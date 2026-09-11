@@ -145,14 +145,14 @@ export function PlaybackSettings() {
         <>
             <div className="space-y-4">
                 <SettingsPageHeader
-                    title="Video playback"
-                    description="Choose how anime is played on this device"
+                    title="视频播放偏好"
+                    description="配置本设备的视频播放模式与引擎"
                     icon={LuCirclePlay}
                 />
 
                 <div className="flex flex-wrap items-center gap-2 text-sm bg-[--paper] rounded-lg p-3 border border-[--border]">
                     <BiDesktop className="text-lg text-[--muted]" />
-                    <span className="text-[--muted]">Device:</span>
+                    <span className="text-[--muted]">设备:</span>
                     <span className="font-medium">{serverStatus?.clientDevice || "-"}</span>
                     <span className="text-[--muted]">/</span>
                     <span className="font-medium">{serverStatus?.clientPlatform || "-"}</span>
@@ -292,8 +292,8 @@ export function PlaybackSettings() {
             )}
 
             <SettingsCard
-                title="Downloaded Media"
-                description="Choose how to play anime files stored on your device."
+                title="已下载媒体播放"
+                description="选择播放本地存储动漫文件的方式。"
                 className={cn(
                     "transition-all duration-200",
                     usingNativePlayer && "opacity-60",
@@ -307,26 +307,26 @@ export function PlaybackSettings() {
                         options={[
                             {
                                 value: PlaybackDownloadedMedia.Default,
-                                title: "Desktop media player",
-                                description: "Open the stream in your configured player with automatic tracking.",
+                                title: "桌面媒体播放器",
+                                description: "使用配置的桌面播放器打开流并自动同步播放进度。",
                                 icon: LuLaptop,
                                 preview: <DesktopPlayerPreview />,
                             },
                             {
                                 value: "mediastream",
-                                title: "Transcoding / Direct Play",
+                                title: "转码 / 网页直连播放",
                                 description: isMediastreamEnabled
-                                    ? "Play local files through an HTML5 video player, available on web."
-                                    : "Enable transcoding first to use the browser player.",
+                                    ? "通过网页端内嵌的 HTML5 播放器直接观看本地文件。"
+                                    : "需先开启转码流服务方可使用网页播放器。",
                                 icon: MdOutlineBroadcastOnHome,
                                 preview: <MediastreamPreview disabled={!isMediastreamEnabled} />,
-                                badge: !isMediastreamEnabled ? <Badge intent="warning" size="sm">Disabled</Badge> : undefined,
+                                badge: !isMediastreamEnabled ? <Badge intent="warning" size="sm">已禁用</Badge> : undefined,
                                 disabled: !isMediastreamEnabled,
                             },
                             {
                                 value: PlaybackDownloadedMedia.ExternalPlayerLink,
-                                title: "External player link",
-                                description: "Send the stream URL to another app using your custom scheme.",
+                                title: "外部播放器协议关联",
+                                description: "使用自定义 URL Scheme 协议将流地址发送至外部播放器应用。",
                                 icon: LuExternalLink,
                                 preview: <ExternalLinkPreview />,
                             },
@@ -336,8 +336,8 @@ export function PlaybackSettings() {
             </SettingsCard>
 
             <SettingsCard
-                title="Torrent & Debrid Streaming"
-                description="Choose how to play streamed content from torrents and debrid services."
+                title="种子与 Debrid 在线流式播放"
+                description="选择播放种子边下边播或 Debrid 云端流媒体的方式。"
                 className={cn(
                     "transition-all duration-200",
                     usingNativePlayer && "opacity-60",
@@ -352,15 +352,15 @@ export function PlaybackSettings() {
                         options={[
                             {
                                 value: PlaybackTorrentStreaming.Default,
-                                title: "Desktop media player",
-                                description: "Open the stream in your configured player with automatic tracking.",
+                                title: "桌面媒体播放器",
+                                description: "使用配置的桌面播放器打开流并自动同步播放进度。",
                                 icon: LuLaptop,
                                 preview: <TorrentDesktopPreview />,
                             },
                             {
                                 value: PlaybackTorrentStreaming.ExternalPlayerLink,
-                                title: "External player link",
-                                description: "Send the stream URL to another app using your custom scheme.",
+                                title: "外部播放器协议关联",
+                                description: "使用自定义 URL Scheme 协议将流地址发送至外部播放器应用。",
                                 icon: LuExternalLink,
                                 preview: <TorrentExternalPreview />,
                             },

@@ -10,6 +10,8 @@ import {
     ADVANCED_SEARCH_SORTING_MANGA,
     ADVANCED_SEARCH_STATUS,
     ADVANCED_SEARCH_TYPE,
+    GENRE_TRANSLATIONS,
+    SEASON_TRANSLATIONS,
 } from "@/app/(main)/search/_lib/advanced-search-constants"
 import { __advancedSearch_paramsAtom } from "@/app/(main)/search/_lib/advanced-search.atoms"
 import { AppLayoutStack } from "@/components/ui/app-layout"
@@ -81,9 +83,9 @@ export function AdvancedSearchOptions() {
                 <Combobox
                     multiple
                     leftAddon={<TbSwords className={cn((params.genre !== null && !!params.genre.length) && "text-indigo-300 font-bold text-xl")} />}
-                    emptyMessage="No options found"
-                    label="Genre" placeholder="All genres" className="w-full"
-                    options={ADVANCED_SEARCH_MEDIA_GENRES.map(genre => ({ value: genre, label: genre, textValue: genre }))}
+                    emptyMessage="未找到流派"
+                    label="流派" placeholder="全部流派" className="w-full"
+                    options={ADVANCED_SEARCH_MEDIA_GENRES.map(genre => ({ value: genre, label: GENRE_TRANSLATIONS[genre] || genre, textValue: `${genre} ${GENRE_TRANSLATIONS[genre] || ""}` }))}
                     value={params.genre ? params.genre : []}
                     onValueChange={v => setParams(draft => {
                         draft.genre = v
@@ -94,8 +96,8 @@ export function AdvancedSearchOptions() {
                 <Combobox
                     multiple
                     leftAddon={<TbTagsFilled className={cn((params.tags !== null && !!params.tags.length) && "text-indigo-300 font-bold text-xl")} />}
-                    emptyMessage="No options found"
-                    label="Tags" placeholder="All tags" className="w-full"
+                    emptyMessage="未找到标签"
+                    label="标签" placeholder="全部标签" className="w-full"
                     options={ADVANCED_SEARCH_MEDIA_TAGS
                         .filter(tag => {
                             if (params.isAdult && serverStatus?.settings?.anilist?.enableAdultContent) {
@@ -114,7 +116,7 @@ export function AdvancedSearchOptions() {
                 />
                 {params.type === "anime" && <Select
                     leftAddon={<MdPersonalVideo className={cn((params.format !== null && !!params.format) && "text-indigo-300 font-bold text-xl")} />}
-                    label="Format" placeholder="All formats" className="w-full"
+                    label="格式" placeholder="全部格式" className="w-full"
                     options={ADVANCED_SEARCH_FORMATS}
                     value={params.format || ""}
                     onValueChange={v => setParams(draft => {
@@ -126,7 +128,7 @@ export function AdvancedSearchOptions() {
                 {params.type === "manga" && <Select
                     leftAddon={
                         <BiWorld className={cn((params.countryOfOrigin !== null && !!params.countryOfOrigin) && "text-indigo-300 font-bold text-xl")} />}
-                    label="Format" placeholder="All countries" className="w-full"
+                    label="国家/地区" placeholder="全部国家/地区" className="w-full"
                     options={ADVANCED_SEARCH_COUNTRIES_MANGA}
                     value={params.countryOfOrigin || ""}
                     onValueChange={v => setParams(draft => {
@@ -137,7 +139,7 @@ export function AdvancedSearchOptions() {
                 />}
                 {params.type === "manga" && <Select
                     leftAddon={<MdOutlineBook className={cn((params.format !== null && !!params.format) && "text-indigo-300 font-bold text-xl")} />}
-                    label="Format" placeholder="All formats" className="w-full"
+                    label="格式" placeholder="全部格式" className="w-full"
                     options={ADVANCED_SEARCH_FORMATS_MANGA}
                     value={params.format || ""}
                     onValueChange={v => setParams(draft => {
@@ -148,8 +150,8 @@ export function AdvancedSearchOptions() {
                 />}
                 {params.type === "anime" && <Select
                     leftAddon={<LuLeaf className={cn((params.season !== null && !!params.season) && "text-indigo-300 font-bold text-xl")} />}
-                    placeholder="All seasons" className="w-full"
-                    options={ADVANCED_SEARCH_SEASONS.map(season => ({ value: season.toUpperCase(), label: season }))}
+                    placeholder="全部季度" className="w-full"
+                    options={ADVANCED_SEARCH_SEASONS.map(season => ({ value: season.toUpperCase(), label: SEASON_TRANSLATIONS[season] || season }))}
                     value={params.season || ""}
                     onValueChange={v => setParams(draft => {
                         draft.season = v as any
@@ -159,7 +161,7 @@ export function AdvancedSearchOptions() {
                 />}
                 <Select
                     leftAddon={<LuCalendar className={cn((params.year !== null && !!params.year) && "text-indigo-300 font-bold text-xl")} />}
-                    label="Year" placeholder="Timeless" className="w-full"
+                    label="年份" placeholder="不限年份" className="w-full"
                     options={[...Array(70)].map((v, idx) => getYear(new Date()) - idx + 2).map(year => ({
                         value: String(year),
                         label: String(year),
@@ -174,7 +176,7 @@ export function AdvancedSearchOptions() {
                 <Select
                     leftAddon={
                         <RiSignalTowerLine className={cn((params.status !== null && !!params.status.length) && "text-indigo-300 font-bold text-xl")} />}
-                    label="Status" placeholder="All statuses" className="w-full"
+                    label="状态" placeholder="全部状态" className="w-full"
                     options={ADVANCED_SEARCH_STATUS}
                     value={params.status?.[0] || ""}
                     onValueChange={v => setParams(draft => {
@@ -185,7 +187,7 @@ export function AdvancedSearchOptions() {
                 />
                 <Select
                     leftAddon={<FaRegStar className={cn((params.minScore !== null && !!params.minScore) && "text-indigo-300 font-bold text-xl")} />}
-                    placeholder="All scores" className="w-full"
+                    placeholder="全部评分" className="w-full"
                     options={[...Array(9)].map((v, idx) => 9 - idx).map(score => ({
                         value: String(score),
                         label: String(score),
@@ -197,7 +199,7 @@ export function AdvancedSearchOptions() {
                     })}
                 />
                 {serverStatus?.settings?.anilist?.enableAdultContent && <Switch
-                    label="Adult"
+                    label="成人内容 (R18)"
                     value={params.isAdult}
                     onValueChange={v => setParams(draft => {
                         draft.isAdult = v
@@ -256,7 +258,7 @@ function TitleInput() {
     return (
         <TextInput
             ref={ref}
-            leftIcon={<FiSearch />} placeholder="Title" className="w-full"
+            leftIcon={<FiSearch />} placeholder="搜索标题..." className="w-full"
             value={inputValue}
             onValueChange={v => setInputValue(v)}
         />

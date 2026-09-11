@@ -183,154 +183,150 @@ export default function Page() {
 
                                 <Card className="bg-transparent border-transparent">
                                     <div className="space-y-2 p-0 w-full">
-                                        <h4 className=" text-xl font-bold text-center">Settings</h4>
+                                        <h4 className=" text-xl font-bold text-center">系统设置</h4>
 
                                     </div>
-                                </Card>
-                                <Card className="block border-0 bg-transparent lg:border lg:bg-[--paper] overflow-clip p-1">
-                                    <TabsTrigger
-                                        value="seanime"
-                                        className="group"
-                                    ><LuWandSparkles className="text-base mr-2 transition-transform duration-200" /> App</TabsTrigger>
-                                    <TabsTrigger
-                                        value="ui"
-                                        className="group"
-                                    ><MdOutlinePalette className="text-base mr-2 transition-transform duration-200" /> User Interface</TabsTrigger>
-                                    {/* <TabsTrigger
-                                     value="local"
-                                     className="group"
-                                     ><LuUserCog className="text-base mr-2 transition-transform duration-200" /> Local Account</TabsTrigger> */}
-                                    <TabsTrigger
-                                        value="library"
-                                        className="group"
-                                    ><LuLibrary className="text-base mr-2 transition-transform duration-200" /> Local Anime Library</TabsTrigger>
-                                </Card>
+                                 </Card>
+                                 <Card className="block border-0 bg-transparent lg:border lg:bg-[--paper] overflow-clip p-1">
+                                     <TabsTrigger
+                                         value="seanime"
+                                         className="group"
+                                     ><LuWandSparkles className="text-base mr-2 transition-transform duration-200" /> 常规设置</TabsTrigger>
+                                     <TabsTrigger
+                                         value="ui"
+                                         className="group"
+                                     ><MdOutlinePalette className="text-base mr-2 transition-transform duration-200" /> 界面外观</TabsTrigger>
+                                     {/* <TabsTrigger
+                                      value="local"
+                                      className="group"
+                                      ><LuUserCog className="text-base mr-2 transition-transform duration-200" /> Local Account</TabsTrigger> */}
+                                     <TabsTrigger
+                                         value="library"
+                                         className="group"
+                                     ><LuLibrary className="text-base mr-2 transition-transform duration-200" /> 本地动漫库</TabsTrigger>
+                                 </Card>
 
-                                {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
-                                {/*    Anime playback*/}
-                                {/*</div>*/}
+                                 {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
+                                 {/*    Anime playback*/}
+                                 {/*</div>*/}
 
-                                <Card className="contents lg:block border-0 bg-transparent lg:border lg:bg-[--paper] overflow-clip p-1">
-                                    <TabsTrigger
-                                        value="playback"
-                                        className="group"
-                                    ><LuCirclePlay className="text-base mr-2 transition-transform duration-200" /> Video Playback</TabsTrigger>
+                                 <Card className="contents lg:block border-0 bg-transparent lg:border lg:bg-[--paper] overflow-clip p-1">
+                                     <TabsTrigger
+                                         value="playback"
+                                         className="group"
+                                     ><LuCirclePlay className="text-base mr-2 transition-transform duration-200" /> 视频播放</TabsTrigger>
 
-                                    <TabsTrigger
-                                        value="media-player"
-                                        className="group"
-                                    ><LuMonitorPlay className="text-base mr-2 transition-transform duration-200" /> Desktop Media Player</TabsTrigger>
-                                    <TabsTrigger
-                                        value="external-player-link"
-                                        className="group"
-                                    ><LuCircleArrowOutUpRight className="text-base mr-2 transition-transform duration-200" /> External Player
-                                                                                                                              Link</TabsTrigger>
-                                    <TabsTrigger
-                                        value="mediastream"
-                                        className="relative group"
-                                    ><LuTabletSmartphone className="text-base mr-2 transition-transform duration-200" /> Transcoding / Direct
-                                                                                                                         Play</TabsTrigger>
-                                </Card>
+                                     <TabsTrigger
+                                         value="media-player"
+                                         className="group"
+                                     ><LuMonitorPlay className="text-base mr-2 transition-transform duration-200" /> 桌面播放器</TabsTrigger>
+                                     <TabsTrigger
+                                         value="external-player-link"
+                                         className="group"
+                                     ><LuCircleArrowOutUpRight className="text-base mr-2 transition-transform duration-200" /> 外部播放器关联</TabsTrigger>
+                                     <TabsTrigger
+                                         value="mediastream"
+                                         className="relative group"
+                                     ><LuTabletSmartphone className="text-base mr-2 transition-transform duration-200" /> 转码 / 直播流</TabsTrigger>
+                                 </Card>
 
-                                {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
-                                {/*    Torrenting*/}
-                                {/*</div>*/}
+                                 {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
+                                 {/*    Torrenting*/}
+                                 {/*</div>*/}
 
-                                <Card className="contents lg:block border-0 bg-transparent lg:border lg:bg-[--paper] overflow-clip p-1">
-                                    <TabsTrigger
-                                        value="torrent"
-                                        className="group"
-                                    ><LuFileSearch className="text-base mr-2 transition-transform duration-200" /> Torrent Provider</TabsTrigger>
-                                    <TabsTrigger
-                                        value="torrent-client"
-                                        className="group"
-                                    ><MdOutlineDownloading className="text-base mr-2 transition-transform duration-200" /> Torrent
-                                                                                                                           Client</TabsTrigger>
-                                    <TabsTrigger
-                                        value="torrentstream"
-                                        className="relative group"
-                                    ><SiBittorrent className="text-base mr-2 transition-transform duration-200" /> Torrent Streaming</TabsTrigger>
-                                    <TabsTrigger
-                                        value="debrid"
-                                        className="group"
-                                    ><HiOutlineServerStack className="text-base mr-2 transition-transform duration-200" /> Debrid
-                                                                                                                           Service</TabsTrigger>
-                                </Card>
+                                 <Card className="contents lg:block border-0 bg-transparent lg:border lg:bg-[--paper] overflow-clip p-1">
+                                     <TabsTrigger
+                                         value="torrent"
+                                         className="group"
+                                     ><LuFileSearch className="text-base mr-2 transition-transform duration-200" /> 种子源提供商</TabsTrigger>
+                                     <TabsTrigger
+                                         value="torrent-client"
+                                         className="group"
+                                     ><MdOutlineDownloading className="text-base mr-2 transition-transform duration-200" /> 下载客户端</TabsTrigger>
+                                     <TabsTrigger
+                                         value="torrentstream"
+                                         className="relative group"
+                                     ><SiBittorrent className="text-base mr-2 transition-transform duration-200" /> 边下边播</TabsTrigger>
+                                     <TabsTrigger
+                                         value="debrid"
+                                         className="group"
+                                     ><HiOutlineServerStack className="text-base mr-2 transition-transform duration-200" /> Debrid 云端服务</TabsTrigger>
+                                 </Card>
 
-                                {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
-                                {/*    Other features*/}
-                                {/*</div>*/}
+                                 {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
+                                 {/*    Other features*/}
+                                 {/*</div>*/}
 
-                                <Card className="contents lg:block border-0 bg-transparent lg:border lg:bg-[--paper] overflow-clip p-1">
-                                    <TabsTrigger
-                                        value="onlinestream"
-                                        className="group"
-                                    ><CgMediaPodcast className="text-base mr-2 transition-transform duration-200" /> Online Streaming</TabsTrigger>
+                                 <Card className="contents lg:block border-0 bg-transparent lg:border lg:bg-[--paper] overflow-clip p-1">
+                                     <TabsTrigger
+                                         value="onlinestream"
+                                         className="group"
+                                     ><CgMediaPodcast className="text-base mr-2 transition-transform duration-200" /> 在线流媒体</TabsTrigger>
 
-                                    <TabsTrigger
-                                        value="manga"
-                                        className="group"
-                                    ><LuBookOpen className="text-base mr-2 transition-transform duration-200" /> Manga</TabsTrigger>
-                                    <TabsTrigger
-                                        value="nakama"
-                                        className="group relative"
-                                    ><MdOutlineConnectWithoutContact className="text-base mr-2 transition-transform duration-200" /> Nakama</TabsTrigger>
-                                    <TabsTrigger
-                                        value="discord"
-                                        className="group"
-                                    ><FaDiscord className="text-base mr-2 transition-transform duration-200" /> Discord</TabsTrigger>
-                                </Card>
+                                     <TabsTrigger
+                                         value="manga"
+                                         className="group"
+                                     ><LuBookOpen className="text-base mr-2 transition-transform duration-200" /> 漫画设置</TabsTrigger>
+                                     <TabsTrigger
+                                         value="nakama"
+                                         className="group relative"
+                                     ><MdOutlineConnectWithoutContact className="text-base mr-2 transition-transform duration-200" /> Nakama 共享</TabsTrigger>
+                                     <TabsTrigger
+                                         value="discord"
+                                         className="group"
+                                     ><FaDiscord className="text-base mr-2 transition-transform duration-200" /> Discord 状态</TabsTrigger>
+                                 </Card>
 
-                                {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
-                                {/*    App*/}
-                                {/*</div>*/}
+                                 {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
+                                 {/*    App*/}
+                                 {/*</div>*/}
 
-                                <Card className="contents lg:block border-0 bg-transparent lg:border lg:bg-[--paper] overflow-clip p-1">
-                                    {__isElectronDesktop__ && (
-                                        <TabsTrigger
-                                            value="denshi"
-                                            className="group"
-                                        ><LuMonitor className="text-base mr-2 transition-transform duration-200" /> Denshi</TabsTrigger>
-                                    )}
-                                    {/* <TabsTrigger
-                                     value="cache"
-                                     className="group"
-                                     ><TbDatabaseExclamation className="text-base mr-2 transition-transform duration-200" /> Cache</TabsTrigger> */}
-                                    <TabsTrigger
-                                        value="logs"
-                                        className="group"
-                                    ><LuBookKey className="text-base mr-2 transition-transform duration-200" /> Logs & Cache</TabsTrigger>
-                                </Card>
-                            </div>
-                        </SettingsNavCard>
+                                 <Card className="contents lg:block border-0 bg-transparent lg:border lg:bg-[--paper] overflow-clip p-1">
+                                     {__isElectronDesktop__ && (
+                                         <TabsTrigger
+                                             value="denshi"
+                                             className="group"
+                                         ><LuMonitor className="text-base mr-2 transition-transform duration-200" /> Denshi 桌面端</TabsTrigger>
+                                     )}
+                                     {/* <TabsTrigger
+                                      value="cache"
+                                      className="group"
+                                      ><TbDatabaseExclamation className="text-base mr-2 transition-transform duration-200" /> Cache</TabsTrigger> */}
+                                     <TabsTrigger
+                                         value="logs"
+                                         className="group"
+                                     ><LuBookKey className="text-base mr-2 transition-transform duration-200" /> 日志与缓存</TabsTrigger>
+                                 </Card>
+                             </div>
+                         </SettingsNavCard>
 
-                        <div className="space-y-3">
-                            <div className="space-y-1">
-                                <p className="text-[--muted] text-xs w-full text-center">
-                                    <span className="font-semibold">{status?.version}</span> {status?.versionName} • {capitalize(status?.os)}{__isElectronDesktop__ &&
-                                    <span className="font-medium"> • Denshi</span>}
-                                </p>
-                                <p className="text-[--muted] text-sm w-full">
+                         <div className="space-y-3">
+                             <div className="space-y-1">
+                                 <p className="text-[--muted] text-xs w-full text-center">
+                                     <span className="font-semibold">{status?.version}</span> {status?.versionName} • {capitalize(status?.os)}{__isElectronDesktop__ &&
+                                     <span className="font-medium"> • Denshi</span>}
+                                 </p>
+                                 <p className="text-[--muted] text-sm w-full">
 
-                                </p>
-                            </div>
+                                 </p>
+                             </div>
 
-                            <div className="flex justify-center !mt-0 pb-4">
-                                <SeaLink
-                                    href="https://github.com/sponsors/5rahim"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <Button
-                                        intent="gray-link"
-                                        size="md"
-                                        leftIcon={<BiDonateHeart className="text-lg" />}
-                                    >
-                                        Donate
-                                    </Button>
-                                </SeaLink>
-                            </div>
-                        </div>
+                             <div className="flex justify-center !mt-0 pb-4">
+                                 <SeaLink
+                                     href="https://github.com/sponsors/5rahim"
+                                     target="_blank"
+                                     rel="noopener noreferrer"
+                                 >
+                                     <Button
+                                         intent="gray-link"
+                                         size="md"
+                                         leftIcon={<BiDonateHeart className="text-lg" />}
+                                     >
+                                         赞助支持
+                                     </Button>
+                                 </SeaLink>
+                             </div>
+                         </div>
                     </TabsList>
 
                     <div className="">
@@ -606,8 +602,8 @@ export default function Page() {
 
                                         <div className="space-y-3">
                                             <SettingsPageHeader
-                                                title="App"
-                                                description="General app settings"
+                                                title="常规设置"
+                                                description="通用应用与服务配置"
                                                 icon={LuWandSparkles}
                                             />
 
@@ -622,7 +618,7 @@ export default function Page() {
                                                     leftIcon={
                                                         <RiFolderDownloadFill className="transition-transform duration-200 group-hover:scale-110" />}
                                                 >
-                                                    Open Data directory
+                                                    打开数据目录
                                                 </Button>}
                                                 <Button
                                                     size="sm"
@@ -632,7 +628,7 @@ export default function Page() {
                                                     className="transition-all duration-200 hover:scale-105 hover:shadow-md group"
                                                     data-open-issue-recorder-button
                                                 >
-                                                    Record an issue
+                                                    反馈问题
                                                 </Button>
                                                 <Button
                                                     size="sm"
@@ -653,7 +649,7 @@ export default function Page() {
                                                                         setWebUpdateModalOpen(true)
                                                                     }
                                                                 } else {
-                                                                    toast.success("You are running the latest version")
+                                                                    toast.success("当前已是最新版本")
                                                                 }
 
                                                             },
@@ -664,7 +660,7 @@ export default function Page() {
                                                     className="transition-all duration-200 hover:scale-105 hover:shadow-md group"
                                                     data-check-for-updates-button
                                                 >
-                                                    Check for updates
+                                                    检查更新
                                                 </Button>
                                             </div>
                                         </div>
@@ -676,8 +672,8 @@ export default function Page() {
                                     <TabsContent value="library" className={tabContentClass}>
 
                                         <SettingsPageHeader
-                                            title="Local Anime Library"
-                                            description="Manage your local anime library"
+                                            title="本地动漫库"
+                                            description="管理本地动漫媒体库与扫描配置"
                                             icon={LuLibrary}
                                         />
 
@@ -700,8 +696,8 @@ export default function Page() {
                                     <TabsContent value="onlinestream" className={tabContentClass}>
 
                                         <SettingsPageHeader
-                                            title="Online Streaming"
-                                            description="Configure online streaming settings"
+                                            title="在线流媒体"
+                                            description="配置第三方在线动漫播放与流媒体选项"
                                             icon={CgMediaPodcast}
                                         />
 
@@ -710,18 +706,18 @@ export default function Page() {
                                                 <Field.Switch
                                                     side="right"
                                                     name="enableOnlinestream"
-                                                    label="Enable"
-                                                    help="Watch anime episodes from online sources."
+                                                    label="启用在线流媒体"
+                                                    help="直接从第三方在线流媒体源观看动漫剧集。"
                                                 />
                                             </div>
                                         </SettingsCard>
 
-                                        <SettingsCard title="Home Screen">
+                                        <SettingsCard title="首页展示">
                                             <Field.Switch
                                                 side="right"
                                                 name="includeOnlineStreamingInLibrary"
-                                                label="Include streaming in anime lists"
-                                                help="Show currently watching streaming titles in your anime lists."
+                                                label="在追番列表中包含流媒体作品"
+                                                help="在您的动漫片单中展示正在观看的在线流媒体动漫。"
                                             />
                                         </SettingsCard>
 
@@ -733,7 +729,7 @@ export default function Page() {
 
                                         <SettingsPageHeader
                                             title="Discord"
-                                            description="Configure Discord rich presence settings"
+                                            description="配置 Discord 正在播放状态展示"
                                             icon={FaDiscord}
                                         />
 
@@ -746,8 +742,8 @@ export default function Page() {
                                     <TabsContent value="torrent" className={tabContentClass}>
 
                                         <SettingsPageHeader
-                                            title="Torrent Provider"
-                                            description="Configure the torrent provider"
+                                            title="种子源提供商"
+                                            description="配置番剧种子检索与默认提供商扩展"
                                             icon={LuFileSearch}
                                         />
 
@@ -816,20 +812,20 @@ export default function Page() {
                                     <TabsContent value="torrent-client" className={tabContentClass}>
 
                                         <SettingsPageHeader
-                                            title="Torrent Client"
-                                            description="Configure the torrent client"
+                                            title="下载客户端"
+                                            description="配置外部或内置下载客户端"
                                             icon={MdOutlineDownloading}
                                         />
 
                                         <SettingsCard>
                                             <Field.Select
                                                 name="defaultTorrentClient"
-                                                label="Default Torrent Client"
+                                                label="默认下载客户端"
                                                 options={[
                                                     { label: "qBittorrent", value: "qbittorrent" },
                                                     { label: "Transmission", value: "transmission" },
-                                                    ...(status?.featureFlags?.builtinTorrentClient ? [{ label: "Built-in", value: "seanime" }] : []),
-                                                    { label: "None", value: "none" },
+                                                    ...(status?.featureFlags?.builtinTorrentClient ? [{ label: "内置客户端", value: "seanime" }] : []),
+                                                    { label: "无", value: "none" },
                                                 ]}
                                             />
                                         </SettingsCard>
@@ -853,21 +849,21 @@ export default function Page() {
                                                 <AccordionContent className="p-0 py-4 space-y-4">
                                                     <Field.Text
                                                         name="qbittorrentHost"
-                                                        label="Host"
+                                                        label="主机"
                                                     />
                                                     <div className="flex flex-col md:flex-row gap-4">
                                                         <Field.Text
                                                             name="qbittorrentUsername"
-                                                            label="Username"
+                                                            label="用户名"
                                                         />
                                                         <Field.Text
                                                             name="qbittorrentPassword"
-                                                            label="Password"
+                                                            label="密码"
                                                             type="password"
                                                         />
                                                         <Field.Number
                                                             name="qbittorrentPort"
-                                                            label="Port"
+                                                            label="端口"
                                                             formatOptions={{
                                                                 useGrouping: false,
                                                             }}
@@ -875,17 +871,17 @@ export default function Page() {
                                                     </div>
                                                     <Field.Text
                                                         name="qbittorrentPath"
-                                                        label="Executable"
+                                                        label="执行文件路径"
                                                     />
                                                     <Field.Text
                                                         name="qbittorrentTags"
-                                                        label="Tags"
-                                                        help="Comma separated tags to apply to downloaded torrents. e.g. seanime,anime"
+                                                        label="标签"
+                                                        help="添加到下载任务的标签，逗号分隔，如 seanime,anime"
                                                     />
                                                     <Field.Text
                                                         name="qbittorrentCategory"
-                                                        label="Category"
-                                                        help="Category to apply to downloaded torrents."
+                                                        label="分类"
+                                                        help="添加到下载任务的分类目录名称。"
                                                     />
                                                 </AccordionContent>
                                             </AccordionItem>
@@ -897,21 +893,21 @@ export default function Page() {
                                                 <AccordionContent className="p-0 py-4 space-y-4 !border-b-0">
                                                     <Field.Text
                                                         name="transmissionHost"
-                                                        label="Host"
+                                                        label="主机"
                                                     />
                                                     <div className="flex flex-col md:flex-row gap-4">
                                                         <Field.Text
                                                             name="transmissionUsername"
-                                                            label="Username"
+                                                            label="用户名"
                                                         />
                                                         <Field.Text
                                                             name="transmissionPassword"
-                                                            label="Password"
+                                                            label="密码"
                                                             type="password"
                                                         />
                                                         <Field.Number
                                                             name="transmissionPort"
-                                                            label="Port"
+                                                            label="端口"
                                                             formatOptions={{
                                                                 useGrouping: false,
                                                             }}
@@ -919,7 +915,7 @@ export default function Page() {
                                                     </div>
                                                     <Field.Text
                                                         name="transmissionPath"
-                                                        label="Executable"
+                                                        label="执行文件路径"
                                                     />
                                                 </AccordionContent>
                                             </AccordionItem>
@@ -927,29 +923,29 @@ export default function Page() {
                                                 <AccordionItem value="seanime">
                                                     <AccordionTrigger>
                                                         <h4 className="flex gap-2 items-center">
-                                                            <SiBittorrent className="text-[--brand]" /> Built-in
+                                                            <SiBittorrent className="text-[--brand]" /> 内置客户端
                                                         </h4>
                                                     </AccordionTrigger>
                                                     <AccordionContent className="p-0 py-4 space-y-4">
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             <Field.Number
                                                                 name="seanimePort"
-                                                                label="Listening port"
+                                                                label="监听端口"
                                                                 formatOptions={{ useGrouping: false }}
                                                             />
-                                                            <Field.Number name="seanimeMaxConnections" label="Connections per torrent" />
-                                                            <Field.Number name="seanimeMaxActiveDownloads" label="Active downloads" />
+                                                            <Field.Number name="seanimeMaxConnections" label="每个种子最大连接数" />
+                                                            <Field.Number name="seanimeMaxActiveDownloads" label="最大同时下载数" />
                                                         </div>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             <Field.Number
                                                                 name="seanimeDownloadLimit"
-                                                                label="Download limit (KB/s)"
-                                                                help="Set to 0 for no limit."
+                                                                label="下载限速 (KB/s)"
+                                                                help="设置为 0 表示不限速。"
                                                             />
                                                             <Field.Number
                                                                 name="seanimeUploadLimit"
-                                                                label="Upload limit (KB/s)"
-                                                                help="Set to 0 for no limit."
+                                                                label="上传限速 (KB/s)"
+                                                                help="设置为 0 表示不限速。"
                                                             />
                                                         </div>
                                                     </AccordionContent>
@@ -958,7 +954,7 @@ export default function Page() {
                                         </Accordion>
                                         {/*</SettingsCard>*/}
 
-                                        <SettingsCard title="Integration">
+                                        <SettingsCard title="客户端集成">
                                             {/*<Field.Switch*/}
                                             {/*    side="right"*/}
                                             {/*    name="hideTorrentList"*/}
@@ -967,13 +963,13 @@ export default function Page() {
                                             <Field.Switch
                                                 side="right"
                                                 name="showActiveTorrentCount"
-                                                label="Show active torrent count"
-                                                help="Show the number of active torrents in the sidebar. (Memory intensive)"
+                                                label="在侧边栏显示活跃下载数"
+                                                help="在左侧导航栏的种子图标旁显示当前活跃下载数量。(较消耗内存)"
                                             />
                                             <Field.Switch
                                                 side="right"
                                                 name="openTorrentClientOnStart"
-                                                label="Open torrent client on startup"
+                                                label="开机启动时打开下载客户端"
                                             />
                                         </SettingsCard>
 
@@ -1011,8 +1007,8 @@ export default function Page() {
                         <TabsContent value="ui" className={tabContentClass}>
 
                             <SettingsPageHeader
-                                title="User Interface"
-                                description="Customize the user interface"
+                                title="界面外观"
+                                description="自定义主题风格与界面展示选项"
                                 icon={LuPalette}
                             />
 
@@ -1023,8 +1019,8 @@ export default function Page() {
                         <TabsContent value="torrentstream" className={tabContentClass}>
 
                             <SettingsPageHeader
-                                title="Torrent Streaming"
-                                description="Configure torrent streaming settings"
+                                title="边下边播"
+                                description="配置种子在线缓冲与边下边播"
                                 icon={SiBittorrent}
                             />
 
@@ -1035,8 +1031,8 @@ export default function Page() {
                         <TabsContent value="logs" className={tabContentClass}>
 
                             <SettingsPageHeader
-                                title="Logs"
-                                description="View the logs"
+                                title="运行日志"
+                                description="查看系统运行日志"
                                 icon={LuBookKey}
                             />
 
@@ -1046,8 +1042,8 @@ export default function Page() {
                             <Separator />
 
                             <SettingsPageHeader
-                                title="Cache"
-                                description="Manage the cache"
+                                title="缓存管理"
+                                description="管理本地文件与数据缓存"
                                 icon={TbDatabaseExclamation}
                             />
 

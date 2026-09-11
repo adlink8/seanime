@@ -112,9 +112,9 @@ export default function Page() {
                 <div className="flex justify-between items-center w-full relative">
                     <div className="space-y-4">
                         <div>
-                            <h2>Scan summaries</h2>
+                            <h2>扫描报告概览</h2>
                             <p className="text-[--muted]">
-                                View the logs of your latest scans
+                                查看媒体库最新扫描的详细记录与匹配日志
                             </p>
                         </div>
                     </div>
@@ -122,7 +122,7 @@ export default function Page() {
 
                 <div className="">
                     {isLoading && <LoadingSpinner />}
-                    {(!isLoading && !data?.length) && <div className="p-4 text-[--muted] text-center">No scan summaries available</div>}
+                    {(!isLoading && !data?.length) && <div className="p-4 text-[--muted] text-center">暂无扫描报告</div>}
                     {!!data?.length && (
                         <div className="space-y-4">
                             <div className="flex gap-2 items-center">
@@ -140,7 +140,7 @@ export default function Page() {
                                 {!!selectedSummary && (
                                     <div className="w-full">
                                         <TextInput
-                                            placeholder="Search filenames..."
+                                            placeholder="搜索文件名..."
                                             value={searchQuery}
                                             onValueChange={setSearchQuery}
                                             leftIcon={<LuFileSearch className="text-[--muted]" />}
@@ -152,25 +152,23 @@ export default function Page() {
                                 <Card className="p-4">
                                     <div>
                                         <p className="text-[--muted]">
-                                            Seanime successfully scanned {selectedSummary.groups?.length} media
+                                            Seanime 成功扫描了 {selectedSummary.groups?.length} 个媒体
                                             {debouncedSearchQuery.trim() && (
-                                                <span className="ml-2 text-sm">({filteredGroups.length} matching)</span>
+                                                <span className="ml-2 text-sm">({filteredGroups.length} 个匹配)</span>
                                             )}
                                         </p>
                                         {!!selectedSummary?.unmatchedFiles?.length && (
                                             <p className="text-orange-300">
-                                                {selectedSummary?.unmatchedFiles?.length} file{selectedSummary?.unmatchedFiles?.length > 1
-                                                ? "s were "
-                                                : " was "}not matched
+                                                {selectedSummary?.unmatchedFiles?.length} 个文件未匹配成功
                                                 {debouncedSearchQuery.trim() && (
-                                                    <span className="ml-2 text-sm">({filteredUnmatchedFiles.length} matching)</span>
+                                                    <span className="ml-2 text-sm">({filteredUnmatchedFiles.length} 个匹配)</span>
                                                 )}
                                             </p>
                                         )}
                                     </div>
 
                                     {!!filteredUnmatchedFiles?.length && <div className="space-y-2">
-                                        <h5>Unmatched files</h5>
+                                        <h5>未匹配文件</h5>
                                         <Accordion
                                             type="single"
                                             collapsible
@@ -189,7 +187,7 @@ export default function Page() {
                                     </div>}
 
                                     {!!filteredGroups?.length && <div>
-                                        <h5>Media scanned</h5>
+                                        <h5>已扫描媒体</h5>
 
                                         <div className="space-y-4 divide-y">
                                             {filteredGroups?.sort((a, b) => a.mediaTitle?.localeCompare(b.mediaTitle,

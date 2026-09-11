@@ -4,6 +4,7 @@ import { useUpdateTheme } from "@/api/hooks/theme.hooks"
 import { MediaCardLazyGrid } from "@/app/(main)/_features/media/_components/media-card-grid"
 import { MediaEntryCard } from "@/app/(main)/_features/media/_components/media-entry-card"
 import { MediaGenreSelector } from "@/app/(main)/_features/media/_components/media-genre-selector"
+import { GENRE_TRANSLATIONS } from "@/app/(main)/search/_lib/advanced-search-constants"
 import { PluginMangaLibraryDropdownItems } from "@/app/(main)/_features/plugin/actions/plugin-actions"
 import { PluginWebviewSlot } from "@/app/(main)/_features/plugin/webview/plugin-webviews"
 import { SeaCommandInjectableItem, useSeaCommandInject } from "@/app/(main)/_features/sea-command/use-inject"
@@ -74,17 +75,17 @@ export function MangaLibraryView(props: MangaLibraryViewProps) {
                 <AnimatePresence mode="wait" initial={false}>
 
                     {!!collection && !hasManga && <LuffyError
-                        title="No manga found"
+                        title="未找到漫画"
                     >
                         <div className="space-y-2">
                             <p>
-                                No manga has been added to your library yet.
+                                您的媒体库中尚未添加任何漫画。
                             </p>
 
                             <div className="!mt-4">
                                 <SeaLink href="/discover?type=manga">
                                     <Button intent="white-outline" rounded>
-                                        Browse manga
+                                        浏览漫画
                                     </Button>
                                 </SeaLink>
                             </div>
@@ -500,7 +501,7 @@ function GenreSelector({
             staticTabsClass=""
             items={[
                 ...genres.map(genre => ({
-                    name: genre,
+                    name: GENRE_TRANSLATIONS[genre] || genre,
                     isCurrent: params!.genre?.includes(genre) ?? false,
                     onClick: () => setParams(draft => {
                         if (draft.genre?.includes(genre)) {

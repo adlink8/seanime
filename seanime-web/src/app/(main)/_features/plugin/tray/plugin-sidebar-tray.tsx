@@ -127,7 +127,7 @@ const ExtensionList = ({
                                 icon={<LuComponent className="size-5 text-[--muted]" />}
                                 className="rounded-full hover:rotate-360 transition-all duration-300"
                             />}
-                        >{unpinnedBadgeCount ? `Tray Plugins (${unpinnedBadgeCount})` : "Tray Plugins"}</Tooltip>
+                        >{unpinnedBadgeCount ? `插件托盘 (${unpinnedBadgeCount})` : "插件托盘"}</Tooltip>
                         {!!unpinnedBadgeCount && <Badge
                             intent="alert-solid"
                             size="sm"
@@ -220,13 +220,13 @@ const ExtensionList = ({
                                             />}
                                         </div>}
                                     >
-                                        {isPinned(trayIcon.extensionId) ? "Unpin" : "Pin"}
+                                        {isPinned(trayIcon.extensionId) ? "取消固定" : "固定"}
                                     </Tooltip>
                                 </div>
                             </div>
                         ))}
                         {!trayIcons.length && <p className="text-sm text-[--muted] py-1 text-center w-full">
-                            No tray plugins
+                            暂无托盘插件
                         </p>}
 
                         {/* {developmentModeExtensions?.map(extension => (
@@ -264,10 +264,10 @@ const ExtensionList = ({
                     <div className="space-y-1" data-plugin-sidebar-debug-popover-content>
                         <div className="text-sm space-y-1">
                             <p className="font-bold">
-                                Debug
+                                调试
                             </p>
                             <p className="text-xs text-[--muted]">
-                                These extensions are loaded in development mode.
+                                这些扩展以开发模式加载。
                             </p>
                         </div>
                         {developmentModeExtensions?.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })).map(extension => (
@@ -284,7 +284,7 @@ const ExtensionList = ({
                                                 onClick={() => openDebugWindow(extension.id)}
                                             />
                                         </div>}
-                                    >Debug logs</Tooltip>
+                                    >调试日志</Tooltip>
                                     <IconButton
                                         intent="warning-basic"
                                         size="sm"

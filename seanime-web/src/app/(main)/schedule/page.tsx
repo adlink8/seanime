@@ -27,8 +27,8 @@ export default function Page() {
                 <AppLayoutStack>
 
                     <div className="hidden lg:block space-y-2">
-                        <h2>Release schedule</h2>
-                        <p className="text-[--muted]">Based on your anime list</p>
+                        <h2>放送日历 / 追番排期</h2>
+                        <p className="text-[--muted]">基于你的个人片单</p>
                     </div>
 
                     <ScheduleCalendar />

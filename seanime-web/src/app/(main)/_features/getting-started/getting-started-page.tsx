@@ -86,36 +86,36 @@ const stepVariants = {
 const STEPS = [
     {
         id: "library",
-        title: "Local Anime Library",
-        description: "Choose your anime library folder",
+        title: "本地番剧库",
+        description: "选择你存放本地动漫文件的目录",
         icon: IoLibraryOutline,
         gradient: "from-blue-500 to-cyan-500",
     },
     {
         id: "player",
-        title: "Media Player",
-        description: "Configure your video player",
+        title: "播放器配置",
+        description: "配置你的本地视频播放器",
         icon: LuMonitorPlay,
         gradient: "from-green-500 to-emerald-500",
     },
     {
         id: "torrents",
-        title: "Downloading",
-        description: "Set up downloading",
+        title: "下载设置",
+        description: "配置种子下载器与来源",
         icon: BiDownload,
         gradient: "from-orange-500 to-red-500",
     },
     {
         id: "debrid",
-        title: "Debrid Service",
-        description: "Optional premium streaming",
+        title: "Debrid 云解析",
+        description: "可选的高级云端流媒体服务",
         icon: HiOutlineServerStack,
         gradient: "from-indigo-500 to-indigo-500",
     },
     {
         id: "features",
-        title: "Features",
-        description: "Enable additional features",
+        title: "功能选项",
+        description: "启用扩展功能与模式",
         icon: LuSparkles,
         gradient: "from-teal-500 to-blue-500",
     },
@@ -139,7 +139,7 @@ function StepIndicator({ currentStep, totalSteps, onStepClick }: { currentStep: 
 
             <div className="text-center mb-8">
                 <p className="text-[--muted] text-sm ">
-                    These settings can be changed later
+                    这些设置后续可随时在【系统设置】中更改
                 </p>
             </div>
 
@@ -831,7 +831,7 @@ export function GettingStartedPage({ status }: { status: Status }) {
                                     className="flex items-center space-x-2"
                                     leftIcon={<BiChevronLeft className="text-xl" />}
                                 >
-                                    Previous
+                                    上一步
                                 </Button>
 
                                 {currentStep === STEPS.length - 1 ? (
@@ -841,7 +841,7 @@ export function GettingStartedPage({ status }: { status: Status }) {
                                         loading={isPending}
                                         rightIcon={<BiRocket className="size-6" />}
                                     >
-                                        <span>Launch Seanime</span>
+                                        <span>启动并进入 Seanime</span>
                                     </Button>
                                 ) : (
                                     <Button
@@ -854,7 +854,7 @@ export function GettingStartedPage({ status }: { status: Status }) {
                                         className="flex items-center space-x-2"
                                         rightIcon={<BiChevronRight className="text-xl" />}
                                     >
-                                        Next
+                                        下一步
                                     </Button>
                                 )}
                             </motion.div>

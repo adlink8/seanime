@@ -10,7 +10,7 @@ export function LoadingOverlayWithLogo({ refetch, title }: { refetch?: () => voi
     return <LoadingOverlay showSpinner={false}>
         <SeaImage
             src="/seanime-logo.png"
-            alt="Loading..."
+            alt="正在加载..."
             priority
             width={100}
             height={100}
@@ -18,7 +18,7 @@ export function LoadingOverlayWithLogo({ refetch, title }: { refetch?: () => voi
         />
         <GradientBackground />
         {/*<div className="absolute inset-0 -z-10 h-full w-full items-center px-5 py-24 [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] opacity-10"></div>*/}
-        <TextGenerateEffect className="text-lg mt-2 text-[--muted] animate-pulse z-[1]" words={title ?? "S e a n i m e"} />
+        <TextGenerateEffect className="text-lg mt-2 text-[--muted] animate-pulse z-[1]" words={title ?? "正 在 加 载 中 . . ."} />
 
         {(__isDesktop__ && !!refetch) && (
             <Button
@@ -26,7 +26,7 @@ export function LoadingOverlayWithLogo({ refetch, title }: { refetch?: () => voi
                 className="mt-4 z-[1]"
                 intent="gray-outline"
                 size="sm"
-            >Reload</Button>
+            >重新加载</Button>
         )}
     </LoadingOverlay>
 }

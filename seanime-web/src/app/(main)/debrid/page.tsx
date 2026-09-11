@@ -192,7 +192,7 @@ function Content() {
                                 downloadProgress={downloadProgressMap[torrent.id] ?? null}
                             />
                         })}
-                        {(!isLoading && !data?.length) && <LuffyError title="Nothing to see">No active torrents</LuffyError>}
+                        {(!isLoading && !data?.length) && <LuffyError title="暂无内容">暂无活跃的种子任务</LuffyError>}
                     </Card>
                 </AppLayoutStack>
             </div>

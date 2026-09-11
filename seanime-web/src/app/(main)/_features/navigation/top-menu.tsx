@@ -25,13 +25,13 @@ export const TopMenu: React.FC<TopMenuProps> = (props) => {
                 href: "/",
                 // icon: IoLibrary,
                 isCurrent: pathname === "/",
-                name: "Home",
+                name: "首页",
             },
             {
                 href: "/schedule",
                 icon: null,
                 isCurrent: pathname.startsWith("/schedule"),
-                name: "Schedule",
+                name: "放送日历",
                 // addon: missingEpisodeCount > 0 ? <Badge
                 //     className="absolute -top-1 right-2 h-2 w-2 p-0 z-[5]" size="sm"
                 //     intent="alert-solid"
@@ -41,19 +41,19 @@ export const TopMenu: React.FC<TopMenuProps> = (props) => {
                 href: "/manga",
                 icon: null,
                 isCurrent: pathname.startsWith("/manga"),
-                name: "Manga",
+                name: "漫画",
             }].filter(Boolean) as NavigationMenuProps["items"],
             {
                 href: "/lists",
                 icon: null,
                 isCurrent: pathname.startsWith("/lists"),
-                name: "My lists",
+                name: "我的片单",
             },
             {
                 href: "/discover",
                 icon: null,
                 isCurrent: pathname.startsWith("/discover") || pathname.startsWith("/search"),
-                name: "Discover",
+                name: "探索发现",
             },
         ].filter(Boolean)
     }, [pathname, missingEpisodeCount, serverStatus?.settings?.library?.enableManga])

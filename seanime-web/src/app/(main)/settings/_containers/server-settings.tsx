@@ -94,36 +94,36 @@ export function ServerSettings(props: ServerSettingsProps) {
                 />
             )}
 
-            <SettingsCard title="Episodes">
+            <SettingsCard title="剧集与播放记录">
                 <Field.Switch
                     side="right"
                     name="autoUpdateProgress"
-                    label="Automatically update progress"
-                    help="If enabled, your progress will be automatically updated when you watch 80% of an episode."
-                    moreHelp="Only applies to desktop and integrated players."
+                    label="自动更新观看进度"
+                    help="启用后，当观看剧集达到 80% 时，将自动同步更新您的追番进度。"
+                    moreHelp="仅适用于桌面播放器或内置播放器。"
                     icon={<TbProgressCheck className="" />}
                 />
                 <Field.Switch
                     side="right"
                     name="enableWatchContinuity"
-                    label="Enable watch history"
-                    help="If enabled, Seanime will remember your watch progress and resume from where you left off."
-                    moreHelp="Only applies to desktop and integrated players."
+                    label="启用播放历史记录"
+                    help="启用后，Seanime 将记录您的播放进度并在下次打开时从上次离开的位置继续播放。"
+                    moreHelp="仅适用于桌面播放器或内置播放器。"
                     icon={<TbClockPlay className="" />}
                 />
 
                 <div data-settings-default-episode-source>
                     <Field.Select
                         name="defaultPlaybackSource"
-                        label="Default episode source"
-                        help="Used when opening anime pages."
+                        label="默认剧集来源"
+                        help="打开动漫详情页时的默认数据播放源。"
                         leftIcon={<RiMovieAiLine />}
                         options={defaultPlaybackSourceOptions}
                     />
                 </div>
             </SettingsCard>
 
-            <SettingsCard title="Anime">
+            <SettingsCard title="动漫展示与防剧透">
                 {/*<p className="text-[--muted]">*/}
                 {/*    Only applies to desktop and integrated players.*/}
                 {/*</p>*/}
@@ -132,8 +132,8 @@ export function ServerSettings(props: ServerSettingsProps) {
                     <div data-settings-hide-anime-spoilers>
                         <Field.Switch
                             side="right"
-                            label="Hide anime spoilers"
-                            help="Use spoiler-safe episode art and text across continue watching, entry episode lists, and missing episodes."
+                            label="隐藏动漫剧透"
+                            help="在继续观看、剧集列表以及缺失剧集中隐藏剧透性的缩略图和文本。"
                             name="hideAnimeSpoilers"
                             icon={<LuEyeOff className="" />}
                         />
@@ -143,26 +143,26 @@ export function ServerSettings(props: ServerSettingsProps) {
                         <div className="space-y-1 pl-4 border-l border-[--border] ml-2">
                             <Field.Switch
                                 side="right"
-                                label="Hide thumbnails"
+                                label="隐藏缩略图"
                                 name="hideAnimeSpoilerThumbnails"
                             />
 
                             <Field.Switch
                                 side="right"
-                                label="Hide titles"
+                                label="隐藏剧集标题"
                                 name="hideAnimeSpoilerTitles"
                             />
 
                             <Field.Switch
                                 side="right"
-                                label="Hide descriptions"
+                                label="隐藏剧集简介"
                                 name="hideAnimeSpoilerDescriptions"
                             />
 
                             <Field.Switch
                                 side="right"
-                                label="Skip next episode"
-                                help="Start hiding spoilers from the episode after the next one."
+                                label="下一集跳过防剧透"
+                                help="从下一集之后的剧集开始隐藏剧透。"
                                 name="hideAnimeSpoilerSkipNextEpisode"
                             />
                         </div>
@@ -172,8 +172,8 @@ export function ServerSettings(props: ServerSettingsProps) {
                 <Field.Switch
                     side="right"
                     name="hideAudienceScore"
-                    label="Hide audience score"
-                    help="If enabled, the audience score will be hidden until you decide to view it."
+                    label="隐藏观众评分"
+                    help="启用后，直到您主动点击查看前，番剧观众评分将被遮挡。"
                     icon={<LuStarOff className="" />}
                 />
 
@@ -182,15 +182,15 @@ export function ServerSettings(props: ServerSettingsProps) {
                     <Field.Switch
                         side="right"
                         name="enableAdultContent"
-                        label="Enable adult content"
-                        help="If disabled, adult content will be hidden from search results and your library."
+                        label="启用成人/R18内容"
+                        help="关闭后，成人向内容将从搜索结果和媒体库中隐藏。"
                         icon={<TbRating18Plus className="" />}
                     />
                     {f.watch("enableAdultContent") && <div className="space-y-1 pl-4 border-l border-[--border] ml-2">
                         <Field.Switch
                             side="right"
                             name="blurAdultContent"
-                            label="Blur adult content"
+                            label="对成人内容应用模糊遮罩"
                             fieldClass={cn(
                                 !f.watch("enableAdultContent") && "opacity-50",
                             )}
@@ -201,28 +201,28 @@ export function ServerSettings(props: ServerSettingsProps) {
                 <Field.Switch
                     side="right"
                     name="disableAnimeCardTrailers"
-                    label="Disable anime card trailers"
+                    label="禁用动漫卡片预告片"
                     help=""
                     icon={<LuImageOff className="" />}
                 />
 
             </SettingsCard>
 
-            <SettingsCard title="Extensions">
+            <SettingsCard title="扩展安全性">
                 <div data-settings-enable-extension-secure-mode>
                     <Field.Switch
                         side="right"
                         name="enableExtensionSecureMode"
-                        label="Enable Extension Secure Mode"
-                        help="If enabled, Seanime will prompt you for confirmation whenever an extension tries to perform a sensitive action, even if permissions have been granted."
+                        label="启用扩展安全模式"
+                        help="启用后，即使已授予权限，扩展尝试执行敏感操作时 Seanime 仍会弹出确认提示。"
                         icon={<LuShield className="" />}
                     />
                 </div>
             </SettingsCard>
 
             <SettingsCard
-                title="Local Account"
-                description="Local account is used when you're not using an AniList account."
+                title="本地账户与数据同步"
+                description="未绑定或离线使用 AniList 账号时使用本地账户。"
             >
                 <div className={cn(serverStatus?.user?.isSimulated && "opacity-50 pointer-events-none")}>
                     <Field.Switch
@@ -249,35 +249,35 @@ export function ServerSettings(props: ServerSettingsProps) {
 
             <ConfirmationDialog {...confirmDialog} />
 
-            <SettingsCard title="Offline mode" description="Only available when authenticated with AniList.">
+            <SettingsCard title="离线模式" description="绑定 AniList 账户时可用。">
 
                 <Field.Switch
                     side="right"
                     name="autoSyncOfflineLocalData"
-                    label="Auto-refresh offline media"
-                    help="If disabled, you will need to manually refresh your local metadata by clicking 'Sync now' in the offline mode page."
-                    moreHelp="Will be paused if you have made changes offline and have not synced them to AniList yet."
+                    label="自动同步离线媒体"
+                    help="如果关闭，您需要在离线模式页面中手动点击“立即同步”来刷新本地元数据。"
+                    moreHelp="如果您在离线时进行了修改且尚未同步到 AniList，该操作会暂停。"
                     icon={<MdDownloading className="" />}
                 />
 
                 <Field.Switch
                     side="right"
                     name="autoSaveCurrentMediaOffline"
-                    label="Auto-save currently watched/read media"
-                    help="If enabled, Seanime will automatically save all media you're currently watching/reading for offline use."
+                    label="自动离线缓存正在观看/阅读的作品"
+                    help="启用后，Seanime 会自动将您正在追的番剧和漫画数据保存为离线可用。"
                     icon={<TbChecklist className="" />}
                 />
 
             </SettingsCard>
 
-            <SettingsCard title="Metadata Providers">
+            <SettingsCard title="元数据与缓存提供方">
                 <div className="space-y-3">
                     <Field.Switch
                         side="right"
                         name="disableCacheLayer"
-                        label="Disable AniList caching"
-                        help="If enabled, Seanime will stop caching AniList requests to disk."
-                        moreHelp="By default, all requests made to AniList are cached. This allows Seanime to keep being usable when AniList goes down. The cache directory is modifiable in the config file."
+                        label="禁用 AniList 请求磁盘缓存"
+                        help="启用后，Seanime 将不再把 AniList 的请求缓存到磁盘。"
+                        moreHelp="默认情况下，所有向 AniList 发起的请求均会缓存到本地，保证网络中断时仍可离线访问。"
                         icon={<LuDatabaseBackup className="" />}
                     />
                     {!f.watch("disableCacheLayer") && (
@@ -286,8 +286,8 @@ export function ServerSettings(props: ServerSettingsProps) {
                                 value={!isApiWorking}
                                 onValueChange={v => toggleCacheLayer()}
                                 disabled={isTogglingCacheLayer}
-                                label="Enable cache-only mode"
-                                moreHelp="Seanime will use cached data instead of making API requests."
+                                label="启用仅缓存模式"
+                                moreHelp="Seanime 将直接使用本地缓存数据，不再向外网 API 发起请求。"
                             />
                         </div>
                     )}
@@ -295,59 +295,59 @@ export function ServerSettings(props: ServerSettingsProps) {
                 <Field.Switch
                     side="right"
                     name="useFallbackMetadataProvider"
-                    label="Use fallback episode metadata"
-                    help="If enabled, Seanime will use an alternative source to fetch episode metadata."
+                    label="使用备用剧集元数据源"
+                    help="启用后，Seanime 将尝试从备用数据源拉取剧集标题与缩略图元数据。"
                     icon={<LuImages className="" />}
                 />
             </SettingsCard>
 
-            <SettingsCard title="Updates">
+            <SettingsCard title="版本更新">
 
                 <Field.Switch
                     side="right"
                     name="disableUpdateCheck"
-                    label={__isElectronDesktop__ ? "Do not fetch updates" : "Do not check for updates"}
+                    label={__isElectronDesktop__ ? "不获取更新" : "不自动检查更新"}
                     help={__isElectronDesktop__ ? (<span className="flex gap-2 items-center">
                         <LuCircleAlert className="size-4 text-[--blue]" />
-                        <span>If enabled, new releases won't be displayed. Seanime Denshi may still auto-update in the background.</span>
-                    </span>) : "If enabled, Seanime will not check for new releases."}
-                    moreHelp={__isElectronDesktop__ ? "You cannot disable auto-updates for Seanime Denshi." : undefined}
+                        <span>启用后将不再提示新版本。</span>
+                    </span>) : "启用后，Seanime 将不再自动检测 GitHub 新版本发布。"}
+                    moreHelp={__isElectronDesktop__ ? "Seanime Denshi 桌面端无法关闭静默自动更新。" : undefined}
                     icon={<TbDownloadOff className="" />}
                 />
                 <Field.Select
-                    label="Update Channel"
+                    label="更新渠道"
                     name="updateChannel"
-                    help={__isElectronDesktop__ ? "Also applies to Seanime Denshi auto-updates." : ""}
+                    help={__isElectronDesktop__ ? "同时也适用于 Seanime Denshi 桌面客户端自动更新。" : ""}
                     options={[
-                        { label: "GitHub (Default)", value: "github" },
-                        { label: "Seanime", value: "seanime" },
-                        { label: "Seanime (Canary)", value: "seanime_nightly" },
+                        { label: "GitHub (默认)", value: "github" },
+                        { label: "Seanime 官方源", value: "seanime" },
+                        { label: "Seanime (Canary 测试版)", value: "seanime_nightly" },
                     ]}
                 />
                 {serverStatus?.settings?.library?.updateChannel === "seanime" && (
-                    <Alert intent="info" description="You are currently using a release channel hosted on Seanime." />
+                    <Alert intent="info" description="您当前正在使用 Seanime 托管的发布渠道。" />
                 )}
                 {serverStatus?.settings?.library?.updateChannel === "seanime_nightly" && (
                     <Alert
                         intent="warning"
-                        description="You are currently using the canary release channel hosted on Seanime. This channel may receive unstable updates without much testing."
+                        description="您当前正在使用 Canary 金丝雀尝鲜分支，可能会接收到未经全面测试的不稳定更新。"
                     />
                 )}
             </SettingsCard>
 
-            <SettingsCard title="Server">
+            <SettingsCard title="服务器与系统通知">
                 <Field.Switch
                     side="right"
                     name="openWebURLOnStart"
-                    label="Open web UI on startup"
+                    label="服务启动时自动打开网页端"
                     icon={<TbBrowserShare className="" />}
                 />
                 <div className="space-y-3">
                     <Field.Switch
                         side="right"
                         name="disableNotifications"
-                        label="Disable system notifications"
-                        moreHelp="Notifications shown by the OS"
+                        label="禁用系统桌面通知"
+                        moreHelp="由操作系统展示的弹窗通知"
                         icon={<TbAlertSquareRoundedOff className="" />}
                     />
 
@@ -357,19 +357,19 @@ export function ServerSettings(props: ServerSettingsProps) {
                                 // side="right"
                                 size="sm"
                                 name="disableAutoDownloaderNotifications"
-                                label="Disable Auto Downloader notifications"
+                                label="禁用自动下载器通知"
                             />
                             <Field.Switch
                                 // side="right"
                                 size="sm"
                                 name="disableAutoScannerNotifications"
-                                label="Disable Auto Scanner notifications"
+                                label="禁用自动扫描器通知"
                             />
                         </div>)}
                 </div>
             </SettingsCard>
 
-            <SettingsCard title="Keyboard Shortcuts">
+            <SettingsCard title="快捷键设置">
                 <div className="space-y-4">
                     {[
                         {

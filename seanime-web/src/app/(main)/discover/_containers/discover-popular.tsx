@@ -8,7 +8,7 @@ import {
     useDiscoverPastSeasonAnime,
     useDiscoverPopularAnime,
 } from "@/app/(main)/discover/_lib/handle-discover-queries"
-import { ADVANCED_SEARCH_MEDIA_GENRES } from "@/app/(main)/search/_lib/advanced-search-constants"
+import { ADVANCED_SEARCH_MEDIA_GENRES, GENRE_TRANSLATIONS } from "@/app/(main)/search/_lib/advanced-search-constants"
 import { Carousel, CarouselContent, CarouselDotButtons } from "@/components/ui/carousel"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -69,12 +69,12 @@ export function DiscoverThisSeason() {
             <MediaGenreSelector
                 items={[
                     {
-                        name: "All",
+                        name: "全部",
                         isCurrent: selectedGenre.length === 0,
                         onClick: () => setSelectedGenre([]),
                     },
                     ...ADVANCED_SEARCH_MEDIA_GENRES.map(genre => ({
-                        name: genre,
+                        name: GENRE_TRANSLATIONS[genre] || genre,
                         isCurrent: selectedGenre.includes(genre),
                         onClick: () => setSelectedGenre([genre]),
                     })),
@@ -121,12 +121,12 @@ export function DiscoverPastSeason() {
             <MediaGenreSelector
                 items={[
                     {
-                        name: "All",
+                        name: "全部",
                         isCurrent: selectedGenre.length === 0,
                         onClick: () => setSelectedGenre([]),
                     },
                     ...ADVANCED_SEARCH_MEDIA_GENRES.map(genre => ({
-                        name: genre,
+                        name: GENRE_TRANSLATIONS[genre] || genre,
                         isCurrent: selectedGenre.includes(genre),
                         onClick: () => setSelectedGenre([genre]),
                     })),

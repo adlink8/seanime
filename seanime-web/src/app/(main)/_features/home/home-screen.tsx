@@ -180,7 +180,7 @@ export function HomeScreen() {
                 />
 
                 <div className="text-center space-y-6 py-10 z-[10] relative">
-                    <h2>Your home screen is empty</h2>
+                    <h2>你的首页暂无番剧内容</h2>
 
                     {!!serverStatus?.settings?.library?.libraryPath && <>
                         <Button
@@ -190,7 +190,7 @@ export function HomeScreen() {
                             rounded
                             onClick={() => setScannerModalOpen(true)}
                         >
-                            Scan your anime library
+                            扫描本地番剧媒体库
                         </Button>
                     </>}
 
@@ -202,7 +202,7 @@ export function HomeScreen() {
                                 size="lg"
                                 rounded
                             >
-                                Add series to your collection
+                                去“探索发现”添加番剧到片单
                             </Button>
                         </SeaLink>
                     </>}
@@ -217,15 +217,15 @@ export function HomeScreen() {
                                 setHomeSettingsModalOpen(true)
                             }}
                         >
-                            Add currently watched series to the library
+                            添加正在观看的番剧到媒体库
                         </Button>}
 
                         {animeLibraryType === "stream" && <div className="p-4 border w-fit mx-auto border-dashed rounded-xl">
                             <p>
-                                No series are currently being watched
+                                当前暂无正在追看的番剧
                             </p>
                             <p className="text-[--muted]">
-                                Add series to your 'Currently watching' list to get started
+                                将番剧添加到“正在观看”列表中即可开始
                             </p>
                         </div>}
                     </>}
@@ -233,7 +233,7 @@ export function HomeScreen() {
 
                 </div>
 
-                <h3>Trending Right Now</h3>
+                <h3>当前热门番剧</h3>
                 <DiscoverTrending />
 
                 <div data-home-screen-item-divider className="h-8" />

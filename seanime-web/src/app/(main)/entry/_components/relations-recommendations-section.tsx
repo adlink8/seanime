@@ -49,7 +49,7 @@ export function RelationsRecommendationsSection(props: RelationsRecommendationsS
             {/*{(!!sourceManga || relations.length > 0 || recommendations.length > 0) && <Separator />}*/}
             {(!!sourceManga || relations.length > 0) && (
                 <>
-                    <h2>Relations</h2>
+                    <h2>关联作品</h2>
                     <MediaCardGrid maxCol={maxCol}>
                         {!!sourceManga && <div className="col-span-1">
                             <MediaEntryCard
@@ -78,7 +78,7 @@ export function RelationsRecommendationsSection(props: RelationsRecommendationsS
                 </>
             )}
             {recommendations.length > 0 && <>
-                <h2>Recommendations</h2>
+                <h2>相关推荐</h2>
                 <MediaCardGrid maxCol={maxCol}>
                     {recommendations.map(media => {
                         return <div key={media.id} className="col-span-1">

@@ -31,8 +31,8 @@ export function UpcomingEpisodes() {
             {data?.episodes.length > 0 && (
                 <>
                     <div>
-                        <h2>Upcoming episodes</h2>
-                        <p className="text-[--muted]">Based on your anime list</p>
+                        <h2>即将更新剧集</h2>
+                        <p className="text-[--muted]">基于你的个人片单</p>
                     </div>
 
                     <Carousel

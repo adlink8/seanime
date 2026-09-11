@@ -2,6 +2,7 @@ import { AL_MediaListStatus, Anime_Episode, Anime_LibraryCollectionList } from "
 import { LibraryCollectionFilteredLists, LibraryCollectionLists } from "@/app/(main)/_features/anime-library/_containers/library-collection"
 import { __mainLibrary_paramsAtom, __mainLibrary_paramsInputAtom } from "@/app/(main)/_features/anime-library/_lib/handle-library-collection"
 import { MediaGenreSelector } from "@/app/(main)/_features/media/_components/media-genre-selector"
+import { GENRE_TRANSLATIONS } from "@/app/(main)/search/_lib/advanced-search-constants"
 import { PageWrapper } from "@/components/shared/page-wrapper"
 import { cn } from "@/components/ui/core/styling"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -122,7 +123,7 @@ function GenreSelector({
             <MediaGenreSelector
                 items={[
                     ...genres.map(genre => ({
-                        name: genre,
+                        name: GENRE_TRANSLATIONS[genre] || genre,
                         isCurrent: params!.genre?.includes(genre) ?? false,
                         onClick: () => setParams(draft => {
                             if (draft.genre?.includes(genre)) {

@@ -4,7 +4,7 @@ import { MediaEntryCardSkeleton } from "@/app/(main)/_features/media/_components
 import { MediaGenreSelector } from "@/app/(main)/_features/media/_components/media-genre-selector"
 import { __discover_hoveringHeaderAtom } from "@/app/(main)/discover/_components/discover-page-header"
 import { __discover_headerIsTransitioningAtom, __discover_randomTrendingAtom } from "@/app/(main)/discover/_containers/discover-trending"
-import { ADVANCED_SEARCH_MEDIA_GENRES } from "@/app/(main)/search/_lib/advanced-search-constants"
+import { ADVANCED_SEARCH_MEDIA_GENRES, GENRE_TRANSLATIONS } from "@/app/(main)/search/_lib/advanced-search-constants"
 import { Carousel, CarouselContent, CarouselDotButtons } from "@/components/ui/carousel"
 import { TextInput } from "@/components/ui/text-input"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -116,12 +116,12 @@ function GenreSelector() {
         <MediaGenreSelector
             items={[
                 {
-                    name: "All",
+                    name: "全部",
                     isCurrent: selectedGenre.length === 0,
                     onClick: () => setSelectedGenre([]),
                 },
                 ...ADVANCED_SEARCH_MEDIA_GENRES.map(genre => ({
-                    name: genre,
+                    name: GENRE_TRANSLATIONS[genre] || genre,
                     isCurrent: selectedGenre.includes(genre),
                     onClick: () => setSelectedGenre([genre]),
                 })),
@@ -152,7 +152,7 @@ export function DiscoverMangaSearchBar() {
                         setSearchInput(v)
                     }}
                     className="rounded-full"
-                    placeholder="Search manga"
+                    placeholder="搜索漫画..."
                 />
             </div>
 

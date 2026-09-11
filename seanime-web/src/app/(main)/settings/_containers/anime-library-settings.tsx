@@ -25,39 +25,39 @@ export function AnimeLibrarySettings(props: LibrarySettingsProps) {
     return (
         <div className="space-y-8">
 
-            <SettingsCard title="Local library">
+            <SettingsCard title="本地媒体库目录">
                 <Field.DirectorySelector
                     name="libraryPath"
-                    label="Library directory"
+                    label="主动漫库路径"
                     leftIcon={<FcFolder />}
-                    help="Path of the directory where your media files ared located. (Keep the casing consistent)"
+                    help="存放动漫视频文件的根目录路径。（请保持路径字母大小写一致）"
                     shouldExist
                 />
 
                 <Field.MultiDirectorySelector
                     name="libraryPaths"
-                    label="Additional library directories"
+                    label="扩展动漫库路径"
                     leftIcon={<FcFolder />}
-                    help="Include additional directory paths if your library is spread across multiple locations."
+                    help="如果您的动漫存放在多个不同磁盘或目录下，可以在此处添加其他路径。"
                     shouldExist
                 />
             </SettingsCard>
 
-            <SettingsCard title="Scanning">
+            <SettingsCard title="媒体库扫描">
 
                 <Field.Switch
                     side="right"
                     name="autoScan"
-                    label="Automatically refresh library"
+                    label="自动定时刷新媒体库"
                     moreHelp={<p>
-                        When adding batches, not all files are guaranteed to be picked up.
+                        批量添加新番时，可能需要等待扫描器识别。
                     </p>}
                 />
 
                 <Field.Switch
                     side="right"
                     name="refreshLibraryOnStart"
-                    label="Refresh library on startup"
+                    label="服务启动时自动扫描刷新"
                 />
             </SettingsCard>
 
@@ -73,15 +73,14 @@ export function AnimeLibrarySettings(props: LibrarySettingsProps) {
             >
                 <AccordionItem value="more">
                     <AccordionTrigger className="bg-gray-900 rounded-[--radius-md]" data-settings-anime-library="advanced-accordion-trigger">
-                        Advanced
+                        高级扫描规则
                     </AccordionTrigger>
                     <AccordionContent className="space-y-4">
                         {!useLegacyMatching && <div className="space-y-4">
                             <div>
-                                <p className="font-semibold text-lg mb-2">Scanner Configuration</p>
+                                <p className="font-semibold text-lg mb-2">扫描器规则配置 (JSON)</p>
                                 <p className="text-sm text-[--muted] mb-4">
-                                    Configure advanced scanner rules in JSON format. This allows you to define custom matching and hydration rules for
-                                    your library.
+                                    以 JSON 格式配置高级扫描与番剧识别规则，支持自定义匹配正则和媒体库清洗。
                                 </p>
                             </div>
                             <ScannerConfigEditor />

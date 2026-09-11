@@ -53,7 +53,7 @@ export function useRefreshAnimeCollection() {
         method: API_ENDPOINTS.ANILIST.GetAnimeCollection.methods[1],
         mutationKey: [API_ENDPOINTS.ANILIST.GetAnimeCollection.key],
         onSuccess: async () => {
-            toast.success("AniList is up-to-date")
+            toast.success("AniList 追番数据已同步至最新")
             await queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ANIME_COLLECTION.GetLibraryCollection.key] })
             await queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ANILIST.GetAnimeCollection.key] })
             await queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ANILIST.GetRawAnimeCollection.key] })
@@ -77,7 +77,7 @@ export function useEditAnilistListEntry(id: Nullish<string | number>, type: "ani
         method: API_ENDPOINTS.ANILIST.EditAnilistListEntry.methods[0],
         mutationKey: [API_ENDPOINTS.ANILIST.EditAnilistListEntry.key, String(id)],
         onSuccess: async () => {
-            toast.success("Entry updated")
+            toast.success("追番条目已更新")
             if (type === "anime") {
                 await queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ANIME_ENTRIES.GetAnimeEntry.key, String(id)] })
                 await queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ANIME_COLLECTION.GetLibraryCollection.key] })
@@ -113,7 +113,7 @@ export function useDeleteAnilistListEntry(id: Nullish<string | number>, type: "a
         method: API_ENDPOINTS.ANILIST.DeleteAnilistListEntry.methods[0],
         mutationKey: [API_ENDPOINTS.ANILIST.DeleteAnilistListEntry.key],
         onSuccess: async () => {
-            toast.success("Entry deleted")
+            toast.success("条目已删除")
             if (type === "anime") {
                 await queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ANIME_ENTRIES.GetAnimeEntry.key, String(id)] })
                 await queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ANIME_COLLECTION.GetLibraryCollection.key] })

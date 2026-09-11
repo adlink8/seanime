@@ -32,15 +32,15 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
     return (
         <>
             <SettingsPageHeader
-                title="Desktop Media Player"
-                description="Seanime has built-in support for MPV, VLC, IINA, and MPC-HC."
+                title="桌面播放器"
+                description="Seanime 内置支持与 MPV、VLC、IINA 以及 MPC-HC 播放器深度联动与进度跟踪。"
                 icon={LuMonitorPlay}
             />
 
             <SettingsCard>
                 <Field.Select
                     name="defaultPlayer"
-                    label="Default player"
+                    label="默认播放器"
                     leftIcon={<FcVideoCall />}
                     options={[
                         { label: "MPV", value: "mpv" },
@@ -48,27 +48,24 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
                         { label: "MPC-HC (Windows)", value: "mpc-hc" },
                         { label: "IINA (macOS)", value: "iina" },
                     ]}
-                    help="Player that will be used to open files and track your progress automatically."
+                    help="用于播放视频文件并自动同步追番进度的播放器。"
                 />
                 {selectedPlayer === "iina" && <Alert
                     intent="info-basic"
-                    description={<p>For IINA to work correctly with Seanime, make sure <strong>Quit after all windows are closed</strong> is <span
-                        className="underline"
-                    >checked</span> and <strong>Keep window open after playback finishes</strong> is <span className="underline">unchecked</span> in
-                        your IINA general settings.</p>}
+                    description={<p>为了让 IINA 正常配合 Seanime 工作，请确保在 IINA 常规设置中勾选 <strong>所有窗口关闭后退出</strong>，并取消勾选 <strong>播放完毕后保持窗口开启</strong>。</p>}
                 />}
             </SettingsCard>
 
-            <SettingsCard title="Playback">
+            <SettingsCard title="连播设置">
                 <Field.Switch
                     side="right"
                     name="autoPlayNextEpisode"
-                    label="Automatically play next episode"
-                    help="If enabled, Seanime will play the next episode after a delay when the current episode is completed."
+                    label="自动连续播放下一集"
+                    help="启用后，当当前剧集播放完毕后，Seanime 将在简短倒数后自动调起下一集。"
                 />
             </SettingsCard>
 
-            <SettingsCard title="Configuration">
+            <SettingsCard title="播放器配置">
 
 
                 <Field.Text
@@ -213,22 +210,22 @@ export function ExternalPlayerLinkSettings() {
     return (
         <>
             <SettingsPageHeader
-                title="External player link"
-                description="Send streams to an external player on this device."
+                title="外部播放器关联 (URL Scheme)"
+                description="通过自定义协议链接将流媒体发送至本机的第三方播放器。"
                 icon={LuCircleArrowOutUpRight}
             />
 
             <Alert
                 intent="info" description={<>
-                    Only applies to this device.
+                    仅适用于当前设备。
                 </>}
             />
 
             <SettingsCard>
                 <div data-settings-external-player-link-scheme>
                     <TextInput
-                        label="Custom scheme"
-                        placeholder="Example: outplayer://{url}"
+                        label="自定义协议 Scheme"
+                        placeholder="例如: outplayer://{url} 或 iina://weblink?url={url}"
                         value={externalPlayerLink}
                         onValueChange={setExternalPlayerLink}
                     />

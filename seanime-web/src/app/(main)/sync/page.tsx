@@ -121,9 +121,9 @@ export default function Page() {
 
     if (serverStatus?.user?.isSimulated) {
         return <LuffyError
-            title="Not authenticated"
+            title="未登录账号"
         >
-            This feature is only available for authenticated users.
+            该功能仅对已登录认证的用户开放。
         </LuffyError>
     }
 

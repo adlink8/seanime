@@ -61,7 +61,7 @@ export default function Page() {
                 <div className="flex items-center gap-3">
                     <SeaLink href={`/discover`}>
                         <Button leftIcon={<LuCompass className="text-xl" />} rounded intent="gray-outline" size="md">
-                            Discover series
+                            探索发现
                         </Button>
                     </SeaLink>
                     {!!customSources?.length && <div data-discover-page-header-custom-source-container>
@@ -73,7 +73,7 @@ export default function Page() {
                                 className="rounded-full"
                                 onClick={() => router.push("/search")}
                             >
-                                Custom sources
+                                自定义源
                             </Button>
                         </SeaLink>
                     </div>}

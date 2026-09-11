@@ -1,5 +1,5 @@
 import { Models_HomeItem, Nullish } from "@/api/generated/types"
-import { ADVANCED_SEARCH_COUNTRIES_MANGA, ADVANCED_SEARCH_MEDIA_GENRES } from "@/app/(main)/search/_lib/advanced-search-constants"
+import { ADVANCED_SEARCH_COUNTRIES_MANGA, ADVANCED_SEARCH_MEDIA_GENRES, GENRE_TRANSLATIONS } from "@/app/(main)/search/_lib/advanced-search-constants"
 
 export const DEFAULT_HOME_ITEMS: Models_HomeItem[] = [
     {
@@ -136,20 +136,20 @@ const _carouselOptions = [
         ],
     },
     {
-        label: "Genres",
+        label: "流派",
         type: "multi-select",
-        options: ADVANCED_SEARCH_MEDIA_GENRES.map(n => ({ value: n, label: n })),
+        options: ADVANCED_SEARCH_MEDIA_GENRES.map(n => ({ value: n, label: GENRE_TRANSLATIONS[n] || n })),
         name: "genres",
     },
     {
-        label: "Season",
+        label: "季度",
         type: "select",
         name: "season",
         options: [
-            { value: "WINTER", label: "Winter" },
-            { value: "SPRING", label: "Spring" },
-            { value: "SUMMER", label: "Summer" },
-            { value: "FALL", label: "Fall" },
+            { value: "WINTER", label: "冬季" },
+            { value: "SPRING", label: "春季" },
+            { value: "SUMMER", label: "夏季" },
+            { value: "FALL", label: "秋季" },
         ],
     },
     {
@@ -180,47 +180,47 @@ export const HOME_ITEMS = {
         }],
     },
     "anime-continue-watching": {
-        name: "Continue Watching",
+        name: "继续观看",
         kind: ["row", "header"],
         schemaVersion: 1,
-        description: "Display a list of episodes you are currently watching.",
+        description: "展示你当前正在追看的剧集列表。",
     },
     "anime-continue-watching-header": {
-        name: "Continue Watching Header",
+        name: "继续观看横幅",
         kind: ["header"],
         schemaVersion: 1,
-        description: "Display a header with a carousel of anime you are currently watching.",
+        description: "在顶部展示正在追看的番剧轮播大图横幅。",
     },
     "anime-library": {
-        name: "Anime Library",
+        name: "本地番剧媒体库",
         kind: ["row"],
         schemaVersion: 2,
-        description: "Display anime you have downloaded / you are currently watching by status.",
+        description: "按观看状态分类展示你下载并追看的番剧。",
         options: [
             {
-                label: "Statuses",
+                label: "观看状态",
                 name: "statuses",
                 type: "multi-select",
                 options: [
                     {
                         value: "CURRENT",
-                        label: "Currently Watching",
+                        label: "正在观看",
                     },
                     {
                         value: "PAUSED",
-                        label: "Paused",
+                        label: "暂停搁置",
                     },
                     {
                         value: "PLANNING",
-                        label: "Planning",
+                        label: "计划观看",
                     },
                     {
                         value: "COMPLETED",
-                        label: "Completed",
+                        label: "已看完",
                     },
                     {
                         value: "DROPPED",
-                        label: "Dropped",
+                        label: "已弃番",
                     },
                 ],
             },

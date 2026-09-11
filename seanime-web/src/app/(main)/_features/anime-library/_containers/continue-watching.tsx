@@ -156,7 +156,7 @@ export function ContinueWatching({ episodes, isLoading, linkTemplate, withTitle 
 
     if (episodes.length > 0) return (
         <PageWrapper className="space-y-3 lg:space-y-6 p-4 relative z-[4]" data-continue-watching-container>
-            <h2 data-continue-watching-title>Continue watching</h2>
+            <h2 data-continue-watching-title>继续观看</h2>
             {(ts.libraryScreenBannerType === ThemeLibraryScreenBannerType.Dynamic && headerEpisode?.baseAnime && withTitle) && <TextGenerateEffect
                 data-continue-watching-media-title
                 words={headerEpisode?.baseAnime?.title?.userPreferred || ""}

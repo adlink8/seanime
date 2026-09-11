@@ -37,7 +37,7 @@ export default function Page() {
                     pillClass="rounded-full border-transparent"
                     items={[
                         {
-                            name: "Installed",
+                            name: "已安装插件",
                             isCurrent: page === "installed",
                             onClick: () => setPage("installed"),
                             iconType: LuPackageCheck,
@@ -48,7 +48,7 @@ export default function Page() {
                             ),
                         },
                         {
-                            name: "Marketplace",
+                            name: "插件市场",
                             isCurrent: page === "marketplace",
                             onClick: () => setPage("marketplace"),
                             iconType: LuShoppingBasket,

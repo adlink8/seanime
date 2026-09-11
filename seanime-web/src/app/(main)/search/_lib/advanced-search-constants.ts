@@ -21,6 +21,27 @@ export const ADVANCED_SEARCH_MEDIA_GENRES = [
     "Thriller",
 ]
 
+export const GENRE_TRANSLATIONS: Record<string, string> = {
+    "Action": "动作",
+    "Adventure": "冒险",
+    "Comedy": "喜剧",
+    "Drama": "剧情",
+    "Ecchi": "福利",
+    "Fantasy": "奇幻",
+    "Horror": "恐怖",
+    "Mahou Shoujo": "魔法少女",
+    "Mecha": "机战",
+    "Music": "音乐",
+    "Mystery": "悬疑",
+    "Psychological": "心理",
+    "Romance": "恋爱",
+    "Sci-Fi": "科幻",
+    "Slice of Life": "日常",
+    "Sports": "运动",
+    "Supernatural": "超自然",
+    "Thriller": "惊悚",
+}
+
 export const ADVANCED_SEARCH_SEASONS = [
     "Winter",
     "Spring",
@@ -28,55 +49,66 @@ export const ADVANCED_SEARCH_SEASONS = [
     "Fall",
 ]
 
+export const SEASON_TRANSLATIONS: Record<string, string> = {
+    "Winter": "冬季",
+    "Spring": "春季",
+    "Summer": "夏季",
+    "Fall": "秋季",
+    "WINTER": "冬季",
+    "SPRING": "春季",
+    "SUMMER": "夏季",
+    "FALL": "秋季",
+}
+
 export const ADVANCED_SEARCH_FORMATS: { value: AL_MediaFormat, label: string }[] = [
-    { value: "TV", label: "TV" },
-    { value: "MOVIE", label: "Movie" },
-    { value: "ONA", label: "ONA" },
-    { value: "OVA", label: "OVA" },
-    { value: "TV_SHORT", label: "TV Short" },
-    { value: "SPECIAL", label: "Special" },
+    { value: "TV", label: "TV 动画" },
+    { value: "MOVIE", label: "剧场版 (Movie)" },
+    { value: "ONA", label: "网络动画 (ONA)" },
+    { value: "OVA", label: "原创录像 (OVA)" },
+    { value: "TV_SHORT", label: "泡面番 (TV Short)" },
+    { value: "SPECIAL", label: "特别篇 (Special)" },
 ]
 
 export const ADVANCED_SEARCH_FORMATS_MANGA: { value: AL_MediaFormat, label: string }[] = [
-    { value: "MANGA", label: "Manga" },
-    { value: "ONE_SHOT", label: "One Shot" },
+    { value: "MANGA", label: "连载漫画" },
+    { value: "ONE_SHOT", label: "短篇单行本 (One Shot)" },
 ]
 
 
 export const ADVANCED_SEARCH_COUNTRIES_MANGA: { value: string, label: string }[] = [
-    { value: "JP", label: "Japan" },
-    { value: "KR", label: "South Korea" },
-    { value: "CN", label: "China" },
-    { value: "TW", label: "Taiwan" },
+    { value: "JP", label: "日本" },
+    { value: "KR", label: "韩国" },
+    { value: "CN", label: "中国大陆" },
+    { value: "TW", label: "中国台湾" },
 ]
 
 export const ADVANCED_SEARCH_STATUS = [
-    { value: "FINISHED", label: "Finished" },
-    { value: "RELEASING", label: "Releasing" },
-    { value: "NOT_YET_RELEASED", label: "Upcoming" },
-    { value: "HIATUS", label: "Hiatus" },
-    { value: "CANCELLED", label: "Cancelled" },
+    { value: "FINISHED", label: "已完结" },
+    { value: "RELEASING", label: "连载中" },
+    { value: "NOT_YET_RELEASED", label: "即将上线" },
+    { value: "HIATUS", label: "停更/休刊" },
+    { value: "CANCELLED", label: "已取消" },
 ]
 
 export const ADVANCED_SEARCH_SORTING = [
-    { value: "TRENDING_DESC", label: "Trending" },
-    { value: "START_DATE_DESC", label: "Release date" },
-    { value: "SCORE_DESC", label: "Highest score" },
-    { value: "POPULARITY_DESC", label: "Most popular" },
-    { value: "EPISODES_DESC", label: "Number of episodes" },
+    { value: "TRENDING_DESC", label: "趋势热度" },
+    { value: "START_DATE_DESC", label: "播出日期" },
+    { value: "SCORE_DESC", label: "最高评分" },
+    { value: "POPULARITY_DESC", label: "最受欢迎" },
+    { value: "EPISODES_DESC", label: "集数最多" },
 ]
 
 export const ADVANCED_SEARCH_SORTING_MANGA = [
-    { value: "TRENDING_DESC", label: "Trending" },
-    { value: "START_DATE_DESC", label: "Release date" },
-    { value: "SCORE_DESC", label: "Highest score" },
-    { value: "POPULARITY_DESC", label: "Most popular" },
-    { value: "CHAPTERS_DESC", label: "Number of chapters" },
+    { value: "TRENDING_DESC", label: "趋势热度" },
+    { value: "START_DATE_DESC", label: "发布日期" },
+    { value: "SCORE_DESC", label: "最高评分" },
+    { value: "POPULARITY_DESC", label: "最受欢迎" },
+    { value: "CHAPTERS_DESC", label: "话数最多" },
 ]
 
 export const ADVANCED_SEARCH_TYPE = [
-    { value: "anime", label: "Anime" },
-    { value: "manga", label: "Manga" },
+    { value: "anime", label: "动漫" },
+    { value: "manga", label: "漫画" },
 ]
 
 // Query used to get all tags:

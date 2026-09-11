@@ -90,12 +90,12 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                 trigger={children}
                 contentClass="max-w-3xl"
                 titleClass="text-center pb-4"
-                title="Add extensions"
+                title="添加扩展"
             >
                 <div className="flex gap-4 flex-col lg:flex-row">
                     <div className="lg:w-1/3">
-                        <h3 className="text-2xl font-bold">Install from URL</h3>
-                        <p className="text-[--muted]">Install an extension by entering the manifest URL.</p>
+                        <h3 className="text-2xl font-bold">通过 URL 安装</h3>
+                        <p className="text-[--muted]">输入扩展 manifest.json 链接进行安装。</p>
                     </div>
                     <div className="lg:w-2/3 gap-3 flex flex-col">
                         <TextInput
@@ -109,7 +109,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                             intent="white"
                             onClick={handleFetchExtensionData}
                             loading={isPending}
-                        >Find</Button>
+                        >查找</Button>
                     </div>
                 </div>
 
@@ -121,7 +121,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
 
                         {extensions?.find(n => n.id === extensionData.id) ? (
                             <p className="text-center">
-                                This extension is already installed.
+                                该扩展已经安装过。
                             </p>
                         ) : (
                             <Button
@@ -132,7 +132,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                                         manifestUri: extensionData?.manifestURI,
                                     })
                                 }}
-                            >Install</Button>
+                            >安装</Button>
                         )}
                     </>
                 )}
@@ -142,17 +142,17 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                         <Separator />
 
                         <p className="text-center text-[--muted]">
-                            You can also install many extensions at once by importing them from a repository.
+                            您也可以输入扩展源仓库地址，批量导入并一键安装多个扩展。
                         </p>
 
                         <div className="flex gap-4 flex-col lg:flex-row-reverse">
                             <div className="lg:w-1/3">
-                                <h3 className="text-xl font-bold">Import from repository</h3>
-                                <p className="text-[--muted]">Import and automatically install extensions by entering a repository URL.</p>
+                                <h3 className="text-xl font-bold">从软件源批量导入</h3>
+                                <p className="text-[--muted]">输入扩展仓库地址或 JSON 链接导入扩展。</p>
                             </div>
                             <div className="lg:w-2/3 gap-3 flex flex-col">
                                 <TextInput
-                                    placeholder={"https://example.com/extensions.json or { \"urls\": [...] }"}
+                                    placeholder={"https://example.com/extensions.json 或 { \"urls\": [...] }"}
                                     value={repositoryURL}
                                     onValueChange={setRepositoryURL}
                                     // label="URL"
@@ -162,7 +162,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                                     intent="gray-outline"
                                     onClick={() => handleInstallFromRepository(false)}
                                     loading={isInstallingFromRepo}
-                                >Import all</Button>
+                                >导入全部</Button>
                             </div>
                         </div>
 
@@ -178,7 +178,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                                     intent="white"
                                     onClick={() => handleInstallFromRepository(true)}
                                     loading={isInstallingFromRepo}
-                                >Install all</Button>
+                                >全部安装</Button>
                             </>
                         )}
                     </>

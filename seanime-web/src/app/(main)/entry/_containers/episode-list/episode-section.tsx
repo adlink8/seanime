@@ -233,7 +233,7 @@ export function EpisodeSection({ entry, details, bottomSection, hideCarousel, ma
                     />}
 
                     {specialEpisodes.length > 0 && <>
-                        <h2>Specials</h2>
+                        <h2>特别篇 (SP)</h2>
                         <EpisodeListGrid data-episode-list-specials maxCol={maxCol}>
                             {specialEpisodes.map(episode => (
                                 <EpisodeItem
@@ -255,7 +255,7 @@ export function EpisodeSection({ entry, details, bottomSection, hideCarousel, ma
                     </>}
 
                     {ncEpisodes.length > 0 && <>
-                        <h2>Others</h2>
+                        <h2>其他剧集</h2>
                         <EpisodeListGrid data-episode-list-others maxCol={maxCol}>
                             {ncEpisodes.map(episode => (
                                 <EpisodeItem

@@ -37,9 +37,9 @@ export default function Page() {
             >
                 <div data-torrent-list-page-header className="flex items-center w-full justify-between">
                     <div data-torrent-list-page-header-title>
-                        <h2>Active torrents</h2>
+                        <h2>当前种子任务</h2>
                         <p className="text-[--muted]">
-                            See torrents currently being downloaded or seeded
+                            查看正在下载或做种的种子任务
                         </p>
                     </div>
                     <div data-torrent-list-page-header-actions>
@@ -47,7 +47,7 @@ export default function Page() {
                         {serverStatus?.settings?.torrent?.defaultTorrentClient === "qbittorrent" && (
                             __isElectronDesktop__ ? (
                                 <SeaLink href={`/qbittorrent`}>
-                                    <Button intent="white" rightIcon={<BiLinkExternal />}>Embedded client</Button>
+                                    <Button intent="white" rightIcon={<BiLinkExternal />}>内置客户端</Button>
                                 </SeaLink>
                             ) : (
                                 <a
@@ -60,7 +60,7 @@ export default function Page() {
                             )
                         )}
                         {serverStatus?.settings?.torrent?.defaultTorrentClient === "seanime" && <SeaLink href="/torrent-client">
-                            <Button intent="white" rightIcon={<BiLinkExternal />}>Torrent dashboard</Button>
+                            <Button intent="white" rightIcon={<BiLinkExternal />}>种子控制台</Button>
                         </SeaLink>}
                     </div>
                 </div>
@@ -104,8 +104,8 @@ function Content() {
 
 
     const confirmStopAllSeedingProps = useConfirmationDialog({
-        title: "Stop seeding all torrents",
-        description: "This action will cause seeding to stop for all completed torrents.",
+        title: "停止所有做种",
+        description: "该操作将停止所有已完成种子的做种状态。",
         actionIntent: "warning",
         onConfirm: () => {
             for (const torrent of data ?? []) {
@@ -119,14 +119,14 @@ function Content() {
         },
     })
 
-    if (!enabled) return <LuffyError title="Failed to connect">
+    if (!enabled) return <LuffyError title="连接失败">
         <div className="flex flex-col gap-4 items-center">
-            <p className="max-w-md">Failed to connect to the torrent client, verify your settings and make sure it is running.</p>
+            <p className="max-w-md">无法连接至种子客户端，请检查设置并确认客户端正在运行。</p>
             <Button
                 intent="primary-subtle" onClick={() => {
                 setEnabled(true)
             }}
-            >Retry</Button>
+            >重试</Button>
         </div>
     </LuffyError>
 
@@ -137,14 +137,14 @@ function Content() {
 
             <div>
                 <ul className="text-[--muted] flex flex-wrap gap-4 items-center">
-                    <li>Downloading: {data?.filter(t => t.status === "downloading" || t.status === "paused")?.length ?? 0}</li>
-                    <li>Seeding: {data?.filter(t => t.status === "seeding")?.length ?? 0}</li>
+                    <li>正在下载: {data?.filter(t => t.status === "downloading" || t.status === "paused")?.length ?? 0}</li>
+                    <li>正在做种: {data?.filter(t => t.status === "seeding")?.length ?? 0}</li>
                     {!!data?.filter(t => t.status === "seeding")?.length && <li>
                         <Button
                             size="xs"
                             intent="primary-link"
                             onClick={() => confirmStopAllSeedingProps.open()}
-                        >Stop seeding</Button>
+                        >停止做种</Button>
                     </li>}
                     <div className="flex flex-1"></div>
                     {serverStatus?.settings?.torrent?.defaultTorrentClient === "qbittorrent" && <Popover
@@ -153,11 +153,11 @@ function Content() {
                             intent="gray-basic"
                             leftIcon={<LuListCheck className="text-[--muted] text-lg" />}
                         >
-                            Category{!!category ? `: ${category}` : ""}
+                            分类{!!category ? `: ${category}` : ""}
                         </Button>}
                     >
                         <TextInput
-                            placeholder="Filter by category"
+                            placeholder="按分类筛选"
                             value={categoryInput}
                             onChange={e => setCategoryInput(e.target.value)}
                         />
@@ -170,7 +170,7 @@ function Content() {
                                 setCategoryInput(categoryInput)
                             }}
                         >
-                            Ok
+                            确定
                         </Button>
                     </Popover>}
                     <Button
@@ -189,7 +189,7 @@ function Content() {
                             })
                         }}
                     >
-                        {sort === "newest" ? "Newest" : sort === "oldest" ? "Oldest" : sort === "name" ? "Name (A-Z)" : "Name (Z-A)"}
+                        {sort === "newest" ? "最新" : sort === "oldest" ? "最旧" : sort === "name" ? "名称 (A-Z)" : "名称 (Z-A)"}
                     </Button>
                 </ul>
             </div>
@@ -203,7 +203,7 @@ function Content() {
                         isPending={isPending}
                     />
                 })}
-                {(!isLoading && !data?.length) && <LuffyError title="Nothing to see"></LuffyError>}
+                {(!isLoading && !data?.length) && <LuffyError title="暂无种子任务"></LuffyError>}
             </Card>
 
             <ConfirmationDialog {...confirmStopAllSeedingProps} />
@@ -224,8 +224,8 @@ const TorrentItem = React.memo(function TorrentItem({ torrent, onTorrentAction, 
     const progress = `${(torrent.progress * 100).toFixed(1)}%`
 
     const confirmDeleteTorrentProps = useConfirmationDialog({
-        title: "Remove torrent",
-        description: "This action cannot be undone.",
+        title: "删除种子",
+        description: "此操作无法撤销，确定要删除吗？",
         onConfirm: () => {
             onTorrentAction({
                 hash: torrent.hash,

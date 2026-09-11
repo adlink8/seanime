@@ -3,7 +3,17 @@ import capitalize from "lodash/capitalize"
 export function getLibraryCollectionTitle(type?: string) {
     switch (type) {
         case "CURRENT":
-            return "Currently watching"
+            return "正在观看"
+        case "COMPLETED":
+            return "已看完"
+        case "PLANNING":
+            return "计划观看"
+        case "PAUSED":
+            return "暂停搁置"
+        case "DROPPED":
+            return "已弃番"
+        case "REPEATING":
+            return "二刷重温"
         default:
             return capitalize(type ?? "")
     }
@@ -12,7 +22,17 @@ export function getLibraryCollectionTitle(type?: string) {
 export function getMangaCollectionTitle(type?: string) {
     switch (type) {
         case "CURRENT":
-            return "Currently reading"
+            return "正在阅读"
+        case "COMPLETED":
+            return "已看完"
+        case "PLANNING":
+            return "计划阅读"
+        case "PAUSED":
+            return "暂停搁置"
+        case "DROPPED":
+            return "已弃坑"
+        case "REPEATING":
+            return "重温阅读"
         default:
             return capitalize(type ?? "")
     }

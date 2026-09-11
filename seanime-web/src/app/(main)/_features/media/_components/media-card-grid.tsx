@@ -34,7 +34,7 @@ export function MediaCardGrid(props: MediaCardGridProps) {
 
     if (React.Children.toArray(children).length === 0) {
         return <LuffyError title={null}>
-            <p>Nothing to see</p>
+            <p>暂无内容</p>
         </LuffyError>
     }
 
@@ -69,7 +69,7 @@ export function MediaCardLazyGrid({
 }: MediaCardLazyGridProps) {
     if (itemCount === 0) {
         return <LuffyError title={null}>
-            <p>Nothing to see</p>
+            <p>暂无内容</p>
         </LuffyError>
     }
 

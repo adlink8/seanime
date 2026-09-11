@@ -191,7 +191,7 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
         {
             id: "home",
             iconType: IoHomeOutline,
-            name: "Home",
+            name: "首页",
             href: "/",
             isCurrent: pathname === "/",
         },
@@ -205,7 +205,7 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
         {
             id: "schedule",
             iconType: LuCalendar,
-            name: "Schedule",
+            name: "放送日历",
             href: "/schedule",
             isCurrent: pathname === "/schedule",
             addon: missingEpisodeCount > 0 ? <Badge
@@ -216,28 +216,28 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
         ...serverStatus?.settings?.library?.enableManga ? [{
             id: "manga",
             iconType: LuBookOpen,
-            name: "Manga",
+            name: "漫画",
             href: "/manga",
             isCurrent: pathname.startsWith("/manga"),
         }] : [],
         {
             id: "lists",
             iconType: RiListCheck3,
-            name: "My lists",
+            name: "我的片单",
             href: "/lists",
             isCurrent: pathname === "/lists",
         },
         {
             id: "discover",
             iconType: LuCompass,
-            name: "Discover",
+            name: "探索发现",
             href: "/discover",
             isCurrent: pathname === "/discover",
         },
         {
             id: "search",
             iconType: FiSearch,
-            name: "Search",
+            name: "搜索",
             href: "/search",
             isCurrent: pathname === "/search",
             // onClick: () => {
@@ -254,8 +254,8 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
                     ? SiQbittorrent
                     : serverStatus?.settings?.torrent?.defaultTorrentClient === TORRENT_CLIENT.SEANIME ? SiBittorrent : SiTransmission,
                 name: (activeTorrentCount.seeding === 0 || !serverStatus?.settings?.torrent?.showActiveTorrentCount)
-                    ? "Torrent list"
-                    : `Torrent list (${activeTorrentCount.seeding} seeding)`,
+                    ? "种子下载列表"
+                    : `种子下载列表 (${activeTorrentCount.seeding} 做种中)`,
                 href: serverStatus?.settings?.torrent?.defaultTorrentClient === TORRENT_CLIENT.SEANIME ? "/torrent-client" : "/torrent-list",
                 isCurrent: pathname === "/torrent-list" || pathname === "/torrent-client",
                 addon: ((activeTorrentCount.downloading + activeTorrentCount.paused) > 0 && serverStatus?.settings?.torrent?.showActiveTorrentCount)
@@ -268,21 +268,21 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
         ...(serverStatus?.debridSettings?.enabled && !!serverStatus?.debridSettings?.provider) ? [{
             id: "debrid",
             iconType: HiOutlineServerStack,
-            name: "Debrid",
+            name: "Debrid 云端",
             href: "/debrid",
             isCurrent: pathname === "/debrid",
         }] : [],
         ...(!!serverStatus?.settings?.library?.libraryPath) ? [{
             id: "scan-summaries",
             iconType: TbReportSearch,
-            name: "Scan summaries",
+            name: "本地扫描报告",
             href: "/scan-summaries",
             isCurrent: pathname === "/scan-summaries",
         }] : [],
         ...(serverStatus?.settings?.library?.torrentProvider !== TORRENT_PROVIDER.NONE && !!serverStatus?.settings?.library?.libraryPath) ? [{
             id: "auto-downloader",
             iconType: LuRss,
-            name: "Auto Downloader",
+            name: "自动追番下载",
             href: "/auto-downloader",
             isCurrent: pathname === "/auto-downloader",
             addon: autoDownloaderQueueCount > 0 ? <Badge
@@ -392,7 +392,7 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
         return [
             {
                 iconType: BiChevronRight,
-                name: "More",
+                name: "更多",
                 subContent: <VerticalMenu
                     items={allHidden}
                     isSidebar
@@ -427,7 +427,7 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
                     ...unpinnedMenuItems,
                     {
                         iconType: LuRefreshCw,
-                        name: "Refresh AniList",
+                        name: "刷新追番数据",
                         onClick: () => {
                             ctx.setOpen(false)
                             if (isRefreshingAC) return
@@ -503,8 +503,8 @@ function SidebarFooter({ isCollapsed, onLogout }: { isCollapsed: boolean, onLogo
 
     // Sign out
     const confirmSignOut = useConfirmationDialog({
-        title: "Sign out",
-        description: "Are you sure you want to sign out?",
+        title: "退出登录",
+        description: "确定要退出登录吗？",
         onConfirm: () => {
             onLogout()
         },
@@ -533,7 +533,7 @@ function SidebarFooter({ isCollapsed, onLogout }: { isCollapsed: boolean, onLogo
                     ...serverStatus?.settings?.nakama?.enabled ? [{
                         iconType: MdOutlineConnectWithoutContact,
                         iconClass: "size-6",
-                        name: "Nakama",
+                        name: "同好联动 (Nakama)",
                         isCurrent: nakamaModalOpen,
                         onClick: () => {
                             ctx.setOpen(false)
@@ -552,7 +552,7 @@ function SidebarFooter({ isCollapsed, onLogout }: { isCollapsed: boolean, onLogo
                     }] : [],
                     {
                         iconType: BiExtension,
-                        name: "Extensions",
+                        name: "扩展中心",
                         href: "/extensions",
                         isCurrent: pathname.includes("/extensions"),
                         addon: (!!updateData?.length || !!pluginWithIssuesCount)
@@ -566,7 +566,7 @@ function SidebarFooter({ isCollapsed, onLogout }: { isCollapsed: boolean, onLogo
                     },
                     {
                         iconType: IoCloudOfflineOutline,
-                        name: "Offline",
+                        name: "离线同步",
                         href: "/sync",
                         isCurrent: pathname.includes("/sync"),
                         addon: (syncIsActive)
@@ -580,14 +580,14 @@ function SidebarFooter({ isCollapsed, onLogout }: { isCollapsed: boolean, onLogo
                     },
                     {
                         iconType: LuSettings,
-                        name: "Settings",
+                        name: "系统设置",
                         href: "/settings",
                         isCurrent: pathname === ("/settings"),
                     },
                     ...(ctx.isBelowBreakpoint ? [
                         {
                             iconType: user?.isSimulated ? FiLogIn : BiLogOut,
-                            name: user?.isSimulated ? "Sign in" : "Sign out",
+                            name: user?.isSimulated ? "登录账号" : "退出登录",
                             onClick: user?.isSimulated ? () => setLoginModal(true) : confirmSignOut.open,
                         },
                     ] : []),
