@@ -8,6 +8,7 @@ import {
     __torrentSearch_selectionEpisodeAtom,
 } from "@/app/(main)/entry/_containers/torrent-search/torrent-search-drawer"
 import { useSetAtom } from "jotai"
+import { t } from "@/lib/i18n"
 import React, { startTransition } from "react"
 import { BiCalendarAlt, BiDownload } from "react-icons/bi"
 import { EpisodeItemInfoModalButton } from "./episode-item"
@@ -76,15 +77,15 @@ export function UndownloadedEpisodeList({ downloadInfo, media, watchedProgress, 
                             <div data-undownloaded-episode-list-episode-metadata-container className="mt-1">
                                 <p data-undownloaded-episode-list-episode-metadata-text className="flex gap-1 items-center text-sm text-[--muted]">
                                     <BiCalendarAlt /> {episode.episodeMetadata?.airDate
-                                    ? `Aired on ${new Date(episode.episodeMetadata?.airDate).toLocaleDateString()}`
-                                    : "Aired"}
+                                    ? t("entry.episode.aired_on", { date: new Date(episode.episodeMetadata?.airDate).toLocaleDateString() })
+                                    : t("entry.episode.aired")}
                                 </p>
                             </div>
                         </EpisodeGridItem>
                     )
                 })}
             </EpisodeListGrid>
-            {episodes.length > 28 && <h3>And more...</h3>}
+            {episodes.length > 28 && <h3>{t("entry.episode.and_more")}</h3>}
         </div>
     )
 

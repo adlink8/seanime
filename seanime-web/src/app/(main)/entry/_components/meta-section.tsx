@@ -37,6 +37,7 @@ import { IoInformationCircle } from "react-icons/io5"
 import { LuExternalLink } from "react-icons/lu"
 import { MdOutlineConnectWithoutContact } from "react-icons/md"
 import { SiAnilist } from "react-icons/si"
+import { t } from "@/lib/i18n"
 import { useNakamaStatus } from "../../_features/nakama/nakama-manager"
 import { PluginAnimePageButtons } from "../../_features/plugin/actions/plugin-actions"
 
@@ -109,7 +110,7 @@ export function MetaSection(props: { entry: Anime_Entry, details: AL_AnimeDetail
                                         </SeaLink>
                                     </div>}
                                 >
-                                    Custom source
+                                    {t("entry.meta.custom_source")}
                                 </Tooltip>
                             )}
 
@@ -124,13 +125,13 @@ export function MetaSection(props: { entry: Anime_Entry, details: AL_AnimeDetail
                                     </SeaLink>
                                 </div>}
                             >
-                                Open in website
+                                {t("entry.meta.open_in_website")}
                             </Tooltip>}
 
                             {!!entry?.media?.trailer?.id && <TrailerModal
                                 trailerId={entry?.media?.trailer?.id} trigger={
                                 <Button size="sm" intent="gray-link" className="px-0">
-                                    Trailer
+                                    {t("entry.meta.trailer")}
                                 </Button>}
                             />}
                         </div>
@@ -224,7 +225,7 @@ export function MetaSection(props: { entry: Anime_Entry, details: AL_AnimeDetail
                         {entry._isNakamaEntry && currentView === "library" &&
                             <div className="flex items-center gap-2 h-10 px-4 border rounded-md flex-none">
                                 <MdOutlineConnectWithoutContact className="size-6 animate-pulse text-[--blue]" />
-                                <span className="text-sm tracking-wide">Shared by {nakamaStatus?.hostConnectionStatus?.username}</span>
+                                <span className="text-sm tracking-wide">{t("entry.meta.shared_by", { user: nakamaStatus?.hostConnectionStatus?.username ?? "" })}</span>
                             </div>}
 
                         <PluginAnimePageButtons media={entry.media!} />
@@ -243,8 +244,8 @@ export function MetaSection(props: { entry: Anime_Entry, details: AL_AnimeDetail
                     )}
                     data-anime-meta-section-inaccurate-schedule-message
                 >
-                    <span className="block">Could not retrieve accurate scheduling information for this show.</span>
-                    <span className="block text-[--muted]">Please check the schedule online for more information.</span>
+                    <span className="block">{t("entry.meta.inaccurate_schedule_1")}</span>
+                    <span className="block text-[--muted]">{t("entry.meta.inaccurate_schedule_2")}</span>
                 </p>}
 
 
@@ -257,7 +258,7 @@ export function MetaSection(props: { entry: Anime_Entry, details: AL_AnimeDetail
                         data-anime-meta-section-no-metadata-message
                     >
                         <IoInformationCircle />
-                        Episode metadata retrieval not available for this entry.
+                        {t("entry.meta.no_metadata_message")}
                     </p>
                 )}
 

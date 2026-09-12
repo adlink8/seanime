@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { LoadingSpinner, Spinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { WSEvents } from "@/lib/server/ws-events"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -57,7 +58,7 @@ export function DebridStreamOverlay() {
                 }
                 if (data.status === "ready") {
                     setState(null)
-                    toast.info("Sending stream to player...", { duration: 1 })
+                    toast.info(t("entry.debrid_stream.sending_to_player"), { duration: 1 })
                     setShowMediaPlayerLoading(true)
                     return
                 }
@@ -75,8 +76,8 @@ export function DebridStreamOverlay() {
     })
 
     const confirmCancelAndRemoveTorrent = useConfirmationDialog({
-        title: "Cancel and remove torrent",
-        description: "Are you sure you want to cancel the stream and remove the torrent?",
+        title: t("entry.debrid_stream.cancel_and_remove_torrent"),
+        description: t("entry.debrid_stream.cancel_and_remove_torrent_desc"),
         onConfirm: () => {
             cancelStream({
                 options: {
@@ -91,8 +92,8 @@ export function DebridStreamOverlay() {
     })
 
     const confirmCancelStream = useConfirmationDialog({
-        title: "Cancel stream",
-        description: "Are you sure you want to cancel the stream?",
+        title: t("entry.debrid_stream.cancel_stream"),
+        description: t("entry.debrid_stream.cancel_stream_desc"),
         onConfirm: () => {
             cancelStream({
                 options: {
@@ -127,7 +128,7 @@ export function DebridStreamOverlay() {
                             <HiOutlineServerStack className="text-2xl text-[--brand]" />
                             <div className="">
                                 <p>
-                                    Awaiting stream from Debrid service
+                                    {t("entry.debrid_stream.awaiting_stream")}
                                 </p>
                                 <p className="text-[--muted] text-sm">
                                     {state?.message}
@@ -153,7 +154,7 @@ export function DebridStreamOverlay() {
                 <AppLayoutStack>
 
                     <p className="text-[--muted] italic text-sm">
-                        Closing this modal will not cancel the stream
+                        {t("entry.debrid_stream.close_wont_cancel")}
                     </p>
 
                     <div className="p-4 pb-0">
@@ -173,7 +174,7 @@ export function DebridStreamOverlay() {
                             disabled={isCancelling || state?.status !== "downloading" || state?.message === "Downloading torrent..."}
                             size="sm"
                         >
-                            Cancel
+                            {t("library.common.cancel")}
                         </Button>
                         <Button
                             onClick={() => confirmCancelAndRemoveTorrent.open()}
@@ -181,7 +182,7 @@ export function DebridStreamOverlay() {
                             disabled={isCancelling || state?.status !== "downloading" || state?.message === "Downloading torrent..."}
                             size="sm"
                         >
-                            Cancel and remove torrent
+                            {t("entry.debrid_stream.cancel_and_remove_torrent")}
                         </Button>
                     </div>
 

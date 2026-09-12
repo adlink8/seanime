@@ -10,6 +10,7 @@ import {
 import { useAtom, useSetAtom } from "jotai"
 import React from "react"
 import { LuMessagesSquare } from "react-icons/lu"
+import { t } from "@/lib/i18n"
 
 export function MpvCoreWatchPartyChat(props: {
     isMiniPlayer: boolean
@@ -47,7 +48,7 @@ export function MpvCoreWatchPartyChat(props: {
         }
         previousCountRef.current = unreadCount
         if (!!unreadCount) {
-            showMessage(`New chat message (${unreadCount})`, "message", 1000)
+            showMessage(t("player.watch_party.new_message", { count: unreadCount }), "message", 1000)
         }
     }, [unreadCount, showMessage])
 

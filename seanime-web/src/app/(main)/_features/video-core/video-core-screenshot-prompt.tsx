@@ -2,6 +2,7 @@ import { useSaveMediaPlayerSettings } from "@/api/hooks/settings.hooks"
 import { useVideoCoreSaveScreenshot } from "@/api/hooks/videocore.hooks"
 import { ScreenshotDirModal } from "@/app/(main)/_features/media-core/screenshot-dir-modal"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
+import { t } from "@/lib/i18n"
 import { useAtom, useAtomValue } from "jotai"
 import { useSetAtom } from "jotai/react"
 import React from "react"
@@ -59,15 +60,15 @@ export function VideoCoreScreenshotDirPrompt() {
                     base64Data,
                 })
 
-                showOverlayFeedback({ message: "Screenshot saved", type: "message" })
+                showOverlayFeedback({ message: t("player.screenshot.saved"), type: "message" })
                 setPendingScreenshot(null)
             }
-            toast.success("Screenshot folder saved")
+            toast.success(t("player.screenshot.folder_saved"))
             return true
         }
         catch (error) {
             console.error("Failed to setup screenshot folder:", error)
-            toast.error(error instanceof Error ? error.message : "Failed to save screenshot folder")
+            toast.error(error instanceof Error ? error.message : t("player.screenshot.folder_save_failed"))
             return false
         }
     }

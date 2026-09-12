@@ -2,6 +2,7 @@ import { MediaCaptionsManager } from "@/app/(main)/_features/video-core/video-co
 import { VideoCoreSubtitleManager } from "@/app/(main)/_features/video-core/video-core-subtitles"
 import { VideoCore_VideoPlaybackInfo } from "@/app/(main)/_features/video-core/video-core.atoms"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { derive } from "jotai-derive"
 
@@ -140,7 +141,7 @@ export class VideoCorePipManager extends EventTarget {
         if (document.pictureInPictureElement) {
             document.exitPictureInPicture().catch((err: DOMException) => {
                 log.error("Failed to exit PiP", err)
-                const errorEvent: PipManagerErrorEvent = new CustomEvent("error", { detail: { error: `Failed to exit PiP: ${err.message}` } })
+                const errorEvent: PipManagerErrorEvent = new CustomEvent("error", { detail: { error: t("player.pip.exit_failed", { message: err.message }) } })
                 this.dispatchEvent(errorEvent)
             })
         }
@@ -168,7 +169,7 @@ export class VideoCorePipManager extends EventTarget {
         }
         catch (error) {
             log.error("Failed to enter PiP", error)
-            const errorMessage = error instanceof Error ? error.message : "Unknown error during PiP entry"
+            const errorMessage = error instanceof Error ? error.message : t("player.pip.enter_error")
             const errorEvent: PipManagerErrorEvent = new CustomEvent("error", { detail: { error: errorMessage } })
             this.dispatchEvent(errorEvent)
         }

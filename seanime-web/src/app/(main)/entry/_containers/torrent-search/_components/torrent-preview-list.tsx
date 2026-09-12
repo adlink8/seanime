@@ -18,6 +18,7 @@ import { TorrentSelectionType } from "@/app/(main)/entry/_containers/torrent-sea
 import { LuffyError } from "@/components/shared/luffy-error"
 import { ScrollAreaBox } from "@/components/shared/scroll-area-box"
 import { cn } from "@/components/ui/core/styling"
+import { t } from "@/lib/i18n"
 import { Skeleton } from "@/components/ui/skeleton"
 import React from "react"
 
@@ -62,7 +63,7 @@ export const TorrentPreviewList = React.memo((
     </div>
 
     if (!isLoading && !previews?.length) {
-        return <LuffyError title="Nothing found" />
+        return <LuffyError title={t("entry.torrent_table.nothing_found")} />
     }
 
     // Apply filters using the generic helper

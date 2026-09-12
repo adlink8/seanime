@@ -14,6 +14,7 @@ import { NormalizedTrackInfo } from "@/app/(main)/_features/video-core/video-cor
 import { vc_dispatchAction } from "@/app/(main)/_features/video-core/video-core.utils"
 import { IconButton } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import { useAtomValue } from "jotai"
 import { useSetAtom } from "jotai/react"
 import React from "react"
@@ -115,19 +116,19 @@ export function VideoCoreSubtitleMenu({ inline, onPreferenceChange }: {
                 }}
             />}
         >
-            <VideoCoreMenuTitle>Subtitles {(!!subtitleManager && !inline) && <Tooltip
+            <VideoCoreMenuTitle>{t("player.subs.title")} {(!!subtitleManager && !inline) && <Tooltip
                 trigger={<AiFillInfoCircle className="text-sm" />}
                 className="z-[150]"
                 portalContainer={isFullscreen ? (containerElement ?? undefined) : undefined}
             >
-                You can add subtitles by dragging and dropping files onto the player.
+                {t("player.subs.drop_hint")}
             </Tooltip>}
                 <IconButton
                     intent="gray-link" size="xs"
                     onClick={() => {
                         setMenuOpen("settings")
                         React.startTransition(() => {
-                            setMenuSectionOpen("Subtitle Styles")
+                            setMenuSectionOpen(t("player.menu.subtitle_styles"))
                         })
                     }}
                     icon={<LuPaintbrush />}
@@ -139,7 +140,7 @@ export function VideoCoreSubtitleMenu({ inline, onPreferenceChange }: {
                     containerElement={containerElement}
                     options={[
                         {
-                            label: "Off",
+                            label: t("player.common.off"),
                             value: -1,
                         },
                         ...subtitleTracks.map(track => {

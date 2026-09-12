@@ -18,6 +18,7 @@ import { LuffyError } from "@/components/shared/luffy-error"
 import { ScrollAreaBox } from "@/components/shared/scroll-area-box"
 import { Skeleton } from "@/components/ui/skeleton"
 import { anilist_animeIsSingleEpisode } from "@/lib/helpers/media"
+import { t } from "@/lib/i18n"
 import React, { memo } from "react"
 import { TorrentList, TorrentListItem } from "./torrent-preview-item"
 
@@ -80,7 +81,7 @@ export const TorrentTable = memo((
                 <Skeleton className="h-[96px]" />
                 <Skeleton className="h-[96px]" />
             </div> : !torrents?.length ? <div>
-                <LuffyError title="Nothing found" />
+                <LuffyError title={t("entry.torrent_table.nothing_found")} />
             </div> : (
                 <>
                     <TorrentFilterSortControls
@@ -144,7 +145,7 @@ export const TorrentTable = memo((
                                         overrideProps={{
                                             releaseGroup: releaseGroup,
                                             displayName: (episodeNumber ?? -1) >= 0
-                                                ? `Episode ${episodeNumber}`
+                                                ? t("entry.torrent_preview.episode_n", { n: episodeNumber })
                                                 : "",
                                             isBatch: torrent.isBestRelease ? true : isBatch,
                                             image: distance <= 20 ? episodeImage : undefined,

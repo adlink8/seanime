@@ -1,4 +1,5 @@
 import { Alert } from "@/components/ui/alert"
+import { t } from "@/lib/i18n"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { Field } from "@/components/ui/form"
@@ -33,7 +34,7 @@ export function SettingsSubmitButton({ isPending }: { isPending: boolean }) {
                 loading={isPending}
                 leftIcon={<FiSave className="transition-transform duration-200 group-hover:scale-110" />}
             >
-                Save
+                {t("settings.action.save")}
             </Field.Submit>
         </>
     )
@@ -51,7 +52,7 @@ export function SettingsIsDirty({ className }: { className?: string }) {
         )}
     >
         <div className="flex items-center gap-2">
-            <span className="text-sm">You have unsaved changes.</span>
+            <span className="text-sm">{t("settings.toast.unsaved_changes")}</span>
             <Button
                 role="save"
                 size="md"
@@ -62,7 +63,7 @@ export function SettingsIsDirty({ className }: { className?: string }) {
                 onClick={() => reset()}
                 leftIcon={<FiRotateCcw className="transition-transform duration-200 group-hover:rotate-180" />}
             >
-                Reset
+                {t("settings.action.reset")}
             </Button>
             <Field.Submit
                 role="save"
@@ -74,7 +75,7 @@ export function SettingsIsDirty({ className }: { className?: string }) {
                 disabled={isLoading || isSubmitting || isValidating}
                 leftIcon={<FiSave className="transition-transform duration-200 group-hover:scale-110" />}
             >
-                Save
+                {t("settings.action.save")}
             </Field.Submit>
         </div>
     </Alert> : null

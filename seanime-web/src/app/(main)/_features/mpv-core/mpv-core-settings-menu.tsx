@@ -22,36 +22,38 @@ import { LuChevronUp, LuHeading, LuPaintbrush, LuPalette, LuSettings2, LuSparkle
 import { MdOutlineAccessTime, MdOutlineSubtitles, MdSpeed } from "react-icons/md"
 import { RiShadowLine } from "react-icons/ri"
 import { TbArrowForwardUp } from "react-icons/tb"
+import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import { mc_parseCustomMpvConfig, mc_resolveAnime4KProfile } from "./mpv-core"
 import type { MpvCoreAnime4KQuality, MpvCoreSettings, MpvCoreShaderMode, MpvCoreShaderSettings } from "./mpv-core.atoms"
 
 const mpvSubtitleFontSizeOptions = [
-    { label: "Small", value: 28 },
-    { label: "Medium", value: 38 },
-    { label: "Large", value: 48 },
-    { label: "Extra Large", value: 58 },
+    { label: t("player.menu.size_small"), value: 28 },
+    { label: t("player.menu.size_medium"), value: 38 },
+    { label: t("player.menu.size_large"), value: 48 },
+    { label: t("player.menu.size_extra_large"), value: 58 },
 ]
 const mpvSubtitleColorOptions = [
-    { label: "White", value: "#FFFFFF" },
-    { label: "Black", value: "#000000" },
-    { label: "Gray", value: "#808080" },
-    { label: "Yellow", value: "#FFD700" },
-    { label: "Cyan", value: "#00FFFF" },
-    { label: "Pink", value: "#FF69B4" },
-    { label: "Purple", value: "#9370DB" },
-    { label: "Lime", value: "#00FF00" },
+    { label: t("player.menu.color_white"), value: "#FFFFFF" },
+    { label: t("player.menu.color_black"), value: "#000000" },
+    { label: t("player.menu.color_gray"), value: "#808080" },
+    { label: t("player.menu.color_yellow"), value: "#FFD700" },
+    { label: t("player.menu.color_cyan"), value: "#00FFFF" },
+    { label: t("player.menu.color_pink"), value: "#FF69B4" },
+    { label: t("player.menu.color_purple"), value: "#9370DB" },
+    { label: t("player.menu.color_lime"), value: "#00FF00" },
 ]
 const mpvSubtitleOutlineOptions = [
-    { label: "None", value: 0 },
-    { label: "Small", value: 2 },
-    { label: "Medium", value: 3 },
-    { label: "Large", value: 4 },
+    { label: t("player.menu.none"), value: 0 },
+    { label: t("player.menu.size_small"), value: 2 },
+    { label: t("player.menu.size_medium"), value: 3 },
+    { label: t("player.menu.size_large"), value: 4 },
 ]
 const mpvSubtitleShadowOptions = [
-    { label: "None", value: 0 },
-    { label: "Small", value: 1 },
-    { label: "Medium", value: 2 },
-    { label: "Large", value: 3 },
+    { label: t("player.menu.none"), value: 0 },
+    { label: t("player.menu.size_small"), value: 1 },
+    { label: t("player.menu.size_medium"), value: 2 },
+    { label: t("player.menu.size_large"), value: 3 },
 ]
 const mpvSubtitleOpacityOptions = [
     { label: "100%", value: 1 },
@@ -149,7 +151,7 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
     const [subFontName, setSubFontName] = React.useState(mpvSettings.subtitleCustomization.fontName)
 
     React.useEffect(() => {
-        if (openSection === "Subtitle Styles") {
+        if (openSection === t("player.menu.subtitle_styles")) {
             setSubFontName(mpvSettings.subtitleCustomization.fontName)
         }
     }, [openSection, mpvSettings.subtitleCustomization.fontName])
@@ -187,37 +189,37 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
             }
         >
             <MediaCoreMenuSectionBody show={!openSection}>
-                <MediaCoreMenuTitle>Settings</MediaCoreMenuTitle>
+                <MediaCoreMenuTitle>{t("player.menu.title")}</MediaCoreMenuTitle>
                 <MediaCoreMenuOption
-                    title="Playback Speed"
+                    title={t("player.menu.playback_speed")}
                     icon={MdSpeed}
                     value={`${speed.toFixed(2)}x`}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 />
                 <MediaCoreMenuOption
-                    title="Auto Play"
+                    title={t("player.menu.auto_play")}
                     icon={IoCaretForwardCircleOutline}
                     value={autoPlay ? "On" : "Off"}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 />
                 <MediaCoreMenuOption
-                    title="Auto Next"
+                    title={t("player.menu.auto_next")}
                     icon={HiFastForward}
                     value={autoNext ? "On" : "Off"}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 />
                 <MediaCoreMenuOption
-                    title="Skip OP/ED"
+                    title={t("player.menu.skip_op_ed")}
                     icon={TbArrowForwardUp}
                     value={autoSkip ? "On" : "Off"}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 />
                 <MediaCoreMenuOption
-                    title="Shaders"
+                    title={t("mpv.shader.title")}
                     icon={LuSparkles}
                     value={[
                         debandActive && "Deband",
@@ -231,27 +233,27 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                     onOpenSectionChange={setOpenSection}
                 />
                 <MediaCoreMenuOption
-                    title="Subtitle Delay"
+                    title={t("player.menu.subtitle_delay")}
                     icon={MdOutlineAccessTime}
                     value={`${subtitleDelay.toFixed(1)}s`}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 />
                 <MediaCoreMenuOption
-                    title="Subtitle Styles"
+                    title={t("player.menu.subtitle_styles")}
                     icon={MdOutlineSubtitles}
                     value={mpvSettings.subtitleCustomization.enabled ? `On${!!mpvSettings.subtitleCustomization.fontName ? ", Font" : ""}` : "Off"}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 />
                 <MediaCoreMenuOption
-                    title="Player Appearance"
+                    title={t("player.menu.player_appearance")}
                     icon={LuTvMinimalPlay}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 />
                 <MediaCoreMenuOption
-                    title="Preferences"
+                    title={t("player.prefs.title")}
                     icon={LuSettings2}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
@@ -261,26 +263,26 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
 
             <MediaCoreMenuSubmenuBody show={!!openSection && !openSubSection}>
                 <MediaCoreMenuOption
-                    title="Subtitle Styles"
+                    title={t("player.menu.subtitle_styles")}
                     icon={MdOutlineSubtitles}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 >
                     <MediaCoreSettingSelect
                         options={[
-                            { label: "On", value: 1 },
-                            { label: "Off", value: 0 },
+                            { label: t("player.common.on"), value: 1 },
+                            { label: t("player.common.off"), value: 0 },
                         ]}
                         onValueChange={value => updateSubtitleStyle("enabled", value === 1)}
                         value={mpvSettings.subtitleCustomization.enabled ? 1 : 0}
                     />
                     {mpvSettings.subtitleCustomization.enabled && (
                         <>
-                            <p className="text-[--muted] text-sm my-2">Options</p>
+                            <p className="text-[--muted] text-sm my-2">{t("player.menu.options")}</p>
                             <MediaCoreMenuSubOption
-                                title="Font"
+                                title={t("player.menu.font")}
                                 icon={LuHeading}
-                                parentId="Subtitle Styles"
+                                parentId={t("player.menu.subtitle_styles")}
                                 value={!mpvSettings.subtitleCustomization.fontName ? "Default" : mpvSettings.subtitleCustomization.fontName?.slice(0,
                                     11) + (!!mpvSettings.subtitleCustomization.fontName?.length && mpvSettings.subtitleCustomization.fontName?.length > 10
                                     ? "..."
@@ -290,36 +292,36 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                                 onOpenSubSectionChange={setOpenSubSection}
                             />
                             <MediaCoreMenuSubOption
-                                title="Font Size"
+                                title={t("player.menu.font_size")}
                                 icon={LuHeading}
-                                parentId="Subtitle Styles"
+                                parentId={t("player.menu.subtitle_styles")}
                                 value={`${mpvSettings.subtitleCustomization.fontSize}px`}
                                 openSection={openSection}
                                 openSubSection={openSubSection}
                                 onOpenSubSectionChange={setOpenSubSection}
                             />
                             <MediaCoreMenuSubOption
-                                title="Text Color"
+                                title={t("player.menu.text_color")}
                                 icon={LuPalette}
-                                parentId="Subtitle Styles"
+                                parentId={t("player.menu.subtitle_styles")}
                                 value={mpvSubtitleColorOptions.find(option => option.value === mpvSettings.subtitleCustomization.primaryColor)?.label}
                                 openSection={openSection}
                                 openSubSection={openSubSection}
                                 onOpenSubSectionChange={setOpenSubSection}
                             />
                             <MediaCoreMenuSubOption
-                                title="Outline"
+                                title={t("player.menu.outline")}
                                 icon={ImFileText}
-                                parentId="Subtitle Styles"
+                                parentId={t("player.menu.subtitle_styles")}
                                 value={`${mpvSubtitleOutlineOptions.find(option => option.value === mpvSettings.subtitleCustomization.outline)?.label}, ${mpvSubtitleColorOptions.find(option => option.value === mpvSettings.subtitleCustomization.outlineColor)?.label}`}
                                 openSection={openSection}
                                 openSubSection={openSubSection}
                                 onOpenSubSectionChange={setOpenSubSection}
                             />
                             <MediaCoreMenuSubOption
-                                title="Shadow"
+                                title={t("player.menu.shadow")}
                                 icon={RiShadowLine}
-                                parentId="Subtitle Styles"
+                                parentId={t("player.menu.subtitle_styles")}
                                 value={`${mpvSubtitleShadowOptions.find(option => option.value === mpvSettings.subtitleCustomization.shadow)?.label}, ${mpvSubtitleColorOptions.find(option => option.value === mpvSettings.subtitleCustomization.backColor)?.label}`}
                                 openSection={openSection}
                                 openSubSection={openSubSection}
@@ -329,7 +331,7 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                     )}
                 </MediaCoreMenuOption>
                 <MediaCoreMenuOption
-                    title="Playback Speed"
+                    title={t("player.menu.playback_speed")}
                     icon={MdSpeed}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
@@ -346,57 +348,57 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                     />
                 </MediaCoreMenuOption>
                 <MediaCoreMenuOption
-                    title="Auto Play"
+                    title={t("player.menu.auto_play")}
                     icon={IoCaretForwardCircleOutline}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 >
                     <MediaCoreSettingSelect
                         options={[
-                            { label: "On", value: 1 },
-                            { label: "Off", value: 0 },
+                            { label: t("player.common.on"), value: 1 },
+                            { label: t("player.common.off"), value: 0 },
                         ]}
                         value={autoPlay ? 1 : 0}
                         onValueChange={value => setAutoPlay(Boolean(value))}
                     />
                 </MediaCoreMenuOption>
                 <MediaCoreMenuOption
-                    title="Auto Next"
+                    title={t("player.menu.auto_next")}
                     icon={HiFastForward}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 >
                     <MediaCoreSettingSelect
                         options={[
-                            { label: "On", value: 1 },
-                            { label: "Off", value: 0 },
+                            { label: t("player.common.on"), value: 1 },
+                            { label: t("player.common.off"), value: 0 },
                         ]}
                         value={autoNext ? 1 : 0}
                         onValueChange={value => setAutoNext(Boolean(value))}
                     />
                 </MediaCoreMenuOption>
                 <MediaCoreMenuOption
-                    title="Skip OP/ED"
+                    title={t("player.menu.skip_op_ed")}
                     icon={TbArrowForwardUp}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 >
                     <MediaCoreSettingSelect
                         options={[
-                            { label: "On", value: 1 },
-                            { label: "Off", value: 0 },
+                            { label: t("player.common.on"), value: 1 },
+                            { label: t("player.common.off"), value: 0 },
                         ]}
                         value={autoSkip ? 1 : 0}
                         onValueChange={value => setAutoSkip(Boolean(value))}
                     />
                 </MediaCoreMenuOption>
                 <MediaCoreMenuOption
-                    title="Subtitle Delay"
+                    title={t("player.menu.subtitle_delay")}
                     icon={MdOutlineAccessTime}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 >
-                    <p className="text-sm text-[--muted] mb-2">Shift subtitle timing relative to the video. Use negative values if subtitles appear too late.</p>
+                    <p className="text-sm text-[--muted] mb-2">{t("mpv.menu.subtitle_delay_hint")}</p>
                     <div className="flex gap-1.5 items-center mt-3">
                         {[-0.5, -0.1].map(delta => (
                             <Button
@@ -434,31 +436,31 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                     />
                 </MediaCoreMenuOption>
                 <MediaCoreMenuOption
-                    title="Shaders"
+                    title={t("mpv.shader.title")}
                     icon={LuSparkles}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 >
                     <div className="border-b border-[--border] pb-3 mb-3">
                         <Switch
-                            label="Debanding"
+                            label={t("mpv.shader.debanding")}
                             side="right"
                             fieldClass="hover:bg-transparent hover:border-transparent px-0 ml-0 w-full"
                             size="sm"
                             value={debandActive}
                             disabled={hasCustomDeband}
-                            help={hasCustomDeband ? "Written in MPV config" : undefined}
+                            help={hasCustomDeband ? t("mpv.shader.debanding_help") : undefined}
                             onValueChange={checked => setMpvSettings(current => ({ ...current, deband: checked }))}
                         />
                     </div>
                     <p className="text-[--muted] text-sm mb-2">
-                        Real-time sharpening and restoration. GPU-intensive.
+                        {t("player.menu.anime4k_desc")}
                     </p>
                     <MediaCoreSettingSelect
                         options={[
-                            { label: "Off", value: "off" },
-                            { label: "Anime4K Preset", value: "anime4k", description: "Use Anime4K upscaling presets" },
-                            { label: "Custom Shaders", value: "custom", description: "Enable individual custom shaders" },
+                            { label: t("player.common.off"), value: "off" },
+                            { label: t("mpv.shader.anime4k_preset"), value: "anime4k", description: t("mpv.shader.anime4k_preset_desc") },
+                            { label: t("mpv.shader.custom_shaders"), value: "custom", description: t("mpv.shader.custom_shaders_desc") },
                         ]}
                         value={shaderSettings.mode}
                         onValueChange={value => setShaderSettings(current => ({
@@ -471,19 +473,19 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
 
                     {shaderSettings.mode === "anime4k" && (
                         <>
-                            <p className="text-[--muted] text-sm my-2">Preset</p>
+                            <p className="text-[--muted] text-sm my-2">{t("mpv.menu.preset")}</p>
                             <MediaCoreSettingSelect
                                 options={[
-                                    { label: "Mode A", value: "mode-a", description: "Optimized for 1080p anime with compression artifacts and blur" },
-                                    { label: "Mode B", value: "mode-b", description: "Optimized for 720p anime with mild compression artifacts and blur" },
-                                    { label: "Mode C", value: "mode-c", description: "Optimized for downscaled clean anime and high PSNR" },
-                                    { label: "Mode A+A", value: "mode-aa", description: "Higher quality Mode A variant with heavier restoration" },
-                                    { label: "Mode B+B", value: "mode-bb", description: "Higher quality Mode B variant with heavier soft restoration" },
-                                    { label: "Mode C+A", value: "mode-ca", description: "Combines Mode C denoise upscaling with Mode A restoration" },
-                                    { label: "CNN 2x Medium", value: "cnn-2x-medium", description: "Medium CNN 2x upscaler for clean images with lower GPU cost" },
-                                    { label: "CNN 2x Very Large", value: "cnn-2x-very-large", description: "Very large CNN 2x upscaler for higher quality at higher GPU cost" },
-                                    { label: "Denoise CNN 2x VL", value: "denoise-cnn-2x-very-large", description: "Very large CNN 2x upscaler with denoising for noisy sources" },
-                                    { label: "CNN 2x Ultra Large", value: "cnn-2x-ultra-large", description: "Ultra large CNN 2x upscaler for maximum CNN quality and GPU cost" },
+                                    { label: t("player.a4k.mode_a"), value: "mode-a", description: t("player.a4k.desc_mode_a") },
+                                    { label: t("player.a4k.mode_b"), value: "mode-b", description: t("player.a4k.desc_mode_b") },
+                                    { label: t("player.a4k.mode_c"), value: "mode-c", description: t("player.a4k.desc_mode_c") },
+                                    { label: t("player.a4k.mode_aa"), value: "mode-aa", description: t("player.a4k.desc_mode_aa") },
+                                    { label: t("player.a4k.mode_bb"), value: "mode-bb", description: t("player.a4k.desc_mode_bb") },
+                                    { label: t("player.a4k.mode_ca"), value: "mode-ca", description: t("player.a4k.desc_mode_ca") },
+                                    { label: t("mpv.shader.a4k_label_cnn_2x_medium"), value: "cnn-2x-medium", description: t("player.a4k.desc_cnn_2x_m") },
+                                    { label: t("mpv.shader.a4k_label_cnn_2x_very_large"), value: "cnn-2x-very-large", description: t("player.a4k.desc_cnn_2x_vl") },
+                                    { label: t("mpv.shader.a4k_label_denoise_cnn_2x_vl"), value: "denoise-cnn-2x-very-large", description: t("player.a4k.desc_denoise_cnn_2x_vl") },
+                                    { label: t("mpv.shader.a4k_label_cnn_2x_ultra_large"), value: "cnn-2x-ultra-large", description: t("player.a4k.desc_cnn_2x_ul") },
                                 ]}
                                 value={shaderSettings.anime4kMode}
                                 onValueChange={value => setShaderSettings(current => ({
@@ -493,11 +495,11 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                                 isFullscreen={isFullscreen}
                                 containerElement={containerElement}
                             />
-                            <p className="text-[--muted] text-sm my-2">Quality</p>
+                            <p className="text-[--muted] text-sm my-2">{t("player.menu.quality")}</p>
                             <MediaCoreSettingSelect
                                 options={[
-                                    { label: "Fast (Lower GPU usage)", value: "fast" },
-                                    { label: "High Quality (Heavy)", value: "hq" },
+                                    { label: t("mpv.shader.quality_fast"), value: "fast" },
+                                    { label: t("mpv.shader.quality_hq"), value: "hq" },
                                 ]}
                                 value={shaderSettings.anime4kQuality}
                                 onValueChange={value => setShaderSettings(current => ({
@@ -512,7 +514,7 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
 
                     {shaderSettings.mode === "custom" && (
                         <div className="mt-4 border-t border-gray-800 pt-4 max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                            <p className="text-[--muted] text-xs font-semibold uppercase tracking-wider mb-2">Select Shaders</p>
+                            <p className="text-[--muted] text-xs font-semibold uppercase tracking-wider mb-2">{t("mpv.shader.select_shaders")}</p>
                             {anime4kDirectory?.shaders.length ? (
                                 anime4kDirectory.shaders.map(shader => {
                                     const isChecked = (shaderSettings.customShaders || []).includes(shader.name)
@@ -538,7 +540,7 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                                     )
                                 })
                             ) : (
-                                <p className="text-[--muted] text-sm italic">No shaders found in the directory.</p>
+                                <p className="text-[--muted] text-sm italic">{t("mpv.shader.none_found")}</p>
                             )}
                         </div>
                     )}
@@ -547,11 +549,11 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                     {/*    {anime4kDirectory?.directory || shaderSettings.directory || "No shader folder selected"}*/}
                     {/*</p>*/}
                     <p className="text-[--muted] text-sm my-2">
-                        Detected {anime4kDirectory?.shaders.length ?? 0} shader files.
+                        {t("mpv.shader.detected_count", { count: anime4kDirectory?.shaders.length ?? 0 })}
                     </p>
                     {shaderSettings.mode === "anime4k" && mc_resolveAnime4KProfile(anime4kDirectory, shaderSettings.anime4kMode, shaderSettings.anime4kQuality).missing.length > 0 && (
                         <p className="text-red-300 text-sm mb-2 break-words">
-                            Missing: {mc_resolveAnime4KProfile(anime4kDirectory, shaderSettings.anime4kMode, shaderSettings.anime4kQuality).missing.join(", ")}
+                            {t("mpv.shader.missing_files", { files: mc_resolveAnime4KProfile(anime4kDirectory, shaderSettings.anime4kMode, shaderSettings.anime4kQuality).missing.join(", ") })}
                         </p>
                     )}
                     {anime4kError && <p className="text-red-300 text-sm mb-2 break-words">{anime4kError}</p>}
@@ -563,21 +565,21 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                                 anime4kDirectory?.directory || shaderSettings.directory,
                             )}
                         >
-                            Open folder
+                            {t("mpv.shader.open_folder")}
                         </Button>
                         <Button size="sm" intent="gray-subtle" onClick={onRefreshAnime4K}>
-                            Refresh
+                            {t("common.action.refresh")}
                         </Button>
                     </div>
                 </MediaCoreMenuOption>
                 <MediaCoreMenuOption
-                    title="Player Appearance"
+                    title={t("player.menu.player_appearance")}
                     icon={LuPaintbrush}
                     openSection={openSection}
                     onOpenSectionChange={setOpenSection}
                 >
                     <Switch
-                        label="Show Chapter Markers"
+                        label={t("player.menu.show_chapter_markers")}
                         side="right"
                         fieldClass="hover:bg-transparent hover:border-transparent px-0 ml-0 w-full"
                         size="sm"
@@ -585,7 +587,7 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                         onValueChange={setChapterMarkers}
                     />
                     <Switch
-                        label="Highlight Skipped Chapters"
+                        label={t("player.menu.highlight_skipped_chapters")}
                         side="right"
                         fieldClass="hover:bg-transparent hover:border-transparent px-0 ml-0 w-full"
                         size="sm"
@@ -596,30 +598,30 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
             </MediaCoreMenuSubmenuBody>
             <MediaCoreMenuSubSubmenuBody show={!!openSubSection}>
                 <MediaCoreMenuSubOption
-                    title="Font"
+                    title={t("player.menu.font")}
                     icon={LuHeading}
-                    parentId="Subtitle Styles"
+                    parentId={t("player.menu.subtitle_styles")}
                     openSection={openSection}
                     openSubSection={openSubSection}
                     onOpenSubSectionChange={setOpenSubSection}
                 >
-                    <p className="text-sm mb-2">Font Family</p>
+                    <p className="text-sm mb-2">{t("player.menu.font")}</p>
                     <MediaCoreSettingTextInput
-                        label="Font Name"
+                        label={t("mpv.menu.font_name")}
                         value={subFontName}
                         onValueChange={setSubFontName}
-                        help="Example: Noto Sans JP"
+                        help={t("mpv.menu.font_name_help")}
                     />
                     <div className="flex w-full mt-2">
                         <Button size="sm" intent="gray-subtle" onClick={() => updateSubtitleStyle("fontName", subFontName)}>
-                            Save
+                            {t("media.action.save")}
                         </Button>
                     </div>
                 </MediaCoreMenuSubOption>
                 <MediaCoreMenuSubOption
-                    title="Font Size"
+                    title={t("player.menu.font_size")}
                     icon={LuHeading}
-                    parentId="Subtitle Styles"
+                    parentId={t("player.menu.subtitle_styles")}
                     openSection={openSection}
                     openSubSection={openSubSection}
                     onOpenSubSectionChange={setOpenSubSection}
@@ -631,9 +633,9 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                     />
                 </MediaCoreMenuSubOption>
                 <MediaCoreMenuSubOption
-                    title="Text Color"
+                    title={t("player.menu.text_color")}
                     icon={LuPalette}
-                    parentId="Subtitle Styles"
+                    parentId={t("player.menu.subtitle_styles")}
                     openSection={openSection}
                     openSubSection={openSubSection}
                     onOpenSubSectionChange={setOpenSubSection}
@@ -645,20 +647,20 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                     />
                 </MediaCoreMenuSubOption>
                 <MediaCoreMenuSubOption
-                    title="Outline"
+                    title={t("player.menu.outline")}
                     icon={ImFileText}
-                    parentId="Subtitle Styles"
+                    parentId={t("player.menu.subtitle_styles")}
                     openSection={openSection}
                     openSubSection={openSubSection}
                     onOpenSubSectionChange={setOpenSubSection}
                 >
-                    <p className="text-[--muted] text-sm mb-2">Outline Width</p>
+                    <p className="text-[--muted] text-sm mb-2">{t("player.menu.outline_width")}</p>
                     <MediaCoreSettingSelect
                         options={mpvSubtitleOutlineOptions}
                         value={mpvSettings.subtitleCustomization.outline}
                         onValueChange={value => updateSubtitleStyle("outline", Number(value))}
                     />
-                    <p className="text-[--muted] text-sm my-2">Outline Color</p>
+                    <p className="text-[--muted] text-sm my-2">{t("player.menu.outline_color")}</p>
                     <MediaCoreSettingSelect
                         options={mpvSubtitleColorOptions}
                         value={mpvSettings.subtitleCustomization.outlineColor}
@@ -666,26 +668,26 @@ export function MpvCoreSettingsMenu(props: MpvCoreSettingsMenuProps) {
                     />
                 </MediaCoreMenuSubOption>
                 <MediaCoreMenuSubOption
-                    title="Shadow"
+                    title={t("player.menu.shadow")}
                     icon={RiShadowLine}
-                    parentId="Subtitle Styles"
+                    parentId={t("player.menu.subtitle_styles")}
                     openSection={openSection}
                     openSubSection={openSubSection}
                     onOpenSubSectionChange={setOpenSubSection}
                 >
-                    <p className="text-[--muted] text-sm mb-2">Shadow Depth</p>
+                    <p className="text-[--muted] text-sm mb-2">{t("player.menu.shadow_depth")}</p>
                     <MediaCoreSettingSelect
                         options={mpvSubtitleShadowOptions}
                         value={mpvSettings.subtitleCustomization.shadow}
                         onValueChange={value => updateSubtitleStyle("shadow", Number(value))}
                     />
-                    <p className="text-[--muted] text-sm my-2">Shadow Opacity</p>
+                    <p className="text-[--muted] text-sm my-2">{t("player.menu.shadow_opacity")}</p>
                     <MediaCoreSettingSelect
                         options={mpvSubtitleOpacityOptions}
                         value={mpvSettings.subtitleCustomization.backColorOpacity}
                         onValueChange={value => updateSubtitleStyle("backColorOpacity", Number(value))}
                     />
-                    <p className="text-[--muted] text-sm my-2">Shadow Color</p>
+                    <p className="text-[--muted] text-sm my-2">{t("player.menu.shadow_color")}</p>
                     <MediaCoreSettingSelect
                         options={mpvSubtitleColorOptions}
                         value={mpvSettings.subtitleCustomization.backColor}

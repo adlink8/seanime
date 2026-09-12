@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Popover } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
+import { t } from "@/lib/i18n"
 import { useAtom } from "jotai/react"
 import { atomWithStorage } from "jotai/utils"
 import React, { useState } from "react"
@@ -293,7 +294,7 @@ export const TorrentFilterSortControls: React.FC<{
 
     return (
         <div className="flex items-center justify-between gap-4">
-            <p className="text-sm text-[--muted] flex-none">{resultCount} results</p>
+            <p className="text-sm text-[--muted] flex-none">{t("entry.torrent_filter.result_count", { count: resultCount })}</p>
             <div className="flex items-center gap-1 flex-wrap">
                 <Popover
                     trigger={<Button
@@ -303,16 +304,16 @@ export const TorrentFilterSortControls: React.FC<{
                             {getFilterIcon(isAnyFilterActive)}
                         </>}
                     >
-                        Filters
+                        {t("entry.torrent_filter.filters")}
                     </Button>}
                 >
                     <p className="text-xs text-[--muted] flex-none pb-2">
-                        Filters are based on torrent names and can miss some results.
+                        {t("entry.torrent_filter.filters_notice")}
                     </p>
                     <div className="space-y-1">
                         <Checkbox
                             label={<div className="flex items-center gap-1">
-                                <PiChatCircleDotsDuotone className="text-lg text-[--blue]" /> Multi Subs
+                                <PiChatCircleDotsDuotone className="text-lg text-[--blue]" /> {t("entry.torrent_filter.multi_subs")}
                             </div>}
                             value={filters.multiSubs}
                             onValueChange={(value) => onFilterChange("multiSubs", value)}
@@ -327,7 +328,7 @@ export const TorrentFilterSortControls: React.FC<{
 
                         <Checkbox
                             label={<div className="flex items-center gap-1">
-                                <LiaMicrophoneSolid className="text-lg text-[--red]" /> Dubbed
+                                <LiaMicrophoneSolid className="text-lg text-[--red]" /> {t("entry.torrent_filter.dubbed")}
                             </div>}
                             value={filters.dubbed}
                             onValueChange={(value) => onFilterChange("dubbed", value)}
@@ -409,7 +410,7 @@ export const TorrentFilterSortControls: React.FC<{
                     </>}
                     onClick={() => onSortChange("seeders")}
                 >
-                    Seeders
+                    {t("entry.torrent_filter.seeders")}
                 </Button>
                 <Button
                     size="xs"
@@ -419,7 +420,7 @@ export const TorrentFilterSortControls: React.FC<{
                     </>}
                     onClick={() => onSortChange("size")}
                 >
-                    Size
+                    {t("library.explorer.size")}
                 </Button>
                 <Button
                     size="xs"
@@ -429,7 +430,7 @@ export const TorrentFilterSortControls: React.FC<{
                     </>}
                     onClick={() => onSortChange("date")}
                 >
-                    Date
+                    {t("entry.torrent_filter.date")}
                 </Button>
                 <Button
                     size="xs"
@@ -439,7 +440,7 @@ export const TorrentFilterSortControls: React.FC<{
                     </>}
                     onClick={() => onSortChange("resolution")}
                 >
-                    Resolution
+                    {t("entry.torrent_search.resolution")}
                 </Button>
             </div>
         </div>

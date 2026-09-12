@@ -33,6 +33,7 @@ import { TextInput } from "@/components/ui/text-input"
 import { TORRENT_PROVIDER } from "@/lib/server/settings"
 import { useEpisodeSpoilerState } from "@/lib/theme/anime-spoilers"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
+import { t } from "@/lib/i18n"
 import { subDays, subMonths } from "date-fns"
 import { atom, useSetAtom } from "jotai"
 import React, { startTransition } from "react"
@@ -182,7 +183,7 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
             label: ext.name,
             value: ext.id,
         })) ?? []).sort((a, b) => a?.label?.localeCompare(b?.label) ?? 0),
-        { label: "None", value: TORRENT_PROVIDER.NONE },
+        { label: t("entry.torrent_search.provider_none"), value: TORRENT_PROVIDER.NONE },
     ], [providerExtensions])
 
     const hasProviderSelected = selectedProviderExtensionId !== TORRENT_PROVIDER.NONE && selectedProviderExtensionId !== ""
@@ -244,7 +245,7 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
                     {(type !== "download" && torrentSearchStreamEpisode) &&
                         <div className="hidden xl:block space-y-3" data-torrent-search-container-stream-episode>
                             <h4 className="!mb-4">
-                                Select a torrent to stream
+                                {t("entry.torrent_search.select_torrent_to_stream")}
                             </h4>
                             <EpisodeCard
                                 image={torrentSearchStreamEpisode.episodeMetadata?.image || torrentSearchStreamEpisode.baseAnime?.bannerImage || torrentSearchStreamEpisode.baseAnime?.coverImage?.extraLarge}
@@ -283,10 +284,10 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
                         >
                             <Switch
                                 // side="right"
-                                label="Smart search"
+                                label={t("entry.torrent_search.smart_search")}
                                 moreHelp={selectedProviderExtension?.settings?.canSmartSearch
-                                    ? "Automated search based on given parameters."
-                                    : "This provider does not support smart search."}
+                                    ? t("entry.torrent_search.smart_search_help")
+                                    : t("entry.torrent_search.smart_search_unsupported")}
                                 value={searchType === Torrent_SearchType.SMART}
                                 onValueChange={v => setSearchType(v ? Torrent_SearchType.SMART : Torrent_SearchType.SIMPLE)}
                                 disabled={!selectedProviderExtension?.settings?.canSmartSearch}
@@ -299,8 +300,8 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
                             data-torrent-search-container-param-container-search-across-providers-switch-container
                         >
                             <Switch
-                                label="Search across providers"
-                                moreHelp="Runs the same search against saved additional providers."
+                                label={t("entry.torrent_search.search_across_providers")}
+                                moreHelp={t("entry.torrent_search.search_across_providers_help")}
                                 value={searchAcrossProviders}
                                 onValueChange={setSearchAcrossProviders}
                                 disabled={!extraProviderOptions.length}
@@ -332,9 +333,9 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
                             value={extraProviderDraft}
                             onValueChange={setExtraProviderDraft}
                             options={extraProviderOptions}
-                            emptyMessage="No providers found"
-                            placeholder="Add providers"
-                            label="Additional providers"
+                            emptyMessage={t("entry.torrent_search.no_providers_found")}
+                            placeholder={t("entry.torrent_search.add_providers")}
+                            label={t("entry.torrent_search.additional_providers")}
                             leftAddon={<LuPlus />}
                             size="sm"
                             fieldClass="w-full md:flex-1"
@@ -348,7 +349,7 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
                             onClick={handleSaveExtraProviders}
                             className="md:self-end"
                         >
-                            Save
+                            {t("media.action.save")}
                         </Button>
                     </div>}
 
@@ -372,7 +373,7 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
 
                                     {selectedProviderExtension?.settings?.smartSearchFilters?.includes("episodeNumber") && <NumberInput
                                         data-torrent-search-smart-search-episode-number-input
-                                        label="Episode number"
+                                        label={t("entry.torrent_search.episode_number")}
                                         value={smartSearchEpisode}
                                         disabled={entry?.media?.format === "MOVIE" || smartSearchBest}
                                         onValueChange={(value) => {
@@ -404,7 +405,7 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
 
                                     {selectedProviderExtension?.settings?.smartSearchFilters?.includes("batch") && <Switch
                                         data-torrent-search-smart-search-batch-switch
-                                        label="Batches"
+                                        label={t("entry.torrent_search.batches")}
                                         value={smartSearchBatch}
                                         onValueChange={setSmartSearchBatch}
                                         disabled={smartSearchBest || !downloadInfo?.canBatch}
@@ -418,11 +419,11 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
 
                                     {selectedProviderExtension?.settings?.smartSearchFilters?.includes("resolution") && <Select
                                         data-torrent-search-smart-search-resolution-select
-                                        label="Resolution"
+                                        label={t("entry.torrent_search.resolution")}
                                         value={smartSearchResolution || "-"}
                                         onValueChange={v => setSmartSearchResolution(v != "-" ? v : "")}
                                         options={[
-                                            { value: "-", label: "Any" },
+                                            { value: "-", label: t("entry.torrent_search.resolution_any") },
                                             { value: "1080", label: "1080p" },
                                             { value: "720", label: "720p" },
                                             { value: "540", label: "540p" },
@@ -441,7 +442,7 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
 
                                     {selectedProviderExtension?.settings?.smartSearchFilters?.includes("bestReleases") && <Switch
                                         data-torrent-search-smart-search-best-releases-switch
-                                        label="Best releases"
+                                        label={t("entry.torrent_search.best_releases")}
                                         value={smartSearchBest}
                                         onValueChange={setSmartSearchBest}
                                         fieldClass={cn(
@@ -468,8 +469,8 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
                                                 }
                                             }}
                                             placeholder={searchType === Torrent_SearchType.SMART
-                                                ? `Refine the title (${entry.media?.title?.romaji})`
-                                                : "Search"}
+                                                ? t("entry.torrent_search.refine_title", { title: entry.media?.title?.romaji ?? "" })
+                                                : t("entry.torrent_search.search_placeholder")}
                                             fieldClass="md:max-w-full w-full"
                                             leftIcon={<FiSearch className="text-lg" />}
                                         />
@@ -501,9 +502,9 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
                                 key={key}
                                 intent="warning"
                                 description={<>
-                                    {key === "extensionDoesNotSupportAdult" && "This provider does not support adult content"}
-                                    {key === "extensionDoesNotSupportSmartSearch" && "This provider does not support smart search"}
-                                    {key === "extensionDoesNotSupportBestRelease" && "This provider does not support best release search"}
+                                    {key === "extensionDoesNotSupportAdult" && t("entry.torrent_search.warn_adult_unsupported")}
+                                    {key === "extensionDoesNotSupportSmartSearch" && t("entry.torrent_search.warn_smart_search_unsupported")}
+                                    {key === "extensionDoesNotSupportBestRelease" && t("entry.torrent_search.warn_best_release_unsupported")}
                                 </>}
                             />
                         }
@@ -529,16 +530,16 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
                             {hasOneWarning && <LuffyError />}
                             {isError && !hasOneWarning && (
                                 <LuffyError
-                                    title="Search failed"
+                                    title={t("entry.torrent_search.search_failed")}
                                 >
                                     <div className="flex flex-col items-center gap-2">
-                                        <p className="text-sm text-[--muted]">Failed to retrieve torrents from the provider.</p>
+                                        <p className="text-sm text-[--muted]">{t("entry.torrent_search.fetch_failed")}</p>
                                         <Button
                                             size="sm"
                                             intent="gray-outline"
                                             onClick={() => refetch()}
                                         >
-                                            Retry Search
+                                            {t("entry.torrent_search.retry_search")}
                                         </Button>
                                     </div>
                                 </LuffyError>
@@ -551,8 +552,8 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
                                         ? <LuLoaderCircle className="text-xl text-blue-500 dark:text-blue-400 animate-spin" />
                                         : <LuClock3 className="text-xl text-blue-500 dark:text-blue-400" />}
                                     description={isAutoRetrying
-                                        ? "Checking the provider again..."
-                                        : `No matching torrent found. Checking again in ${formatRetryTime(autoRetrySeconds)}.`}
+                                        ? t("entry.torrent_search.checking_provider_again")
+                                        : t("entry.torrent_search.auto_retry_countdown", { time: formatRetryTime(autoRetrySeconds) })}
                                 />
                             )}
                             {(searchType === Torrent_SearchType.SMART) && !hasOneWarning && !isError && (
@@ -601,11 +602,11 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
 
                     </>
                 ) : (!!providerExtensions) ? <div className="space-y-2">
-                    <LuffyError title="No extension selected" />
+                    <LuffyError title={t("entry.torrent_search.no_extension_selected")} />
                     {!providerExtensions.length && <div className="flex justify-center">
                         <SeaLink href="/extensions">
                             <Button intent="white" leftIcon={<LuPlus />}>
-                                Add extensions
+                                {t("entry.torrent_search.add_extensions")}
                             </Button>
                         </SeaLink>
                     </div>}
@@ -633,11 +634,11 @@ export function TorrentSearchContainer({ type, entry }: { type: TorrentSelection
 }
 
 function formatRetryTime(seconds: number | undefined) {
-    if (seconds === undefined) return "a moment"
+    if (seconds === undefined) return t("entry.time.moment")
     const minutes = Math.floor(seconds / 60)
     const remaining = seconds % 60
-    if (minutes === 0) return `${remaining}s`
-    return `${minutes}m ${remaining}s`
+    if (minutes === 0) return t("entry.time.seconds", { seconds: remaining })
+    return t("entry.time.minutes_seconds", { minutes, seconds: remaining })
 }
 
 function TorrentSearchTorrentStreamBatchHistory({ entry, type, debridInstantAvailability, isSpoiler }: {
@@ -660,7 +661,7 @@ function TorrentSearchTorrentStreamBatchHistory({ entry, type, debridInstantAvai
 
     return (
         <AppLayoutStack>
-            <h5 className="text-center flex gap-2 items-center"><LuCornerLeftDown className="mt-1" /> Previous selection</h5>
+            <h5 className="text-center flex gap-2 items-center"><LuCornerLeftDown className="mt-1" /> {t("entry.torrent_search.previous_selection")}</h5>
 
             <TorrentListItem
                 torrent={batchHistory?.torrent}

@@ -37,6 +37,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useSearchParams } from "@/lib/navigation"
+import { t } from "@/lib/i18n"
 import { DEFAULT_TORRENT_CLIENT, DEFAULT_TORRENT_PROVIDER, settingsSchema, TORRENT_PROVIDER } from "@/lib/server/settings"
 import { THEME_DEFAULT_VALUES } from "@/lib/theme/theme-hooks"
 import { __isElectronDesktop__ } from "@/types/constants"
@@ -183,7 +184,7 @@ export default function Page() {
 
                                 <Card className="bg-transparent border-transparent">
                                     <div className="space-y-2 p-0 w-full">
-                                        <h4 className=" text-xl font-bold text-center">系统设置</h4>
+                                        <h4 className=" text-xl font-bold text-center">{t("settings.page.title")}</h4>
 
                                     </div>
                                  </Card>
@@ -191,11 +192,11 @@ export default function Page() {
                                      <TabsTrigger
                                          value="seanime"
                                          className="group"
-                                     ><LuWandSparkles className="text-base mr-2 transition-transform duration-200" /> 常规设置</TabsTrigger>
+                                     ><LuWandSparkles className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.general")}</TabsTrigger>
                                      <TabsTrigger
                                          value="ui"
                                          className="group"
-                                     ><MdOutlinePalette className="text-base mr-2 transition-transform duration-200" /> 界面外观</TabsTrigger>
+                                     ><MdOutlinePalette className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.appearance")}</TabsTrigger>
                                      {/* <TabsTrigger
                                       value="local"
                                       className="group"
@@ -203,7 +204,7 @@ export default function Page() {
                                      <TabsTrigger
                                          value="library"
                                          className="group"
-                                     ><LuLibrary className="text-base mr-2 transition-transform duration-200" /> 本地动漫库</TabsTrigger>
+                                     ><LuLibrary className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.library")}</TabsTrigger>
                                  </Card>
 
                                  {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
@@ -214,20 +215,20 @@ export default function Page() {
                                      <TabsTrigger
                                          value="playback"
                                          className="group"
-                                     ><LuCirclePlay className="text-base mr-2 transition-transform duration-200" /> 视频播放</TabsTrigger>
+                                     ><LuCirclePlay className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.video_playback")}</TabsTrigger>
 
                                      <TabsTrigger
                                          value="media-player"
                                          className="group"
-                                     ><LuMonitorPlay className="text-base mr-2 transition-transform duration-200" /> 桌面播放器</TabsTrigger>
+                                     ><LuMonitorPlay className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.desktop_player")}</TabsTrigger>
                                      <TabsTrigger
                                          value="external-player-link"
                                          className="group"
-                                     ><LuCircleArrowOutUpRight className="text-base mr-2 transition-transform duration-200" /> 外部播放器关联</TabsTrigger>
+                                     ><LuCircleArrowOutUpRight className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.external_player")}</TabsTrigger>
                                      <TabsTrigger
                                          value="mediastream"
                                          className="relative group"
-                                     ><LuTabletSmartphone className="text-base mr-2 transition-transform duration-200" /> 转码 / 直播流</TabsTrigger>
+                                     ><LuTabletSmartphone className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.transcode")}</TabsTrigger>
                                  </Card>
 
                                  {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
@@ -238,19 +239,19 @@ export default function Page() {
                                      <TabsTrigger
                                          value="torrent"
                                          className="group"
-                                     ><LuFileSearch className="text-base mr-2 transition-transform duration-200" /> 种子源提供商</TabsTrigger>
+                                     ><LuFileSearch className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.torrent_provider")}</TabsTrigger>
                                      <TabsTrigger
                                          value="torrent-client"
                                          className="group"
-                                     ><MdOutlineDownloading className="text-base mr-2 transition-transform duration-200" /> 下载客户端</TabsTrigger>
+                                     ><MdOutlineDownloading className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.download_client")}</TabsTrigger>
                                      <TabsTrigger
                                          value="torrentstream"
                                          className="relative group"
-                                     ><SiBittorrent className="text-base mr-2 transition-transform duration-200" /> 边下边播</TabsTrigger>
+                                     ><SiBittorrent className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.downloader")}</TabsTrigger>
                                      <TabsTrigger
                                          value="debrid"
                                          className="group"
-                                     ><HiOutlineServerStack className="text-base mr-2 transition-transform duration-200" /> Debrid 云端服务</TabsTrigger>
+                                     ><HiOutlineServerStack className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.debrid")}</TabsTrigger>
                                  </Card>
 
                                  {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
@@ -261,20 +262,20 @@ export default function Page() {
                                      <TabsTrigger
                                          value="onlinestream"
                                          className="group"
-                                     ><CgMediaPodcast className="text-base mr-2 transition-transform duration-200" /> 在线流媒体</TabsTrigger>
+                                     ><CgMediaPodcast className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.onlinestream")}</TabsTrigger>
 
                                      <TabsTrigger
                                          value="manga"
                                          className="group"
-                                     ><LuBookOpen className="text-base mr-2 transition-transform duration-200" /> 漫画设置</TabsTrigger>
+                                     ><LuBookOpen className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.manga")}</TabsTrigger>
                                      <TabsTrigger
                                          value="nakama"
                                          className="group relative"
-                                     ><MdOutlineConnectWithoutContact className="text-base mr-2 transition-transform duration-200" /> Nakama 共享</TabsTrigger>
+                                     ><MdOutlineConnectWithoutContact className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.nakama")}</TabsTrigger>
                                      <TabsTrigger
                                          value="discord"
                                          className="group"
-                                     ><FaDiscord className="text-base mr-2 transition-transform duration-200" /> Discord 状态</TabsTrigger>
+                                     ><FaDiscord className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.discord")}</TabsTrigger>
                                  </Card>
 
                                  {/*<div className="text-sm lg:text-[--foreground] py-1.5 px-3 tracking-wide font-medium hidden lg:block">*/}
@@ -286,7 +287,7 @@ export default function Page() {
                                          <TabsTrigger
                                              value="denshi"
                                              className="group"
-                                         ><LuMonitor className="text-base mr-2 transition-transform duration-200" /> Denshi 桌面端</TabsTrigger>
+                                         ><LuMonitor className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.denshi")}</TabsTrigger>
                                      )}
                                      {/* <TabsTrigger
                                       value="cache"
@@ -295,7 +296,7 @@ export default function Page() {
                                      <TabsTrigger
                                          value="logs"
                                          className="group"
-                                     ><LuBookKey className="text-base mr-2 transition-transform duration-200" /> 日志与缓存</TabsTrigger>
+                                     ><LuBookKey className="text-base mr-2 transition-transform duration-200" /> {t("settings.tab.logs_cache")}</TabsTrigger>
                                  </Card>
                              </div>
                          </SettingsNavCard>
@@ -320,10 +321,10 @@ export default function Page() {
                                      <Button
                                          intent="gray-link"
                                          size="md"
-                                         leftIcon={<BiDonateHeart className="text-lg" />}
-                                     >
-                                         赞助支持
-                                     </Button>
+                                        leftIcon={<BiDonateHeart className="text-lg" />}
+                                    >
+                                        {t("settings.action.sponsor")}
+                                    </Button>
                                  </SeaLink>
                              </div>
                          </div>
@@ -602,8 +603,8 @@ export default function Page() {
 
                                         <div className="space-y-3">
                                             <SettingsPageHeader
-                                                title="常规设置"
-                                                description="通用应用与服务配置"
+                                                title={t("settings.card.general_title")}
+                                                description={t("settings.card.general_desc")}
                                                 icon={LuWandSparkles}
                                             />
 
@@ -618,7 +619,7 @@ export default function Page() {
                                                     leftIcon={
                                                         <RiFolderDownloadFill className="transition-transform duration-200 group-hover:scale-110" />}
                                                 >
-                                                    打开数据目录
+                                                    {t("settings.action.open_data_dir")}
                                                 </Button>}
                                                 <Button
                                                     size="sm"
@@ -628,7 +629,7 @@ export default function Page() {
                                                     className="transition-all duration-200 hover:scale-105 hover:shadow-md group"
                                                     data-open-issue-recorder-button
                                                 >
-                                                    反馈问题
+                                                    {t("settings.action.report_issue")}
                                                 </Button>
                                                 <Button
                                                     size="sm"
@@ -649,7 +650,7 @@ export default function Page() {
                                                                         setWebUpdateModalOpen(true)
                                                                     }
                                                                 } else {
-                                                                    toast.success("当前已是最新版本")
+                                                                    toast.success(t("settings.toast.up_to_date"))
                                                                 }
 
                                                             },
@@ -660,7 +661,7 @@ export default function Page() {
                                                     className="transition-all duration-200 hover:scale-105 hover:shadow-md group"
                                                     data-check-for-updates-button
                                                 >
-                                                    检查更新
+                                                    {t("settings.action.check_update")}
                                                 </Button>
                                             </div>
                                         </div>
@@ -672,8 +673,8 @@ export default function Page() {
                                     <TabsContent value="library" className={tabContentClass}>
 
                                         <SettingsPageHeader
-                                            title="本地动漫库"
-                                            description="管理本地动漫媒体库与扫描配置"
+                                            title={t("settings.card.library_title")}
+                                            description={t("settings.card.library_desc")}
                                             icon={LuLibrary}
                                         />
 
@@ -696,8 +697,8 @@ export default function Page() {
                                     <TabsContent value="onlinestream" className={tabContentClass}>
 
                                         <SettingsPageHeader
-                                            title="在线流媒体"
-                                            description="配置第三方在线动漫播放与流媒体选项"
+                                            title={t("settings.card.onlinestream_title")}
+                                            description={t("settings.card.onlinestream_desc")}
                                             icon={CgMediaPodcast}
                                         />
 
@@ -706,18 +707,18 @@ export default function Page() {
                                                 <Field.Switch
                                                     side="right"
                                                     name="enableOnlinestream"
-                                                    label="启用在线流媒体"
-                                                    help="直接从第三方在线流媒体源观看动漫剧集。"
+                                                    label={t("settings.field.enable_onlinestream")}
+                                                    help={t("settings.help.enable_onlinestream")}
                                                 />
                                             </div>
                                         </SettingsCard>
 
-                                        <SettingsCard title="首页展示">
+                                        <SettingsCard title={t("settings.card.home_display_title")}>
                                             <Field.Switch
                                                 side="right"
                                                 name="includeOnlineStreamingInLibrary"
-                                                label="在追番列表中包含流媒体作品"
-                                                help="在您的动漫片单中展示正在观看的在线流媒体动漫。"
+                                                label={t("settings.field.include_streaming_in_library")}
+                                                help={t("settings.help.include_streaming_in_library")}
                                             />
                                         </SettingsCard>
 
@@ -728,8 +729,8 @@ export default function Page() {
                                     <TabsContent value="discord" className={tabContentClass}>
 
                                         <SettingsPageHeader
-                                            title="Discord"
-                                            description="配置 Discord 正在播放状态展示"
+                                            title={t("settings.card.discord_title")}
+                                            description={t("settings.card.discord_desc")}
                                             icon={FaDiscord}
                                         />
 
@@ -742,36 +743,36 @@ export default function Page() {
                                     <TabsContent value="torrent" className={tabContentClass}>
 
                                         <SettingsPageHeader
-                                            title="种子源提供商"
-                                            description="配置番剧种子检索与默认提供商扩展"
+                                            title={t("settings.card.torrent_provider_title")}
+                                            description={t("settings.card.torrent_provider_desc")}
                                             icon={LuFileSearch}
                                         />
 
                                         <SettingsCard>
                                             <Field.Select
                                                 name="torrentProvider"
-                                                label="Default Provider"
-                                                help="Used by the search engine. Select 'None' if you don't need torrent support."
+                                                label={t("settings.field.default_provider")}
+                                                help={t("settings.help.torrent_provider")}
                                                 leftIcon={<RiFolderDownloadFill className="text-orange-500" />}
                                                 options={[
                                                     ...(torrentProviderExtensions?.filter(ext => ext?.settings?.type === "main")?.map(ext => ({
                                                         label: ext.name,
                                                         value: ext.id,
                                                     })) ?? []).sort((a, b) => a?.label?.localeCompare(b?.label) ?? 0),
-                                                    { label: "None", value: TORRENT_PROVIDER.NONE },
+                                                    { label: t("settings.option.none"), value: TORRENT_PROVIDER.NONE },
                                                 ]}
                                             />
                                             <Field.Switch
                                                 data-settings-show-torrent-availability
                                                 side="right"
                                                 name="showTorrentAvailability"
-                                                label="Show torrent availability on recent episodes"
-                                                help="Adds a badge to recent episodes missing from your library, and to Continue Watching when using torrent or Debrid streaming."
+                                                label={t("settings.field.show_torrent_availability")}
+                                                help={t("settings.help.show_torrent_availability")}
                                                 disabled={torrentProviderMissing}
                                             />
                                             {torrentProviderMissing && <Alert
                                                 intent="warning"
-                                                description="Choose a torrent provider to check episode availability."
+                                                description={t("settings.help.torrent_availability_missing")}
                                             />}
                                         </SettingsCard>
 
@@ -812,20 +813,20 @@ export default function Page() {
                                     <TabsContent value="torrent-client" className={tabContentClass}>
 
                                         <SettingsPageHeader
-                                            title="下载客户端"
-                                            description="配置外部或内置下载客户端"
+                                            title={t("settings.card.download_client_title")}
+                                            description={t("settings.card.download_client_desc")}
                                             icon={MdOutlineDownloading}
                                         />
 
                                         <SettingsCard>
                                             <Field.Select
                                                 name="defaultTorrentClient"
-                                                label="默认下载客户端"
+                                                label={t("settings.field.default_download_client")}
                                                 options={[
                                                     { label: "qBittorrent", value: "qbittorrent" },
-                                                    { label: "Transmission", value: "transmission" },
-                                                    ...(status?.featureFlags?.builtinTorrentClient ? [{ label: "内置客户端", value: "seanime" }] : []),
-                                                    { label: "无", value: "none" },
+                                                    { label: t("settings.client.transmission"), value: "transmission" },
+                                                    ...(status?.featureFlags?.builtinTorrentClient ? [{ label: t("settings.field.builtin_client"), value: "seanime" }] : []),
+                                                    { label: t("settings.option.none"), value: "none" },
                                                 ]}
                                             />
                                         </SettingsCard>
@@ -849,21 +850,21 @@ export default function Page() {
                                                 <AccordionContent className="p-0 py-4 space-y-4">
                                                     <Field.Text
                                                         name="qbittorrentHost"
-                                                        label="主机"
+                                                        label={t("settings.field.host")}
                                                     />
                                                     <div className="flex flex-col md:flex-row gap-4">
                                                         <Field.Text
                                                             name="qbittorrentUsername"
-                                                            label="用户名"
+                                                            label={t("settings.field.username")}
                                                         />
                                                         <Field.Text
                                                             name="qbittorrentPassword"
-                                                            label="密码"
+                                                            label={t("settings.field.password")}
                                                             type="password"
                                                         />
                                                         <Field.Number
                                                             name="qbittorrentPort"
-                                                            label="端口"
+                                                            label={t("settings.field.port")}
                                                             formatOptions={{
                                                                 useGrouping: false,
                                                             }}
@@ -871,43 +872,43 @@ export default function Page() {
                                                     </div>
                                                     <Field.Text
                                                         name="qbittorrentPath"
-                                                        label="执行文件路径"
+                                                        label={t("settings.field.executable_path")}
                                                     />
                                                     <Field.Text
                                                         name="qbittorrentTags"
-                                                        label="标签"
-                                                        help="添加到下载任务的标签，逗号分隔，如 seanime,anime"
+                                                        label={t("settings.field.tags")}
+                                                        help={t("settings.help.qbittorrent_tags")}
                                                     />
                                                     <Field.Text
                                                         name="qbittorrentCategory"
-                                                        label="分类"
-                                                        help="添加到下载任务的分类目录名称。"
+                                                        label={t("settings.field.category")}
+                                                        help={t("settings.help.qbittorrent_category")}
                                                     />
                                                 </AccordionContent>
                                             </AccordionItem>
                                             <AccordionItem value="transmission">
                                                 <AccordionTrigger>
                                                     <h4 className="flex gap-2 items-center">
-                                                        <SiTransmission className="text-orange-200" /> Transmission</h4>
+                                                        <SiTransmission className="text-orange-200" /> {t("settings.client.transmission")}</h4>
                                                 </AccordionTrigger>
                                                 <AccordionContent className="p-0 py-4 space-y-4 !border-b-0">
                                                     <Field.Text
                                                         name="transmissionHost"
-                                                        label="主机"
+                                                        label={t("settings.field.host")}
                                                     />
                                                     <div className="flex flex-col md:flex-row gap-4">
                                                         <Field.Text
                                                             name="transmissionUsername"
-                                                            label="用户名"
+                                                            label={t("settings.field.username")}
                                                         />
                                                         <Field.Text
                                                             name="transmissionPassword"
-                                                            label="密码"
+                                                            label={t("settings.field.password")}
                                                             type="password"
                                                         />
                                                         <Field.Number
                                                             name="transmissionPort"
-                                                            label="端口"
+                                                            label={t("settings.field.port")}
                                                             formatOptions={{
                                                                 useGrouping: false,
                                                             }}
@@ -915,7 +916,7 @@ export default function Page() {
                                                     </div>
                                                     <Field.Text
                                                         name="transmissionPath"
-                                                        label="执行文件路径"
+                                                        label={t("settings.field.executable_path")}
                                                     />
                                                 </AccordionContent>
                                             </AccordionItem>
@@ -923,29 +924,29 @@ export default function Page() {
                                                 <AccordionItem value="seanime">
                                                     <AccordionTrigger>
                                                         <h4 className="flex gap-2 items-center">
-                                                            <SiBittorrent className="text-[--brand]" /> 内置客户端
+                                                            <SiBittorrent className="text-[--brand]" /> {t("settings.field.builtin_client")}
                                                         </h4>
                                                     </AccordionTrigger>
                                                     <AccordionContent className="p-0 py-4 space-y-4">
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             <Field.Number
                                                                 name="seanimePort"
-                                                                label="监听端口"
+                                                                label={t("settings.field.listen_port")}
                                                                 formatOptions={{ useGrouping: false }}
                                                             />
-                                                            <Field.Number name="seanimeMaxConnections" label="每个种子最大连接数" />
-                                                            <Field.Number name="seanimeMaxActiveDownloads" label="最大同时下载数" />
+                                                            <Field.Number name="seanimeMaxConnections" label={t("settings.field.max_connections_per_torrent")} />
+                                                            <Field.Number name="seanimeMaxActiveDownloads" label={t("settings.field.max_active_downloads")} />
                                                         </div>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             <Field.Number
                                                                 name="seanimeDownloadLimit"
-                                                                label="下载限速 (KB/s)"
-                                                                help="设置为 0 表示不限速。"
+                                                                label={t("settings.field.download_speed_limit")}
+                                                                help={t("settings.help.speed_limit_zero")}
                                                             />
                                                             <Field.Number
                                                                 name="seanimeUploadLimit"
-                                                                label="上传限速 (KB/s)"
-                                                                help="设置为 0 表示不限速。"
+                                                                label={t("settings.field.upload_speed_limit")}
+                                                                help={t("settings.help.speed_limit_zero")}
                                                             />
                                                         </div>
                                                     </AccordionContent>
@@ -954,7 +955,7 @@ export default function Page() {
                                         </Accordion>
                                         {/*</SettingsCard>*/}
 
-                                        <SettingsCard title="客户端集成">
+                                        <SettingsCard title={t("settings.card.client_integration_title")}>
                                             {/*<Field.Switch*/}
                                             {/*    side="right"*/}
                                             {/*    name="hideTorrentList"*/}
@@ -963,13 +964,13 @@ export default function Page() {
                                             <Field.Switch
                                                 side="right"
                                                 name="showActiveTorrentCount"
-                                                label="在侧边栏显示活跃下载数"
-                                                help="在左侧导航栏的种子图标旁显示当前活跃下载数量。(较消耗内存)"
+                                                label={t("settings.field.show_active_downloads")}
+                                                help={t("settings.help.show_active_downloads")}
                                             />
                                             <Field.Switch
                                                 side="right"
                                                 name="openTorrentClientOnStart"
-                                                label="开机启动时打开下载客户端"
+                                                label={t("settings.field.open_client_on_startup")}
                                             />
                                         </SettingsCard>
 
@@ -1007,8 +1008,8 @@ export default function Page() {
                         <TabsContent value="ui" className={tabContentClass}>
 
                             <SettingsPageHeader
-                                title="界面外观"
-                                description="自定义主题风格与界面展示选项"
+                                title={t("settings.tab.appearance")}
+                                description={t("settings.card.appearance_desc")}
                                 icon={LuPalette}
                             />
 
@@ -1019,8 +1020,8 @@ export default function Page() {
                         <TabsContent value="torrentstream" className={tabContentClass}>
 
                             <SettingsPageHeader
-                                title="边下边播"
-                                description="配置种子在线缓冲与边下边播"
+                                title={t("settings.tab.downloader")}
+                                description={t("settings.card.streaming_desc")}
                                 icon={SiBittorrent}
                             />
 
@@ -1031,8 +1032,8 @@ export default function Page() {
                         <TabsContent value="logs" className={tabContentClass}>
 
                             <SettingsPageHeader
-                                title="运行日志"
-                                description="查看系统运行日志"
+                                title={t("settings.card.logs_title")}
+                                description={t("settings.card.logs_desc")}
                                 icon={LuBookKey}
                             />
 
@@ -1042,8 +1043,8 @@ export default function Page() {
                             <Separator />
 
                             <SettingsPageHeader
-                                title="缓存管理"
-                                description="管理本地文件与数据缓存"
+                                title={t("settings.card.cache_title")}
+                                description={t("settings.card.cache_desc")}
                                 icon={TbDatabaseExclamation}
                             />
 
@@ -1055,8 +1056,8 @@ export default function Page() {
                             <TabsContent value="denshi" className={tabContentClass}>
 
                                 <SettingsPageHeader
-                                    title="Denshi"
-                                    description="Desktop client settings"
+                                    title={t("settings.card.denshi_title")}
+                                    description={t("settings.card.denshi_desc")}
                                     icon={LuMonitor}
                                 />
 

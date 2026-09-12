@@ -9,6 +9,7 @@ import { NumberInput } from "@/components/ui/number-input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TextInput } from "@/components/ui/text-input"
 import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import { atom, useAtom, useAtomValue } from "jotai"
 import React from "react"
 import { useServerStatus } from "../../_hooks/use-server-status"
@@ -103,7 +104,7 @@ const KeybindingRow = ({
                     recordingKey === actionKey && "!text-xs text-white",
                 )}
             >
-                {recordingKey === actionKey ? "Press key..." : formatKeyDisplay(editedKeybindings[actionKey].key)}
+                {recordingKey === actionKey ? t("player.prefs.press_key") : formatKeyDisplay(editedKeybindings[actionKey].key)}
             </Button>
         </div>
     </div>
@@ -230,7 +231,7 @@ export function MpvCorePreferencesModal(props: {
     return (
         <>
             <Modal
-                title="Preferences"
+                title={t("player.prefs.title")}
                 open={open}
                 onOpenChange={setOpen}
                 contentClass="max-w-5xl focus:outline-none focus-visible:outline-none outline-none bg-[--background] backdrop-blur-sm z-[101]"
@@ -246,19 +247,19 @@ export function MpvCorePreferencesModal(props: {
                     variant="pill"
                 >
                     <TabsList className="flex-wrap max-w-full bg-[--paper] p-2 border rounded-xl">
-                        <TabsTrigger value="keybinds">Keyboard Shortcuts</TabsTrigger>
-                        <TabsTrigger value="subtitles">Subtitles & Audio</TabsTrigger>
-                        <TabsTrigger value="general">General</TabsTrigger>
+                        <TabsTrigger value="keybinds">{t("player.prefs.tab_keybinds")}</TabsTrigger>
+                        <TabsTrigger value="subtitles">{t("player.prefs.tab_subtitles_audio")}</TabsTrigger>
+                        <TabsTrigger value="general">{t("player.prefs.tab_general")}</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="general" className={tabContentClass}>
                         <div className="space-y-4">
                             <TextInput
-                                label="Extra Chapters to Skip"
+                                label={t("player.prefs.extra_skip_chapters")}
                                 value={editedSkipPatterns}
                                 onValueChange={setEditedSkipPatterns}
                                 placeholder="^Intro$,^Outro$,^Preview$"
-                                help="Comma-separated regular expressions matched case-insensitively. Existing opening and ending rules remain active."
+                                help={t("player.prefs.extra_skip_chapters_help")}
                                 error={skipPatternError}
                                 onKeyDown={event => event.stopPropagation()}
                                 onInput={event => event.stopPropagation()}
@@ -266,9 +267,9 @@ export function MpvCorePreferencesModal(props: {
                             <DirectorySelector
                                 value={editedScreenshotDir}
                                 onSelect={setEditedScreenshotDir}
-                                label="Screenshot Directory"
-                                help="Configure the directory where screenshots will be saved"
-                                error={!isAbsolute ? "Must be an absolute path" : ""}
+                                label={t("player.prefs.screenshot_dir")}
+                                help={t("player.prefs.screenshot_dir_help")}
+                                error={!isAbsolute ? t("player.prefs.must_be_absolute_path") : ""}
                             />
 
                             <div className="flex items-center justify-between pt-6">
@@ -276,21 +277,21 @@ export function MpvCorePreferencesModal(props: {
                                     intent="gray-outline"
                                     onClick={handleReset}
                                 >
-                                    Reset all
+                                    {t("player.prefs.reset_all")}
                                 </Button>
                                 <div className="flex gap-2">
                                     <Button
                                         intent="gray-outline"
                                         onClick={() => setOpen(false)}
                                     >
-                                        Cancel
+                                        {t("library.common.cancel")}
                                     </Button>
                                     <Button
                                         intent="primary"
                                         onClick={handleSave}
                                         disabled={!isAbsolute || !!skipPatternError}
                                     >
-                                        Save
+                                        {t("media.action.save")}
                                     </Button>
                                 </div>
                             </div>
@@ -302,42 +303,42 @@ export function MpvCorePreferencesModal(props: {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 <div>
                                     <div className="space-y-3">
-                                        <KeybindingRow action="Seek Forward (Fine)" actionKey="seekForwardFine" hasValue valueLabel="Seconds" {...rowProps} />
-                                        <KeybindingRow action="Seek Backward (Fine)" actionKey="seekBackwardFine" hasValue valueLabel="Seconds" {...rowProps} />
-                                        <KeybindingRow action="Seek Forward" actionKey="seekForward" hasValue valueLabel="Seconds" {...rowProps} />
-                                        <KeybindingRow action="Seek Backward" actionKey="seekBackward" hasValue valueLabel="Seconds" {...rowProps} />
-                                        <KeybindingRow action="Increase Speed" actionKey="increaseSpeed" hasValue valueLabel="increment" {...rowProps} />
-                                        <KeybindingRow action="Decrease Speed" actionKey="decreaseSpeed" hasValue valueLabel="increment" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_seek_forward_fine")} actionKey="seekForwardFine" hasValue valueLabel={t("player.prefs.kb_value_seconds")} {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_seek_backward_fine")} actionKey="seekBackwardFine" hasValue valueLabel={t("player.prefs.kb_value_seconds")} {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_seek_forward")} actionKey="seekForward" hasValue valueLabel={t("player.prefs.kb_value_seconds")} {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_seek_backward")} actionKey="seekBackward" hasValue valueLabel={t("player.prefs.kb_value_seconds")} {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_increase_speed")} actionKey="increaseSpeed" hasValue valueLabel={t("player.prefs.kb_value_increment")} {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_decrease_speed")} actionKey="decreaseSpeed" hasValue valueLabel={t("player.prefs.kb_value_increment")} {...rowProps} />
                                     </div>
                                 </div>
                                 <div>
                                     <div className="space-y-3">
-                                        <KeybindingRow action="Next Chapter" actionKey="nextChapter" {...rowProps} />
-                                        <KeybindingRow action="Previous Chapter" actionKey="previousChapter" {...rowProps} />
-                                        <KeybindingRow action="Next Episode" actionKey="nextEpisode" {...rowProps} />
-                                        <KeybindingRow action="Previous Episode" actionKey="previousEpisode" {...rowProps} />
-                                        <KeybindingRow action="Cycle Subtitles" actionKey="cycleSubtitles" {...rowProps} />
-                                        <KeybindingRow action="Fullscreen" actionKey="fullscreen" {...rowProps} />
-                                        <KeybindingRow action="Picture in Picture" actionKey="pictureInPicture" {...rowProps} />
-                                        <KeybindingRow action="Take Screenshot" actionKey="takeScreenshot" {...rowProps} />
-                                        <KeybindingRow action="Display Characters" actionKey="openInSight" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_next_chapter")} actionKey="nextChapter" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_previous_chapter")} actionKey="previousChapter" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_next_episode")} actionKey="nextEpisode" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_previous_episode")} actionKey="previousEpisode" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_cycle_subtitles")} actionKey="cycleSubtitles" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_fullscreen")} actionKey="fullscreen" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_pip")} actionKey="pictureInPicture" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_take_screenshot")} actionKey="takeScreenshot" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_display_characters")} actionKey="openInSight" {...rowProps} />
                                     </div>
                                 </div>
                                 <div>
                                     <div className="space-y-3">
-                                        <KeybindingRow action="Volume Up" actionKey="volumeUp" hasValue valueLabel="Percent" {...rowProps} />
-                                        <KeybindingRow action="Volume Down" actionKey="volumeDown" hasValue valueLabel="Percent" {...rowProps} />
-                                        <KeybindingRow action="Mute" actionKey="mute" {...rowProps} />
-                                        <KeybindingRow action="Cycle Audio" actionKey="cycleAudio" {...rowProps} />
-                                        <KeybindingRow action="Stats for Nerds" actionKey="statsForNerds" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_volume_up")} actionKey="volumeUp" hasValue valueLabel={t("player.prefs.kb_value_percent")} {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_volume_down")} actionKey="volumeDown" hasValue valueLabel={t("player.prefs.kb_value_percent")} {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_mute")} actionKey="mute" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_cycle_audio")} actionKey="cycleAudio" {...rowProps} />
+                                        <KeybindingRow action={t("player.prefs.kb_stats_for_nerds")} actionKey="statsForNerds" {...rowProps} />
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-center justify-between pt-6">
-                                <Button intent="gray-outline" onClick={handleReset}>Reset all</Button>
+                                <Button intent="gray-outline" onClick={handleReset}>{t("player.prefs.reset_all")}</Button>
                                 <div className="flex gap-2">
-                                    <Button intent="gray-outline" onClick={() => setOpen(false)}>Cancel</Button>
-                                    <Button intent="primary" onClick={handleSave} disabled={!!skipPatternError}>Save</Button>
+                                    <Button intent="gray-outline" onClick={() => setOpen(false)}>{t("library.common.cancel")}</Button>
+                                    <Button intent="primary" onClick={handleSave} disabled={!!skipPatternError}>{t("media.action.save")}</Button>
                                 </div>
                             </div>
                         </div>
@@ -345,10 +346,10 @@ export function MpvCorePreferencesModal(props: {
 
                     <TabsContent value="subtitles" className={tabContentClass}>
                         <div className="space-y-3">
-                            <h3 className="text-lg font-semibold text-white">Defaults</h3>
+                            <h3 className="text-lg font-semibold text-white">{t("player.prefs.defaults")}</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-muted-foreground">Preferred Subtitle Language</label>
+                                    <label className="text-sm font-medium text-muted-foreground">{t("player.prefs.preferred_sub_language")}</label>
                                     <TextInput
                                         value={editedSubLanguage}
                                         onValueChange={setEditedSubLanguage}
@@ -358,7 +359,7 @@ export function MpvCorePreferencesModal(props: {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-muted-foreground">Preferred Audio Language</label>
+                                    <label className="text-sm font-medium text-muted-foreground">{t("player.prefs.preferred_audio_language")}</label>
                                     <TextInput
                                         value={editedAudioLanguage}
                                         onValueChange={setEditedAudioLanguage}
@@ -369,18 +370,18 @@ export function MpvCorePreferencesModal(props: {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">Ignored Subtitle Names</label>
+                                <label className="text-sm font-medium text-muted-foreground">{t("player.prefs.ignored_sub_names")}</label>
                                 <TextInput
                                     value={editedSubsBlacklist}
                                     onValueChange={setEditedSubsBlacklist}
                                     placeholder="e.g. signs & songs,signs/songs"
                                     onKeyDown={event => event.stopPropagation()}
                                     onInput={event => event.stopPropagation()}
-                                    help="Subtitle tracks that will not be selected by default if they match the preferred languages. Separate multiple names with commas."
+                                    help={t("player.prefs.ignored_sub_names_help")}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">Subtitle Delay</label>
+                                <label className="text-sm font-medium text-muted-foreground">{t("player.menu.subtitle_delay")}</label>
                                 <NumberInput
                                     value={editedSubtitleDelay}
                                     onValueChange={value => setEditedSubtitleDelay(value || 0)}
@@ -391,10 +392,10 @@ export function MpvCorePreferencesModal(props: {
                             </div>
                         </div>
                         <div className="flex items-center justify-between pt-6">
-                            <Button intent="gray-outline" onClick={handleReset}>Reset all</Button>
+                            <Button intent="gray-outline" onClick={handleReset}>{t("player.prefs.reset_all")}</Button>
                             <div className="flex gap-2">
-                                <Button intent="gray-outline" onClick={() => setOpen(false)}>Cancel</Button>
-                                <Button intent="primary" onClick={handleSave} disabled={!!skipPatternError}>Save</Button>
+                                <Button intent="gray-outline" onClick={() => setOpen(false)}>{t("library.common.cancel")}</Button>
+                                <Button intent="primary" onClick={handleSave} disabled={!!skipPatternError}>{t("media.action.save")}</Button>
                             </div>
                         </div>
                     </TabsContent> </Tabs>

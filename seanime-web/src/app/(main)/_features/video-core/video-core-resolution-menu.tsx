@@ -5,6 +5,7 @@ import { VideoCoreControlButtonIcon } from "@/app/(main)/_features/video-core/vi
 import { vc_hlsCurrentQuality, vc_hlsQualityLevels, vc_hlsSetQuality } from "@/app/(main)/_features/video-core/video-core-hls"
 import { VideoCoreMenu, VideoCoreMenuBody, VideoCoreMenuTitle, VideoCoreSettingSelect } from "@/app/(main)/_features/video-core/video-core-menu"
 import { VideoCore_VideoSource, VideoCoreLifecycleState } from "@/app/(main)/_features/video-core/video-core.atoms"
+import { t } from "@/lib/i18n"
 import { atom, useAtomValue } from "jotai"
 import React from "react"
 import { LuFilm } from "react-icons/lu"
@@ -57,14 +58,14 @@ export function VideoCoreResolutionMenu({ state, onVideoSourceChange, onHlsQuali
                 className="text-xl lg:text-2xl"
             />}
         >
-            <VideoCoreMenuTitle>Quality</VideoCoreMenuTitle>
+            <VideoCoreMenuTitle>{t("player.menu.quality")}</VideoCoreMenuTitle>
             <VideoCoreMenuBody>
                 <VideoCoreSettingSelect
                     isFullscreen={isFullscreen}
                     containerElement={containerElement}
                     options={[
                         ...(isHls ? [{
-                            label: "Auto",
+                            label: t("player.menu.auto"),
                             value: -1,
                         }] : []),
                         ...levels.map(level => ({

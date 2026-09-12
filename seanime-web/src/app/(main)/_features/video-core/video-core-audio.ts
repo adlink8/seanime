@@ -1,6 +1,7 @@
 import { HlsAudioTrack } from "@/app/(main)/_features/video-core/video-core-hls"
 import { VideoCore_VideoPlaybackInfo, VideoCoreSettings } from "@/app/(main)/_features/video-core/video-core.atoms"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { isTrackLanguageMatch } from "@/lib/helpers/language"
 
 const audioLog = logger("AUDIO")
@@ -58,7 +59,7 @@ export class VideoCoreAudioManager extends EventTarget {
             // Check that audio tracks are loaded
             if (this.videoElement.audioTracks.length <= 0) {
                 // Dispatch error event
-                const errorMessage = "The player does not support this audio codec. Please try another file or use an external player."
+                const errorMessage = t("player.audio.codec_unsupported")
                 const errorEvent: AudioManagerErrorEvent = new CustomEvent("error", { detail: { error: errorMessage } })
                 this.dispatchEvent(errorEvent)
                 onError(errorMessage)

@@ -21,6 +21,9 @@ export type DictionaryModule =
     | "media"
     | "discover"
     | "schedule"
+    | "settings-media"
+    | "entry"
+    | "mpv"
 
 /** 模块清单（运行时可用，顺序即文档中的展示顺序） */
 export const DICTIONARY_MODULES: readonly DictionaryModule[] = [
@@ -34,6 +37,9 @@ export const DICTIONARY_MODULES: readonly DictionaryModule[] = [
     "media",
     "discover",
     "schedule",
+    "settings-media",
+    "entry",
+    "mpv",
 ] as const
 
 /** t(key, params) 的插值参数，占位符写法为 {name} */

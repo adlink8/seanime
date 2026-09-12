@@ -4,6 +4,7 @@ import { MediaEntryCard } from "@/app/(main)/_features/media/_components/media-e
 import { MediaEntryDetailsSkeleton } from "@/app/(main)/_features/media/_components/media-entry-page-loading-display"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import capitalize from "lodash/capitalize"
+import { t } from "@/lib/i18n"
 import React from "react"
 
 type RelationsRecommendationsSectionProps = {
@@ -49,14 +50,14 @@ export function RelationsRecommendationsSection(props: RelationsRecommendationsS
             {/*{(!!sourceManga || relations.length > 0 || recommendations.length > 0) && <Separator />}*/}
             {(!!sourceManga || relations.length > 0) && (
                 <>
-                    <h2>关联作品</h2>
+                    <h2>{t("entry.relations.header")}</h2>
                     <MediaCardGrid maxCol={maxCol}>
                         {!!sourceManga && <div className="col-span-1">
                             <MediaEntryCard
                                 media={sourceManga!}
                                 overlay={<p
                                     className="font-semibold text-white bg-gray-950 z-[-1] absolute right-0 w-fit px-4 py-1.5 text-center !bg-opacity-90 text-sm lg:text-base rounded-none rounded-bl-lg"
-                                >Manga</p>}
+                                >{t("entry.relations.manga")}</p>}
                                 type="manga"
                             /></div>}
                         {relations.slice(0, 4).map(edge => {
@@ -66,7 +67,7 @@ export function RelationsRecommendationsSection(props: RelationsRecommendationsS
                                     overlay={<p
                                         className="font-semibold text-white bg-gray-950 z-[-1] absolute right-0 w-fit px-4 py-1.5 text-center !bg-opacity-90 text-sm lg:text-base rounded-none rounded-bl-lg"
                                     >{edge.node?.format === "MOVIE"
-                                        ? capitalize(edge.relationType || "").replace("_", " ") + " (Movie)"
+                                        ? t("entry.relations.movie_relation", { relation: capitalize(edge.relationType || "").replace("_", " ") })
                                         : capitalize(edge.relationType || "").replace("_", " ")}</p>}
                                     showLibraryBadge
                                     showTrailer
@@ -78,7 +79,7 @@ export function RelationsRecommendationsSection(props: RelationsRecommendationsS
                 </>
             )}
             {recommendations.length > 0 && <>
-                <h2>相关推荐</h2>
+                <h2>{t("entry.relations.recommendations")}</h2>
                 <MediaCardGrid maxCol={maxCol}>
                     {recommendations.map(media => {
                         return <div key={media.id} className="col-span-1">

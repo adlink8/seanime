@@ -21,6 +21,7 @@ import { vc_showOverlayFeedback } from "@/app/(main)/_features/video-core/video-
 import { VIDEOCORE_PREVIEW_CAPTURE_INTERVAL_SECONDS, VIDEOCORE_PREVIEW_THUMBNAIL_SIZE } from "@/app/(main)/_features/video-core/video-core-preview"
 import { vc_autoSkipOPEDAtom, vc_highlightOPEDChaptersAtom, vc_showChapterMarkersAtom } from "@/app/(main)/_features/video-core/video-core.atoms"
 import { vc_dispatchAction } from "@/app/(main)/_features/video-core/video-core.utils"
+import { t } from "@/lib/i18n"
 import { atom, useAtomValue } from "jotai"
 import { useAtom, useSetAtom } from "jotai/react"
 import React from "react"
@@ -149,7 +150,7 @@ export function VideoCoreTimeRange(props: VideoCoreTimeRangeProps) {
         if (autoSkipIntroOutro && !restoreProgressTo) {
             setSkipChapter(null)
             action({ type: "seekTo", payload: { time: chapter.end } })
-            showOverlayFeedback({ message: `Skipped ${label}`, duration: 1000 })
+            showOverlayFeedback({ message: t("player.overlay.skipped", { label }), duration: 1000 })
             return
         }
 

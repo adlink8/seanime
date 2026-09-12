@@ -11,6 +11,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Vaul, VaulContent } from "@/components/vaul"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -131,7 +132,7 @@ export function TorrentstreamFileSelectionModal({ entry }: { entry: Anime_Entry 
             <VaulContent className="max-w-5xl mx-auto">
                 <AppLayoutStack className="mt-4 p-3 lg:p-6">
                     {(isLoading || filePreviews?.length === 1) ? <LoadingSpinner
-                        title={filePreviews?.length === 1 ? "Launching stream..." : "Fetching torrent info..."}
+                        title={filePreviews?.length === 1 ? t("entry.stream_file_selection.launching") : t("entry.stream_file_selection.fetching_info")}
                     /> : (
                         <AppLayoutStack className="pb-0">
 
@@ -157,7 +158,7 @@ export function TorrentstreamFileSelectionModal({ entry }: { entry: Anime_Entry 
                                 disabled={selectedFileIdx === -1 || isLoading}
                                 onClick={() => onStream(selectedFileIdx)}
                             >
-                                Stream
+                                {t("entry.torrent_download.stream")}
                             </Button>
 
                         </AppLayoutStack>

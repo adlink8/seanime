@@ -37,6 +37,7 @@ import { Button, IconButton } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { Modal } from "@/components/ui/modal"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { upath } from "@/lib/helpers/upath"
 import { WSEvents } from "@/lib/server/ws-events"
 import { __isDesktop__ } from "@/types/constants"
@@ -142,7 +143,7 @@ export function MpvCorePlayerInner() {
 
             const writeConfigFile = window.electron?.mpvCore?.writeConfigFile
             if (!writeConfigFile) {
-                toast.error("MPV config files are unavailable in this Denshi build")
+                toast.error(t("mpv.config.unavailable"))
                 setConfigState({ ready: true, path: null })
                 return
             }
@@ -156,7 +157,7 @@ export function MpvCorePlayerInner() {
             }
             catch (error) {
                 if (!cancelled) {
-                    toast.error(error instanceof Error ? error.message : "Failed to write MPV config")
+                    toast.error(error instanceof Error ? error.message : t("mpv.config.write_failed"))
                     setConfigState({ ready: true, path: null })
                 }
             }
@@ -663,7 +664,7 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
             const profile = mc_resolveAnime4KProfile(directory, shaderSettings.anime4kMode, shaderSettings.anime4kQuality)
             if (profile.missing.length) {
                 await p.clearShaders()
-                setAnime4kError(`Missing ${profile.missing.join(", ")}`)
+                setAnime4kError(t("mpv.shader.missing_files", { files: profile.missing.join(", ") }))
                 return
             }
             await p.setShaders(profile.paths)
@@ -973,7 +974,7 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
         if (autoSkip && chapter) {
             setSkipChapter(null)
             player?.seek(chapter.end, "absolute+exact")
-            showMessage(`Skipped ${getSkipLabel(chapter.label)}`)
+            showMessage(t("player.overlay.skipped", { label: getSkipLabel(chapter.label) }))
             return
         }
 
@@ -1183,7 +1184,7 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
     React.useEffect(() => {
         if (!player || !state.active || !metadataReadyRef.current) return
         applyMpvSubtitleSettings(player, mpvSettings).catch(error => {
-            toast.error(error instanceof Error ? error.message : "Failed to apply subtitle settings")
+            toast.error(error instanceof Error ? error.message : t("mpv.subs.apply_failed"))
         })
     }, [player, state.active, mpvSettings])
 
@@ -1448,7 +1449,7 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
             }
         } catch (error) {
             console.error("Failed to toggle PiP:", error)
-            toast.error(error instanceof Error ? error.message : "Failed to toggle PiP")
+            toast.error(error instanceof Error ? error.message : t("mpv.pip.toggle_failed"))
         }
     }
 
@@ -1539,11 +1540,11 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
                     base64Data,
                 })
 
-                showMessage(`Screenshot saved to ${screenshotDir}`, "message", 4000)
+                showMessage(t("mpv.screenshot.saved_to", { path: screenshotDir }), "message", 4000)
             }
             catch (error) {
                 console.error("Failed to save screenshot:", error)
-                toast.error("Failed to save screenshot to server")
+                toast.error(t("player.screenshot.save_server_failed"))
 
                 // Reprompt the screenshot dir when saving fails
                 setPendingScreenshot({ base64Data })
@@ -1551,20 +1552,20 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
             }
         } catch (error) {
             console.error("Screenshot capture failed:", error)
-            toast.error(error instanceof Error ? error.message : "Failed to capture screenshot")
+            toast.error(error instanceof Error ? error.message : t("player.screenshot.failed"))
         }
     }
 
     async function changeSpeed(value: number) {
         setSpeed(value)
         await player?.setSpeed(value)
-        showMessage(`Speed: ${value.toFixed(2)}x`)
+        showMessage(t("player.overlay.speed", { speed: value.toFixed(2) }))
     }
 
     async function addSubtitleFile(file: File) {
         const extension = file.name.split(".").pop()?.toLowerCase() ?? ""
         if (!subtitleExts.includes(extension)) {
-            toast.error("Unsupported subtitle format")
+            toast.error(t("mpv.subs.unsupported_format"))
             return
         }
         const content = await file.text()
@@ -1572,7 +1573,7 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
         const path = await window.electron.mpvCore.createTempSubtitle(file.name, content)
         await player?.runCommand("sub-add", path, "select", file.name)
         setTracks(await player?.getTracks().catch(() => []) ?? [])
-        showMessage(`Loaded subtitle ${file.name}`)
+        showMessage(t("mpv.subs.loaded_file", { name: file.name }))
     }
 
     function handleDrop(event: React.DragEvent) {
@@ -1829,7 +1830,7 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
                                         className="absolute top-0 left-0 w-full h-full z-[100] bg-black flex items-center justify-center"
                                     >
                                         <Button intent="gray-outline" size="xl" onClick={() => togglePip(false)}>
-                                            Exit PiP
+                                            {t("player.pip.exit")}
                                         </Button>
                                     </div>
                                 )}
@@ -1970,7 +1971,7 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
                                                         />
                                                     }
                                                 >
-                                                    <MediaCoreMenuTitle>Quality</MediaCoreMenuTitle>
+                                                    <MediaCoreMenuTitle>{t("player.menu.quality")}</MediaCoreMenuTitle>
                                                     <MediaCoreMenuBody>
                                                         <MediaCoreSettingSelect
                                                             options={state.playbackInfo.videoSources.toReversed().map(source => ({
@@ -2023,13 +2024,13 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
                                                         />
                                                     }
                                                 >
-                                                    <MediaCoreMenuTitle>Subtitles
+                                                    <MediaCoreMenuTitle>{t("player.subs.title")}
                                                         <IconButton
                                                             intent="gray-link" size="xs"
                                                             onClick={() => {
                                                                 setOpenMenu("settings")
                                                                 React.startTransition(() => {
-                                                                    setOpenSection("Subtitle Styles")
+                                                                    setOpenSection(t("player.menu.subtitle_styles"))
                                                                 })
                                                             }}
                                                             icon={<LuPaintbrush />}
@@ -2039,7 +2040,7 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
                                                     <MediaCoreMenuBody>
                                                         <MediaCoreSettingSelect
                                                             options={[
-                                                                { label: "Off", value: "no" },
+                                                                { label: t("player.common.off"), value: "no" },
                                                                 ...subtitleTracks.map(mc_formatSubtitleTrack),
                                                             ]}
                                                             value={selectedSubtitle}
@@ -2071,7 +2072,7 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
                                                         />
                                                     }
                                                 >
-                                                    <MediaCoreMenuTitle>Audio</MediaCoreMenuTitle>
+                                                    <MediaCoreMenuTitle>{t("player.menu.audio")}</MediaCoreMenuTitle>
                                                     <MediaCoreMenuBody>
                                                         <MediaCoreSettingSelect
                                                             options={audioTracks.map(mc_formatAudioTrack)}
@@ -2141,8 +2142,8 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
             </MediaCoreDrawer>
 
             <Modal
-                title="Terminate stream?"
-                description="Press Esc again or choose terminate to stop playback."
+                title={t("player.terminate.title")}
+                description={t("player.terminate.desc")}
                 titleClass="text-center"
                 open={isTerminateConfirmOpen && state.miniPlayer}
                 onOpenChange={open => {
@@ -2155,10 +2156,10 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
             >
                 <div className="flex gap-2 justify-center items-center">
                     <Button intent="warning-subtle" onClick={() => terminate("user terminated player")}>
-                        Terminate stream
+                        {t("player.terminate.confirm")}
                     </Button>
                     <Button intent="white" onClick={() => setTerminateConfirmOpen(false)}>
-                        Keep playing
+                        {t("player.terminate.keep")}
                     </Button>
                 </div>
             </Modal>

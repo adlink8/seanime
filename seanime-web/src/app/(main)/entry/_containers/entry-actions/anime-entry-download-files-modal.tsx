@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { Separator } from "@/components/ui/separator"
 import { openTab } from "@/lib/helpers/browser"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -27,7 +28,7 @@ export function AnimeEntryDownloadFilesModal({ entry }: AnimeEntryDownloadFilesM
             open={open}
             onOpenChange={() => setOpen(false)}
             contentClass="max-w-2xl"
-            title={<span>Select files to download</span>}
+            title={<span>{t("entry.download_files.select_files_to_download")}</span>}
             titleClass="text-center"
 
         >
@@ -59,7 +60,7 @@ function Content({ entry }: { entry: Anime_Entry }) {
         <div className="space-y-2 mt-2">
 
             <p className="text-[--muted]">
-                Seanime will open a new tab for each file you download. Make sure your browser allows popups.
+                {t("entry.download_files.popup_notice")}
             </p>
 
             <Separator />
@@ -76,7 +77,7 @@ function Content({ entry }: { entry: Anime_Entry }) {
                     intent="white"
                     onClick={() => handleDownload()}
                 >
-                    Download
+                    {t("entry.torrent_download.download")}
                 </Button>
             </div>
         </div>

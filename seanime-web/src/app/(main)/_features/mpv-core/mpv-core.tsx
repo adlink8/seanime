@@ -3,6 +3,7 @@ import type { MpvCore_ServerEvent, Player_PlaybackInfo, Player_SkipData } from "
 import { useWebsocketMessageListener } from "@/app/(main)/_hooks/handle-websockets"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { isTrackLanguageMatch } from "@/lib/helpers/language"
+import { t } from "@/lib/i18n"
 import { WSEvents } from "@/lib/server/ws-events"
 import { __isElectronDesktop__ } from "@/types/constants"
 import type { MpvPrismTrack, MpvPrismTrackKind } from "@mpv-prism/core"
@@ -382,7 +383,7 @@ export function getMpvAudioCodecType(codec: string) {
 export function mc_formatSubtitleTrack(track: MpvPrismTrack) {
     const codecStr = track.codec ? String(track.codec) : undefined
     const formattedCodec = codecStr ? getMpvSubtitleCodecType(codecStr) : undefined
-    const label = track.title || track.lang?.toUpperCase() || `Track ${track.id}`
+    const label = track.title || track.lang?.toUpperCase() || t("player.overlay.track", { num: String(track.id) })
     const isLangSameAsLabel = track.lang?.toLowerCase() === track.title?.toLowerCase() || track.lang?.toUpperCase() === label
     const moreInfo = track.lang && !isLangSameAsLabel
         ? `${track.lang.toUpperCase()}${formattedCodec ? "/" + formattedCodec : ""}`
@@ -398,7 +399,7 @@ export function mc_formatSubtitleTrack(track: MpvPrismTrack) {
 export function mc_formatAudioTrack(track: MpvPrismTrack) {
     const codecStr = track.codec ? String(track.codec) : undefined
     const formattedCodec = codecStr ? getMpvAudioCodecType(codecStr) : undefined
-    const label = track.title || track.lang?.toUpperCase() || `Track ${track.id}`
+    const label = track.title || track.lang?.toUpperCase() || t("player.overlay.track", { num: String(track.id) })
     const isLangSameAsLabel = track.lang?.toLowerCase() === track.title?.toLowerCase() || track.lang?.toUpperCase() === label
     const moreInfo = track.lang && !isLangSameAsLabel
         ? `${track.lang.toUpperCase()}${formattedCodec ? "/" + formattedCodec : ""}`

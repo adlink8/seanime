@@ -1,4 +1,5 @@
 import { cn } from "@/components/ui/core/styling"
+import { t } from "@/lib/i18n"
 import { motion } from "motion/react"
 import React from "react"
 
@@ -60,7 +61,7 @@ export function EpisodePillsGrid({
                             // }}
                             onClick={() => !disabled && onEpisodeSelect(episode.number, getEpisodeId(episode))}
                             disabled={disabled}
-                            title={episode.title || `Episode ${episode.number}`}
+                            title={episode.title || t("player.episodes.episode_num", { num: episode.number })}
                             id={getEpisodeId(episode)}
                             className={cn(
                                 "relative flex items-center justify-center",
@@ -95,7 +96,7 @@ export function EpisodePillsGrid({
                                         "bg-orange-400",
                                         isSelected && "bg-orange-200",
                                     )}
-                                    title="Filler episode"
+                                    title={t("player.episodes.filler")}
                                 />
                             )}
 

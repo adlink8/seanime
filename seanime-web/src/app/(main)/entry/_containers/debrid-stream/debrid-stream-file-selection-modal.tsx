@@ -13,6 +13,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Vaul, VaulContent } from "@/components/vaul"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { DEBRID_SERVICE } from "@/lib/server/settings"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -141,7 +142,7 @@ export function DebridStreamFileSelectionModal(props: DebridStreamFileSelectionM
             <VaulContent className="max-w-5xl mx-auto">
                 <AppLayoutStack className="mt-4 p-3 lg:p-6">
                     {(isLoading || previews?.length === 1) ? <LoadingSpinner
-                        title={previews?.length === 1 ? "Launching stream..." : "Fetching torrent info..."}
+                        title={previews?.length === 1 ? t("entry.stream_file_selection.launching") : t("entry.stream_file_selection.fetching_info")}
                     /> : (
                         <AppLayoutStack className="mt-4">
 
@@ -164,7 +165,7 @@ export function DebridStreamFileSelectionModal(props: DebridStreamFileSelectionM
                                 disabled={selectedFileId === "" || isLoading}
                                 onClick={() => onStream(selectedFileId)}
                             >
-                                Stream
+                                {t("entry.torrent_download.stream")}
                             </Button>
 
                         </AppLayoutStack>

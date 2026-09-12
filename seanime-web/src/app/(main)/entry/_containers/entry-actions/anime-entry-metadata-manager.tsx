@@ -12,6 +12,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { NumberInput } from "@/components/ui/number-input"
 import { Separator } from "@/components/ui/separator"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -54,7 +55,7 @@ export function AnimeEntryMetadataManager(props: AnimeEntryMetadataManagerProps)
         <Modal
             open={isOpen}
             onOpenChange={setOpen}
-            title="Metadata"
+            title={t("library.super_update.metadata")}
             contentClass="max-w-2xl"
             titleClass=""
         >
@@ -69,7 +70,7 @@ export function AnimeEntryMetadataManager(props: AnimeEntryMetadataManagerProps)
                     loading={filler_isPopulating}
                     disabled={filler_isPopulating || filler_isRemoving || cannotAddMetadata}
                 >
-                    {filler_isPopulating ? "Fetching..." : "Fetch filler info"}
+                    {filler_isPopulating ? t("entry.metadata.fetching") : t("entry.metadata.fetch_filler_info")}
                 </Button>
                 <Button
                     className="w-full"
@@ -78,7 +79,7 @@ export function AnimeEntryMetadataManager(props: AnimeEntryMetadataManagerProps)
                     loading={filler_isRemoving}
                     disabled={filler_isPopulating || filler_isRemoving || cannotAddMetadata}
                 >
-                    {filler_isRemoving ? "Removing..." : "Remove filler info"}
+                    {filler_isRemoving ? t("entry.metadata.removing") : t("entry.metadata.remove_filler_info")}
                 </Button>
             </div>
 
@@ -88,11 +89,11 @@ export function AnimeEntryMetadataManager(props: AnimeEntryMetadataManagerProps)
                     <Separator />
 
                     <div>
-                        <h3 className="text-center flex gap-2 items-center justify-center">Metadata
-                                                                                           Parent <Help content="This will not work if the parent series does not contain specials metadata." />
+                        <h3 className="text-center flex gap-2 items-center justify-center">{t("entry.metadata.parent")}
+                                                                                           <Help content={t("entry.metadata.parent_help")} />
                         </h3>
                         <p className="text-sm text-[--muted] text-center">
-                            Add metadata to specials by linking the entry to a parent anime.
+                            {t("entry.metadata.parent_desc")}
                         </p>
                     </div>
 
@@ -100,7 +101,7 @@ export function AnimeEntryMetadataManager(props: AnimeEntryMetadataManagerProps)
                         <>
                             <div className="flex gap-2 flex-col lg:flex-row">
                                 <NumberInput
-                                    leftAddon="AniList ID"
+                                    leftAddon={t("entry.metadata.anilist_id")}
                                     addonClass="justify-center text-center font-semibold"
                                     hideControls
                                     value={metadataParentId ?? ""}
@@ -110,17 +111,17 @@ export function AnimeEntryMetadataManager(props: AnimeEntryMetadataManagerProps)
                                         size="xs" intent="gray-link"
                                         onClick={() => setMetadataParentId(parentId)}
                                     >
-                                        Select parent
+                                        {t("entry.metadata.select_parent")}
                                     </Button> : undefined}
                                 />
 
                                 <NumberInput
-                                    leftAddon="Special Offset"
+                                    leftAddon={t("entry.metadata.special_offset")}
                                     value={specialOffset ?? ""}
                                     onValueChange={setSpecialOffset}
                                     addonClass="text-center font-semibold"
                                     hideControls
-                                    placeholder="0 = S1, 1 = S2, etc."
+                                    placeholder={t("entry.metadata.special_offset_hint")}
                                 />
                             </div>
 
@@ -139,7 +140,7 @@ export function AnimeEntryMetadataManager(props: AnimeEntryMetadataManagerProps)
                                     }}
                                     disabled={isSavingMetadataParent || isDeletingMetadataParent}
                                 >
-                                    Save
+                                    {t("media.action.save")}
                                 </Button>
                                 {!!metadataParentData?.id && <Button
                                     className="w-full"
@@ -147,7 +148,7 @@ export function AnimeEntryMetadataManager(props: AnimeEntryMetadataManagerProps)
                                     loading={isDeletingMetadataParent || isSavingMetadataParent}
                                     onClick={() => deleteMetadataParent({ mediaId: entry.mediaId })}
                                 >
-                                    Remove
+                                    {t("entry.metadata.remove")}
                                 </Button>}
                             </div>
                         </>

@@ -38,6 +38,7 @@ import { HiOutlineServerStack } from "react-icons/hi2"
 import { IoLibraryOutline } from "react-icons/io5"
 import { PiMonitorPlayDuotone } from "react-icons/pi"
 import { useUnmount } from "react-use"
+import { t } from "@/lib/i18n"
 
 export const __anime_entryPageViewAtom = atom<string>("library")
 
@@ -251,28 +252,28 @@ export function AnimeEntryPage() {
             items: [
                 ...[{
                     id: "library",
-                    description: "Downloaded episodes",
+                    description: t("entry.page.downloaded_episodes"),
                     show: currentView !== "library",
                 },
                     {
                         id: "torrentstream",
-                        description: "Torrent streaming",
+                        description: t("entry.page.torrent_streaming"),
                         show: serverStatus?.torrentstreamSettings?.enabled && currentView !== "torrentstream",
                     },
                     {
                         id: "debridstream",
-                        description: "Debrid streaming",
+                        description: t("entry.page.debrid_streaming"),
                         show: serverStatus?.debridSettings?.enabled && currentView !== "debridstream",
                     },
                     {
                         id: "onlinestream",
-                        description: "Online streaming",
+                        description: t("entry.page.online_streaming"),
                         show: serverStatus?.settings?.library?.enableOnlinestream && currentView !== "onlinestream",
                     },
                 ].map(item => ({
                     id: item.id,
                     value: item.id,
-                    heading: "Views",
+                    heading: t("entry.page.views"),
                     data: item,
                     render: () => <div>{item.description}</div>,
                     onSelect: () => setView(item.id as any),
@@ -281,8 +282,8 @@ export function AnimeEntryPage() {
                 {
                     id: "download",
                     value: "download",
-                    render: () => <div>Download torrents</div>,
-                    heading: "Views",
+                    render: () => <div>{t("entry.page.download_torrents")}</div>,
+                    heading: t("entry.page.views"),
                     data: "download torrents",
                     onSelect: () => setTorrentSearchDrawer("download"),
                     shouldShow: () => currentView === "library",
@@ -290,7 +291,7 @@ export function AnimeEntryPage() {
                 ...pluginEpisodeTabs.tabs.map(tab => ({
                     id: tab.viewId,
                     value: tab.viewId,
-                    heading: "Views",
+                    heading: t("entry.page.views"),
                     data: { description: tab.name },
                     render: () => <div>{tab.name}</div>,
                     onSelect: () => setView(tab.viewId),
@@ -471,21 +472,21 @@ export function EntrySectionTabs(props: EntrySectionTabs) {
                     pillClass="border-transparent"
                     iconClass="size-5 hidden data-[current=true]:block"
                     items={[
-                        { name: "Local library", iconType: IoLibraryOutline, isCurrent: isLibraryView, onClick: () => setView("library") },
+                        { name: t("entry.page.local_library"), iconType: IoLibraryOutline, isCurrent: isLibraryView, onClick: () => setView("library") },
                         ...(serverStatus?.torrentstreamSettings?.enabled ? [{
-                            name: "Torrent streaming",
+                            name: t("entry.page.torrent_streaming"),
                             iconType: PiMonitorPlayDuotone,
                             isCurrent: isTorrentStreamingView,
                             onClick: () => setView("torrentstream"),
                         }] : []),
                         ...(serverStatus?.debridSettings?.enabled ? [{
-                            name: "Debrid streaming",
+                            name: t("entry.page.debrid_streaming"),
                             iconType: HiOutlineServerStack,
                             isCurrent: isDebridStreamingView,
                             onClick: () => setView("debridstream"),
                         }] : []),
                         ...(serverStatus?.settings?.library?.enableOnlinestream ? [{
-                            name: "Online streaming",
+                            name: t("entry.page.online_streaming"),
                             iconType: FiGlobe,
                             isCurrent: isOnlineStreamingView,
                             onClick: () => setView("onlinestream"),

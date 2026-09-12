@@ -13,6 +13,7 @@ import { vc_videoElement } from "@/app/(main)/_features/video-core/video-core-at
 import { VideoCoreControlButtonIcon } from "@/app/(main)/_features/video-core/video-core-control-bar"
 import { VideoCoreMenu } from "@/app/(main)/_features/video-core/video-core-menu"
 import { vc_showOverlayFeedback } from "@/app/(main)/_features/video-core/video-core-overlay-display"
+import { t } from "@/lib/i18n"
 import { useAtom, useAtomValue } from "jotai"
 import { useSetAtom } from "jotai/react"
 import React from "react"
@@ -53,7 +54,7 @@ export function VideoCoreWatchPartyChat() {
         }
         previousCountRef.current = unreadCount
         if (!!unreadCount) {
-            showOverlayFeedback({ message: `New chat message (${unreadCount})`, duration: 1000 })
+            showOverlayFeedback({ message: t("player.watch_party.new_message", { count: unreadCount }), duration: 1000 })
         }
     }, [unreadCount])
 

@@ -12,6 +12,7 @@ import { cn } from "@/components/ui/core/styling"
 import { Spinner } from "@/components/ui/loading-spinner"
 import { Tooltip } from "@/components/ui/tooltip"
 import { WSEvents } from "@/lib/server/ws-events"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { useAtom, useAtomValue, useSetAtom } from "jotai/react"
 import React, { useRef, useState } from "react"
@@ -58,7 +59,7 @@ export function TorrentStreamOverlay({ isNativePlayerComponent, show }: {
 
     const { mutate: stop, isPending } = useTorrentstreamStopStream()
 
-    const t = useRef<NodeJS.Timeout | null>(null)
+    const hideTimeout = useRef<NodeJS.Timeout | null>(null)
 
     const handleStopStream = React.useCallback(() => {
         if (mpvCoreState.active && clientId) {
@@ -125,12 +126,12 @@ export function TorrentStreamOverlay({ isNativePlayerComponent, show }: {
         type: WSEvents.TORRENTSTREAM_STATE,
         onMessage: ({ state, data }: { state: string, data: any }) => {
             if (state !== TorrentStreamEvents.TorrentLoading) {
-                if (t.current) clearTimeout(t.current)
+                if (hideTimeout.current) clearTimeout(hideTimeout.current)
             }
             switch (state) {
                 case TorrentStreamEvents.TorrentLoading:
                     if (!data) {
-                        t.current = setTimeout(() => {
+                        hideTimeout.current = setTimeout(() => {
                             setLoadingState("SEARCHING_TORRENTS")
                             setStatus(null)
                             setMediaPlayerStartedPlaying(false)
@@ -221,7 +222,7 @@ export function TorrentStreamOverlay({ isNativePlayerComponent, show }: {
                                     icon={<BiStop />}
                                 />}
                             >
-                                Stop stream
+                                {t("entry.torrent_stream.stop_stream")}
                             </Tooltip>}
                         </div>
                     </div>}
@@ -231,12 +232,12 @@ export function TorrentStreamOverlay({ isNativePlayerComponent, show }: {
                         <div className="lg:max-w-[50%] w-fit h-14 px-6 flex gap-2 items-center text-sm lg:text-base pointer-events-auto">
                             <Spinner className="w-4 h-4" />
                             <div className="truncate max-w-[500px]">
-                                {loadingState === "LOADING" ? "Loading..." : ""}
-                                {loadingState === "SEARCHING_TORRENTS" ? "Selecting file..." : ""}
-                                {loadingState === "ADDING_TORRENT" ? `Adding torrent "${torrentBeingLoaded}"` : ""}
-                                {loadingState === "CHECKING_TORRENT" ? `Checking torrent "${torrentBeingLoaded}"` : ""}
-                                {loadingState === "SELECTING_FILE" ? `Selecting file...` : ""}
-                                {loadingState === "SENDING_STREAM_TO_MEDIA_PLAYER" ? "Getting metadata..." : ""}
+                                {loadingState === "LOADING" ? t("entry.torrent_stream.loading") : ""}
+                                {loadingState === "SEARCHING_TORRENTS" ? t("entry.torrent_stream.selecting_file") : ""}
+                                {loadingState === "ADDING_TORRENT" ? t("entry.torrent_stream.adding_torrent", { name: torrentBeingLoaded || "" }) : ""}
+                                {loadingState === "CHECKING_TORRENT" ? t("entry.torrent_stream.checking_torrent", { name: torrentBeingLoaded || "" }) : ""}
+                                {loadingState === "SELECTING_FILE" ? t("entry.torrent_stream.selecting_file") : ""}
+                                {loadingState === "SENDING_STREAM_TO_MEDIA_PLAYER" ? t("entry.torrent_stream.getting_metadata") : ""}
                             </div>
                         </div>
                     </div>}
@@ -284,7 +285,7 @@ export function TorrentStreamOverlay({ isNativePlayerComponent, show }: {
                                     icon={<BiStop />}
                                 />}
                             >
-                                Stop stream
+                                {t("entry.torrent_stream.stop_stream")}
                             </Tooltip>
                         </div>
                     </div>}
@@ -301,12 +302,12 @@ export function TorrentStreamOverlay({ isNativePlayerComponent, show }: {
                 <div className="bg-gray-950 rounded-full border lg:max-w-[50%] w-fit h-14 px-6 flex gap-2 items-center text-sm lg:text-base pointer-events-auto">
                     <Spinner className="w-4 h-4" />
                     <div className="truncate max-w-[500px]">
-                        {loadingState === "LOADING" ? "Loading..." : ""}
-                        {loadingState === "SEARCHING_TORRENTS" ? "Selecting file..." : ""}
-                        {loadingState === "ADDING_TORRENT" ? `Adding torrent "${torrentBeingLoaded}"` : ""}
-                        {loadingState === "CHECKING_TORRENT" ? `Checking torrent "${torrentBeingLoaded}"` : ""}
-                        {loadingState === "SELECTING_FILE" ? `Selecting file...` : ""}
-                        {loadingState === "SENDING_STREAM_TO_MEDIA_PLAYER" ? "Sending stream to media player" : ""}
+                        {loadingState === "LOADING" ? t("entry.torrent_stream.loading") : ""}
+                        {loadingState === "SEARCHING_TORRENTS" ? t("entry.torrent_stream.selecting_file") : ""}
+                        {loadingState === "ADDING_TORRENT" ? t("entry.torrent_stream.adding_torrent", { name: torrentBeingLoaded || "" }) : ""}
+                        {loadingState === "CHECKING_TORRENT" ? t("entry.torrent_stream.checking_torrent", { name: torrentBeingLoaded || "" }) : ""}
+                        {loadingState === "SELECTING_FILE" ? t("entry.torrent_stream.selecting_file") : ""}
+                        {loadingState === "SENDING_STREAM_TO_MEDIA_PLAYER" ? t("entry.torrent_stream.sending_to_player") : ""}
                     </div>
                 </div>
             </div>

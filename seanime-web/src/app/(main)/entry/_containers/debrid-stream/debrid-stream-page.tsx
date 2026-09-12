@@ -19,6 +19,7 @@ import { IconButton } from "@/components/ui/button"
 import { Popover } from "@/components/ui/popover"
 import { Switch } from "@/components/ui/switch"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { DEBRID_SERVICE } from "@/lib/server/settings"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
@@ -120,10 +121,10 @@ export function DebridStreamPage(props: DebridStreamPageProps) {
     }
 
     const confirmPreviousBatchAction = useConfirmationDialog({
-        title: "Disable previous torrent",
-        description: "Disable using the saved previous batch for now, or delete the saved history entirely.",
-        actionText: "Delete history",
-        cancelText: "Disable only",
+        title: t("entry.stream_page.disable_previous_torrent"),
+        description: t("entry.stream_page.disable_previous_torrent_desc"),
+        actionText: t("entry.stream_page.delete_history"),
+        cancelText: t("entry.stream_page.disable_only"),
         onConfirm: handleDeletePreviousBatch,
         onCancel: handleDisablePreviousBatch,
     })
@@ -283,7 +284,7 @@ export function DebridStreamPage(props: DebridStreamPageProps) {
                         data-debrid-stream-page-content-actions-container
                     >
                         <Switch
-                            label="Auto-select"
+                            label={t("entry.stream_page.auto_select")}
                             value={autoSelect}
                             onValueChange={v => {
                                 setAutoSelect(v)
@@ -294,12 +295,12 @@ export function DebridStreamPage(props: DebridStreamPageProps) {
 
                         {!autoSelect && !usePreviousBatch && (
                             <Switch
-                                label="Auto-select file"
+                                label={t("entry.stream_page.auto_select_file")}
                                 value={autoSelectFile}
                                 onValueChange={v => {
                                     setAutoSelectFile(v)
                                 }}
-                                moreHelp="The episode file will be automatically selected from your chosen batch torrent"
+                                moreHelp={t("entry.stream_page.auto_select_file_help")}
                                 fieldClass="w-fit flex-none"
                                 disabled={!autoSelect && usePreviousBatch}
                             />
@@ -320,7 +321,7 @@ export function DebridStreamPage(props: DebridStreamPageProps) {
                                             />
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
-                                            <div className="flex items-center flex-none gap-1">Auto-selecting from previous torrent
+                                            <div className="flex items-center flex-none gap-1">{t("entry.stream_page.autoselecting_previous")}
                                                 <Popover
                                                     className="text-sm"
                                                     trigger={
@@ -342,7 +343,7 @@ export function DebridStreamPage(props: DebridStreamPageProps) {
                     {episodeCollection?.hasMappingError && (
                         <div data-debrid-stream-page-no-metadata-message-container>
                             <p className="text-red-200 opacity-50">
-                                No metadata info available for this anime. You may need to manually select the file to stream.
+                                {t("entry.stream_page.no_metadata_info")}
                             </p>
                         </div>
 

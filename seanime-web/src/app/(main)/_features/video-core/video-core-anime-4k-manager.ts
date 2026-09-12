@@ -1,5 +1,6 @@
 import { VideoCoreSettings } from "@/app/(main)/_features/video-core/video-core.atoms"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import type { Anime4KPipeline } from "anime4k-webgpu"
 
 const log = logger("VIDEO CORE ANIME 4K MANAGER")
@@ -427,7 +428,7 @@ export class VideoCoreAnime4KManager extends EventTarget {
             }
             catch (error) {
                 log.error("Failed to initialize Anime4K", error)
-                this._handleError(error instanceof Error ? error.message : "Unknown error")
+                this._handleError(error instanceof Error ? error.message : t("player.common.unknown_error"))
             }
             this._onOptionChanged?.(option)
         }
@@ -774,9 +775,9 @@ export class VideoCoreAnime4KManager extends EventTarget {
     }
 
     private _handlePerformanceFallback() {
-        this._onFallback?.("Performance degraded. Turning off Anime4K.")
+        this._onFallback?.(t("player.a4k.performance_degraded"))
         // Dispatch Fallback Event
-        const errorEvent: Anime4KManagerErrorEvent = new CustomEvent("error", { detail: { message: "Performance degraded. Turning off Anime4K." } })
+        const errorEvent: Anime4KManagerErrorEvent = new CustomEvent("error", { detail: { message: t("player.a4k.performance_degraded") } })
         this.dispatchEvent(errorEvent)
 
         this.setOption("off")

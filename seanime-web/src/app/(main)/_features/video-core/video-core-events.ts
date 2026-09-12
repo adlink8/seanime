@@ -24,6 +24,7 @@ import { detectSubtitleType, isSubtitleFile } from "@/app/(main)/_features/video
 import { useWebsocketMessageListener, useWebsocketSender } from "@/app/(main)/_hooks/handle-websockets"
 import { clientIdAtom } from "@/app/websocket-provider"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { WSEvents } from "@/lib/server/ws-events"
 import { useAtomValue, useSetAtom } from "jotai"
 import React, { useCallback } from "react"
@@ -361,27 +362,27 @@ export function useVideoCoreSetupEvents(id: string,
 
 
         const error = v.error || value
-        let msg = value || "Unknown error"
+        let msg = value || t("player.common.unknown_error")
         let detailedInfo = ""
 
         if (error instanceof MediaError) {
             switch (error.code) {
                 case MediaError.MEDIA_ERR_ABORTED:
-                    msg = "Media playback aborted"
+                    msg = t("player.error.aborted")
                     break
                 case MediaError.MEDIA_ERR_NETWORK:
-                    msg = "Network error occurred: Check the console and network tab for more details"
+                    msg = t("player.error.network")
                     break
                 case MediaError.MEDIA_ERR_DECODE:
-                    msg = "Media decode error: codec not supported or corrupted file"
-                    detailedInfo = "This is likely a codec compatibility issue."
+                    msg = t("player.error.decode")
+                    detailedInfo = t("player.error.decode_detail")
                     break
                 case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                    msg = "Media format not supported"
-                    detailedInfo = "The video codec/container format is not supported."
+                    msg = t("player.error.format_not_supported")
+                    detailedInfo = t("player.error.format_detail")
                     break
                 default:
-                    msg = error.message || "Unknown media error"
+                    msg = error.message || t("player.error.unknown_media")
             }
             log.error("Media error", {
                 code: error?.code,
@@ -442,7 +443,7 @@ export function useVideoCoreSetupEvents(id: string,
     }
     const handleUpload = useCallback(async (e: UploadEvent & Event) => {
         e.preventDefault()
-        toast.info("Adding subtitle file...")
+        toast.info(t("player.subs.adding_file"))
         log.info("Upload event", e)
         const items = [...(e.dataTransfer ?? e.clipboardData)?.items ?? []]
 
@@ -479,7 +480,7 @@ export function useVideoCoreSetupEvents(id: string,
                     const type = detectSubtitleType(str)
                     log.info("Detected subtitle type", type)
                     if (type === "unknown") {
-                        toast.error("Unknown subtitle type")
+                        toast.error(t("player.subs.unknown_type"))
                         log.info("Unknown subtitle type, skipping")
                         return
                     }
@@ -621,7 +622,7 @@ export function useVideoCoreSetupEvents(id: string,
                     } else if (mediaCaptionsManager) {
                         mediaCaptionsManager.addCaptionTrack({ ...fileTrack })
                     }
-                    showOverlayFeedback({ message: `Subtitle track added: ${fileTrack.label}`, type: "message", duration: 1500 })
+                    showOverlayFeedback({ message: t("player.overlay.subtitle_track_added", { label: fileTrack.label }), type: "message", duration: 1500 })
                     break
                 case "set-media-caption-track":
                     log.info("Set media caption track event received", payload)

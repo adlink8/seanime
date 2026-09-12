@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { TextInput } from "@/components/ui/text-input"
 import { openTab } from "@/lib/helpers/browser"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { CgImport } from "react-icons/cg"
 import { TbDatabaseExport } from "react-icons/tb"
@@ -43,7 +44,7 @@ export function DataSettings(props: DataSettingsProps) {
             openTab(`${getServerBaseUrl()}${endpoint}${tokenQuery}`)
         }
         catch (error) {
-            toast.error("Failed to generate export token")
+            toast.error(t("settings.data.toast_export_failed"))
         }
     }, [getHMACTokenQueryParam])
 
@@ -51,10 +52,10 @@ export function DataSettings(props: DataSettingsProps) {
         <div className="space-y-4">
 
             <div>
-                <h5>Local files</h5>
+                <h5>{t("settings.data.title")}</h5>
 
                 <p className="text-[--muted]">
-                    Scanned local file data.
+                    {t("settings.data.desc")}
                 </p>
             </div>
 
@@ -66,11 +67,11 @@ export function DataSettings(props: DataSettingsProps) {
                     disabled={isImportingLocalFiles}
                     onClick={handleExportLocalFiles}
                 >
-                    Export local file data
+                    {t("settings.data.export")}
                 </Button>
 
                 <Modal
-                    title="Import local files"
+                    title={t("settings.data.import_title")}
                     trigger={
                         <Button
                             intent="white-subtle"
@@ -78,18 +79,18 @@ export function DataSettings(props: DataSettingsProps) {
                             size="md"
                             disabled={isImportingLocalFiles}
                         >
-                            Import local files
+                            {t("settings.data.import_title")}
                         </Button>
                     }
                 >
 
                     <p>
-                        This will overwrite your existing library data, make sure you have a backup.
+                        {t("settings.data.import_warning")}
                     </p>
 
                     <TextInput
-                        label="Data file path"
-                        help="The path to the JSON file containing the local file data."
+                        label={t("settings.data.file_path")}
+                        help={t("settings.data.file_path_help")}
                         value={localFileDataPath}
                         onValueChange={setLocalFileDataPath}
                     />
@@ -99,7 +100,7 @@ export function DataSettings(props: DataSettingsProps) {
                         rounded
                         onClick={handleImportLocalFiles}
                         disabled={isImportingLocalFiles}
-                    >Import</Button>
+                    >{t("settings.action.import")}</Button>
 
                 </Modal>
             </div>

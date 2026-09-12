@@ -5,6 +5,7 @@ import { cn } from "@/components/ui/core/styling"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { WSEvents } from "@/lib/server/ws-events"
 import { __CAST_ENABLED__, __isElectronDesktop__ } from "@/types/constants"
 import { atom } from "jotai"
@@ -69,7 +70,7 @@ export function useCastManager() {
 
         const c4 = window.electron.on("cast:error", (err: any) => {
             log.error("Cast error:", err)
-            toast.error(`Cast error: ${err?.message || "Unknown error"}`)
+            toast.error(t("player.cast.error", { message: err?.message || t("player.common.unknown_error") }))
         })
         if (c4) cleanups.push(c4)
 
@@ -96,7 +97,7 @@ export function useCastManager() {
         if (!window.electron?.cast) return
         try {
             await window.electron.cast.connect(deviceId)
-            toast.success("Connected to Chromecast")
+            toast.success(t("player.cast.connected"))
             // Poll media status
             statusPollRef.current = setInterval(() => {
                 window.electron?.cast?.getStatus().then(s => {
@@ -105,7 +106,7 @@ export function useCastManager() {
             }, 2000)
         }
         catch (err: any) {
-            toast.error(`Failed to connect: ${err?.message || "Unknown error"}`)
+            toast.error(t("player.cast.connect_failed", { message: err?.message || t("player.common.unknown_error") }))
         }
     }, [])
 
@@ -114,7 +115,7 @@ export function useCastManager() {
         await window.electron.cast.disconnect()
         setIsCasting(false)
         setMediaStatus(null)
-        toast.info("Disconnected from Chromecast")
+        toast.info(t("player.cast.disconnected"))
     }, [])
 
     return {
@@ -215,7 +216,7 @@ export function VideoCoreCastButton() {
                 size="sm"
                 icon={<BiCast className={cn("text-lg", isCasting && "text-brand-300")} />}
                 onClick={() => setModalOpen(true)}
-                title={isCasting ? "Casting" : "Cast to device"}
+                title={isCasting ? t("player.cast.casting") : t("player.cast.title")}
             />
             <CastDeviceModal open={modalOpen} onOpenChange={setModalOpen} />
         </>
@@ -232,16 +233,16 @@ function CastDeviceModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
     }, [open])
 
     return (
-        <Modal open={open} onOpenChange={onOpenChange} title="Cast to Device" contentClass="max-w-md">
+        <Modal open={open} onOpenChange={onOpenChange} title={t("player.cast.title")} contentClass="max-w-md">
             <div className="space-y-4">
                 {isCasting && session.device && (
                     <div className="flex items-center justify-between p-3 bg-gray-900 rounded-md border border-brand-700">
                         <div>
-                            <p className="text-sm font-medium text-brand-300">Connected to</p>
+                            <p className="text-sm font-medium text-brand-300">{t("player.cast.connected_to")}</p>
                             <p className="text-base font-semibold">{session.device.name}</p>
                         </div>
                         <Button intent="alert-subtle" size="sm" onClick={disconnect}>
-                            Disconnect
+                            {t("player.cast.disconnect")}
                         </Button>
                     </div>
                 )}
@@ -249,15 +250,15 @@ function CastDeviceModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
                 {isDiscovering && (
                     <div className="flex items-center gap-2 text-sm text-[--muted]">
                         <LoadingSpinner />
-                        <span>Searching for devices...</span>
+                        <span>{t("player.cast.searching")}</span>
                     </div>
                 )}
 
                 {devices.length === 0 && !isDiscovering && (
                     <div className="text-center py-6">
-                        <p className="text-sm text-[--muted]">No devices found</p>
+                        <p className="text-sm text-[--muted]">{t("player.cast.no_devices")}</p>
                         <Button intent="gray-subtle" size="sm" className="mt-2" onClick={discover}>
-                            Scan again
+                            {t("player.cast.scan_again")}
                         </Button>
                     </div>
                 )}
@@ -290,7 +291,7 @@ function CastDeviceModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
 
                 {!isDiscovering && devices.length > 0 && (
                     <Button intent="gray-subtle" size="sm" className="w-full" onClick={discover}>
-                        Scan again
+                        {t("player.cast.scan_again")}
                     </Button>
                 )}
             </div>
@@ -322,7 +323,7 @@ export function CastPlaybackControls({ onStop }: { onStop?: () => void }) {
         <div className="flex flex-col gap-2 p-3 bg-gray-950/80 rounded-lg">
             <div className="flex items-center gap-2 text-sm text-brand-300">
                 <BiCast className="text-lg" />
-                <span>Casting to {session.device?.name}</span>
+                <span>{t("player.cast.casting_to", { device: session.device?.name ?? "" })}</span>
                 {isBuffering && <LoadingSpinner className="ml-1" />}
             </div>
 
@@ -358,7 +359,7 @@ export function CastPlaybackControls({ onStop }: { onStop?: () => void }) {
                     size="sm"
                     onClick={() => isPlaying ? window.electron?.cast?.pause() : window.electron?.cast?.play()}
                 >
-                    {isPlaying ? "Pause" : "Play"}
+                    {isPlaying ? t("player.cast.pause") : t("player.cast.play")}
                 </Button>
                 <Button
                     intent="gray-subtle"
@@ -375,7 +376,7 @@ export function CastPlaybackControls({ onStop }: { onStop?: () => void }) {
                         onStop?.()
                     }}
                 >
-                    Stop
+                    {t("player.cast.stop")}
                 </Button>
             </div>
         </div>

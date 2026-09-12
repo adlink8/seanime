@@ -2,6 +2,7 @@ import { Anime_Entry } from "@/api/generated/types"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { AnimeMetaActionButton } from "@/app/(main)/entry/_components/meta-section"
 import { useAnimeEntryPageView } from "@/app/(main)/entry/_containers/anime-entry-page"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { AiOutlineArrowLeft } from "react-icons/ai"
 import { PiMonitorPlayDuotone } from "react-icons/pi"
@@ -40,7 +41,7 @@ export function TorrentStreamButton(props: TorrentStreamButtonProps) {
                 leftIcon={isTorrentStreamingView ? <AiOutlineArrowLeft className="text-xl" /> : <PiMonitorPlayDuotone className="text-2xl" />}
                 onClick={() => toggleTorrentStreamingView()}
             >
-                {isTorrentStreamingView ? "Close torrent streaming" : "Torrent streaming"}
+                {isTorrentStreamingView ? t("entry.torrent_stream.close_view") : t("entry.torrent_stream.view")}
             </AnimeMetaActionButton>
         </>
     )

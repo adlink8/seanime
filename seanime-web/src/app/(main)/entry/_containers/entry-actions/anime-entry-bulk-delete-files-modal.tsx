@@ -4,6 +4,7 @@ import { FilepathSelector } from "@/app/(main)/_features/media/_components/filep
 import { ConfirmationDialog, useConfirmationDialog } from "@/components/shared/confirmation-dialog"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -24,7 +25,7 @@ export function AnimeEntryBulkDeleteFilesModal({ entry }: AnimeEntryBulkDeleteFi
             open={open}
             onOpenChange={() => setOpen(false)}
             contentClass="max-w-2xl"
-            title={<span>Select files to delete</span>}
+            title={<span>{t("library.explorer.select_files_to_delete")}</span>}
             titleClass="text-center"
 
         >
@@ -52,8 +53,8 @@ function Content({ entry }: { entry: Anime_Entry }) {
     const { mutate: deleteFiles, isPending: isDeleting } = useDeleteLocalFiles()
 
     const confirmUnmatch = useConfirmationDialog({
-        title: "Delete files",
-        description: "This action cannot be undone.",
+        title: t("library.explorer.delete_files"),
+        description: t("entry.bulk_delete.cannot_be_undone"),
         onConfirm: () => {
             if (filepaths.length === 0) return
 
@@ -84,14 +85,14 @@ function Content({ entry }: { entry: Anime_Entry }) {
                     onClick={() => confirmUnmatch.open()}
                     loading={isDeleting}
                 >
-                    Delete
+                    {t("library.common.delete")}
                 </Button>
                 <Button
                     intent="white"
                     onClick={() => setOpen(false)}
                     disabled={isDeleting}
                 >
-                    Cancel
+                    {t("library.common.cancel")}
                 </Button>
             </div>
             <ConfirmationDialog {...confirmUnmatch} />

@@ -8,6 +8,7 @@ import { Field } from "@/components/ui/form"
 import { Switch } from "@/components/ui/switch"
 import { TextInput } from "@/components/ui/text-input"
 import { getDefaultIinaSocket } from "@/lib/server/settings"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { useWatch } from "react-hook-form"
 import { FcClapperboard, FcVideoCall, FcVlc } from "react-icons/fc"
@@ -32,46 +33,46 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
     return (
         <>
             <SettingsPageHeader
-                title="桌面播放器"
-                description="Seanime 内置支持与 MPV、VLC、IINA 以及 MPC-HC 播放器深度联动与进度跟踪。"
+                title={t("player.desktop.title")}
+                description={t("player.desktop.desc")}
                 icon={LuMonitorPlay}
             />
 
             <SettingsCard>
                 <Field.Select
                     name="defaultPlayer"
-                    label="默认播放器"
+                    label={t("player.desktop.default_player")}
                     leftIcon={<FcVideoCall />}
                     options={[
                         { label: "MPV", value: "mpv" },
                         { label: "VLC", value: "vlc" },
-                        { label: "MPC-HC (Windows)", value: "mpc-hc" },
-                        { label: "IINA (macOS)", value: "iina" },
+                        { label: t("settings.mediaplayer.option_mpc"), value: "mpc-hc" },
+                        { label: t("settings.mediaplayer.option_iina"), value: "iina" },
                     ]}
-                    help="用于播放视频文件并自动同步追番进度的播放器。"
+                    help={t("player.desktop.default_player_help")}
                 />
                 {selectedPlayer === "iina" && <Alert
                     intent="info-basic"
-                    description={<p>为了让 IINA 正常配合 Seanime 工作，请确保在 IINA 常规设置中勾选 <strong>所有窗口关闭后退出</strong>，并取消勾选 <strong>播放完毕后保持窗口开启</strong>。</p>}
+                    description={<p>{t("settings.mediaplayer.iina_notice_1")} <strong>{t("settings.mediaplayer.iina_notice_quit")}</strong>{t("settings.mediaplayer.iina_notice_2")} <strong>{t("settings.mediaplayer.iina_notice_keep")}</strong>{t("settings.mediaplayer.iina_notice_3")}</p>}
                 />}
             </SettingsCard>
 
-            <SettingsCard title="连播设置">
+            <SettingsCard title={t("player.autoplay.title")}>
                 <Field.Switch
                     side="right"
                     name="autoPlayNextEpisode"
-                    label="自动连续播放下一集"
-                    help="启用后，当当前剧集播放完毕后，Seanime 将在简短倒数后自动调起下一集。"
+                    label={t("player.autoplay.next_label")}
+                    help={t("player.autoplay.next_help")}
                 />
             </SettingsCard>
 
-            <SettingsCard title="播放器配置">
+            <SettingsCard title={t("player.desktop.config_title")}>
 
 
                 <Field.Text
                     name="mediaPlayerHost"
-                    label="Host"
-                    help="VLC/MPC-HC"
+                    label={t("settings.field.host")}
+                    help={t("settings.mediaplayer.host_help")}
                 />
 
                 <Accordion
@@ -91,16 +92,16 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
                             <div className="flex flex-col md:flex-row gap-4">
                                 <Field.Text
                                     name="vlcUsername"
-                                    label="Username"
+                                    label={t("settings.field.username")}
                                 />
                                 <Field.Text
                                     name="vlcPassword"
-                                    label="Password"
+                                    label={t("settings.field.password")}
                                     type="password"
                                 />
                                 <Field.Number
                                     name="vlcPort"
-                                    label="Port"
+                                    label={t("settings.field.port")}
                                     formatOptions={{
                                         useGrouping: false,
                                     }}
@@ -109,7 +110,7 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
                             </div>
                             <Field.Text
                                 name="vlcPath"
-                                label="Application path"
+                                label={t("settings.mediaplayer.app_path")}
                             />
                         </AccordionContent>
                     </AccordionItem>
@@ -122,7 +123,7 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
                             <div className="flex flex-col md:flex-row gap-4">
                                 <Field.Number
                                     name="mpcPort"
-                                    label="Port"
+                                    label={t("settings.field.port")}
                                     formatOptions={{
                                         useGrouping: false,
                                     }}
@@ -130,7 +131,7 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
                                 />
                                 <Field.Text
                                     name="mpcPath"
-                                    label="Application path"
+                                    label={t("settings.mediaplayer.app_path")}
                                 />
                             </div>
                         </AccordionContent>
@@ -145,22 +146,22 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
                                 <Field.Text
                                     name="mpvSocket"
                                     label="Socket"
-                                    placeholder="Leave empty for an auto-generated socket"
-                                    help="Set this only if you want Seanime to attach to a specific mpv IPC socket."
+                                    placeholder={t("settings.mediaplayer.socket_placeholder")}
+                                    help={t("settings.mediaplayer.socket_help")}
                                 />
                                 <Field.Text
                                     name="mpvPath"
-                                    label="Application path"
+                                    label={t("settings.mediaplayer.app_path")}
                                     placeholder={serverStatus?.os === "windows" ? "e.g. C:/Program Files/mpv/mpv.exe" : serverStatus?.os === "darwin"
                                         ? "e.g. /Applications/mpv.app/Contents/MacOS/mpv"
-                                        : "Defaults to CLI"}
-                                    help="Leave empty to use the CLI."
+                                        : t("settings.mediaplayer.mpv_path_placeholder_default")}
+                                    help={t("settings.mediaplayer.cli_leave_empty")}
                                 />
                             </div>
                             <div className="mt-4">
                                 <Field.Text
                                     name="mpvArgs"
-                                    label="Options"
+                                    label={t("player.menu.options")}
                                     placeholder="e.g. --no-config --mute=yes"
                                 />
                             </div>
@@ -176,19 +177,19 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
                                 <Field.Text
                                     name="iinaSocket"
                                     label="Socket"
-                                    placeholder={`Default: '${getDefaultIinaSocket(serverStatus?.os ?? "")}'`}
+                                    placeholder={t("settings.mediaplayer.socket_default", { value: getDefaultIinaSocket(serverStatus?.os ?? "") })}
                                 />
                                 <Field.Text
                                     name="iinaPath"
-                                    label="CLI path"
-                                    placeholder={"Path to the IINA CLI"}
-                                    help="Leave empty to use the CLI."
+                                    label={t("settings.mediaplayer.cli_path")}
+                                    placeholder={t("settings.mediaplayer.iina_cli_placeholder")}
+                                    help={t("settings.mediaplayer.cli_leave_empty")}
                                 />
                             </div>
                             <div>
                                 <Field.Text
                                     name="iinaArgs"
-                                    label="Options"
+                                    label={t("player.menu.options")}
                                     placeholder="e.g. --mpv-mute=yes"
                                 />
                             </div>
@@ -210,22 +211,22 @@ export function ExternalPlayerLinkSettings() {
     return (
         <>
             <SettingsPageHeader
-                title="外部播放器关联 (URL Scheme)"
-                description="通过自定义协议链接将流媒体发送至本机的第三方播放器。"
+                title={t("player.external.title")}
+                description={t("player.external.desc")}
                 icon={LuCircleArrowOutUpRight}
             />
 
             <Alert
                 intent="info" description={<>
-                    仅适用于当前设备。
+                    {t("player.external.device_only")}
                 </>}
             />
 
             <SettingsCard>
                 <div data-settings-external-player-link-scheme>
                     <TextInput
-                        label="自定义协议 Scheme"
-                        placeholder="例如: outplayer://{url} 或 iina://weblink?url={url}"
+                        label={t("player.external.scheme_label")}
+                        placeholder={t("player.external.scheme_placeholder")}
                         value={externalPlayerLink}
                         onValueChange={setExternalPlayerLink}
                     />
@@ -236,8 +237,8 @@ export function ExternalPlayerLinkSettings() {
                 <Switch
                     side="right"
                     name="encodePath"
-                    label="Encode file path in URL (library only)"
-                    help="If enabled, the file path will be base64 encoded in the URL to avoid issues with special characters."
+                    label={t("settings.mediaplayer.encode_path")}
+                    help={t("settings.mediaplayer.encode_path_help")}
                     value={encodePath}
                     onValueChange={setEncodePath}
                 />
@@ -245,7 +246,7 @@ export function ExternalPlayerLinkSettings() {
 
             <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 dark:bg-gray-900/30 rounded-lg p-3 border border-gray-200 dark:border-gray-800 border-dashed">
                 <RiSettings3Fill className="text-base" />
-                <span>Settings are saved automatically</span>
+                <span>{t("settings.common.saved_automatically")}</span>
             </div>
         </>
     )

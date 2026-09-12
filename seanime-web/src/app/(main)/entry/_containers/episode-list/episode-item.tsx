@@ -13,6 +13,7 @@ import { Modal, ModalProps } from "@/components/ui/modal"
 import { Popover, PopoverProps } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { getImageUrl } from "@/lib/server/assets"
+import { t } from "@/lib/i18n"
 import { useWindowSize } from "@uidotdev/usehooks"
 import { atom } from "jotai"
 import { createIsolation } from "jotai-scope"
@@ -117,11 +118,11 @@ export const EpisodeItem = memo(({ episode, media, isWatched, watchedProgress, o
                                     const tokenQuery = await getHMACTokenQueryParam("/api/v1/nakama/stream", "&")
                                     copyToClipboard(`${getServerBaseUrl()}${endpoint}${tokenQuery}`)
                                 }
-                                toast.info("Stream URL copied")
+                                toast.info(t("entry.episode.stream_url_copied"))
                             }}
                         >
                             <MdOutlineOndemandVideo />
-                            Copy stream URL
+                            {t("entry.episode.copy_stream_url")}
                         </DropdownMenuItem>}
 
                         {onPlayExternally && <DropdownMenuItem
@@ -130,7 +131,7 @@ export const EpisodeItem = memo(({ episode, media, isWatched, watchedProgress, o
                             }}
                         >
                             <LuTvMinimalPlay />
-                            Play externally
+                            {t("entry.episode.play_externally")}
                         </DropdownMenuItem>}
 
 
@@ -150,7 +151,7 @@ export const EpisodeItem = memo(({ episode, media, isWatched, watchedProgress, o
                                     }
                                 }}
                             >
-                                <MdOutlineRemoveDone /> Unmatch
+                                <MdOutlineRemoveDone /> {t("library.unknown.unmatch")}
                             </DropdownMenuItem>
                         </>}
                     </DropdownMenu>
@@ -191,7 +192,7 @@ function MetadataModal({ episode }: { episode: Anime_Episode }) {
                 },
             }, () => {
                 setIsOpen(false)
-                toast.success("Metadata saved")
+                toast.success(t("library.explorer.metadata_saved"))
             })
         }
     }
@@ -214,26 +215,26 @@ function MetadataModal({ episode }: { episode: Anime_Episode }) {
                 defaultValues={{ ...episode.fileMetadata }}
             >
                 <Field.Number
-                    label="Episode number" name="episode"
-                    help="Relative episode number. If movie, episode number = 1"
+                    label={t("entry.torrent_search.episode_number")} name="episode"
+                    help={t("entry.episode.episode_number_help")}
                     required
                 />
                 <Field.Text
-                    label="AniDB episode"
+                    label={t("entry.episode.anidb_episode")}
                     name="aniDBEpisode"
-                    help="Specials typically contain the letter S"
+                    help={t("entry.episode.anidb_episode_help")}
                 />
                 <Field.Select
-                    label="Type"
+                    label={t("entry.episode.type")}
                     name="type"
                     options={[
-                        { label: "Main", value: "main" },
-                        { label: "Special", value: "special" },
-                        { label: "NC/Other", value: "nc" },
+                        { label: t("entry.episode.type_main"), value: "main" },
+                        { label: t("entry.episode.type_special"), value: "special" },
+                        { label: t("entry.episode.type_nc_other"), value: "nc" },
                     ]}
                 />
                 <div className="w-full">
-                    <Field.Submit role="save" intent="primary" className="w-full" loading={isPending}>Save</Field.Submit>
+                    <Field.Submit role="save" intent="primary" className="w-full" loading={isPending}>{t("media.action.save")}</Field.Submit>
                 </div>
             </Form>
         </Modal>
@@ -244,7 +245,7 @@ function MetadataModalButton() {
     const [, setIsOpen] = EpisodeItemIsolation.useAtom(__metadataModalIsOpenAtom)
     return <DropdownMenuItem onClick={() => setIsOpen(true)}>
         <RiEdit2Line />
-        Update metadata
+        {t("entry.episode.update_metadata")}
     </DropdownMenuItem>
 }
 
@@ -287,7 +288,7 @@ export function EpisodeItemInfoModalButton({ episode }: { episode: Anime_Episode
         >
             <SeaImage
                 src={getImageUrl(episode.episodeMetadata?.image)}
-                alt="banner"
+                alt={t("entry.episode.banner_alt")}
                 fill
                 quality={80}
                 sizes="20rem"
@@ -304,11 +305,11 @@ export function EpisodeItemInfoModalButton({ episode }: { episode: Anime_Episode
                 {episode.isInvalid && <AiFillWarning />}
             </p>
             <p className="text-[--muted]">
-                {episode.episodeMetadata?.airDate || "Unknown airing date"} - {episode.episodeMetadata?.length || "N/A"} minutes
+                {episode.episodeMetadata?.airDate || t("media.episode.unknown_air_date")} - {episode.episodeMetadata?.length || "N/A"} {t("entry.episode.minutes")}
             </p>
             <p className="text-gray-300">
                 {(episode.episodeMetadata?.summary || episode.episodeMetadata?.overview)?.replaceAll("`", "'")
-                    ?.replace(/source:.*/gi, "") || "No summary"}
+                    ?.replace(/source:.*/gi, "") || t("entry.episode.no_summary")}
             </p>
             <Separator />
             <p className="text-[--muted] line-clamp-2 tracking-wide text-sm">
@@ -317,12 +318,12 @@ export function EpisodeItemInfoModalButton({ episode }: { episode: Anime_Episode
             {
                 (!!episode.episodeMetadata?.anidbId) && <>
                     <div className="w-full flex gap-2">
-                        <p>AniDB Episode: {episode.fileMetadata?.aniDBEpisode}</p>
+                        <p>{t("entry.episode.anidb_episode_label", { episode: episode.fileMetadata?.aniDBEpisode ?? "" })}</p>
                         <a
                             href={"https://anidb.net/episode/" + episode.episodeMetadata?.anidbId + "#layout-footer"}
                             target="_blank"
                             className="hover:underline text-[--muted]"
-                        >Open on AniDB
+                        >{t("entry.dropdown.open_on_anidb")}
                         </a>
                     </div>
                 </>

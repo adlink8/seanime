@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Vaul, VaulContent } from "@/components/vaul"
 import { logger } from "@/lib/helpers/debug"
 import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import { useRouter } from "@/lib/navigation"
 import { atom } from "jotai"
 import { useAtom, useAtomValue, useSetAtom } from "jotai/react"
@@ -156,12 +157,12 @@ export function TorrentDownloadFileSelection({ entry }: { entry: Anime_Entry }) 
             <VaulContent className="max-w-5xl mx-auto">
                 <AppLayoutStack className="mt-4 p-3 lg:p-6">
                     <h4 className="text-center mb-4">
-                        Select files to download
+                        {t("entry.download_files.select_files_to_download")}
                     </h4>
 
                     <DirectorySelector
                         name="destination"
-                        label="Destination"
+                        label={t("entry.torrent_download.destination")}
                         leftIcon={<FcFolder />}
                         value={destination}
                         defaultValue={destination}
@@ -186,7 +187,7 @@ export function TorrentDownloadFileSelection({ entry }: { entry: Anime_Entry }) 
                             </ScrollArea>
 
                             <div className="text-sm text-[--muted] mb-2">
-                                {selectedFileIndices.length} of {filePreviews.length} files selected
+                                {t("entry.download_files.files_selected_count", { selected: selectedFileIndices.length, total: filePreviews.length })}
                             </div>
 
                             <Button
@@ -197,7 +198,7 @@ export function TorrentDownloadFileSelection({ entry }: { entry: Anime_Entry }) 
                                 loading={isPending}
                                 onClick={handleDownload}
                             >
-                                Download selected files
+                                {t("entry.download_files.download_selected")}
                             </Button>
 
                         </AppLayoutStack>

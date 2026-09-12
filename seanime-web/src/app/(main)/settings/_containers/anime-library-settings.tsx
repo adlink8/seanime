@@ -10,6 +10,7 @@ import CodeMirror from "@uiw/react-codemirror"
 import React from "react"
 import { useFormContext, useWatch } from "react-hook-form"
 import { FcFolder } from "react-icons/fc"
+import { t } from "@/lib/i18n"
 
 type LibrarySettingsProps = {
     isPending: boolean
@@ -25,39 +26,39 @@ export function AnimeLibrarySettings(props: LibrarySettingsProps) {
     return (
         <div className="space-y-8">
 
-            <SettingsCard title="本地媒体库目录">
+            <SettingsCard title={t("settings.card.library_dir_title")}>
                 <Field.DirectorySelector
                     name="libraryPath"
-                    label="主动漫库路径"
+                    label={t("settings.field.main_library_path")}
                     leftIcon={<FcFolder />}
-                    help="存放动漫视频文件的根目录路径。（请保持路径字母大小写一致）"
+                    help={t("settings.anime_library.main_path_help")}
                     shouldExist
                 />
 
                 <Field.MultiDirectorySelector
                     name="libraryPaths"
-                    label="扩展动漫库路径"
+                    label={t("settings.field.extended_library_path")}
                     leftIcon={<FcFolder />}
-                    help="如果您的动漫存放在多个不同磁盘或目录下，可以在此处添加其他路径。"
+                    help={t("settings.anime_library.extended_path_help")}
                     shouldExist
                 />
             </SettingsCard>
 
-            <SettingsCard title="媒体库扫描">
+            <SettingsCard title={t("settings.card.library_scan_title")}>
 
                 <Field.Switch
                     side="right"
                     name="autoScan"
-                    label="自动定时刷新媒体库"
+                    label={t("settings.field.auto_refresh_library")}
                     moreHelp={<p>
-                        批量添加新番时，可能需要等待扫描器识别。
+                        {t("settings.anime_library.auto_refresh_more_help")}
                     </p>}
                 />
 
                 <Field.Switch
                     side="right"
                     name="refreshLibraryOnStart"
-                    label="服务启动时自动扫描刷新"
+                    label={t("settings.field.scan_on_startup")}
                 />
             </SettingsCard>
 
@@ -73,14 +74,14 @@ export function AnimeLibrarySettings(props: LibrarySettingsProps) {
             >
                 <AccordionItem value="more">
                     <AccordionTrigger className="bg-gray-900 rounded-[--radius-md]" data-settings-anime-library="advanced-accordion-trigger">
-                        高级扫描规则
+                        {t("settings.anime_library.advanced_rules")}
                     </AccordionTrigger>
                     <AccordionContent className="space-y-4">
                         {!useLegacyMatching && <div className="space-y-4">
                             <div>
-                                <p className="font-semibold text-lg mb-2">扫描器规则配置 (JSON)</p>
+                                <p className="font-semibold text-lg mb-2">{t("settings.anime_library.scanner_rules_title")}</p>
                                 <p className="text-sm text-[--muted] mb-4">
-                                    以 JSON 格式配置高级扫描与番剧识别规则，支持自定义匹配正则和媒体库清洗。
+                                    {t("settings.anime_library.scanner_rules_desc")}
                                 </p>
                             </div>
                             <ScannerConfigEditor />
@@ -89,28 +90,28 @@ export function AnimeLibrarySettings(props: LibrarySettingsProps) {
                         <>
                             <Field.Switch
                                 name="scannerUseLegacyMatching"
-                                label="Use legacy matching algorithm"
-                                help="Enable to use the legacy matching algorithms. (Versions 3.4 and below)"
-                                moreHelp="The legacy matching algorithm uses simpler methods which may be less accurate."
+                                label={t("settings.anime_library.use_legacy_matching")}
+                                help={t("settings.anime_library.use_legacy_matching_help")}
+                                moreHelp={t("settings.anime_library.use_legacy_matching_more_help")}
                             />
                         </>
 
                         {useLegacyMatching && <div className="flex flex-col md:flex-row gap-3">
                             <Field.Select
                                 options={[
-                                    { value: "-", label: "Levenshtein + Sorensen-Dice (Default)" },
+                                    { value: "-", label: t("settings.anime_library.algorithm_default") },
                                     { value: "sorensen-dice", label: "Sorensen-Dice" },
                                     { value: "jaccard", label: "Jaccard" },
                                 ]}
                                 name="scannerMatchingAlgorithm"
-                                label="Matching algorithm"
-                                help="Choose the algorithm used to match files to AniList entries."
+                                label={t("settings.anime_library.matching_algorithm")}
+                                help={t("settings.anime_library.matching_algorithm_help")}
                             />
                             <Field.Number
                                 name="scannerMatchingThreshold"
-                                label="Matching threshold"
+                                label={t("settings.anime_library.matching_threshold")}
                                 placeholder="0.5"
-                                help="The minimum score required for a file to be matched to an AniList entry. Default is 0.5."
+                                help={t("settings.anime_library.matching_threshold_help")}
                                 formatOptions={{
                                     minimumFractionDigits: 1,
                                     maximumFractionDigits: 1,

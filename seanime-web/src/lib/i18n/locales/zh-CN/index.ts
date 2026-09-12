@@ -9,7 +9,10 @@ import { navigationDictionary } from "./navigation"
 import { playerDictionary } from "./player"
 import { scheduleDictionary } from "./schedule"
 import { searchDictionary } from "./search"
+import { entryDictionary } from "./entry"
+import { mpvDictionary } from "./mpv"
 import { settingsDictionary } from "./settings"
+import { settingsMediaDictionary } from "./settings-media"
 
 /** 分模块字典清单（合并顺序即文档展示顺序） */
 const moduleDictionaries: readonly [string, Dictionary][] = [
@@ -21,6 +24,9 @@ const moduleDictionaries: readonly [string, Dictionary][] = [
     ["player", playerDictionary],
     ["home", homeDictionary],
     ["media", mediaDictionary],
+    ["settings-media", settingsMediaDictionary],
+    ["entry", entryDictionary],
+    ["mpv", mpvDictionary],
     ["discover", discoverDictionary],
     ["schedule", scheduleDictionary],
 ]
@@ -37,6 +43,9 @@ export const zhCN = {
     ...mediaDictionary,
     ...discoverDictionary,
     ...scheduleDictionary,
+    ...settingsMediaDictionary,
+    ...entryDictionary,
+    ...mpvDictionary,
 } satisfies Dictionary
 
 /** 全部合法词条 key */

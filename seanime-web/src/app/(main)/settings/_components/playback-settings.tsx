@@ -20,6 +20,7 @@ import { RadioGroup } from "@/components/ui/radio-group"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { __isElectronDesktop__ } from "@/types/constants"
+import { t } from "@/lib/i18n"
 import { useAtom, useSetAtom } from "jotai"
 import React from "react"
 import { BiDesktop } from "react-icons/bi"
@@ -81,7 +82,7 @@ export function PlaybackSettings() {
     const engineMethod = serverStatus?.settings?.mediaPlayer?.mpvPrismEnabled ? "mpvcore" : "videocore"
 
     function notifyUpdated() {
-        toast.success("Playback settings updated")
+        toast.success(t("settings.playback.updated"))
     }
 
     function handleDenshiMethodChange(value: string) {
@@ -129,10 +130,10 @@ export function PlaybackSettings() {
             setIsExportingMpvLogs(true)
             if (!window.electron?.mpvCore) throw new Error("MpvCore is not available")
             await window.electron.mpvCore.exportLogs()
-            toast.success("MpvCore logs exported")
+            toast.success(t("settings.playback.logs_exported"))
         }
         catch (error) {
-            let msg = error instanceof Error ? error.message : "Failed to export MpvCore logs"
+            let msg = error instanceof Error ? error.message : t("settings.playback.logs_export_failed")
             msg = msg.replace(/^Error:\s*/i, "").replace(/Error invoking remote method '.*?':\s*/i, "")
             toast.error(msg)
         }
@@ -145,14 +146,14 @@ export function PlaybackSettings() {
         <>
             <div className="space-y-4">
                 <SettingsPageHeader
-                    title="视频播放偏好"
-                    description="配置本设备的视频播放模式与引擎"
+                    title={t("player.playback.title")}
+                    description={t("player.playback.desc")}
                     icon={LuCirclePlay}
                 />
 
                 <div className="flex flex-wrap items-center gap-2 text-sm bg-[--paper] rounded-lg p-3 border border-[--border]">
                     <BiDesktop className="text-lg text-[--muted]" />
-                    <span className="text-[--muted]">设备:</span>
+                    <span className="text-[--muted]">{t("player.playback.device")}</span>
                     <span className="font-medium">{serverStatus?.clientDevice || "-"}</span>
                     <span className="text-[--muted]">/</span>
                     <span className="font-medium">{serverStatus?.clientPlatform || "-"}</span>
@@ -164,13 +165,13 @@ export function PlaybackSettings() {
                     intent="alert-basic"
                     description={
                         <div className="flex items-center justify-between gap-3">
-                            <span>No external player custom scheme has been set</span>
+                            <span>{t("settings.playback.no_scheme")}</span>
                             <Button
                                 intent="gray-outline"
                                 size="sm"
                                 onClick={() => setTab("external-player-link")}
                             >
-                                Add
+                                {t("home.settings.add")}
                             </Button>
                         </div>
                     }
@@ -179,7 +180,7 @@ export function PlaybackSettings() {
 
             {__isElectronDesktop__ && (
                 <SettingsCard
-                    title="Seanime Denshi"
+                    title={t("settings.playback.denshi_title")}
                     className="border-[--border] bg-[--paper]"
                 >
                     <div className="space-y-5">
@@ -189,8 +190,8 @@ export function PlaybackSettings() {
                             </div>
                             <div className="flex-1">
                                 <Switch
-                                    label="Use built-in player"
-                                    help="When enabled, all media playback will use the built-in player (overrides settings below)"
+                                    label={t("settings.playback.use_builtin")}
+                                    help={t("settings.playback.use_builtin_help")}
                                     value={electronPlaybackMethod === ElectronPlaybackMethod.NativePlayer}
                                     onValueChange={v => {
                                         setElectronPlaybackMethod(v ? ElectronPlaybackMethod.NativePlayer : ElectronPlaybackMethod.Default)
@@ -204,8 +205,8 @@ export function PlaybackSettings() {
                             <div className="space-y-4 border-t border-[--border] pt-5">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div>
-                                        <p className="font-semibold">Built-in player engine</p>
-                                        <p className="text-sm text-[--muted]">Choose the renderer Denshi should use for integrated playback.</p>
+                                        <p className="font-semibold">{t("settings.playback.engine_title")}</p>
+                                        <p className="text-sm text-[--muted]">{t("settings.playback.engine_desc")}</p>
                                     </div>
                                 </div>
 
@@ -218,14 +219,14 @@ export function PlaybackSettings() {
                                         {
                                             value: "videocore",
                                             title: "VideoCore",
-                                            description: "HTML5 player powered by Chromium's video handling.",
+                                            description: t("settings.playback.engine_videocore_desc"),
                                             icon: FaHtml5,
                                             preview: <VideoCorePreview />,
                                         },
                                         {
                                             value: "mpvcore",
                                             title: "MpvCore",
-                                            description: "Native player powered by libmpv, with broader codec support.",
+                                            description: t("settings.playback.engine_mpvcore_desc"),
                                             icon: SiMpv,
                                             badge: <ExperimentalBadge />,
                                             preview: <MpvCorePreview />,
@@ -238,9 +239,9 @@ export function PlaybackSettings() {
                                         <div className="flex flex-wrap items-center gap-3">
                                             <div className="min-w-0 flex-1">
                                                 <Switch
-                                                    label="Enable logging"
+                                                    label={t("settings.playback.enable_logging")}
                                                     side="right"
-                                                    help="If enabled, debug logs will be written to the Denshi data directory."
+                                                    help={t("settings.playback.logging_help")}
                                                     value={serverStatus?.settings?.mediaPlayer?.mpvPrismLogging ?? false}
                                                     onValueChange={v => {
                                                         patchSetting({
@@ -259,15 +260,15 @@ export function PlaybackSettings() {
                                                 loading={isExportingMpvLogs}
                                                 onClick={handleExportMpvLogs}
                                             >
-                                                Export logs
+                                                {t("settings.playback.export_logs")}
                                             </Button>
                                         </div>}
                                         <div className="space-y-2 pt-4 border-t border-[--border] mt-4">
                                             <div className="flex justify-between items-center">
-                                                <label className="text-sm font-semibold">Custom MPV Options</label>
+                                                <label className="text-sm font-semibold">{t("settings.playback.custom_mpv_options")}</label>
                                             </div>
                                             <p className="text-xs text-muted-foreground">
-                                                Add custom <code>mpv.conf</code> options.
+                                                {t("settings.playback.custom_mpv_desc_prefix")} <code>mpv.conf</code> {t("settings.playback.custom_mpv_desc_suffix")}
                                             </p>
                                             <Textarea
                                                 value={mpvSettings.customMpvConfig || ""}
@@ -277,7 +278,7 @@ export function PlaybackSettings() {
                                                         customMpvConfig: value,
                                                     })
                                                 }}
-                                                placeholder="# Add custom settings here"
+                                                placeholder={t("settings.playback.custom_mpv_placeholder")}
                                                 className="font-mono text-sm mt-1 h-[300px]"
                                                 fieldClass=""
                                                 size="sm"
@@ -292,8 +293,8 @@ export function PlaybackSettings() {
             )}
 
             <SettingsCard
-                title="已下载媒体播放"
-                description="选择播放本地存储动漫文件的方式。"
+                title={t("player.local_media.title")}
+                description={t("player.local_media.desc")}
                 className={cn(
                     "transition-all duration-200",
                     usingNativePlayer && "opacity-60",
@@ -307,26 +308,26 @@ export function PlaybackSettings() {
                         options={[
                             {
                                 value: PlaybackDownloadedMedia.Default,
-                                title: "桌面媒体播放器",
-                                description: "使用配置的桌面播放器打开流并自动同步播放进度。",
+                                title: t("player.mode.desktop_player"),
+                                description: t("player.mode.desktop_player_desc"),
                                 icon: LuLaptop,
                                 preview: <DesktopPlayerPreview />,
                             },
                             {
                                 value: "mediastream",
-                                title: "转码 / 网页直连播放",
+                                title: t("player.mode.transcode"),
                                 description: isMediastreamEnabled
-                                    ? "通过网页端内嵌的 HTML5 播放器直接观看本地文件。"
-                                    : "需先开启转码流服务方可使用网页播放器。",
+                                    ? t("player.mode.transcode_desc")
+                                    : t("player.mode.transcode_disabled_desc"),
                                 icon: MdOutlineBroadcastOnHome,
                                 preview: <MediastreamPreview disabled={!isMediastreamEnabled} />,
-                                badge: !isMediastreamEnabled ? <Badge intent="warning" size="sm">已禁用</Badge> : undefined,
+                                badge: !isMediastreamEnabled ? <Badge intent="warning" size="sm">{t("player.status.disabled")}</Badge> : undefined,
                                 disabled: !isMediastreamEnabled,
                             },
                             {
                                 value: PlaybackDownloadedMedia.ExternalPlayerLink,
-                                title: "外部播放器协议关联",
-                                description: "使用自定义 URL Scheme 协议将流地址发送至外部播放器应用。",
+                                title: t("player.mode.external_protocol"),
+                                description: t("player.mode.external_protocol_desc"),
                                 icon: LuExternalLink,
                                 preview: <ExternalLinkPreview />,
                             },
@@ -336,8 +337,8 @@ export function PlaybackSettings() {
             </SettingsCard>
 
             <SettingsCard
-                title="种子与 Debrid 在线流式播放"
-                description="选择播放种子边下边播或 Debrid 云端流媒体的方式。"
+                title={t("player.streaming.title")}
+                description={t("player.streaming.desc")}
                 className={cn(
                     "transition-all duration-200",
                     usingNativePlayer && "opacity-60",
@@ -352,15 +353,15 @@ export function PlaybackSettings() {
                         options={[
                             {
                                 value: PlaybackTorrentStreaming.Default,
-                                title: "桌面媒体播放器",
-                                description: "使用配置的桌面播放器打开流并自动同步播放进度。",
+                                title: t("player.mode.desktop_player"),
+                                description: t("player.mode.desktop_player_desc"),
                                 icon: LuLaptop,
                                 preview: <TorrentDesktopPreview />,
                             },
                             {
                                 value: PlaybackTorrentStreaming.ExternalPlayerLink,
-                                title: "外部播放器协议关联",
-                                description: "使用自定义 URL Scheme 协议将流地址发送至外部播放器应用。",
+                                title: t("player.mode.external_protocol"),
+                                description: t("player.mode.external_protocol_desc"),
                                 icon: LuExternalLink,
                                 preview: <TorrentExternalPreview />,
                             },
@@ -371,7 +372,7 @@ export function PlaybackSettings() {
 
             <div className="flex items-center gap-2 text-sm text-[--muted] bg-[--paper] rounded-lg p-3 border border-[--border] border-dashed">
                 <RiSettings3Fill className="text-base" />
-                <span>Settings are saved automatically</span>
+                <span>{t("settings.common.saved_automatically")}</span>
             </div>
         </>
     )

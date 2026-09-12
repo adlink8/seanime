@@ -12,6 +12,7 @@ import React from "react"
 import { useFormContext } from "react-hook-form"
 import { LuBookOpen } from "react-icons/lu"
 import { toast } from "sonner"
+import { t } from "@/lib/i18n"
 
 type MangaSettingsProps = {
     isPending: boolean
@@ -36,7 +37,7 @@ export function MangaSettings(props: MangaSettingsProps) {
 
     const options = React.useMemo(() => {
         return [
-            { label: "Auto", value: "-" },
+            { label: t("settings.option.automatic"), value: "-" },
             ...(extensions?.map(provider => ({
                 label: provider.name,
                 value: provider.id,
@@ -47,15 +48,15 @@ export function MangaSettings(props: MangaSettingsProps) {
     const defaultProviderExt = extensions?.find(e => e.id === serverStatus?.settings?.manga?.defaultMangaProvider)
 
     const confirmDialog = useConfirmationDialog({
-        title: "Overwrite all sources",
-        description: "This will overwrite the selected source of all manga series you've opened with the default provider. Are you sure you want to proceed?",
-        actionText: "Overwrite",
+        title: t("settings.manga.overwrite_confirm_title"),
+        description: t("settings.manga.overwrite_confirm_desc"),
+        actionText: t("settings.manga.overwrite_action"),
         actionIntent: "warning",
         onConfirm: async () => {
             if (!defaultProviderExt) return
             const oldProviders = structuredClone(storedProviders)
             overwriteStoredProvidersWith(defaultProviderExt.id)
-            toast.success("All source selections have been overwritten.")
+            toast.success(t("settings.manga.overwritten_toast"))
             setTimeout(() => {
                 setStoredProvidersHistory(oldProviders)
             }, 500)
@@ -65,8 +66,8 @@ export function MangaSettings(props: MangaSettingsProps) {
     return (
         <>
             <SettingsPageHeader
-                title="Manga"
-                description="Manage your manga library"
+                title={t("settings.manga.title")}
+                description={t("settings.manga.desc")}
                 icon={LuBookOpen}
             />
 
@@ -74,50 +75,50 @@ export function MangaSettings(props: MangaSettingsProps) {
                 <Field.Switch
                     side="right"
                     name="enableManga"
-                    label={<span className="flex gap-1 items-center">Enable</span>}
-                    help="Read manga series, download chapters and track your progress."
+                    label={<span className="flex gap-1 items-center">{t("settings.action.enable")}</span>}
+                    help={t("settings.manga.enable_help")}
                 />
                 <Field.Switch
                     side="right"
                     name="mangaAutoUpdateProgress"
-                    label="Automatically update progress"
-                    help="If enabled, your progress will be automatically updated when you reach the end of a chapter."
+                    label={t("settings.manga.auto_update_progress")}
+                    help={t("settings.manga.auto_update_progress_help")}
                 />
             </SettingsCard>
 
-            <SettingsCard title="Provider">
+            <SettingsCard title={t("settings.manga.provider_title")}>
                 <Field.Select
                     name="defaultMangaProvider"
-                    label="Default Provider"
-                    help="Provider selected by default when opening a new manga series."
+                    label={t("settings.manga.default_provider")}
+                    help={t("settings.manga.default_provider_help")}
                     options={options}
                 />
                 {(!!defaultProviderExt && f.watch("defaultMangaProvider") === serverStatus?.settings?.manga?.defaultMangaProvider) && (
                     <div className="flex w-full space-x-4 flex-wrap">
                         <Button className="px-0 py-1" intent="warning-link" onClick={() => confirmDialog.open()}>
-                            Overwrite all manga sources with {defaultProviderExt.name}
+                            {t("settings.manga.overwrite_with", { name: defaultProviderExt.name })}
                         </Button>
                         {!!storedProvidersHistory && (
                             <Button
                                 className="px-0 py-1" intent="gray-link" onClick={() => {
                                 overwriteStoredProviders(storedProvidersHistory)
-                                toast.success("Previous source selections have been restored.")
+                                toast.success(t("settings.manga.restored_toast"))
                                 setStoredProvidersHistory(null)
                             }}
                             >
-                                Undo
+                                {t("settings.manga.undo")}
                             </Button>
                         )}
                     </div>
                 )}
             </SettingsCard>
 
-            <SettingsCard title="Local Provider" description="Read manga series from your local directory.">
+            <SettingsCard title={t("settings.manga.local_provider_title")} description={t("settings.manga.local_provider_desc")}>
 
                 <Field.DirectorySelector
                     name="mangaLocalSourceDirectory"
-                    label="Local Source Directory"
-                    help="Directory where your manga is stored. This is only used by the local manga provider."
+                    label={t("settings.manga.local_source_directory")}
+                    help={t("settings.manga.local_source_directory_help")}
                 />
             </SettingsCard>
 

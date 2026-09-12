@@ -11,6 +11,7 @@ import { Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { defineSchema, Field, Form } from "@/components/ui/form"
 import { WSEvents } from "@/lib/server/ws-events.ts"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { UseFormReturn } from "react-hook-form"
 import { FcFolder } from "react-icons/fc"
@@ -83,7 +84,7 @@ export function TorrentstreamSettings(props: TorrentstreamSettingsProps) {
                             {
                                 onSuccess: () => {
                                     formRef.current?.reset(formRef.current.getValues())
-                                    toast.success("Settings saved")
+                                    toast.success(t("settings.toast.settings_saved"))
                                 },
                             },
                         )
@@ -115,33 +116,33 @@ export function TorrentstreamSettings(props: TorrentstreamSettingsProps) {
                             <Field.Switch
                                 side="right"
                                 name="enabled"
-                                label="Enable"
+                                label={t("settings.action.enable")}
                             />
                         </SettingsCard>
 
-                        <SettingsCard title="Home Screen">
+                        <SettingsCard title={t("settings.debrid.home_screen_title")}>
                             <Field.Switch
                                 side="right"
                                 name="includeInLibrary"
-                                label="Include streaming in anime lists"
-                                help="Show currently watching streaming titles in your anime lists."
+                                label={t("settings.debrid.include_streaming")}
+                                help={t("settings.debrid.include_streaming_help")}
                             />
                         </SettingsCard>
 
-                        <SettingsCard title="Auto-select">
+                        <SettingsCard title={t("settings.debrid.autoselect_title")}>
                             <Field.Switch
                                 side="right"
                                 name="autoSelect"
-                                label="Enable"
-                                help="Let Seanime find the best torrent automatically."
+                                label={t("settings.action.enable")}
+                                help={t("settings.torrentstream.autoselect_help")}
                             />
 
                             <Field.Select
                                 name="preferredResolution"
-                                label="Preferred resolution"
-                                help="If auto-select is enabled, Seanime will try to find torrents with this resolution."
+                                label={t("settings.debrid.preferred_resolution")}
+                                help={t("settings.debrid.preferred_resolution_help")}
                                 options={[
-                                    { label: "Highest", value: "-" },
+                                    { label: t("settings.option.highest"), value: "-" },
                                     { label: "480p", value: "480" },
                                     { label: "720p", value: "720" },
                                     { label: "1080p", value: "1080" },
@@ -155,9 +156,9 @@ export function TorrentstreamSettings(props: TorrentstreamSettingsProps) {
                             <Field.Switch
                                 side="right"
                                 name="preloadNextStream"
-                                label={<span>Preload next episode <ExperimentalBadge title="Unstable" /></span>}
-                                help="Starts downloading the next episode in the background."
-                                moreHelp="This feature is only partially implemented. Do not rely on it working correctly."
+                                label={<span>{t("settings.torrentstream.preload_next")} <ExperimentalBadge title={t("settings.common.unstable")} /></span>}
+                                help={t("settings.torrentstream.preload_next_help")}
+                                moreHelp={t("settings.torrentstream.preload_next_more_help")}
                             />
                         </SettingsCard>
 
@@ -182,24 +183,24 @@ export function TorrentstreamSettings(props: TorrentstreamSettingsProps) {
                         >
                             <AccordionItem value="more">
                                 <AccordionTrigger className="bg-gray-900 rounded-[--radius-md]">
-                                    Torrent Client
+                                    {t("settings.torrentstream.torrent_client")}
                                 </AccordionTrigger>
                                 <AccordionContent className="space-y-4">
                                     <div className="flex items-center gap-3">
 
                                         <Field.Text
                                             name="torrentClientHost"
-                                            label="Host"
-                                            help="Leave empty for default. The host to listen for new uTP and TCP BitTorrent connections."
+                                            label={t("settings.field.host")}
+                                            help={t("settings.torrentstream.host_help")}
                                         />
 
                                         <Field.Number
                                             name="torrentClientPort"
-                                            label="Port"
+                                            label={t("settings.field.port")}
                                             formatOptions={{
                                                 useGrouping: false,
                                             }}
-                                            help="Leave empty for default. Default is 43213."
+                                            help={t("settings.torrentstream.port_help")}
                                         />
 
                                     </div>
@@ -207,22 +208,22 @@ export function TorrentstreamSettings(props: TorrentstreamSettingsProps) {
                                     <Field.Switch
                                         side="right"
                                         name="disableIPv6"
-                                        label="Disable IPv6"
+                                        label={t("settings.torrentstream.disable_ipv6")}
                                     />
 
                                     <Field.Switch
                                         side="right"
                                         name="slowSeeding"
-                                        label="Slow seeding"
-                                        moreHelp="This can help avoid issues with your network. Note: Slow seeding can significantly delay startup."
+                                        label={t("settings.torrentstream.slow_seeding")}
+                                        moreHelp={t("settings.torrentstream.slow_seeding_more_help")}
                                     />
 
                                     <Field.Switch
                                         side="right"
                                         name="disableAcceleratedStartup"
-                                        label="Disable accelerated startup"
+                                        label={t("settings.torrentstream.disable_accelerated_startup")}
                                         disabled={f.watch("slowSeeding")}
-                                        moreHelp="Turn this on to disable aggressive peer discovery and connection limits during startup."
+                                        moreHelp={t("settings.torrentstream.disable_accelerated_startup_more_help")}
                                     />
                                 </AccordionContent>
                             </AccordionItem>
@@ -237,26 +238,26 @@ export function TorrentstreamSettings(props: TorrentstreamSettingsProps) {
                         >
                             <AccordionItem value="more">
                                 <AccordionTrigger className="bg-gray-900 rounded-[--radius-md]">
-                                    Advanced
+                                    {t("settings.common.advanced")}
                                 </AccordionTrigger>
                                 <AccordionContent className="pt-6 space-y-4">
                                     <Field.Text
                                         name="streamUrlAddress"
-                                        label="Stream URL address"
-                                        placeholder="e.g. 0.0.0.0:43211"
-                                        help="Modify the stream URL formatting. Leave empty for default."
+                                        label={t("settings.torrentstream.stream_url_address")}
+                                        placeholder={t("settings.torrentstream.stream_url_placeholder")}
+                                        help={t("settings.torrentstream.stream_url_help")}
                                     />
 
                                     <Field.DirectorySelector
                                         name="downloadDir"
-                                        label="Cache directory"
+                                        label={t("settings.torrentstream.cache_directory")}
                                         leftIcon={<FcFolder />}
-                                        help="Where the torrents will be downloaded to while streaming. Leave empty to use the default cache directory."
+                                        help={t("settings.torrentstream.cache_directory_help")}
                                         shouldExist
                                     />
                                     <Alert
                                         intent="warning"
-                                        description="Choose an empty directory to avoid losing data."
+                                        description={t("settings.torrentstream.cache_directory_warning")}
                                     />
                                 </AccordionContent>
                             </AccordionItem>
@@ -270,7 +271,7 @@ export function TorrentstreamSettings(props: TorrentstreamSettingsProps) {
                                 leftIcon={<SiBittorrent />} intent="alert-subtle" onClick={() => dropTorrent()}
                                 disabled={droppingTorrent}
                             >
-                                Drop torrent
+                                {t("settings.torrentstream.drop_torrent")}
                             </Button>
                         </div>
                     </>

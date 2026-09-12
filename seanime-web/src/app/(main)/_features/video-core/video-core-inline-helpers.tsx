@@ -6,6 +6,7 @@ import { Button, IconButton } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
+import { t } from "@/lib/i18n"
 import { atom, useAtomValue } from "jotai"
 import { useAtom } from "jotai/react"
 import { atomWithStorage } from "jotai/utils"
@@ -130,7 +131,7 @@ export function VideoCoreInlineHelperUpdateProgressButton() {
             disabled={hasUpdatedProgress}
             onClick={handleProgressUpdate}
         >
-            Update progress
+            {t("player.inline.update_progress")}
         </Button>
     }
 

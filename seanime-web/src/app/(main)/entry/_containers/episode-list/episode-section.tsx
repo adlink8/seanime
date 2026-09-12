@@ -16,6 +16,7 @@ import { AppLayoutStack } from "@/components/ui/app-layout"
 import { Carousel, CarouselContent, CarouselDotButtons, CarouselItem } from "@/components/ui/carousel"
 import { ContextMenuItem } from "@/components/ui/context-menu"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { IoLibrarySharp } from "react-icons/io5"
 import { LuTvMinimalPlay } from "react-icons/lu"
@@ -107,10 +108,10 @@ export function EpisodeSection({ entry, details, bottomSection, hideCarousel, ma
     if (!!media && ((!entry.listData && !entry._isNakamaEntry) || !entry.libraryData) && !serverStatus?.isOffline) {
         return <div className="space-y-10">
             {media?.status !== "NOT_YET_RELEASED"
-                ? <h4 className="text-yellow-50 flex items-center gap-2"><IoLibrarySharp /> Not in {entry._isNakamaEntry
-                    ? "the Nakama's"
-                    : "your"} library</h4>
-                : <h5 className="text-yellow-50">Not yet released</h5>}
+                ? <h4 className="text-yellow-50 flex items-center gap-2"><IoLibrarySharp /> {entry._isNakamaEntry
+                    ? t("entry.episode.not_in_nakama_library")
+                    : t("entry.episode.not_in_your_library")}</h4>
+                : <h5 className="text-yellow-50">{t("entry.episode.not_yet_released")}</h5>}
             <div className="overflow-y-auto pt-4 lg:pt-0 space-y-10 overflow-x-hidden">
                 {!entry._isNakamaEntry && <UndownloadedEpisodeList
                     downloadInfo={entry.downloadInfo}
@@ -129,7 +130,7 @@ export function EpisodeSection({ entry, details, bottomSection, hideCarousel, ma
 
                 {hasInvalidEpisodes && <Alert
                     intent="alert"
-                    description="Some episodes are invalid. Update the metadata to fix this."
+                    description={t("entry.episode.invalid_episodes_notice")}
                 />}
 
 
@@ -189,7 +190,7 @@ export function EpisodeSection({ entry, details, bottomSection, hideCarousel, ma
                                                         })
                                                     }}
                                                 >
-                                                    <LuTvMinimalPlay /> Play externally
+                                                    <LuTvMinimalPlay /> {t("entry.episode.play_externally")}
                                                 </ContextMenuItem>}
                                             </>}
                                         />
@@ -233,7 +234,7 @@ export function EpisodeSection({ entry, details, bottomSection, hideCarousel, ma
                     />}
 
                     {specialEpisodes.length > 0 && <>
-                        <h2>特别篇 (SP)</h2>
+                        <h2>{t("entry.episode.specials_header")}</h2>
                         <EpisodeListGrid data-episode-list-specials maxCol={maxCol}>
                             {specialEpisodes.map(episode => (
                                 <EpisodeItem
@@ -255,7 +256,7 @@ export function EpisodeSection({ entry, details, bottomSection, hideCarousel, ma
                     </>}
 
                     {ncEpisodes.length > 0 && <>
-                        <h2>其他剧集</h2>
+                        <h2>{t("entry.episode.others_header")}</h2>
                         <EpisodeListGrid data-episode-list-others maxCol={maxCol}>
                             {ncEpisodes.map(episode => (
                                 <EpisodeItem

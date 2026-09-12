@@ -2,6 +2,7 @@ import { vc_audioManager } from "@/app/(main)/_features/video-core/video-core"
 import { getPreferredHlsQualityLevel } from "@/app/(main)/_features/video-core/_lib/hls-quality"
 import { vc_autoPlayVideoAtom } from "@/app/(main)/_features/video-core/video-core.atoms"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import Hls, { ErrorData, Events, Level } from "hls.js"
 import { atom, useAtomValue } from "jotai"
 import { useAtom, useSetAtom } from "jotai/react"
@@ -210,7 +211,7 @@ export function useVideoCoreHls({
                     height: level.height,
                     width: level.width,
                     bitrate: level.bitrate,
-                    name: level.height ? `${level.height}p` : `Level ${index + 1}`,
+                    name: level.height ? `${level.height}p` : t("player.hls.level", { num: index + 1 }),
                 }))
 
                 setQualityLevels(levels)
@@ -239,7 +240,7 @@ export function useVideoCoreHls({
 
                     const audioTracks: HlsAudioTrack[] = Array.from(uniqueTracks.values()).map(({ track, index }) => ({
                         id: typeof track.id === "number" ? track.id : index,
-                        name: track.name || track.lang || `Track ${track.id}`,
+                        name: track.name || track.lang || t("player.overlay.track", { num: track.id }),
                         language: track.lang,
                         default: track.default,
                     }))
@@ -309,7 +310,7 @@ export function useVideoCoreHls({
             setSetAudioTrack(() => {})
         } else {
             hlsLog.error("HLS not supported on this browser")
-            toast.error("HLS playback not supported on this browser")
+            toast.error(t("player.hls.not_supported"))
         }
     }, [streamUrl, videoElement, streamType])
 

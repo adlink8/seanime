@@ -40,6 +40,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TextInput } from "@/components/ui/text-input"
 import { logger } from "@/lib/helpers/debug"
 import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import { atom, useAtom, useAtomValue } from "jotai"
 import { useSetAtom } from "jotai/react"
 import React, { useCallback, useEffect, useRef, useState } from "react"
@@ -158,7 +159,7 @@ const KeybindingRow = ({
                     recordingKey === actionKey && "!text-xs text-white",
                 )}
             >
-                {recordingKey === actionKey ? "Press key..." : formatKeyDisplay(editedKeybindings?.[actionKey]?.key as any ?? "" as any)}
+                {recordingKey === actionKey ? t("player.prefs.press_key") : formatKeyDisplay(editedKeybindings?.[actionKey]?.key as any ?? "" as any)}
             </Button>
         </div>
     </div>
@@ -315,7 +316,7 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
             },
         }, {
             onSuccess: () => {
-                toast.success("Translation settings saved")
+                toast.success(t("player.prefs.translation_saved"))
                 translationFormRef.current?.reset(translationFormRef.current.getValues())
 
                 subtitleManager?.updateShouldTranslate(data.vcTranslate ? data.vcTranslateTargetLanguage : null)
@@ -326,7 +327,7 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
 
     return (
         <Modal
-            title="Preferences"
+            title={t("player.prefs.title")}
             open={open}
             onOpenChange={setOpen}
             contentClass="max-w-5xl focus:outline-none focus-visible:outline-none outline-none bg-[--background] backdrop-blur-sm z-[101]"
@@ -342,21 +343,21 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                 listClass={tabsListClass}
             >
                 <TabsList className="flex-wrap max-w-full bg-[--paper] p-2 border rounded-xl">
-                    <TabsTrigger value="keybinds">Keyboard Shortcuts</TabsTrigger>
-                    <TabsTrigger value="subtitles">Subtitles & Audio</TabsTrigger>
-                    <TabsTrigger value="general">General</TabsTrigger>
-                    <TabsTrigger value="translation">Translation</TabsTrigger>
+                    <TabsTrigger value="keybinds">{t("player.prefs.tab_keybinds")}</TabsTrigger>
+                    <TabsTrigger value="subtitles">{t("player.prefs.tab_subtitles_audio")}</TabsTrigger>
+                    <TabsTrigger value="general">{t("player.prefs.tab_general")}</TabsTrigger>
+                    <TabsTrigger value="translation">{t("player.prefs.tab_translation")}</TabsTrigger>
                     {/*<TabsTrigger value="browser-client">Rendering</TabsTrigger>*/}
                 </TabsList>
 
                 <TabsContent value="general" className={tabContentClass}>
                     <div className="space-y-4">
                         <TextInput
-                            label="Extra Chapters to Skip"
+                            label={t("player.prefs.extra_skip_chapters")}
                             value={editedSkipPatterns}
                             onValueChange={setEditedSkipPatterns}
                             placeholder="^Intro$,^Outro$,^Preview$"
-                            help="Comma-separated regular expressions matched case-insensitively. Existing opening and ending rules remain active."
+                            help={t("player.prefs.extra_skip_chapters_help")}
                             error={skipPatternError}
                             onKeyDown={event => event.stopPropagation()}
                             onInput={event => event.stopPropagation()}
@@ -364,9 +365,9 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                         <DirectorySelector
                             value={editedScreenshotDir}
                             onSelect={setEditedScreenshotDir}
-                            label="Screenshot Directory"
-                            help="Configure the directory where screenshots will be saved"
-                            error={!isAbsolute ? "Must be an absolute path" : ""}
+                            label={t("player.prefs.screenshot_dir")}
+                            help={t("player.prefs.screenshot_dir_help")}
+                            error={!isAbsolute ? t("player.prefs.must_be_absolute_path") : ""}
                         />
 
                         <div className="flex items-center justify-between pt-6">
@@ -374,21 +375,21 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                 intent="gray-outline"
                                 onClick={handleReset}
                             >
-                                Reset all
+                                {t("player.prefs.reset_all")}
                             </Button>
                             <div className="flex gap-2">
                                 <Button
                                     intent="gray-outline"
                                     onClick={() => setOpen(false)}
                                 >
-                                    Cancel
+                                    {t("library.common.cancel")}
                                 </Button>
                                 <Button
                                     intent="primary"
                                     onClick={handleSave}
                                     disabled={!isAbsolute || !!skipPatternError}
                                 >
-                                    Save
+                                    {t("media.action.save")}
                                 </Button>
                             </div>
                         </div>
@@ -402,8 +403,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                 {/* <h3 className="text-lg font-semibold mb-4 text-white">Playback</h3> */}
                                 <div className="space-y-3">
                                     <KeybindingRow
-                                        action="Seek Forward (Fine)"
-                                        description="Seek forward (fine)"
+                                        action={t("player.prefs.kb_seek_forward_fine")}
+                                        description={t("player.prefs.kb_seek_forward_fine")}
                                         actionKey="seekForwardFine"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -411,11 +412,11 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         handleKeyRecord={handleKeyRecord}
                                         formatKeyDisplay={formatKeyDisplay}
                                         hasValue={true}
-                                        valueLabel="Seconds"
+                                        valueLabel={t("player.prefs.kb_value_seconds")}
                                     />
                                     <KeybindingRow
-                                        action="Seek Backward (Fine)"
-                                        description="Seek backward (fine)"
+                                        action={t("player.prefs.kb_seek_backward_fine")}
+                                        description={t("player.prefs.kb_seek_backward_fine")}
                                         actionKey="seekBackwardFine"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -423,11 +424,11 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         handleKeyRecord={handleKeyRecord}
                                         formatKeyDisplay={formatKeyDisplay}
                                         hasValue={true}
-                                        valueLabel="Seconds"
+                                        valueLabel={t("player.prefs.kb_value_seconds")}
                                     />
                                     <KeybindingRow
-                                        action="Seek Forward"
-                                        description="Seek forward"
+                                        action={t("player.prefs.kb_seek_forward")}
+                                        description={t("player.prefs.kb_seek_forward")}
                                         actionKey="seekForward"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -435,11 +436,11 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         handleKeyRecord={handleKeyRecord}
                                         formatKeyDisplay={formatKeyDisplay}
                                         hasValue={true}
-                                        valueLabel="Seconds"
+                                        valueLabel={t("player.prefs.kb_value_seconds")}
                                     />
                                     <KeybindingRow
-                                        action="Seek Backward"
-                                        description="Seek backward"
+                                        action={t("player.prefs.kb_seek_backward")}
+                                        description={t("player.prefs.kb_seek_backward")}
                                         actionKey="seekBackward"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -447,11 +448,11 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         handleKeyRecord={handleKeyRecord}
                                         formatKeyDisplay={formatKeyDisplay}
                                         hasValue={true}
-                                        valueLabel="Seconds"
+                                        valueLabel={t("player.prefs.kb_value_seconds")}
                                     />
                                     <KeybindingRow
-                                        action="Increase Speed"
-                                        description="Increase playback speed"
+                                        action={t("player.prefs.kb_increase_speed")}
+                                        description={t("player.prefs.kb_increase_speed")}
                                         actionKey="increaseSpeed"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -459,11 +460,11 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         handleKeyRecord={handleKeyRecord}
                                         formatKeyDisplay={formatKeyDisplay}
                                         hasValue={true}
-                                        valueLabel="increment"
+                                        valueLabel={t("player.prefs.kb_value_increment")}
                                     />
                                     <KeybindingRow
-                                        action="Decrease Speed"
-                                        description="Decrease playback speed"
+                                        action={t("player.prefs.kb_decrease_speed")}
+                                        description={t("player.prefs.kb_decrease_speed")}
                                         actionKey="decreaseSpeed"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -471,7 +472,7 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         handleKeyRecord={handleKeyRecord}
                                         formatKeyDisplay={formatKeyDisplay}
                                         hasValue={true}
-                                        valueLabel="increment"
+                                        valueLabel={t("player.prefs.kb_value_increment")}
                                     />
                                 </div>
                             </div>
@@ -480,8 +481,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                 {/* <h3 className="text-lg font-semibold mb-4 text-white">Navigation</h3> */}
                                 <div className="space-y-3">
                                     <KeybindingRow
-                                        action="Next Chapter"
-                                        description="Skip to next chapter"
+                                        action={t("player.prefs.kb_next_chapter")}
+                                        description={t("player.prefs.kb_next_chapter")}
                                         actionKey="nextChapter"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -490,8 +491,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         formatKeyDisplay={formatKeyDisplay}
                                     />
                                     <KeybindingRow
-                                        action="Previous Chapter"
-                                        description="Skip to previous chapter"
+                                        action={t("player.prefs.kb_previous_chapter")}
+                                        description={t("player.prefs.kb_previous_chapter")}
                                         actionKey="previousChapter"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -500,8 +501,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         formatKeyDisplay={formatKeyDisplay}
                                     />
                                     <KeybindingRow
-                                        action="Next Episode"
-                                        description="Play next episode"
+                                        action={t("player.prefs.kb_next_episode")}
+                                        description={t("player.prefs.kb_next_episode")}
                                         actionKey="nextEpisode"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -510,8 +511,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         formatKeyDisplay={formatKeyDisplay}
                                     />
                                     <KeybindingRow
-                                        action="Previous Episode"
-                                        description="Play previous episode"
+                                        action={t("player.prefs.kb_previous_episode")}
+                                        description={t("player.prefs.kb_previous_episode")}
                                         actionKey="previousEpisode"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -520,8 +521,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         formatKeyDisplay={formatKeyDisplay}
                                     />
                                     <KeybindingRow
-                                        action="Cycle Subtitles"
-                                        description="Cycle through subtitle tracks"
+                                        action={t("player.prefs.kb_cycle_subtitles")}
+                                        description={t("player.prefs.kb_cycle_subtitles")}
                                         actionKey="cycleSubtitles"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -530,8 +531,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         formatKeyDisplay={formatKeyDisplay}
                                     />
                                     <KeybindingRow
-                                        action="Fullscreen"
-                                        description="Toggle fullscreen"
+                                        action={t("player.prefs.kb_fullscreen")}
+                                        description={t("player.prefs.kb_fullscreen")}
                                         actionKey="fullscreen"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -540,8 +541,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         formatKeyDisplay={formatKeyDisplay}
                                     />
                                     <KeybindingRow
-                                        action="Picture in Picture"
-                                        description="Toggle picture in picture"
+                                        action={t("player.prefs.kb_pip")}
+                                        description={t("player.prefs.kb_pip")}
                                         actionKey="pictureInPicture"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -550,8 +551,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         formatKeyDisplay={formatKeyDisplay}
                                     />
                                     <KeybindingRow
-                                        action="Take Screenshot"
-                                        description="Take screenshot"
+                                        action={t("player.prefs.kb_take_screenshot")}
+                                        description={t("player.prefs.kb_take_screenshot")}
                                         actionKey="takeScreenshot"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -566,8 +567,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                 {/* <h3 className="text-lg font-semibold mb-4 text-white">Audio</h3> */}
                                 <div className="space-y-3">
                                     <KeybindingRow
-                                        action="Volume Up"
-                                        description="Increase volume"
+                                        action={t("player.prefs.kb_volume_up")}
+                                        description={t("player.prefs.kb_volume_up")}
                                         actionKey="volumeUp"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -575,11 +576,11 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         handleKeyRecord={handleKeyRecord}
                                         formatKeyDisplay={formatKeyDisplay}
                                         hasValue={true}
-                                        valueLabel="Percent"
+                                        valueLabel={t("player.prefs.kb_value_percent")}
                                     />
                                     <KeybindingRow
-                                        action="Volume Down"
-                                        description="Decrease volume"
+                                        action={t("player.prefs.kb_volume_down")}
+                                        description={t("player.prefs.kb_volume_down")}
                                         actionKey="volumeDown"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -587,11 +588,11 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         handleKeyRecord={handleKeyRecord}
                                         formatKeyDisplay={formatKeyDisplay}
                                         hasValue={true}
-                                        valueLabel="Percent"
+                                        valueLabel={t("player.prefs.kb_value_percent")}
                                     />
                                     <KeybindingRow
-                                        action="Mute"
-                                        description="Toggle mute"
+                                        action={t("player.prefs.kb_mute")}
+                                        description={t("player.prefs.kb_mute")}
                                         actionKey="mute"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -600,8 +601,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         formatKeyDisplay={formatKeyDisplay}
                                     />
                                     <KeybindingRow
-                                        action="Cycle Audio"
-                                        description="Cycle through audio tracks"
+                                        action={t("player.prefs.kb_cycle_audio")}
+                                        description={t("player.prefs.kb_cycle_audio")}
                                         actionKey="cycleAudio"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -610,8 +611,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         formatKeyDisplay={formatKeyDisplay}
                                     />
                                     <KeybindingRow
-                                        action="Display Characters"
-                                        description="Toggle characters panel"
+                                        action={t("player.prefs.kb_display_characters")}
+                                        description={t("player.prefs.kb_display_characters")}
                                         actionKey="openInSight"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -620,8 +621,8 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         formatKeyDisplay={formatKeyDisplay}
                                     />
                                     <KeybindingRow
-                                        action="Stats for Nerds"
-                                        description="Toggle stats for nerds"
+                                        action={t("player.prefs.kb_stats_for_nerds")}
+                                        description={t("player.prefs.kb_stats_for_nerds")}
                                         actionKey="statsForNerds"
                                         editedKeybindings={editedKeybindings}
                                         setEditedKeybindings={setEditedKeybindings}
@@ -638,21 +639,21 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                 intent="gray-outline"
                                 onClick={handleReset}
                             >
-                                Reset all
+                                {t("player.prefs.reset_all")}
                             </Button>
                             <div className="flex gap-2">
                                 <Button
                                     intent="gray-outline"
                                     onClick={() => setOpen(false)}
                                 >
-                                    Cancel
+                                    {t("library.common.cancel")}
                                 </Button>
                                 <Button
                                     intent="primary"
                                     onClick={handleSave}
                                     disabled={!!skipPatternError}
                                 >
-                                    Save
+                                    {t("media.action.save")}
                                 </Button>
                             </div>
                         </div>
@@ -660,11 +661,11 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                 </TabsContent>
                 <TabsContent value="subtitles" className={tabContentClass}>
                     <div className="space-y-3">
-                        <h3 className="text-lg font-semibold text-white">Defaults</h3>
+                        <h3 className="text-lg font-semibold text-white">{t("player.prefs.defaults")}</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-muted-foreground">
-                                    Preferred Subtitle Language
+                                    {t("player.prefs.preferred_sub_language")}
                                 </label>
                                 <TextInput
                                     value={editedSubLanguage}
@@ -676,7 +677,7 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-muted-foreground">
-                                    Preferred Audio Language
+                                    {t("player.prefs.preferred_audio_language")}
                                 </label>
                                 <TextInput
                                     value={editedAudioLanguage}
@@ -689,7 +690,7 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-muted-foreground">
-                                Ignored Subtitle Names
+                                {t("player.prefs.ignored_sub_names")}
                             </label>
                             <TextInput
                                 value={editedSubsBlacklist}
@@ -697,20 +698,20 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                 placeholder="e.g. signs & songs,signs/songs"
                                 onKeyDown={(e) => e.stopPropagation()}
                                 onInput={(e) => e.stopPropagation()}
-                                help="Subtitle tracks that will not be selected by default if they match the preferred lanauges. Separate multiple names with commas."
+                                help={t("player.prefs.ignored_sub_names_help")}
                             />
                         </div>
                     </div>
 
                     {isWebPlayer && <div className="space-y-3">
-                        <h3 className="text-lg font-semibold text-white">Rendering</h3>
+                        <h3 className="text-lg font-semibold text-white">{t("player.prefs.rendering")}</h3>
                         <div className="space-y-2">
                             <Switch
                                 side="right"
-                                label="Convert Soft Subs to ASS"
+                                label={t("player.prefs.convert_soft_subs")}
                                 value={editedUseLibassRenderer}
                                 onValueChange={setEditedUseLibassRenderer}
-                                help="The player will convert other subtitle formats (SRT, VTT, ...) to ASS. In case your language is not supported, you can add a new font or disable this feature. Reloading the player is required after changing this setting."
+                                help={t("player.prefs.convert_soft_subs_help")}
                             />
                         </div>
                     </div>}
@@ -720,21 +721,21 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                             intent="gray-outline"
                             onClick={handleReset}
                         >
-                            Reset all
+                            {t("player.prefs.reset_all")}
                         </Button>
                         <div className="flex gap-2">
                             <Button
                                 intent="gray-outline"
                                 onClick={() => setOpen(false)}
                             >
-                                Cancel
+                                {t("library.common.cancel")}
                             </Button>
                             <Button
                                 intent="primary"
                                 onClick={handleSave}
                                 disabled={!!skipPatternError}
                             >
-                                Save
+                                {t("media.action.save")}
                             </Button>
                         </div>
                     </div>
@@ -766,18 +767,18 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                         <Field.Switch
                                             name="vcTranslate"
                                             side="right"
-                                            label="Enable Translation"
-                                            help="Automatically translate subtitle tracks to your selected language"
+                                            label={t("player.prefs.enable_translation")}
+                                            help={t("player.prefs.enable_translation_help")}
                                         />
                                         <div className="space-y-2">
                                             <Field.Select
-                                                label="Provider"
+                                                label={t("player.prefs.provider")}
                                                 name="vcTranslateProvider"
                                                 options={[
-                                                    { value: "google", label: "Google Free" },
+                                                    { value: "google", label: t("player.prefs.provider_google_free") },
                                                     { value: "deepl", label: "DeepL" },
                                                     { value: "openai", label: "OpenAI" },
-                                                    { value: "openai-compatible", label: "OpenAI Compatible" },
+                                                    { value: "openai-compatible", label: t("player.prefs.provider_openai_compatible") },
                                                 ]}
                                                 contentClass="z-[999]"
                                             />
@@ -785,88 +786,88 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
 
                                         {provider === "deepl" && (
                                             <p>
-                                                DeepL does not support all target languages.
+                                                {t("player.prefs.deepl_limit")}
                                             </p>
                                         )}
 
                                         <div className="space-y-2">
                                             <Field.Select
-                                                label="Target Language"
+                                                label={t("player.prefs.target_language")}
                                                 name="vcTranslateTargetLanguage"
                                                 options={[
                                                     // DeepL
-                                                    { value: "en-US", label: "English (US)" },
-                                                    { value: "en-GB", label: "English (UK)" },
-                                                    { value: "es", label: "Spanish" },
-                                                    { value: "fr", label: "French" },
-                                                    { value: "de", label: "German" },
-                                                    { value: "it", label: "Italian" },
-                                                    { value: "pt-BR", label: "Portuguese (BR)" },
-                                                    { value: "pt-PT", label: "Portuguese (PT)" },
-                                                    { value: "ru", label: "Russian" },
-                                                    { value: "ja", label: "Japanese" },
-                                                    { value: "ko", label: "Korean" },
-                                                    { value: "zh-hans", label: "Chinese (Simplified)" },
-                                                    { value: "zh-hant", label: "Chinese (Traditional)" },
-                                                    { value: "ar", label: "Arabic" },
-                                                    { value: "tr", label: "Turkish" },
-                                                    { value: "pl", label: "Polish" },
-                                                    { value: "nl", label: "Dutch" },
-                                                    { value: "sv", label: "Swedish" },
-                                                    { value: "nb", label: "Norwegian" },
-                                                    { value: "da", label: "Danish" },
-                                                    { value: "fi", label: "Finnish" },
-                                                    { value: "el", label: "Greek" },
-                                                    { value: "cs", label: "Czech" },
-                                                    { value: "hu", label: "Hungarian" },
-                                                    { value: "ro", label: "Romanian" },
-                                                    { value: "id", label: "Indonesian" },
-                                                    { value: "uk", label: "Ukrainian" },
-                                                    { value: "bg", label: "Bulgarian" },
-                                                    { value: "sk", label: "Slovak" },
-                                                    { value: "sl", label: "Slovenian" },
-                                                    { value: "et", label: "Estonian" },
-                                                    { value: "lv", label: "Latvian" },
-                                                    { value: "lt", label: "Lithuanian" },
+                                                    { value: "en-US", label: t("player.prefs.lang_en_us") },
+                                                    { value: "en-GB", label: t("player.prefs.lang_en_gb") },
+                                                    { value: "es", label: t("player.prefs.lang_es") },
+                                                    { value: "fr", label: t("player.prefs.lang_fr") },
+                                                    { value: "de", label: t("player.prefs.lang_de") },
+                                                    { value: "it", label: t("player.prefs.lang_it") },
+                                                    { value: "pt-BR", label: t("player.prefs.lang_pt_br") },
+                                                    { value: "pt-PT", label: t("player.prefs.lang_pt_pt") },
+                                                    { value: "ru", label: t("player.prefs.lang_ru") },
+                                                    { value: "ja", label: t("player.prefs.lang_ja") },
+                                                    { value: "ko", label: t("player.prefs.lang_ko") },
+                                                    { value: "zh-hans", label: t("player.prefs.lang_zh_hans") },
+                                                    { value: "zh-hant", label: t("player.prefs.lang_zh_hant") },
+                                                    { value: "ar", label: t("player.prefs.lang_ar") },
+                                                    { value: "tr", label: t("player.prefs.lang_tr") },
+                                                    { value: "pl", label: t("player.prefs.lang_pl") },
+                                                    { value: "nl", label: t("player.prefs.lang_nl") },
+                                                    { value: "sv", label: t("player.prefs.lang_sv") },
+                                                    { value: "nb", label: t("player.prefs.lang_nb") },
+                                                    { value: "da", label: t("player.prefs.lang_da") },
+                                                    { value: "fi", label: t("player.prefs.lang_fi") },
+                                                    { value: "el", label: t("player.prefs.lang_el") },
+                                                    { value: "cs", label: t("player.prefs.lang_cs") },
+                                                    { value: "hu", label: t("player.prefs.lang_hu") },
+                                                    { value: "ro", label: t("player.prefs.lang_ro") },
+                                                    { value: "id", label: t("player.prefs.lang_id") },
+                                                    { value: "uk", label: t("player.prefs.lang_uk") },
+                                                    { value: "bg", label: t("player.prefs.lang_bg") },
+                                                    { value: "sk", label: t("player.prefs.lang_sk") },
+                                                    { value: "sl", label: t("player.prefs.lang_sl") },
+                                                    { value: "et", label: t("player.prefs.lang_et") },
+                                                    { value: "lv", label: t("player.prefs.lang_lv") },
+                                                    { value: "lt", label: t("player.prefs.lang_lt") },
                                                     // Not currently supported by DeepL
-                                                    { value: "hi", label: "Hindi" },
-                                                    { value: "bn", label: "Bengali" },
-                                                    { value: "ta", label: "Tamil" },
-                                                    { value: "te", label: "Telugu" },
-                                                    { value: "mr", label: "Marathi" },
-                                                    { value: "kn", label: "Kannada" },
-                                                    { value: "ml", label: "Malayalam" },
-                                                    { value: "pa", label: "Punjabi" },
-                                                    { value: "fa", label: "Persian" },
-                                                    { value: "ur", label: "Urdu" },
-                                                    { value: "sw", label: "Swahili" },
-                                                    { value: "af", label: "Afrikaans" },
-                                                    { value: "ms", label: "Malay" },
-                                                    { value: "hr", label: "Croatian" },
-                                                    { value: "sr", label: "Serbian" },
-                                                    { value: "he", label: "Hebrew" },
-                                                    { value: "th", label: "Thai" },
-                                                    { value: "vi", label: "Vietnamese" },
+                                                    { value: "hi", label: t("player.prefs.lang_hi") },
+                                                    { value: "bn", label: t("player.prefs.lang_bn") },
+                                                    { value: "ta", label: t("player.prefs.lang_ta") },
+                                                    { value: "te", label: t("player.prefs.lang_te") },
+                                                    { value: "mr", label: t("player.prefs.lang_mr") },
+                                                    { value: "kn", label: t("player.prefs.lang_kn") },
+                                                    { value: "ml", label: t("player.prefs.lang_ml") },
+                                                    { value: "pa", label: t("player.prefs.lang_pa") },
+                                                    { value: "fa", label: t("player.prefs.lang_fa") },
+                                                    { value: "ur", label: t("player.prefs.lang_ur") },
+                                                    { value: "sw", label: t("player.prefs.lang_sw") },
+                                                    { value: "af", label: t("player.prefs.lang_af") },
+                                                    { value: "ms", label: t("player.prefs.lang_ms") },
+                                                    { value: "hr", label: t("player.prefs.lang_hr") },
+                                                    { value: "sr", label: t("player.prefs.lang_sr") },
+                                                    { value: "he", label: t("player.prefs.lang_he") },
+                                                    { value: "th", label: t("player.prefs.lang_th") },
+                                                    { value: "vi", label: t("player.prefs.lang_vi") },
                                                 ]}
                                                 contentClass="z-[999]"
-                                                help="Select the language you want subtitles to be translated to"
+                                                help={t("player.prefs.target_language_help")}
                                             />
                                         </div>
 
                                         <div className="space-y-2">
                                             {provider === "openai-compatible" && (
                                                 <Field.Text
-                                                    label="Base URL"
+                                                    label={t("player.prefs.base_url")}
                                                     name="vcTranslateBaseUrl"
                                                     placeholder="http://localhost:1234/v1"
                                                     onKeyDown={(e) => e.stopPropagation()}
                                                     onInput={(e) => e.stopPropagation()}
-                                                    help="OpenAI-compatible /v1 endpoint, e.g. LM Studio or Ollama."
+                                                    help={t("player.prefs.base_url_help")}
                                                 />
                                             )}
                                             {usesOpenAIProvider && (
                                                 <Field.Text
-                                                    label="Model"
+                                                    label={t("player.prefs.model")}
                                                     name="vcTranslateModel"
                                                     placeholder={provider === "openai-compatible" ? "local-model" : "gpt-4o-mini"}
                                                     onKeyDown={(e) => e.stopPropagation()}
@@ -875,9 +876,9 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                             )}
                                             {provider !== "google" && (
                                                 <Field.Text
-                                                    label={provider === "openai-compatible" ? "API Key (optional)" : "API Key"}
+                                                    label={provider === "openai-compatible" ? t("player.prefs.api_key_optional") : t("player.prefs.api_key")}
                                                     name="vcTranslateApiKey"
-                                                    placeholder="Enter your API key"
+                                                    placeholder={t("player.prefs.api_key_placeholder")}
                                                     onKeyDown={(e) => e.stopPropagation()}
                                                     onInput={(e) => e.stopPropagation()}
                                                     type="password"
@@ -887,8 +888,7 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                     </div>
 
                                     <p className="text-[--muted]">
-                                        Reloading the player is required only when switching translation provider, language, endpoint, model, or API
-                                        key.
+                                        {t("player.prefs.reload_notice")}
                                     </p>
 
                                     <div className="flex items-center justify-end pt-6">
@@ -898,13 +898,13 @@ export function VideoCorePreferencesModal({ isWebPlayer }: { isWebPlayer: boolea
                                                 intent="gray-outline"
                                                 onClick={() => setOpen(false)}
                                             >
-                                                Cancel
+                                                {t("library.common.cancel")}
                                             </Button>
                                             <Button
                                                 type="submit"
                                                 intent="primary"
                                             >
-                                                Save
+                                                {t("media.action.save")}
                                             </Button>
                                         </div>
                                     </div>
@@ -1046,7 +1046,7 @@ export function VideoCoreKeybindingController(props: {
             if (e.code === "Home") {
                 e.preventDefault()
                 seekTo(0)
-                showOverlayFeedback({ message: "Beginning" })
+                showOverlayFeedback({ message: t("player.overlay.beginning") })
                 return
             }
 
@@ -1054,7 +1054,7 @@ export function VideoCoreKeybindingController(props: {
             if (e.code === "End") {
                 e.preventDefault()
                 seekTo(video.duration)
-                showOverlayFeedback({ message: "End" })
+                showOverlayFeedback({ message: t("player.overlay.end") })
                 return
             }
 
@@ -1080,14 +1080,14 @@ export function VideoCoreKeybindingController(props: {
             if (e.code === "Comma") {
                 e.preventDefault()
                 seek(-1 / 24)
-                showOverlayFeedback({ message: "Previous Frame" })
+                showOverlayFeedback({ message: t("player.overlay.prev_frame") })
                 return
             }
 
             if (e.code === "Period") {
                 e.preventDefault()
                 seek(1 / 24)
-                showOverlayFeedback({ message: "Next Frame" })
+                showOverlayFeedback({ message: t("player.overlay.next_frame") })
                 return
             }
 
@@ -1108,12 +1108,12 @@ export function VideoCoreKeybindingController(props: {
 
                 if (props.introEndTime && props.introStartTime && video.currentTime < props.introEndTime && video.currentTime >= props.introStartTime) {
                     seekTo(props.introEndTime)
-                    showOverlayFeedback({ message: "Skipped Opening" })
+                    showOverlayFeedback({ message: t("player.overlay.skipped_opening") })
                     return
                 }
                 if (props.endingEndTime && props.endingStartTime && video.currentTime < props.endingEndTime && video.currentTime >= props.endingStartTime) {
                     seekTo(props.endingEndTime)
-                    showOverlayFeedback({ message: "Skipped Ending" })
+                    showOverlayFeedback({ message: t("player.overlay.skipped_ending") })
                     return
                 }
                 seek(keybindings.seekForward.value)
@@ -1183,12 +1183,12 @@ export function VideoCoreKeybindingController(props: {
                 e.preventDefault()
                 const newRate = Math.min(8, video.playbackRate + keybindings.increaseSpeed.value)
                 video.playbackRate = newRate
-                showOverlayFeedback({ message: `Speed: ${newRate.toFixed(2)}x` })
+                showOverlayFeedback({ message: t("player.overlay.speed", { speed: newRate.toFixed(2) }) })
             } else if (e.code === keybindings.decreaseSpeed.key) {
                 e.preventDefault()
                 const newRate = Math.max(0.20, video.playbackRate - keybindings.decreaseSpeed.value)
                 video.playbackRate = newRate
-                showOverlayFeedback({ message: `Speed: ${newRate.toFixed(2)}x` })
+                showOverlayFeedback({ message: t("player.overlay.speed", { speed: newRate.toFixed(2) }) })
             }
         },
         [keybindings, volume, muted, seek, active, fullscreen, pip, showOverlayFeedback, introEndTime, introStartTime, isKeybindingsModalOpen,
@@ -1209,13 +1209,13 @@ export function VideoCoreKeybindingController(props: {
             seekTo(nextChapter.startTime)
             // Try to get chapter name from video track cues
             const chapterName = nextChapter.text
-            showOverlayFeedback({ message: chapterName ? `Chapter: ${chapterName}` : `Chapter ${sortedChapters.indexOf(nextChapter) + 1}` })
+            showOverlayFeedback({ message: chapterName ? t("player.overlay.chapter", { name: chapterName }) : t("player.overlay.chapter_num", { num: sortedChapters.indexOf(nextChapter) + 1 }) })
         } else {
             // If no next chapter, go to the end
             const lastChapter = sortedChapters[sortedChapters.length - 1]
             if (lastChapter && lastChapter.endTime) {
                 seekTo(lastChapter.endTime)
-                showOverlayFeedback({ message: "End of chapters" })
+                showOverlayFeedback({ message: t("player.overlay.end_of_chapters") })
             }
         }
     }, [chapterCues, seekTo, showOverlayFeedback])
@@ -1239,13 +1239,13 @@ export function VideoCoreKeybindingController(props: {
             const previousChapter = sortedChapters[currentChapterIndex - 1]
             seekTo(previousChapter.startTime)
             const chapterName = previousChapter.text
-            showOverlayFeedback({ message: chapterName ? `Chapter: ${chapterName}` : `Chapter ${currentChapterIndex}` })
+            showOverlayFeedback({ message: chapterName ? t("player.overlay.chapter", { name: chapterName }) : t("player.overlay.chapter_num", { num: currentChapterIndex }) })
         } else if (currentChapterIndex === 0) {
             // Already in first chapter, go to the beginning
             seekTo(0)
             const firstChapter = sortedChapters[0]
             const chapterName = firstChapter.text
-            showOverlayFeedback({ message: chapterName ? `Chapter: ${chapterName}` : "Chapter 1" })
+            showOverlayFeedback({ message: chapterName ? t("player.overlay.chapter", { name: chapterName }) : t("player.overlay.chapter_num", { num: 1 }) })
         } else {
             // If we can't determine current chapter, just go to the beginning
             seekTo(0)
@@ -1265,8 +1265,8 @@ export function VideoCoreKeybindingController(props: {
             // Enable next track if available
             if (nextTrackNumber > -1) {
                 subtitleManager?.selectTrack(nextTrackNumber)
-                const trackName = subtitleManager.getTrack(nextTrackNumber)?.label || `Track ${nextTrackNumber}`
-                showOverlayFeedback({ message: `Subtitles: ${trackName}` })
+                const trackName = subtitleManager.getTrack(nextTrackNumber)?.label || t("player.overlay.track", { num: nextTrackNumber })
+                showOverlayFeedback({ message: t("player.overlay.subtitles", { track: trackName }) })
                 found = true
             }
         }
@@ -1278,14 +1278,14 @@ export function VideoCoreKeybindingController(props: {
             // Enable next track if available
             if (nextTrack) {
                 mediaCaptionsManager?.selectTrack(nextTrackIdx)
-                const trackName = mediaCaptionsManager.getTrack(nextTrackIdx)?.label || `Track ${nextTrackIdx}`
-                showOverlayFeedback({ message: `Subtitles: ${trackName}` })
+                const trackName = mediaCaptionsManager.getTrack(nextTrackIdx)?.label || t("player.overlay.track", { num: nextTrackIdx })
+                showOverlayFeedback({ message: t("player.overlay.subtitles", { track: trackName }) })
                 found = true
             }
         }
 
         if (!found) {
-            showOverlayFeedback({ message: "Subtitles: Off" })
+            showOverlayFeedback({ message: t("player.overlay.subtitles_off") })
             subtitleManager?.setNoTrack()
             mediaCaptionsManager?.setNoTrack()
         }
@@ -1298,7 +1298,7 @@ export function VideoCoreKeybindingController(props: {
         if (audioManager.isHlsStream()) {
             const currentTrackNumber = audioManager.getSelectedTrackNumberOrNull()
             if (currentTrackNumber === null) {
-                showOverlayFeedback({ message: "No additional audio tracks" })
+                showOverlayFeedback({ message: t("player.overlay.no_audio_tracks") })
                 return
             }
             const audioTracks = audioManager.getHlsAudioTracks()
@@ -1307,8 +1307,8 @@ export function VideoCoreKeybindingController(props: {
 
             const nextTrack = audioTracks.find(n => n.id === nextTrackNumber)
             if (nextTrack) {
-                const trackName = nextTrack.name || nextTrack.language || `Track ${nextTrack.id + 1}`
-                showOverlayFeedback({ message: `Audio: ${trackName}` })
+                const trackName = nextTrack.name || nextTrack.language || t("player.overlay.track", { num: nextTrack.id + 1 })
+                showOverlayFeedback({ message: t("player.overlay.audio", { track: trackName }) })
                 audioManager.selectTrack(nextTrackNumber)
             }
 
@@ -1317,7 +1317,7 @@ export function VideoCoreKeybindingController(props: {
 
         const audioTracks = videoElement.audioTracks
         if (!audioTracks || audioTracks.length <= 1) {
-            showOverlayFeedback({ message: "No additional audio tracks" })
+            showOverlayFeedback({ message: t("player.overlay.no_audio_tracks") })
             return
         }
 
@@ -1343,15 +1343,15 @@ export function VideoCoreKeybindingController(props: {
         audioTracks.dispatchEvent?.(new Event("change"))
         audioManager.syncSelectedTrack()
 
-        const trackName = audioTracks[nextIndex].label || audioTracks[nextIndex].language || `Track ${nextIndex + 1}`
-        showOverlayFeedback({ message: `Audio: ${trackName}` })
+        const trackName = audioTracks[nextIndex].label || audioTracks[nextIndex].language || t("player.overlay.track", { num: nextIndex + 1 })
+        showOverlayFeedback({ message: t("player.overlay.audio", { track: trackName }) })
     }, [audioManager])
 
     const log = logger("VideoCoreKeybindings")
 
     const handleNextEpisode = useCallback(() => {
         if (!hasNextEpisode) {
-            showOverlayFeedback({ message: "No next episode" })
+            showOverlayFeedback({ message: t("player.overlay.no_next_episode") })
             log.info("No next episode available")
             return
         }
@@ -1362,7 +1362,7 @@ export function VideoCoreKeybindingController(props: {
 
     const handlePreviousEpisode = useCallback(() => {
         if (!hasPreviousEpisode) {
-            showOverlayFeedback({ message: "No previous episode" })
+            showOverlayFeedback({ message: t("player.overlay.no_prev_episode") })
             log.info("No previous episode available")
             return
         }

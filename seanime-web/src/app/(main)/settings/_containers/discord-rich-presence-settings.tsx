@@ -1,6 +1,7 @@
 import { SettingsCard } from "@/app/(main)/settings/_components/settings-card"
 import { cn } from "@/components/ui/core/styling"
 import { Field } from "@/components/ui/form"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { useFormContext } from "react-hook-form"
 
@@ -21,12 +22,12 @@ export function DiscordRichPresenceSettings(props: DiscordRichPresenceSettingsPr
 
     return (
         <>
-            <SettingsCard title="Rich Presence" description="Show what you are watching or reading in Discord.">
+            <SettingsCard title={t("settings.discord.rich_presence")} description={t("settings.discord.rich_presence_desc")}>
                 <div className="space-y-3">
                     <Field.Switch
                         side="right"
                         name="enableRichPresence"
-                        label={<span className="flex gap-1 items-center">Enable</span>}
+                        label={<span className="flex gap-1 items-center">{t("settings.action.enable")}</span>}
                     />
                     <div
                         className={cn(
@@ -36,12 +37,12 @@ export function DiscordRichPresenceSettings(props: DiscordRichPresenceSettingsPr
                     >
                         <Field.Checkbox
                             name="enableAnimeRichPresence"
-                            label="Anime"
+                            label={t("discover.tab.anime")}
                             fieldClass="w-fit"
                         />
                         <Field.Checkbox
                             name="enableMangaRichPresence"
-                            label="Manga"
+                            label={t("navigation.item.manga")}
                             fieldClass="w-fit"
                         />
                     </div>
@@ -50,7 +51,7 @@ export function DiscordRichPresenceSettings(props: DiscordRichPresenceSettingsPr
                 <Field.Switch
                     side="right"
                     name="richPresenceHideSeanimeRepositoryButton"
-                    label="Hide Seanime Repository Button"
+                    label={t("settings.discord.hide_repo_button")}
                 />
 
                 {/*<Field.Switch*/}
@@ -63,8 +64,8 @@ export function DiscordRichPresenceSettings(props: DiscordRichPresenceSettingsPr
                 <Field.Switch
                     side="right"
                     name="richPresenceShowAniListProfileButton"
-                    label="Show AniList Profile Button"
-                    help="Show a button to open your profile page on AniList."
+                    label={t("settings.discord.show_profile_button")}
+                    help={t("settings.discord.show_profile_button_help")}
                 />
 
                 {/*<Field.Switch*/}

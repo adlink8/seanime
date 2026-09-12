@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/components/ui/core/styling"
 import { Tooltip } from "@/components/ui/tooltip"
 import startCase from "lodash/startCase"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { LiaMicrophoneSolid } from "react-icons/lia"
 import { LuGauge } from "react-icons/lu"
@@ -65,9 +66,7 @@ export function TorrentSeedersBadge({ seeders }: { seeders: number }) {
                 className={cn("text-[.9rem] font-normal",
                     seeders >= 50 ? "text-[--indigo]" : seeders >= 10 ? "text-[--green]" : seeders >= 5 ? "text-orange-300" : "text-[--red]",
                 )}
-            >{seeders || "No"}</span><span className="text-[--muted] text-[.9rem]">seeder{seeders != 1
-            ? "s"
-            : ""}</span>
+            >{seeders || t("entry.torrent_filter.seeders_none")}</span><span className="text-[--muted] text-[.9rem]">{t("entry.torrent_filter.seeders_unit")}</span>
         </Badge>
     )
 
@@ -119,7 +118,7 @@ export function TorrentParsedMetadata({ metadata }: { metadata: Habari_Metadata 
                 trigger={<Badge
                     className="rounded-md bg-transparent border-transparent px-1"
                 >
-                    <PiChatTextDuotone className="text-lg text-[--blue]" /> Languages
+                    <PiChatTextDuotone className="text-lg text-[--blue]" /> {t("entry.torrent_filter.languages")}
                 </Badge>}
             >
                 <span>
@@ -133,7 +132,7 @@ export function TorrentParsedMetadata({ metadata }: { metadata: Habari_Metadata 
                 >
                     {/* <LuAudioWaveform className="text-lg text-[--blue]" /> {term} */}
                     <LiaMicrophoneSolid className="text-lg text-[--rose]" /> {term.toLowerCase().includes("dual")
-                    ? "Original + Dub"
+                    ? t("entry.torrent_filter.original_and_dub")
                     : startCase(term)}
                 </Badge>
             ))}
@@ -141,14 +140,14 @@ export function TorrentParsedMetadata({ metadata }: { metadata: Habari_Metadata 
                 <Badge
                     className="rounded-md border-transparent bg-indigo-300 px-1"
                 >
-                    <LiaMicrophoneSolid className="text-lg text-[--red]" /> Dubbed
+                    <LiaMicrophoneSolid className="text-lg text-[--red]" /> {t("entry.torrent_filter.dubbed")}
                 </Badge>
             )}
             {hasMultiSubs && (
                 <Badge
                     className="rounded-md border-transparent bg-indigo-300 px-1"
                 >
-                    <PiChatCircleDotsDuotone className="text-lg text-[--blue]" /> Multi Subs
+                    <PiChatCircleDotsDuotone className="text-lg text-[--blue]" /> {t("entry.torrent_filter.multi_subs")}
                 </Badge>
             )}
         </div>
@@ -168,7 +167,7 @@ export function TorrentDebridInstantAvailabilityBadge() {
                 <LuGauge className="text-xl" />
             </Badge>}
         >
-            Instantly available on Debrid service
+            {t("entry.torrent_filter.debrid_instant")}
         </Tooltip>
     )
 

@@ -5,6 +5,7 @@ import { vc_videoElement } from "@/app/(main)/_features/video-core/video-core-at
 import { vc_showOverlayFeedback } from "@/app/(main)/_features/video-core/video-core-overlay-display"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import { atom, useAtomValue, useSetAtom } from "jotai"
 import React from "react"
 import { toast } from "sonner"
@@ -68,12 +69,12 @@ export function useVideoCoreScreenshot() {
                 base64Data,
             })
 
-            showOverlayFeedback({ message: "Screenshot saved", type: "message" })
+            showOverlayFeedback({ message: t("player.screenshot.saved"), type: "message" })
         }
         catch (error) {
             console.error("Failed to save screenshot:", error)
-            showOverlayFeedback({ message: "Screenshot failed" })
-            toast.error("Failed to save screenshot to server")
+            showOverlayFeedback({ message: t("player.screenshot.failed") })
+            toast.error(t("player.screenshot.save_server_failed"))
 
             // Reprompt the screenshot dir when saving fails
             setPendingScreenshot({ blob, isAnime4K })
@@ -153,7 +154,7 @@ export function useVideoCoreScreenshot() {
         const isPaused = videoElement.paused
 
         videoElement.pause()
-        showOverlayFeedback({ message: "Taking screenshot..." })
+        showOverlayFeedback({ message: t("player.screenshot.taking") })
 
         try {
             let blob: Blob | null = null
@@ -185,7 +186,7 @@ export function useVideoCoreScreenshot() {
         }
         catch (error) {
             console.error("Screenshot failed:", error)
-            showOverlayFeedback({ message: "Screenshot failed" })
+            showOverlayFeedback({ message: t("player.screenshot.failed") })
         }
         finally {
             if (!isPaused) {

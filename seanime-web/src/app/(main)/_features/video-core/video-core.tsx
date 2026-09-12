@@ -128,6 +128,7 @@ import { cn } from "@/components/ui/core/styling"
 import { Modal } from "@/components/ui/modal"
 import { useDisclosure } from "@/hooks/use-disclosure"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { __isDesktop__, __isElectronDesktop__ } from "@/types/constants"
 import { useQueryClient } from "@tanstack/react-query"
 import { ErrorData } from "hls.js"
@@ -515,7 +516,7 @@ const PlayerContent = React.memo<PlayerContentProps>(({
                                         pipManager?.togglePip()
                                     }}
                                 >
-                                    Exit PiP
+                                    {t("player.pip.exit")}
                                 </Button>
                             </div>
                         )}
@@ -1030,7 +1031,7 @@ export function VideoCore(props: VideoCoreProps) {
         preferredQuality: hlsPreferredQuality,
         onMediaDetached: onHlsMediaDetached,
         onFatalError: onHlsFatalError,
-        onStalled: err => onStalled?.(`HLS stalled: ${err.error?.message || err.details}`),
+        onStalled: err => onStalled?.(t("player.hls.stalled", { message: err.error?.message || err.details })),
     })
 
     React.useEffect(() => {
@@ -1047,7 +1048,7 @@ export function VideoCore(props: VideoCoreProps) {
             const stallKey = `${playbackId}:${startedAt.toFixed(1)}`
             if (stalledPlaybackRef.current === stallKey) return
             stalledPlaybackRef.current = stallKey
-            onStalled?.("Playback stalled while buffering")
+            onStalled?.(t("player.playback.stalled_while_buffering"))
         }, PLAYBACK_STALL_TIMEOUT_MS)
 
         return () => window.clearTimeout(timeout)
@@ -1416,7 +1417,7 @@ export function VideoCore(props: VideoCoreProps) {
             return
         }
 
-        const error = `Video playback error occurred. (Code: ${(e.currentTarget.error && e.currentTarget.error.code) || "unknown"})`
+        const error = t("player.playback.error_occurred", { code: (e.currentTarget.error && e.currentTarget.error.code) || "unknown" })
         onError?.(error)
         dispatchVideoErrorEvent(error)
     }
@@ -1428,7 +1429,7 @@ export function VideoCore(props: VideoCoreProps) {
     function restoreSeekTime(time: number, showMessage: boolean, paused?: boolean) {
         if (!videoRef.current) return
         if (anime4kOption === "off" || anime4kManager?.canvas !== null) {
-            if (showMessage) showOverlayFeedback({ message: "Progress restored", duration: 1500 })
+            if (showMessage) showOverlayFeedback({ message: t("player.overlay.progress_restored"), duration: 1500 })
             videoRef.current.currentTime = time
             if (paused && !videoRef.current.paused) {
                 videoRef.current.pause()
@@ -1437,7 +1438,7 @@ export function VideoCore(props: VideoCoreProps) {
             }
         } else if (anime4kOption !== ("off" as Anime4KOption)) {
             videoRef.current.pause()
-            if (showMessage) showOverlayFeedback({ message: "Restoring progress", duration: 1500 })
+            if (showMessage) showOverlayFeedback({ message: t("player.overlay.restoring_progress"), duration: 1500 })
             anime4kManager.registerOnCanvasCreatedOnce(() => {
                 if (!videoRef.current) return
                 videoRef.current.currentTime = time
@@ -1823,8 +1824,8 @@ export function VideoCore(props: VideoCoreProps) {
                 </VideoCoreDrawer>
 
                 <Modal
-                    title="Terminate stream?"
-                    description="Press Esc again or choose terminate to stop playback."
+                    title={t("player.terminate.title")}
+                    description={t("player.terminate.desc")}
                     titleClass="text-center"
                     open={isTerminateConfirmOpen && isMiniPlayer}
                     onOpenChange={open => {
@@ -1839,10 +1840,10 @@ export function VideoCore(props: VideoCoreProps) {
                 >
                     <div className="flex gap-2 justify-center items-center">
                         <Button intent="warning-subtle" onClick={onTerminateStream}>
-                            Terminate stream
+                            {t("player.terminate.confirm")}
                         </Button>
                         <Button intent="white" onClick={closeTerminateConfirm}>
-                            Keep playing
+                            {t("player.terminate.keep")}
                         </Button>
                     </div>
                 </Modal>

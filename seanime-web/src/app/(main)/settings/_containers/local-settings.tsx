@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { Field } from "@/components/ui/form"
 import { Separator } from "@/components/ui/separator"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { LuCloudUpload, LuUserCog } from "react-icons/lu"
 
@@ -28,9 +29,9 @@ export function LocalSettings(props: Props) {
     const { mutate: upload, isPending: isUploading } = useLocalSyncSimulatedDataToAnilist()
 
     const confirmDialog = useConfirmationDialog({
-        title: "Upload to AniList",
-        description: "This will upload your local Seanime collection to your AniList account. Are you sure you want to proceed?",
-        actionText: "Upload",
+        title: t("settings.confirm.upload_to_anilist"),
+        description: t("settings.confirm.upload_to_anilist_desc"),
+        actionText: t("settings.action.upload"),
         actionIntent: "primary",
         onConfirm: async () => {
             upload()
@@ -41,8 +42,8 @@ export function LocalSettings(props: Props) {
         <div className="space-y-4">
 
             <SettingsPageHeader
-                title="Local Account"
-                description="Local anime and manga list managed by Seanime"
+                title={t("settings.local.title")}
+                description={t("settings.local.desc")}
                 icon={LuUserCog}
             />
 
@@ -54,8 +55,8 @@ export function LocalSettings(props: Props) {
                     <Field.Switch
                         side="right"
                         name="autoSyncToLocalAccount"
-                        label="Auto sync from AniList"
-                        help="Periodically update your local collection by using your AniList data."
+                        label={t("settings.local.auto_sync")}
+                        help={t("settings.local.auto_sync_help")}
                     />
                 </div>
                 <Separator />
@@ -69,7 +70,7 @@ export function LocalSettings(props: Props) {
                     }}
                     disabled={serverStatus?.user?.isSimulated}
                 >
-                    Upload to AniList
+                    {t("settings.confirm.upload_to_anilist")}
                 </Button>
             </SettingsCard>
 

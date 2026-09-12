@@ -1,5 +1,6 @@
 import type { Player_PlaybackInfo } from "@/api/generated/types"
 import type { MpvPrismTrack } from "@mpv-prism/core"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { mc_trackKind } from "./mpv-core"
 import type { MpvCoreAnime4KQuality, MpvCoreShaderMode } from "./mpv-core.atoms"
@@ -111,35 +112,35 @@ export function MpvCoreStats(props: MpvCoreStatsProps) {
 
     return (
         <div className="absolute left-4 top-24 z-30 max-w-lg rounded-md bg-black/80 p-4 font-mono text-xs leading-5 text-white backdrop-blur pointer-events-none select-none">
-            <p className="font-bold mb-2">Stats for Nerds</p>
+            <p className="font-bold mb-2">{t("player.stats.title")}</p>
             <div className="space-y-1">
-                <StatLine label="Source" value={props.info?.streamPath || props.info?.playbackUri || "unknown"} />
-                <StatLine label="Display / Video" value={`${displaySize.width}x${displaySize.height} / ${videoWidth || "?"}x${videoHeight || "?"}`} />
+                <StatLine label={t("mpv.stats.source")} value={props.info?.streamPath || props.info?.playbackUri || "unknown"} />
+                <StatLine label={t("player.stats.display_video")} value={`${displaySize.width}x${displaySize.height} / ${videoWidth || "?"}x${videoHeight || "?"}`} />
                 <StatLine
-                    label="Video"
+                    label={t("mpv.stats.video")}
                     value={`${String(video?.codec ?? "unknown")}${videoLang ? ` ${videoLang}` : ""}${videoTitle}${videoBitrate > 0
                         ? ` @ ${(videoBitrate / 1_000_000).toFixed(2)} Mbps`
                         : ""}`}
                 />
-                {videoDetails && <StatLine label="Color / Format" value={videoDetails} />}
+                {videoDetails && <StatLine label={t("mpv.stats.color_format")} value={videoDetails} />}
                 <StatLine
-                    label="Audio"
+                    label={t("player.menu.audio")}
                     value={`${String(audio?.codec ?? "unknown")}${audioLang ? ` ${audioLang}` : ""}${audioTitle}${audioBitrate > 0
                         ? ` @ ${(audioBitrate / 1000).toFixed(0)} kbps`
                         : ""}`}
                 />
                 <StatLine
-                    label="Framerate"
+                    label={t("player.stats.framerate")}
                     value={`${fps > 0 ? `${fps.toFixed(2)} fps` : "unknown"}${displayFps > 0 ? ` (Display: ${displayFps.toFixed(2)} Hz)` : ""}`}
                 />
-                <StatLine label="Frame Drops (Output / Decoder)" value={`${outputDrops} / ${decoderDrops}`} />
+                <StatLine label={t("mpv.stats.frame_drops")} value={`${outputDrops} / ${decoderDrops}`} />
                 <StatLine
-                    label="Presenter Drops (Queue / Browser)"
+                    label={t("mpv.stats.presenter_drops")}
                     value={`${props.frameDrops["presenter-queue-drops"] ?? 0} / ${props.frameDrops["presenter-browser-drops"] ?? 0}`}
                 />
                 {renderTimeMs && (
                     <>
-                        <StatLine label="Avg Render Time" value={`${renderTimeMs} ms`} />
+                        <StatLine label={t("player.stats.render_time")} value={`${renderTimeMs} ms`} />
                         <div className="pl-4 border-l border-gray-800 space-y-0.5 my-1">
                             {freshPasses.map((pass, idx) => {
                                 const name = String(pass.desc ?? `pass-${idx}`)
@@ -156,29 +157,29 @@ export function MpvCoreStats(props: MpvCoreStatsProps) {
                 )}
                 {/*<StatLine label="Mistimed / Delayed" value={`${props.frameDrops["mistimed-frame-count"] ?? 0} / ${props.frameDrops["vo-delayed-frame-count"] ?? 0}`} />*/}
                 <StatLine
-                    label="A/V Sync"
+                    label={t("mpv.stats.av_sync")}
                     value={`${typeof props.diagnostics["avsync"] === "number"
                         ? (props.diagnostics["avsync"] * 1000).toFixed(1) + " ms"
                         : "unknown"}`}
                 />
                 <StatLine
-                    label="Buffer Ahead"
+                    label={t("player.stats.buffer_ahead")}
                     value={`${Math.max(0, cacheDuration).toFixed(2)} s${cacheSizeMB ? ` (${cacheSizeMB} MB)` : ""}${props.buffering
                         ? " - buffering"
                         : ""}`}
                 />
-                <StatLine label="Playback Rate" value={`${props.speed.toFixed(2)}x`} />
+                <StatLine label={t("player.stats.playback_rate")} value={`${props.speed.toFixed(2)}x`} />
                 <StatLine
-                    label="Time / Duration"
+                    label={t("player.stats.time_duration")}
                     value={`${formatTime(props.currentTime)} / ${formatTime(props.duration)} (Remaining: ${formatTime(remainingTime)})`}
                 />
-                <StatLine label="Hardware Decode" value={String(props.diagnostics["hwdec-current"] || "no")} />
-                <StatLine label="Container" value={String(props.diagnostics["file-format"] || props.info?.mimeType || "unknown")} />
+                <StatLine label={t("mpv.stats.hw_decode")} value={String(props.diagnostics["hwdec-current"] || "no")} />
+                <StatLine label={t("mpv.stats.container")} value={String(props.diagnostics["file-format"] || props.info?.mimeType || "unknown")} />
                 {props.shaderMode === "anime4k" && (
-                    <StatLine label="Shaders" value={`Anime4K (${props.anime4kMode}) - ${props.anime4kQuality.toUpperCase()}`} />
+                    <StatLine label={t("mpv.shader.title")} value={`Anime4K (${props.anime4kMode}) - ${props.anime4kQuality.toUpperCase()}`} />
                 )}
                 {props.shaderMode === "custom" && (
-                    <StatLine label="Shaders" value={`Custom (${props.customShadersCount} active)`} />
+                    <StatLine label={t("mpv.shader.title")} value={`Custom (${props.customShadersCount} active)`} />
                 )}
             </div>
         </div>

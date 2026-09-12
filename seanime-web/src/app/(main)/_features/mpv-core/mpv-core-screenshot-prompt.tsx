@@ -6,6 +6,7 @@ import { useAtom } from "jotai"
 import { useSetAtom } from "jotai/react"
 import React from "react"
 import { toast } from "sonner"
+import { t } from "@/lib/i18n"
 import { mc_overlayFeedback, mc_pendingScreenshotAtom, mc_screenshotPromptOpenAtom } from "./mpv-core.atoms"
 
 interface MpvCoreScreenshotDirPromptProps {
@@ -47,15 +48,15 @@ export function MpvCoreScreenshotDirPrompt({ isFullscreen, containerElement }: M
                     base64Data,
                 })
 
-                setOverlayFeedback({ message: `Screenshot saved to ${path}`, type: "message" })
+                setOverlayFeedback({ message: t("mpv.screenshot.saved_to", { path }), type: "message" })
                 setPendingScreenshot(null)
             }
-            toast.success("Screenshot folder saved")
+            toast.success(t("player.screenshot.folder_saved"))
             return true
         }
         catch (error) {
             console.error("Failed to setup screenshot folder:", error)
-            toast.error(error instanceof Error ? error.message : "Failed to save screenshot folder")
+            toast.error(error instanceof Error ? error.message : t("player.screenshot.folder_save_failed"))
             return false
         }
     }

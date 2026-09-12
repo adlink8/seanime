@@ -5,6 +5,7 @@ import { __torrentSearch_selectionAtom } from "@/app/(main)/entry/_containers/to
 import { useSetAtom } from "jotai/react"
 import React, { useMemo } from "react"
 import { BiDownload } from "react-icons/bi"
+import { t } from "@/lib/i18n"
 
 export function TorrentSearchButton({ entry, onClick }: { entry: Anime_Entry, onClick?: () => void }) {
 
@@ -31,10 +32,10 @@ export function TorrentSearchButton({ entry, onClick }: { entry: Anime_Entry, on
                 data-torrent-search-button
             >
                 {(!entry.downloadInfo?.hasInaccurateSchedule && !!count) ? <>
-                    {(!isMovie) && `Download ${entry.downloadInfo?.batchAll ? "batch /" : "next"} ${count > 1 ? `${count} episodes` : "episode"}`}
-                    {(isMovie) && `Download movie`}
+                    {(!isMovie) && t("entry.torrent_search_button.download_episodes", { range: entry.downloadInfo?.batchAll ? t("entry.torrent_search_button.range_batch") : t("entry.torrent_search_button.range_next"), n: count })}
+                    {(isMovie) && t("entry.torrent_search_button.download_movie")}
                 </> : <>
-                    Download
+                    {t("entry.torrent_download.download")}
                 </>}
             </AnimeMetaActionButton>
         </div>

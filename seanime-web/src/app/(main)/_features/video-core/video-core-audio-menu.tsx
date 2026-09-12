@@ -10,6 +10,7 @@ import { VideoCoreControlButtonIcon } from "@/app/(main)/_features/video-core/vi
 import { HlsAudioTrack, vc_hlsAudioTracks, vc_hlsCurrentAudioTrack } from "@/app/(main)/_features/video-core/video-core-hls"
 import { VideoCoreMenu, VideoCoreMenuBody, VideoCoreMenuTitle, VideoCoreSettingSelect } from "@/app/(main)/_features/video-core/video-core-menu"
 import { vc_dispatchAction } from "@/app/(main)/_features/video-core/video-core.utils"
+import { t } from "@/lib/i18n"
 import { useAtomValue } from "jotai"
 import { useSetAtom } from "jotai/react"
 import React from "react"
@@ -76,7 +77,7 @@ export function VideoCoreAudioMenu() {
                 }}
             />}
         >
-            <VideoCoreMenuTitle>Audio</VideoCoreMenuTitle>
+            <VideoCoreMenuTitle>{t("player.menu.audio")}</VideoCoreMenuTitle>
             <VideoCoreMenuBody>
                 <VideoCoreSettingSelect
                     isFullscreen={isFullscreen}
@@ -86,7 +87,7 @@ export function VideoCoreAudioMenu() {
                             // HLS track format
                             const hlsTrack = track as HlsAudioTrack
                             return {
-                                label: hlsTrack.name || hlsTrack.language?.toUpperCase() || `Track ${hlsTrack.id + 1}`,
+                                label: hlsTrack.name || hlsTrack.language?.toUpperCase() || t("player.overlay.track", { num: hlsTrack.id + 1 }),
                                 value: hlsTrack.id,
                                 moreInfo: hlsTrack.language?.toUpperCase(),
                             }

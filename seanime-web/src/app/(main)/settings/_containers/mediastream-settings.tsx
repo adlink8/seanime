@@ -7,6 +7,7 @@ import { SettingsIsDirty, SettingsSubmitButton } from "@/app/(main)/settings/_co
 import { defineSchema, Field, Form } from "@/components/ui/form"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { WSEvents } from "@/lib/server/ws-events.ts"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { UseFormReturn } from "react-hook-form"
 import { LuTabletSmartphone } from "react-icons/lu"
@@ -26,13 +27,13 @@ const mediastreamSchema = defineSchema(({ z }) => z.object({
 }))
 
 const MEDIASTREAM_HW_ACCEL_OPTIONS = [
-    { label: "CPU (Disabled)", value: "cpu" },
+    { label: t("settings.mediastream.hwaccel_cpu"), value: "cpu" },
     { label: "NVIDIA (NVENC)", value: "nvidia" },
     { label: "Intel (QSV)", value: "qsv" },
     { label: "Intel (QSV Low-Power)", value: "qsv-low-power" },
     { label: "VAAPI", value: "vaapi" },
     { label: "Apple VideoToolbox", value: "videotoolbox" },
-    { label: "Custom", value: "custom" },
+    { label: t("settings.ui.banner_type_custom"), value: "custom" },
 ]
 
 const MEDIASTREAM_PRESET_OPTIONS = [
@@ -76,8 +77,8 @@ export function MediastreamSettings(props: MediastreamSettingsProps) {
     return (
         <>
             <SettingsPageHeader
-                title="Transcoding / Direct Play"
-                description="Manage transcoding and direct play settings"
+                title={t("settings.mediastream.title")}
+                description={t("settings.mediastream.desc")}
                 icon={LuTabletSmartphone}
             />
 
@@ -126,7 +127,7 @@ export function MediastreamSettings(props: MediastreamSettingsProps) {
                             <Field.Switch
                                 side="right"
                                 name="transcodeEnabled"
-                                label="Enable"
+                                label={t("settings.action.enable")}
                             />
                         </SettingsCard>
 
@@ -162,46 +163,46 @@ export function MediastreamSettings(props: MediastreamSettingsProps) {
                          )}
                          </SettingsCard> */}
 
-                        <SettingsCard title="Direct Play">
+                        <SettingsCard title={t("settings.mediastream.direct_play_title")}>
 
                             <Field.Switch
                                 side="right"
                                 name="disableAutoSwitchToDirectPlay"
-                                label="Prefer transcoding"
-                                help="If enabled, Seanime will not automatically switch to direct play if the media codec is supported by the client."
+                                label={t("settings.mediastream.prefer_transcoding")}
+                                help={t("settings.mediastream.prefer_transcoding_help")}
                             />
 
                             <Field.Switch
                                 side="right"
                                 name="directPlayOnly"
-                                label="Direct play only"
-                                help="Only allow direct play. Transcoding will never be started."
+                                label={t("settings.mediastream.direct_play_only")}
+                                help={t("settings.mediastream.direct_play_only_help")}
                             />
 
                         </SettingsCard>
 
-                        <SettingsCard title="Transcoding">
+                        <SettingsCard title={t("settings.mediastream.transcoding_title")}>
                             <Field.Select
                                 options={MEDIASTREAM_HW_ACCEL_OPTIONS}
                                 name="transcodeHwAccel"
-                                label="Hardware acceleration"
-                                help="Hardware acceleration is highly recommended for a smoother transcoding experience."
+                                label={t("settings.mediastream.hardware_acceleration")}
+                                help={t("settings.mediastream.hardware_acceleration_help")}
                             />
 
                             {f.watch("transcodeHwAccel") === "custom" && (
                                 <Field.Textarea
                                     name="transcodeHwAccelCustomSettings"
-                                    label="Custom settings (JSON)"
+                                    label={t("settings.mediastream.custom_settings_json")}
                                     className="min-h-[400px]"
-                                    help="Video stream only, scaleFilter = -vf, -map,-bufsize,-b:v,-maxrate automatically applied."
+                                    help={t("settings.mediastream.custom_settings_help")}
                                 />
                             )}
 
                             <Field.Select
                                 options={MEDIASTREAM_PRESET_OPTIONS}
                                 name="transcodePreset"
-                                label="Transcode preset"
-                                help="'Fast' is recommended. VAAPI does not support presets."
+                                label={t("settings.mediastream.transcode_preset")}
+                                help={t("settings.mediastream.transcode_preset_help")}
                             />
                         </SettingsCard>
 
@@ -210,14 +211,14 @@ export function MediastreamSettings(props: MediastreamSettingsProps) {
                             <div className="flex gap-3 items-center">
                                 <Field.Text
                                     name="ffmpegPath"
-                                    label="FFmpeg path"
-                                    help="Path to the FFmpeg binary. Leave empty if binary is already in your PATH."
+                                    label={t("settings.mediastream.ffmpeg_path")}
+                                    help={t("settings.mediastream.ffmpeg_path_help")}
                                 />
 
                                 <Field.Text
                                     name="ffprobePath"
-                                    label="FFprobe path"
-                                    help="Path to the FFprobe binary. Leave empty if binary is already in your PATH."
+                                    label={t("settings.mediastream.ffprobe_path")}
+                                    help={t("settings.mediastream.ffprobe_path_help")}
                                 />
                             </div>
                         </SettingsCard>

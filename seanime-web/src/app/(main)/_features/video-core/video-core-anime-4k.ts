@@ -7,6 +7,7 @@ import { vc_miniPlayer } from "@/app/(main)/_features/video-core/video-core-atom
 import { vc_videoElement } from "@/app/(main)/_features/video-core/video-core-atoms"
 import { vc_pip } from "@/app/(main)/_features/video-core/video-core-pip"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { useAtomValue } from "jotai"
 import { useAtom } from "jotai/react"
 import { atomWithStorage } from "jotai/utils"
@@ -88,19 +89,19 @@ export const VideoCoreAnime4K = () => {
 }
 
 export const anime4kOptions: { value: Anime4KOption; label: string; description: string; performance: "light" | "medium" | "heavy" }[] = [
-    { value: "off", label: "Off", description: "Disabled", performance: "light" },
-    { value: "mode-a", label: "Mode A", description: "Removes compression artifacts then upscales", performance: "light" },
-    { value: "mode-b", label: "Mode B", description: "Gentle artifact removal then upscales", performance: "light" },
-    { value: "mode-c", label: "Mode C", description: "Upscales with denoising then upscales again", performance: "light" },
-    { value: "mode-aa", label: "Mode A+A", description: "Enhanced restoration for better quality", performance: "medium" },
-    { value: "mode-bb", label: "Mode B+B", description: "Double soft restoration", performance: "medium" },
-    { value: "mode-ca", label: "Mode C+A", description: "Denoising + restoration hybrid", performance: "medium" },
-    { value: "cnn-2x-medium", label: "CNN 2x M", description: "Balanced speed and quality", performance: "medium" },
-    { value: "cnn-2x-very-large", label: "CNN 2x VL", description: "High quality neural network", performance: "heavy" },
-    { value: "denoise-cnn-2x-very-large", label: "Denoise CNN 2x VL", description: "Removes noise while upscaling", performance: "heavy" },
-    { value: "cnn-2x-ultra-large", label: "CNN 2x UL", description: "Maximum CNN quality", performance: "heavy" },
-    { value: "gan-3x-large", label: "GAN 3x L", description: "Generative adversarial network for perceptual quality", performance: "heavy" },
-    { value: "gan-4x-ultra-large", label: "GAN 4x UL", description: "Maximum upscaling with GAN technology", performance: "heavy" },
+    { value: "off", label: t("player.common.off"), description: t("player.a4k.disabled"), performance: "light" },
+    { value: "mode-a", label: t("player.a4k.mode_a"), description: t("player.a4k.desc_mode_a"), performance: "light" },
+    { value: "mode-b", label: t("player.a4k.mode_b"), description: t("player.a4k.desc_mode_b"), performance: "light" },
+    { value: "mode-c", label: t("player.a4k.mode_c"), description: t("player.a4k.desc_mode_c"), performance: "light" },
+    { value: "mode-aa", label: t("player.a4k.mode_aa"), description: t("player.a4k.desc_mode_aa"), performance: "medium" },
+    { value: "mode-bb", label: t("player.a4k.mode_bb"), description: t("player.a4k.desc_mode_bb"), performance: "medium" },
+    { value: "mode-ca", label: t("player.a4k.mode_ca"), description: t("player.a4k.desc_mode_ca"), performance: "medium" },
+    { value: "cnn-2x-medium", label: "CNN 2x M", description: t("player.a4k.desc_cnn_2x_m"), performance: "medium" },
+    { value: "cnn-2x-very-large", label: "CNN 2x VL", description: t("player.a4k.desc_cnn_2x_vl"), performance: "heavy" },
+    { value: "denoise-cnn-2x-very-large", label: "Denoise CNN 2x VL", description: t("player.a4k.desc_denoise_cnn_2x_vl"), performance: "heavy" },
+    { value: "cnn-2x-ultra-large", label: "CNN 2x UL", description: t("player.a4k.desc_cnn_2x_ul"), performance: "heavy" },
+    { value: "gan-3x-large", label: "GAN 3x L", description: t("player.a4k.desc_gan_3x_l"), performance: "heavy" },
+    { value: "gan-4x-ultra-large", label: "GAN 4x UL", description: t("player.a4k.desc_gan_4x_ul"), performance: "heavy" },
 ]
 
 export const getAnime4KOptionByValue = (value: Anime4KOption) => {
@@ -206,7 +207,7 @@ export const getOptimalAnime4KSettings = async (videoResolution: { width: number
     return {
         supported: true,
         recommendation: optimalOption?.value || "mode-a" as Anime4KOption,
-        reason: `Recommended for ${videoResolution.height}p video on ${gpuInfo?.gpu || "current GPU"}`,
+        reason: t("player.a4k.recommended_reason", { height: videoResolution.height, gpu: gpuInfo?.gpu || "GPU" }),
         alternatives: recommendation.recommendedOptions.slice(0, 3),
     }
 }

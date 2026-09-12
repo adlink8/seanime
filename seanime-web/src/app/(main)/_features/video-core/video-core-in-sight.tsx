@@ -8,6 +8,7 @@ import { IconButton } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { Popover } from "@/components/ui/popover"
 import { TextInput } from "@/components/ui/text-input"
+import { t } from "@/lib/i18n"
 import { useAtomValue } from "jotai"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
@@ -57,7 +58,7 @@ export function VideoCoreInSight() {
         const res = list.filter(c => c.name?.toLowerCase().includes(searchQuery.toLowerCase()))
         if (res.length === 0) return [{
             mal_id: 0,
-            name: "No results",
+            name: t("player.insight.no_results"),
             images: {
                 webp: {
                     image_url: "/no-cover.png",
@@ -200,9 +201,9 @@ export function VideoCoreInSight() {
                 <div className="w-fit flex items-center gap-3">
                     <div className="w-fit">
                         <p className="text-2xl font-semibold text-white text-shadow-md">
-                            Characters
+                            {t("media.section.characters")}
                         </p>
-                        <p className="text-white/60">May contain spoilers.</p>
+                        <p className="text-white/60">{t("player.insight.spoilers")}</p>
                     </div>
                     <IconButton
                         icon={<BiX />}
@@ -216,7 +217,7 @@ export function VideoCoreInSight() {
                 <TextInput
                     ref={searchInputRef}
                     type="text"
-                    placeholder="Search characters..."
+                    placeholder={t("player.insight.search_placeholder")}
                     value={searchQuery}
                     onValueChange={(v) => setSearchQuery(v)}
                     fieldClass="w-[300px] !rounded-full"
