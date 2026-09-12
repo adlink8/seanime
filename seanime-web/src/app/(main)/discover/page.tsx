@@ -12,6 +12,7 @@ import { __discord_pageTypeAtom } from "@/app/(main)/discover/_lib/discover.atom
 import { RecentReleases } from "@/app/(main)/schedule/_containers/recent-releases"
 import { PageWrapper } from "@/components/shared/page-wrapper"
 import { StaticTabs } from "@/components/ui/tabs"
+import { t } from "@/lib/i18n"
 import { useRouter, useSearchParams } from "@/lib/navigation"
 import { useAtom } from "jotai/react"
 import { AnimatePresence, motion } from "motion/react"
@@ -54,10 +55,10 @@ export default function Page() {
                             triggerClass="px-4 py-2 h-full rounded-full border-transparent"
                             pillClass="rounded-full border-transparent"
                             items={[
-                                { name: "动漫", isCurrent: pageType === "anime", onClick: () => setPageType("anime") },
-                                { name: "放送日历", isCurrent: pageType === "schedule", onClick: () => setPageType("schedule") },
+                                { name: t("discover.tab.anime"), isCurrent: pageType === "anime", onClick: () => setPageType("anime") },
+                                { name: t("navigation.item.schedule"), isCurrent: pageType === "schedule", onClick: () => setPageType("schedule") },
                                 ...(serverStatus?.settings?.library?.enableManga ? [{
-                                    name: "漫画",
+                                    name: t("discover.tab.manga"),
                                     isCurrent: pageType === "manga",
                                     onClick: () => setPageType("manga"),
                                 }] : []),
@@ -107,25 +108,25 @@ export default function Page() {
                         data-discover-page-anime-container
                     >
                         <div className="space-y-2 z-[5] relative" data-discover-page-anime-trending-container>
-                            <h2>当前热门番剧</h2>
+                            <h2>{t("common.home.trending")}</h2>
                             <DiscoverTrending />
                         </div>
                         <RecentReleases />
                         <div className="space-y-2 z-[5] relative" data-discover-page-anime-highest-rated-container>
-                            <h2>本季霸权精选</h2>
+                            <h2>{t("discover.section.this_season")}</h2>
                             <DiscoverThisSeason />
                         </div>
                         <div className="space-y-2 z-[5] relative" data-discover-page-anime-highest-rated-container>
-                            <h2>上季高分佳作</h2>
+                            <h2>{t("discover.section.past_season")}</h2>
                             <DiscoverPastSeason />
                         </div>
                         <DiscoverMissedSequelsSection />
                         <div className="space-y-2 z-[5] relative" data-discover-page-anime-upcoming-container>
-                            <h2>即将播出新番</h2>
+                            <h2>{t("discover.section.upcoming")}</h2>
                             <DiscoverUpcoming />
                         </div>
                         <div className="space-y-2 z-[5] relative" data-discover-page-anime-trending-movies-container>
-                            <h2>热门剧场版</h2>
+                            <h2>{t("discover.section.trending_movies")}</h2>
                             <DiscoverTrendingMovies />
                         </div>
                         {/*<div className="space-y-2 z-[5] relative">*/}
@@ -166,15 +167,15 @@ export default function Page() {
                         {/*    <DiscoverTrendingMangaAll />*/}
                         {/*</div>*/}
                         <div className="space-y-2 z-[5] relative" data-discover-page-manga-trending-container>
-                            <h2>热门日漫</h2>
+                            <h2>{t("discover.section.manga_trending_jp")}</h2>
                             <DiscoverTrendingCountry country="JP" forDiscoverHeader />
                         </div>
                         <div className="space-y-2 z-[5] relative" data-discover-page-manga-trending-manhwa-container>
-                            <h2>热门韩漫</h2>
+                            <h2>{t("discover.section.manga_trending_kr")}</h2>
                             <DiscoverTrendingCountry country="KR" />
                         </div>
                         <div className="space-y-2 z-[5] relative" data-discover-page-manga-trending-manhua-container>
-                            <h2>热门国漫</h2>
+                            <h2>{t("discover.section.manga_trending_cn")}</h2>
                             <DiscoverTrendingCountry country="CN" />
                         </div>
                         {/*<div className="space-y-2 z-[5] relative">*/}

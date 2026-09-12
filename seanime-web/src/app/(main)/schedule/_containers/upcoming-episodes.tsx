@@ -5,6 +5,7 @@ import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { AppLayoutStack } from "@/components/ui/app-layout"
 import { Carousel, CarouselContent, CarouselDotButtons, CarouselItem } from "@/components/ui/carousel"
 import { useRouter } from "@/lib/navigation"
+import { t } from "@/lib/i18n"
 import { useMissingEpisodeSpoilers } from "@/lib/theme/anime-spoilers"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
 import { addSeconds, formatDistanceToNow } from "date-fns"
@@ -31,8 +32,8 @@ export function UpcomingEpisodes() {
             {data?.episodes.length > 0 && (
                 <>
                     <div>
-                        <h2>即将更新剧集</h2>
-                        <p className="text-[--muted]">基于你的个人片单</p>
+                        <h2>{t("schedule.upcoming.title")}</h2>
+                        <p className="text-[--muted]">{t("schedule.personal_list_hint")}</p>
                     </div>
 
                     <Carousel
@@ -59,7 +60,7 @@ export function UpcomingEpisodes() {
                                             isAdult={item.baseAnime?.isAdult}
                                             spoilerMode="replace"
                                             spoilerActive={spoilerActive}
-                                            title={`Episode ${item.episodeNumber}`}
+                                            title={t("schedule.episode_title", { ep: item.episodeNumber })}
                                             meta={formatDistanceToNow(addSeconds(new Date(), item.timeUntilAiring!),
                                                 { addSuffix: true })}
                                             imageClass="opacity-50"

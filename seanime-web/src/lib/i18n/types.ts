@@ -19,6 +19,8 @@ export type DictionaryModule =
     | "player"
     | "home"
     | "media"
+    | "discover"
+    | "schedule"
 
 /** 模块清单（运行时可用，顺序即文档中的展示顺序） */
 export const DICTIONARY_MODULES: readonly DictionaryModule[] = [
@@ -30,6 +32,8 @@ export const DICTIONARY_MODULES: readonly DictionaryModule[] = [
     "player",
     "home",
     "media",
+    "discover",
+    "schedule",
 ] as const
 
 /** t(key, params) 的插值参数，占位符写法为 {name} */

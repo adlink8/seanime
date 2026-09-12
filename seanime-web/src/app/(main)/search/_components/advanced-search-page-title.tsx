@@ -1,4 +1,5 @@
 import { __advancedSearch_getValue, __advancedSearch_paramsAtom } from "@/app/(main)/search/_lib/advanced-search.atoms"
+import { t } from "@/lib/i18n"
 import { useAtomValue } from "jotai/react"
 import capitalize from "lodash/capitalize"
 import startCase from "lodash/startCase"
@@ -15,21 +16,21 @@ export function AdvancedSearchPageTitle() {
             return str
         }
         // if (!!__advancedSearch_getValue(params.genre)) str += params.genre?.join(", ") || ""
-        if (__advancedSearch_getValue(params.sorting)?.includes("SCORE_DESC")) str += "最高评分"
-        if (__advancedSearch_getValue(params.sorting)?.includes("TRENDING_DESC")) str += "当前热门"
-        if (__advancedSearch_getValue(params.sorting)?.includes("POPULARITY_DESC")) str += "最受喜爱"
-        if (__advancedSearch_getValue(params.sorting)?.includes("START_DATE_DESC")) str += "最新推出"
-        if (__advancedSearch_getValue(params.sorting)?.includes("EPISODES_DESC")) str += "剧集最多"
-        if (__advancedSearch_getValue(params.sorting)?.includes("CHAPTERS_DESC")) str += "章节最多"
+        if (__advancedSearch_getValue(params.sorting)?.includes("SCORE_DESC")) str += t("search.sort.highest_score")
+        if (__advancedSearch_getValue(params.sorting)?.includes("TRENDING_DESC")) str += t("search.sort.trending_now")
+        if (__advancedSearch_getValue(params.sorting)?.includes("POPULARITY_DESC")) str += t("search.sort.most_loved")
+        if (__advancedSearch_getValue(params.sorting)?.includes("START_DATE_DESC")) str += t("search.sort.latest_released")
+        if (__advancedSearch_getValue(params.sorting)?.includes("EPISODES_DESC")) str += t("search.sort.most_episodes")
+        if (__advancedSearch_getValue(params.sorting)?.includes("CHAPTERS_DESC")) str += t("search.sort.most_chapters")
         if (!!__advancedSearch_getValue(params.genre)) str += ` ${params.genre?.join(", ")}`
-        if (!str) str += "最高评分"
-        if (params.type === "anime") str += " 动漫"
-        else str += " 漫画"
+        if (!str) str += t("search.sort.highest_score")
+        if (params.type === "anime") str += ` ${t("search.type.anime")}`
+        else str += ` ${t("search.type.manga")}`
         if (params.season || params.year) str += " •"
         if (params.season) str += ` ${capitalize(params.season)}`
         if (params.year) str += ` ${params.year}`
         if (!!str) return str
-        return params.type === "anime" ? "最受喜爱动漫" : "最受喜爱漫画"
+        return params.type === "anime" ? t("search.title.most_loved_anime") : t("search.title.most_loved_manga")
     }, [params.title, params.genre, params.sorting, params.type, params.season, params.year])
 
     // const secondaryTitle = React.useMemo(() => {

@@ -2,6 +2,7 @@ import { useAnilistListManga } from "@/api/hooks/manga.hooks"
 import { MediaEntryCard } from "@/app/(main)/_features/media/_components/media-entry-card"
 import { MediaEntryCardSkeleton } from "@/app/(main)/_features/media/_components/media-entry-card-skeleton"
 import { MediaGenreSelector } from "@/app/(main)/_features/media/_components/media-genre-selector"
+import { t } from "@/lib/i18n"
 import { __discover_hoveringHeaderAtom } from "@/app/(main)/discover/_components/discover-page-header"
 import { __discover_headerIsTransitioningAtom, __discover_randomTrendingAtom } from "@/app/(main)/discover/_containers/discover-trending"
 import { ADVANCED_SEARCH_MEDIA_GENRES, GENRE_TRANSLATIONS } from "@/app/(main)/search/_lib/advanced-search-constants"
@@ -132,7 +133,7 @@ function GenreSelector() {
         <MediaGenreSelector
             items={[
                 {
-                    name: "全部",
+                    name: t("library.filter.all"),
                     isCurrent: selectedGenre.length === 0,
                     onClick: () => setSelectedGenre([]),
                 },

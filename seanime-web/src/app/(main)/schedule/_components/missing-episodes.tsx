@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AppLayoutStack } from "@/components/ui/app-layout"
 import { Carousel, CarouselContent, CarouselDotButtons, CarouselItem } from "@/components/ui/carousel"
 import { useRouter } from "@/lib/navigation"
+import { t } from "@/lib/i18n"
 import { useMissingEpisodeSpoilers } from "@/lib/theme/anime-spoilers"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
 import React from "react"
@@ -34,7 +35,7 @@ export function MissingEpisodes({ isLoading, data }: {
 
                 {!!missingEpisodes?.length && (
                     <>
-                        <h2 className="flex gap-3 items-center"><IoLibrary /> Missing from your library</h2>
+                        <h2 className="flex gap-3 items-center"><IoLibrary /> {t("schedule.missing.title")}</h2>
 
                         <Carousel
                             className="w-full max-w-full"
@@ -97,7 +98,7 @@ export function MissingEpisodes({ isLoading, data }: {
                         >
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>
-                                    <p className="flex gap-3 items-center text-lg text-inherit"><LuBellOff /> Silenced episodes</p>
+                                    <p className="flex gap-3 items-center text-lg text-inherit"><LuBellOff /> {t("schedule.missing.silenced")}</p>
                                 </AccordionTrigger>
                                 <AccordionContent className="bg-gray-950 rounded-[--radius]">
                                     <Carousel

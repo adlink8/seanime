@@ -3,6 +3,7 @@ import { MediaEntryCard } from "@/app/(main)/_features/media/_components/media-e
 import { useAnilistAdvancedSearch } from "@/app/(main)/search/_lib/handle-advanced-search"
 import { cn } from "@/components/ui/core/styling"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { AiOutlinePlusCircle } from "react-icons/ai"
 
@@ -35,7 +36,7 @@ export function AdvancedSearchList() {
                 onClick={() => fetchNextPage()}
             >
                 <AiOutlinePlusCircle className="text-4xl" />
-                <p className="text-lg font-medium">Load more</p>
+                <p className="text-lg font-medium">{t("search.list.load_more")}</p>
             </div>}
     </>
 }

@@ -3,6 +3,7 @@ import { MediaEntryCard } from "@/app/(main)/_features/media/_components/media-e
 import { MediaEntryCardSkeleton } from "@/app/(main)/_features/media/_components/media-entry-card-skeleton"
 import { AppLayoutStack } from "@/components/ui/app-layout"
 import { Carousel, CarouselContent, CarouselDotButtons } from "@/components/ui/carousel"
+import { t } from "@/lib/i18n"
 import { addSeconds, formatDistanceToNow, subDays } from "date-fns"
 import React from "react"
 
@@ -25,7 +26,7 @@ export function RecentReleases() {
 
     return (
         <AppLayoutStack className="pb-6">
-            <h2>近期已播出</h2>
+            <h2>{t("schedule.recent.title")}</h2>
             <Carousel
                 className="w-full max-w-full"
                 gap="md"
@@ -51,7 +52,7 @@ export function RecentReleases() {
                                 overlay={<div className="flex flex-col w-fit absolute right-0 items-end">
                                     <div
                                         className="font-semibold text-white bg-gray-950 z-[1] pl-3 pr-[0.2rem] w-full py-1.5 text-center !tracking-wider !bg-opacity-80 rounded-none rounded-bl-lg"
-                                    >{item?.media?.format === "MOVIE" ? "Movie" :
+                                    >{item?.media?.format === "MOVIE" ? t("library.stats.movies") :
                                         <span className="tracking-wider"><span className="!text-lg">{item.episode}</span><span className="text-[--muted] tracking-wider !text-md">/{item.media?.episodes ?? "-"}</span></span>}</div>
                                     <div className="text-xs font-semibold z-[-1] w-fit h-fit pl-2 pr-[0.3rem] py-1 ml-2 text-center bg-gray-700 !bg-opacity-70 rounded-none rounded-bl-lg">
                                         {item.airingAt

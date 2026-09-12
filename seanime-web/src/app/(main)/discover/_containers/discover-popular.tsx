@@ -1,6 +1,7 @@
 import { MediaEntryCard } from "@/app/(main)/_features/media/_components/media-entry-card"
 import { MediaEntryCardSkeleton } from "@/app/(main)/_features/media/_components/media-entry-card-skeleton"
 import { MediaGenreSelector } from "@/app/(main)/_features/media/_components/media-genre-selector"
+import { t } from "@/lib/i18n"
 import {
     __discover_currentSeasonGenresAtom,
     __discover_pastSeasonGenresAtom,
@@ -69,7 +70,7 @@ export function DiscoverThisSeason() {
             <MediaGenreSelector
                 items={[
                     {
-                        name: "全部",
+                        name: t("library.filter.all"),
                         isCurrent: selectedGenre.length === 0,
                         onClick: () => setSelectedGenre([]),
                     },
@@ -121,7 +122,7 @@ export function DiscoverPastSeason() {
             <MediaGenreSelector
                 items={[
                     {
-                        name: "全部",
+                        name: t("library.filter.all"),
                         isCurrent: selectedGenre.length === 0,
                         onClick: () => setSelectedGenre([]),
                     },

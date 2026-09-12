@@ -6,6 +6,7 @@ import { UpcomingEpisodes } from "@/app/(main)/schedule/_containers/upcoming-epi
 import { PageWrapper } from "@/components/shared/page-wrapper"
 import { AppLayoutStack } from "@/components/ui/app-layout"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { ScheduleCalendar } from "./_components/schedule-calendar"
 
@@ -27,8 +28,8 @@ export default function Page() {
                 <AppLayoutStack>
 
                     <div className="hidden lg:block space-y-2">
-                        <h2>放送日历 / 追番排期</h2>
-                        <p className="text-[--muted]">基于你的个人片单</p>
+                        <h2>{t("schedule.title")}</h2>
+                        <p className="text-[--muted]">{t("schedule.personal_list_hint")}</p>
                     </div>
 
                     <ScheduleCalendar />

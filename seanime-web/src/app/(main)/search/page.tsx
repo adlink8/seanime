@@ -11,6 +11,7 @@ import { AppLayoutGrid } from "@/components/ui/app-layout"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "@/lib/navigation"
 import { useSearchParams } from "@/lib/navigation"
+import { t } from "@/lib/i18n"
 import { useSetAtom } from "jotai/react"
 import React from "react"
 import { LuCompass } from "react-icons/lu"
@@ -61,7 +62,7 @@ export default function Page() {
                 <div className="flex items-center gap-3">
                     <SeaLink href={`/discover`}>
                         <Button leftIcon={<LuCompass className="text-xl" />} rounded intent="gray-outline" size="md">
-                            探索发现
+                            {t("search.page.title")}
                         </Button>
                     </SeaLink>
                     {!!customSources?.length && <div data-discover-page-header-custom-source-container>
@@ -73,7 +74,7 @@ export default function Page() {
                                 className="rounded-full"
                                 onClick={() => router.push("/search")}
                             >
-                                自定义源
+                                {t("search.page.custom_source")}
                             </Button>
                         </SeaLink>
                     </div>}

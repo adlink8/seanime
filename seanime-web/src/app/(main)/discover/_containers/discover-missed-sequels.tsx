@@ -3,11 +3,12 @@ import { MediaEntryCard } from "@/app/(main)/_features/media/_components/media-e
 import { MediaEntryCardSkeleton } from "@/app/(main)/_features/media/_components/media-entry-card-skeleton"
 import { PageWrapper } from "@/components/shared/page-wrapper"
 import { Carousel, CarouselContent, CarouselDotButtons } from "@/components/ui/carousel"
+import { t } from "@/lib/i18n"
 import { useInView } from "motion/react"
 import React from "react"
 
 
-export function DiscoverMissedSequelsSection({ title = "You Might Have Missed" }: { title?: string }) {
+export function DiscoverMissedSequelsSection({ title = t("discover.missed_sequels.title") }: { title?: string }) {
     const ref = React.useRef(null)
     const isInView = useInView(ref, { once: true })
     const { data, isLoading } = useAnilistListMissedSequels(isInView)

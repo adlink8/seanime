@@ -15,6 +15,23 @@ export const searchDictionary = {
     "search.filter.country_all": "全部国家/地区", // src/app/(main)/search/_components/advanced-search-options.tsx
     "search.filter.score_all": "全部评分", // src/app/(main)/search/_components/advanced-search-options.tsx
     "search.filter.title_placeholder": "搜索标题...", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.tags": "标签", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.tags_all": "全部标签", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.format": "格式", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.format_all": "全部格式", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.season_all": "全部季度", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.year": "年份", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.year_any": "不限年份", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.status": "状态", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.status_all": "全部状态", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.adult": "成人内容 (R18)", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.sort.trending_now": "当前热门", // src/app/(main)/search/_components/advanced-search-page-title.tsx
+    "search.sort.most_loved": "最受喜爱", // src/app/(main)/search/_components/advanced-search-page-title.tsx
+    "search.sort.latest_released": "最新推出", // src/app/(main)/search/_components/advanced-search-page-title.tsx
+    "search.sort.most_episodes": "剧集最多", // src/app/(main)/search/_components/advanced-search-page-title.tsx
+    "search.sort.most_chapters": "章节最多", // src/app/(main)/search/_components/advanced-search-page-title.tsx
+    "search.title.most_loved_manga": "最受喜爱漫画", // src/app/(main)/search/_components/advanced-search-page-title.tsx
+    "search.list.load_more": "加载更多", // src/app/(main)/search/_components/advanced-search-list.tsx
     "search.type.anime": "动漫", // src/app/(main)/search/_lib/advanced-search-constants.ts
     "search.type.manga": "漫画", // src/app/(main)/search/_lib/advanced-search-constants.ts
     "search.genre.action": "动作", // src/app/(main)/search/_lib/advanced-search-constants.ts

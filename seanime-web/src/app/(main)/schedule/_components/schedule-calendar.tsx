@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { addMonths, Day, endOfMonth, endOfWeek, format, isSameMonth, isToday, parseISO, startOfMonth, startOfWeek, subMonths } from "date-fns"
 import { addDays } from "date-fns/addDays"
+import { t } from "@/lib/i18n"
 import { useImmerAtom } from "jotai-immer"
 import { useAtom, useAtomValue } from "jotai/react"
 import { atomWithStorage } from "jotai/utils"
@@ -178,20 +179,20 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                         data-schedule-calendar-header-settings-popover
                     >
                         <RadioGroup
-                            label="Week starts on" options={[
-                            { label: "Monday", value: "1" },
-                            { label: "Sunday", value: "0" },
+                            label={t("schedule.calendar.week_start")} options={[
+                            { label: t("schedule.calendar.monday"), value: "1" },
+                            { label: t("schedule.calendar.sunday"), value: "0" },
                         ]} value={String(weekStartsOn)} onValueChange={v => setWeekStartsOn(Number(v))}
                             data-schedule-calendar-header-settings-popover-week-starts-on
                         />
                         <Separator />
                         {isUserSchedule && <>
                             <CheckboxGroup
-                                label="Status" options={[
-                                { label: "Watching", value: "CURRENT" },
-                                { label: "Planning", value: "PLANNING" },
-                                { label: "Completed", value: "COMPLETED" },
-                                { label: "Paused", value: "PAUSED" },
+                                label={t("schedule.calendar.status")} options={[
+                                { label: t("common.state.watching"), value: "CURRENT" },
+                                { label: t("common.state.planning"), value: "PLANNING" },
+                                { label: t("common.state.completed"), value: "COMPLETED" },
+                                { label: t("common.state.paused"), value: "PAUSED" },
                             ]} value={calendarParams.listStatuses} onValueChange={v => setCalendarParams(draft => {
                                 draft.listStatuses = v as AL_MediaListStatus[]
                                 return
@@ -202,7 +203,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                             <Separator />
                         </>}
                         <Switch
-                            label="Indicate watched episodes"
+                            label={t("schedule.calendar.indicate_watched")}
                             side="right"
                             value={calendarParams.indicateWatchedEpisodes}
                             onValueChange={v => setCalendarParams(draft => {
@@ -213,7 +214,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                         />
                         <Separator />
                         <Switch
-                            label="Disable image transitions"
+                            label={t("schedule.calendar.disable_transitions")}
                             side="right"
                             value={animationsDisabled}
                             onValueChange={v => setAnimationDisabled(v)}
@@ -309,7 +310,7 @@ function MobileCalendarList({ days }: MobileCalendarListProps) {
     if (relevantDays.length === 0) {
         return (
             <div className="p-6 text-center text-[--muted]">
-                <p>No scheduled episodes for this month</p>
+                <p>{t("schedule.calendar.empty_month")}</p>
             </div>
         )
     }
@@ -373,7 +374,7 @@ function MobileDayItem({ day, calendarParams }: MobileDayItemProps) {
                         className="text-xs text-[--muted] bg-gray-800 px-2 py-1 rounded-full"
                         data-schedule-calendar-mobile-list-day-item-event-count
                     >
-                        {day.events.length} episode{day.events.length !== 1 ? "s" : ""}
+                        {t("schedule.calendar.episode_count", { count: day.events.length })}
                     </div>
                 )}
             </div>
@@ -392,7 +393,7 @@ function MobileDayItem({ day, calendarParams }: MobileDayItemProps) {
 
             {day.isToday && day.events.length === 0 && (
                 <div className="ml-0 lg:ml-13 text-sm text-[--muted] italic" data-schedule-calendar-mobile-list-day-item-no-events>
-                    No episodes scheduled for today
+                    {t("schedule.calendar.empty_today")}
                 </div>
             )}
         </div>
@@ -449,12 +450,12 @@ function MobileEventItem({ event, calendarParams }: MobileEventItemProps) {
                         className="flex items-center gap-2 mt-2 text-sm text-[--muted]"
                         data-schedule-calendar-mobile-list-day-item-event-episode-time
                     >
-                        <span className="font-medium" data-schedule-calendar-mobile-list-day-item-event-episode>Episode {event.episode}</span>
+                        <span className="font-medium" data-schedule-calendar-mobile-list-day-item-event-episode>{t("schedule.episode_title", { ep: event.episode })}</span>
                         {event.time && <span>•</span>}
                         {event.time && <span data-schedule-calendar-mobile-list-day-item-event-time>{event.time}</span>}
                         {event.isSeasonFinale && <span>•</span>}
                         {event.isSeasonFinale && (
-                            <span className="text-[--blue] font-medium" data-schedule-calendar-mobile-list-day-item-event-finale>Finale</span>
+                            <span className="text-[--blue] font-medium" data-schedule-calendar-mobile-list-day-item-event-finale>{t("schedule.calendar.finale")}</span>
                         )}
                     </div>
                 </div>
@@ -480,8 +481,8 @@ function CalendarDayModal({ day, open, onOpenChange }: CalendarDayModalProps) {
             onOpenChange={onOpenChange}
             title={format(localDay, "EEEE, MMMM d, yyyy")}
             description={hasEvents
-                ? `${day.events.length} scheduled episode${day.events.length !== 1 ? "s" : ""}`
-                : "No scheduled episodes for this day"}
+                ? t("schedule.calendar.scheduled_count", { count: day.events.length })
+                : t("schedule.calendar.empty_day")}
             contentClass="max-w-2xl gap-0 p-0 overflow-hidden"
             headerClass="px-5 pt-5 pb-3 pr-12"
             closeClass="right-5 top-5"
@@ -506,7 +507,7 @@ function CalendarDayModal({ day, open, onOpenChange }: CalendarDayModalProps) {
                         className="rounded-lg border bg-[--paper] p-4 text-sm text-[--muted]"
                         data-schedule-calendar-day-modal-empty
                     >
-                        No episodes are scheduled for this day.
+                        {t("schedule.calendar.empty_day")}
                     </div>
                 )}
             </div>
@@ -562,7 +563,7 @@ function CalendarDayBackground({ events, isToday, hoveredEventId, onClick }: Cal
             >
                 <SeaImage
                     src={displayedEvent?.image || ""}
-                    alt="banner"
+                    alt={t("media.alt.banner_image")}
                     fill
                     className="object-cover transition-all duration-500 ease-out transform"
                     key={displayedEvent?.id}
@@ -634,7 +635,7 @@ function CalendarEventList({ events, onEventHover }: CalendarEventListProps) {
                                 {/*</span>*/}
                             </p>
                             <p className="text-xs text-[--muted] lg:hidden" data-schedule-calendar-event-item-episode>
-                                Ep. {event.episode}
+                                {t("schedule.episode_title", { ep: event.episode })}
                                 {event.time && <span className="ml-1" data-schedule-calendar-event-item-time>• {event.time}</span>}
                             </p>
                         </div>
@@ -644,7 +645,7 @@ function CalendarEventList({ events, onEventHover }: CalendarEventListProps) {
                             data-schedule-calendar-event-item-episode-time
                         >
                             <span className="mr-1 text-sm group-hover:text-[--foreground] font-semibold" data-schedule-calendar-event-item-episode>
-                                Ep. {event.episode}
+                                {t("schedule.episode_title", { ep: event.episode })}
                             </span>
                         </time>
                     </SeaLink>
@@ -654,7 +655,7 @@ function CalendarEventList({ events, onEventHover }: CalendarEventListProps) {
                 <Popover
                     className="w-[280px] lg:w-full max-w-sm lg:max-w-sm"
                     trigger={
-                        <li className="text-[--muted] cursor-pointer text-sm lg:text-[0.7rem] py-1 pt-0">+ {events.length - MAX_EVENT_COUNT} more</li>
+                        <li className="text-[--muted] cursor-pointer text-sm lg:text-[0.7rem] py-1 pt-0">{t("schedule.calendar.more", { count: events.length - MAX_EVENT_COUNT })}</li>
                     }
                     data-schedule-calendar-event-list-more-popover
                 >
@@ -676,7 +677,7 @@ function CalendarEventList({ events, onEventHover }: CalendarEventListProps) {
                                         {event.name}
                                     </p>
                                     <p className="flex-none" data-schedule-calendar-event-list-item-more-episode>
-                                        Ep. {event.episode}
+                                        {t("schedule.episode_title", { ep: event.episode })}
                                     </p>
                                     <time
                                         dateTime={event.datetime}
@@ -747,7 +748,7 @@ function CalendarDay({ day, index }: { day: CalendarDayItem, index: number }) {
                                     ? "..."
                                     : "")}</span>
                                 {hoveredEvent.isSeasonFinale &&
-                                    <span className="text-[--blue] ml-1" data-schedule-calendar-day-hovered-event-text-finale>Finale</span>}
+                                    <span className="text-[--blue] ml-1" data-schedule-calendar-day-hovered-event-text-finale>{t("schedule.calendar.finale")}</span>}
                                 <span className="ml-1" data-schedule-calendar-day-hovered-event-text-episode> Ep. {hoveredEvent.episode}</span>
                                 {hoveredEvent.time &&
                                     <span className="ml-1" data-schedule-calendar-day-hovered-event-text-time>- {hoveredEvent.time}</span>}

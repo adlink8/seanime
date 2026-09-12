@@ -7,6 +7,7 @@ import { ContextMenuGroup, ContextMenuItem, ContextMenuLabel, ContextMenuTrigger
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Separator } from "@/components/ui/separator"
 import { useRouter } from "@/lib/navigation"
+import { t } from "@/lib/i18n"
 import { format, isSameMonth, isToday, subDays } from "date-fns"
 import { addDays } from "date-fns/addDays"
 import { isSameDay } from "date-fns/isSameDay"
@@ -91,7 +92,7 @@ export function DiscoverAiringSchedule() {
 
     return (
         <div className="space-y-4 z-[5] relative" data-discover-airing-schedule-container>
-            <h2 className="text-center">Airing Schedule</h2>
+            <h2 className="text-center">{t("discover.airing.title")}</h2>
             <div className="space-y-6">
                 {days.map((day, index) => {
                     if (day.events.length === 0) return null
@@ -100,7 +101,7 @@ export function DiscoverAiringSchedule() {
                             <div className="flex flex-col gap-2">
                                 <div className="flex items-center gap-2">
                                     <h3 className="font-semibold">{format(new Date(day.date), "EEEE, PP")}</h3>
-                                    {day.isToday && <span className="text-[--muted]">Today</span>}
+                                    {day.isToday && <span className="text-[--muted]">{t("discover.airing.today")}</span>}
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                                     {day.events?.toSorted((a, b) => a.datetime.localeCompare(b.datetime))?.map((event, index) => {
@@ -116,14 +117,14 @@ export function DiscoverAiringSchedule() {
                                                                 setPreviewModalMediaId(event.media?.id || 0, "anime")
                                                             }}
                                                         >
-                                                            <LuEye /> Preview
+                                                            <LuEye /> {t("media.action.preview")}
                                                         </ContextMenuItem>
                                                         <ContextMenuItem
                                                             onClick={() => {
                                                                 router.push(`/entry?id=${event.media?.id}`)
                                                             }}
                                                         >
-                                                            <LuDock /> Open page
+                                                            <LuDock /> {t("discover.airing.open_page")}
                                                         </ContextMenuItem>
                                                     </ContextMenuGroup>}
                                                 >
@@ -137,7 +138,7 @@ export function DiscoverAiringSchedule() {
                                                             >
                                                                 <SeaImage
                                                                     src={event.media?.coverImage?.large || event.media?.bannerImage || "/no-cover.png"}
-                                                                    alt="banner"
+                                                                    alt={t("media.alt.banner_image")}
                                                                     fill
                                                                     quality={80}
                                                                     priority
@@ -153,7 +154,7 @@ export function DiscoverAiringSchedule() {
                                                                 >{event.media?.title?.userPreferred}</SeaLink>
 
                                                                 <p className="text-[--muted]">
-                                                                    Ep {event.episode} airing at {event.time}
+                                                                    {t("discover.airing.episode_airing_at", { episode: event.episode, time: event.time })}
                                                                 </p>
                                                             </div>
                                                         </div>

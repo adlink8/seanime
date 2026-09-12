@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
+import { t } from "@/lib/i18n"
 import { usePathname } from "@/lib/navigation"
 import { ThemeMediaPageBannerSize, ThemeMediaPageBannerType, useThemeSettings } from "@/lib/theme/theme-hooks"
 import { __isDesktop__, __isElectronDesktop__ } from "@/types/constants"
@@ -100,7 +101,7 @@ function HeaderCarouselDots({ className }: HeaderCarouselDotsProps) {
                         setCurrentIndex(index)
                         setClickedCarouselDot(n => n + 1)
                     }}
-                    aria-label={`Go to slide ${index + 1}`}
+                    aria-label={t("discover.header.go_to_slide", { index: index + 1 })}
                 />
             ))}
         </div>
@@ -141,7 +142,7 @@ function BannerImage({ media, isTransitioning, shouldBlurBanner, showTrailer, tr
                     {bannerImage && (
                         <MotionImage
                             src={bannerImage}
-                            alt="banner image"
+                            alt={t("media.alt.banner_image")}
                             fill
                             quality={100}
                             priority
@@ -257,7 +258,7 @@ function MediaMetadata({ media, pageType, isTransitioning, onHoverChange }: Medi
                         <div className="w-[180px] h-[280px] relative rounded-[--radius-md] overflow-hidden bg-[--background] shadow-md">
                             <SeaImage
                                 src={media.coverImage.large}
-                                alt="cover image"
+                                alt={t("media.alt.cover_image")}
                                 fill
                                 priority
                                 placeholder={imageShimmer(700, 475)}
@@ -302,7 +303,7 @@ function MediaMetadata({ media, pageType, isTransitioning, onHoverChange }: Medi
 
                     {(media as AL_BaseAnime)?.nextAiringEpisode?.airingAt && (
                         <p className="text-base text-brand-200 inline-flex items-center gap-1.5">
-                            <RiSignalTowerLine /> Releasing now
+                            <RiSignalTowerLine /> {t("discover.header.releasing_now")}
                         </p>
                     )}
 
@@ -310,13 +311,11 @@ function MediaMetadata({ media, pageType, isTransitioning, onHoverChange }: Medi
                         <p className="text-base font-medium">
                             {(media as AL_BaseAnime).nextAiringEpisode?.episode ? (
                                 <span>
-                                    {(media as AL_BaseAnime).nextAiringEpisode?.episode! - 1} episode{(media as AL_BaseAnime).nextAiringEpisode?.episode! - 1 === 1
-                                        ? ""
-                                        : "s"} released
+                                    {t("discover.header.episodes_released", { count: (media as AL_BaseAnime).nextAiringEpisode?.episode! - 1 })}
                                 </span>
                             ) : (
                                 <span>
-                                    {(media as AL_BaseAnime).episodes} total episode{(media as AL_BaseAnime).episodes === 1 ? "" : "s"}
+                                    {t("discover.header.total_episodes", { count: (media as AL_BaseAnime).episodes ?? 0 })}
                                 </span>
                             )}
                         </p>
@@ -339,7 +338,7 @@ function MediaMetadata({ media, pageType, isTransitioning, onHoverChange }: Medi
                         className="rounded-full"
                         onClick={() => setPreviewModalMediaId(media?.id, pageType === "manga" ? "manga" : "anime")}
                     >
-                        Preview
+                        {t("media.action.preview")}
                     </Button>
                 </motion.div>
             </motion.div>
