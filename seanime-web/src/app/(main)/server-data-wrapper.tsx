@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { defineSchema, Field, Form } from "@/components/ui/form"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { usePathname, useRouter } from "@/lib/navigation"
 import { ANILIST_OAUTH_URL, ANILIST_PIN_URL } from "@/lib/server/config"
 import { WSEvents } from "@/lib/server/ws-events"
@@ -97,7 +98,7 @@ export function ServerDataWrapper(props: ServerDataWrapperProps) {
      * If the server status is loading or doesn't exist, show the loading overlay
      */
     if (isLoading || !resolvedServerStatus || !authenticated) return <LoadingOverlayWithLogo />
-    if (!resolvedServerStatus.serverReady) return <LoadingOverlayWithLogo title="服 务 加 载 中 . . ." />
+    if (!resolvedServerStatus.serverReady) return <LoadingOverlayWithLogo title={t("common.loading.server_data")} />
 
     const currentServerStatus = resolvedServerStatus
 
@@ -122,7 +123,7 @@ export function ServerDataWrapper(props: ServerDataWrapperProps) {
                 <img src="/seanime-logo.png" alt="logo" className="w-14 h-auto" />
             </div>
             <p className="text-center text-lg">
-                Seanime 正在更新中。更新完成并恢复连接后请刷新页面。
+                {t("common.status.updating")}
             </p>
         </div>
     }
@@ -132,7 +133,7 @@ export function ServerDataWrapper(props: ServerDataWrapperProps) {
      */
 
     if (!currentServerStatus.mediastreamSettings?.transcodeEnabled && pathname.startsWith("/mediastream")) {
-        return <LuffyError title="转码功能尚未启用" />
+        return <LuffyError title={t("common.error.transcode_disabled")} />
     }
 
     if (!currentServerStatus.user && host === "127.0.0.1:43211" && !__isDesktop__) {
@@ -143,7 +144,7 @@ export function ServerDataWrapper(props: ServerDataWrapperProps) {
                         <div className="mb-4 flex justify-center w-full">
                             <img src="/seanime-logo.png" alt="logo" className="w-24 h-auto" />
                         </div>
-                        <h3>欢迎使用 Seanime！</h3>
+                        <h3>{t("common.welcome.title")}</h3>
                         <Button
                             onClick={() => {
                                 const url = currentServerStatus.anilistClientId
@@ -161,7 +162,7 @@ export function ServerDataWrapper(props: ServerDataWrapperProps) {
                             </svg>}
                             intent="primary"
                             size="xl"
-                        >登录 AniList 账号</Button>
+                        >{t("common.action.login_anilist_account")}</Button>
                     </div>
                 </AppLayoutStack>
             </Card>
@@ -174,7 +175,7 @@ export function ServerDataWrapper(props: ServerDataWrapperProps) {
                         <div className="mb-4 flex justify-center w-full">
                             <img src="/seanime-logo.png" alt="logo" className="w-24 h-auto" />
                         </div>
-                        <h3>欢迎使用 Seanime！</h3>
+                        <h3>{t("common.welcome.title")}</h3>
                         <a
                             href={ANILIST_PIN_URL}
                             target="_blank"
@@ -191,12 +192,12 @@ export function ServerDataWrapper(props: ServerDataWrapperProps) {
                                 </svg>}
                                 intent="white"
                                 size="md"
-                            >获取 AniList 授权 Token</Button>
+                            >{t("common.action.get_anilist_token")}</Button>
                         </a>
 
                         <Form
                             schema={defineSchema(({ z }) => z.object({
-                                token: z.string().min(1, "必须输入 Token"),
+                                token: z.string().min(1, t("common.form.token_required")),
                             }))}
                             onSubmit={data => {
                                 router.push("/auth/callback#access_token=" + data.token.trim())
@@ -204,10 +205,10 @@ export function ServerDataWrapper(props: ServerDataWrapperProps) {
                         >
                             <Field.Textarea
                                 name="token"
-                                label="输入授权 Token"
+                                label={t("common.form.token_label")}
                                 fieldClass="px-4"
                             />
-                            <Field.Submit showLoadingOverlayOnSuccess>继续并登录</Field.Submit>
+                            <Field.Submit showLoadingOverlayOnSuccess>{t("common.action.continue_and_login")}</Field.Submit>
                         </Form>
                     </div>
                 </AppLayoutStack>

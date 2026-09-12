@@ -1,5 +1,6 @@
 import { Models_HomeItem, Nullish } from "@/api/generated/types"
 import { ADVANCED_SEARCH_COUNTRIES_MANGA, ADVANCED_SEARCH_MEDIA_GENRES, GENRE_TRANSLATIONS } from "@/app/(main)/search/_lib/advanced-search-constants"
+import { t } from "@/lib/i18n"
 
 export const DEFAULT_HOME_ITEMS: Models_HomeItem[] = [
     {
@@ -46,70 +47,70 @@ type HomeItemSchema = {
 
 const _carouselOptions = [
     {
-        label: "Name",
+        label: t("home.option.name"),
         type: "text",
         name: "name",
     },
     {
-        label: "Sorting",
+        label: t("home.option.sorting"),
         type: "select",
         name: "sorting",
         options: [
             {
-                label: "Popular",
+                label: t("home.option.sort.popular"),
                 value: "POPULARITY_DESC",
             },
             {
-                label: "Trending",
+                label: t("home.option.sort.trending"),
                 value: "TRENDING_DESC",
             },
             {
-                label: "Romaji Title (A-Z)",
+                label: t("home.option.sort.title_romaji_asc"),
                 value: "TITLE_ROMAJI_ASC",
             },
             {
-                label: "Romaji Title (Z-A)",
+                label: t("home.option.sort.title_romaji_desc"),
                 value: "TITLE_ROMAJI_DESC",
             },
             {
-                label: "English title (A-Z)",
+                label: t("home.option.sort.title_english_asc"),
                 value: "TITLE_ENGLISH_ASC",
             },
             {
-                label: "English title (Z-A)",
+                label: t("home.option.sort.title_english_desc"),
                 value: "TITLE_ENGLISH_DESC",
             },
             {
-                label: "Score (0-10)",
+                label: t("home.option.sort.score_asc"),
                 value: "SCORE",
             },
             {
-                label: "Score (10-0)",
+                label: t("home.option.sort.score_desc"),
                 value: "SCORE_DESC",
             },
         ],
     },
     {
-        label: "Status",
+        label: t("library.filter.status"),
         type: "multi-select",
         name: "status",
         options: [
             {
-                label: "Releasing",
+                label: t("search.status.releasing"),
                 value: "RELEASING",
             },
             {
-                label: "Finished",
+                label: t("search.status.finished"),
                 value: "FINISHED",
             },
             {
-                label: "Not yet released",
+                label: t("search.status.not_yet_released"),
                 value: "NOT_YET_RELEASED",
             },
         ],
     },
     {
-        label: "Format",
+        label: t("library.filter.format"),
         type: "select",
         name: "format",
         options: [
@@ -118,7 +119,7 @@ const _carouselOptions = [
                 value: "TV",
             },
             {
-                label: "Movie",
+                label: t("library.stats.movies"),
                 value: "MOVIE",
             },
             {
@@ -130,37 +131,37 @@ const _carouselOptions = [
                 value: "ONA",
             },
             {
-                label: "Special",
+                label: t("library.stats.specials"),
                 value: "SPECIAL",
             },
         ],
     },
     {
-        label: "流派",
+        label: t("search.filter.genre"),
         type: "multi-select",
         options: ADVANCED_SEARCH_MEDIA_GENRES.map(n => ({ value: n, label: GENRE_TRANSLATIONS[n] || n })),
         name: "genres",
     },
     {
-        label: "季度",
+        label: t("library.filter.season"),
         type: "select",
         name: "season",
         options: [
-            { value: "WINTER", label: "冬季" },
-            { value: "SPRING", label: "春季" },
-            { value: "SUMMER", label: "夏季" },
-            { value: "FALL", label: "秋季" },
+            { value: "WINTER", label: t("search.season.winter") },
+            { value: "SPRING", label: t("search.season.spring") },
+            { value: "SUMMER", label: t("search.season.summer") },
+            { value: "FALL", label: t("search.season.fall") },
         ],
     },
     {
-        label: "Year",
+        label: t("library.filter.year"),
         type: "number",
         name: "year",
         min: 0,
         max: 2100,
     },
     {
-        label: "Country of Origin",
+        label: t("home.option.country_of_origin"),
         type: "select",
         name: "countryOfOrigin",
         options: ADVANCED_SEARCH_COUNTRIES_MANGA,
@@ -169,72 +170,72 @@ const _carouselOptions = [
 
 export const HOME_ITEMS = {
     "centered-title": {
-        name: "Centered title",
+        name: t("home.item.centered_title.name"),
         kind: ["row"],
         schemaVersion: 1,
-        description: "Display a centered title text.",
+        description: t("home.item.centered_title.description"),
         options: [{
-            label: "Text",
+            label: t("home.option.text"),
             type: "text",
             name: "text",
         }],
     },
     "anime-continue-watching": {
-        name: "继续观看",
+        name: t("library.continue_watching.title"),
         kind: ["row", "header"],
         schemaVersion: 1,
-        description: "展示你当前正在追看的剧集列表。",
+        description: t("home.item.continue_watching.description"),
     },
     "anime-continue-watching-header": {
-        name: "继续观看横幅",
+        name: t("home.item.continue_watching_header.name"),
         kind: ["header"],
         schemaVersion: 1,
-        description: "在顶部展示正在追看的番剧轮播大图横幅。",
+        description: t("home.item.continue_watching_header.description"),
     },
     "anime-library": {
-        name: "本地番剧媒体库",
+        name: t("home.item.anime_library.name"),
         kind: ["row"],
         schemaVersion: 2,
-        description: "按观看状态分类展示你下载并追看的番剧。",
+        description: t("home.item.anime_library.description"),
         options: [
             {
-                label: "观看状态",
+                label: t("home.option.watch_status"),
                 name: "statuses",
                 type: "multi-select",
                 options: [
                     {
                         value: "CURRENT",
-                        label: "正在观看",
+                        label: t("common.state.watching"),
                     },
                     {
                         value: "PAUSED",
-                        label: "暂停搁置",
+                        label: t("common.state.paused"),
                     },
                     {
                         value: "PLANNING",
-                        label: "计划观看",
+                        label: t("common.state.planning"),
                     },
                     {
                         value: "COMPLETED",
-                        label: "已看完",
+                        label: t("common.state.completed"),
                     },
                     {
                         value: "DROPPED",
-                        label: "已弃番",
+                        label: t("common.state.dropped"),
                     },
                 ],
             },
             {
-                label: "Layout",
+                label: t("home.option.layout"),
                 name: "layout",
                 type: "select",
                 options: [
                     {
-                        label: "Grid",
+                        label: t("home.option.layout.grid"),
                         value: "grid",
                     },
                     {
-                        label: "Carousel",
+                        label: t("home.option.layout.carousel"),
                         value: "carousel",
                     },
                 ],
@@ -242,96 +243,96 @@ export const HOME_ITEMS = {
         ],
     },
     "my-lists": {
-        name: "My Lists",
+        name: t("navigation.item.lists"),
         kind: ["row"],
         schemaVersion: 1,
-        description: "Display media from your lists by status.",
+        description: t("home.item.my_lists.description"),
         options: [
             {
-                label: "Statuses",
+                label: t("library.filter.status"),
                 name: "statuses",
                 type: "multi-select",
                 options: [
                     {
                         value: "CURRENT",
-                        label: "Current",
+                        label: t("common.state.watching"),
                     },
                     {
                         value: "REPEATING",
-                        label: "Repeating",
+                        label: t("common.state.rewatching"),
                     },
                     {
                         value: "PAUSED",
-                        label: "Paused",
+                        label: t("common.state.paused"),
                     },
                     {
                         value: "PLANNING",
-                        label: "Planning",
+                        label: t("common.state.planning"),
                     },
                     {
                         value: "COMPLETED",
-                        label: "Completed",
+                        label: t("common.state.completed"),
                     },
                     {
                         value: "DROPPED",
-                        label: "Dropped",
+                        label: t("common.state.dropped"),
                     },
                 ],
             },
             {
-                label: "Layout",
+                label: t("home.option.layout"),
                 name: "layout",
                 type: "select",
                 options: [
                     {
-                        label: "Grid",
+                        label: t("home.option.layout.grid"),
                         value: "grid",
                     },
                     {
-                        label: "Carousel",
+                        label: t("home.option.layout.carousel"),
                         value: "carousel",
                     },
                 ],
             },
             {
-                label: "Type",
+                label: t("home.option.type"),
                 name: "type",
                 type: "select",
                 options: [
                     {
-                        label: "Anime",
+                        label: t("search.type.anime"),
                         value: "anime",
                     },
                     {
-                        label: "Manga",
+                        label: t("search.type.manga"),
                         value: "manga",
                     },
                 ],
             },
             {
-                label: "Custom list name (Optional)",
+                label: t("home.option.custom_list_name"),
                 type: "text",
                 name: "customListName",
             },
         ],
     },
     "local-anime-library": {
-        name: "Local Anime Library",
+        name: t("home.item.local_anime_library.name"),
         kind: ["row"],
         schemaVersion: 2,
-        description: "Display a complete grid of anime you have in your local library.",
+        description: t("home.item.local_anime_library.description"),
         options: [
             {
-                label: "Layout",
+                label: t("home.option.layout"),
                 name: "layout",
                 type: "select",
                 options: [
                     {
-                        label: "Grid",
+                        label: t("home.option.layout.grid"),
                         value: "grid",
                     },
                     {
-                        label: "Carousel",
+                        label: t("home.option.layout.carousel"),
                         value: "carousel",
                     },
                 ],
@@ -339,40 +340,40 @@ export const HOME_ITEMS = {
         ],
     },
     "library-upcoming-episodes": {
-        name: "Upcoming Library Episodes",
+        name: t("home.item.library_upcoming_episodes.name"),
         kind: ["row"],
         schemaVersion: 1,
-        description: "Display a carousel of upcoming episodes from anime you have in your library.",
+        description: t("home.item.library_upcoming_episodes.description"),
     },
     "aired-recently": {
-        name: "Aired Recently (Global)",
+        name: t("home.item.aired_recently.name"),
         kind: ["row"],
         schemaVersion: 1,
-        description: "Display a carousel of anime episodes that aired recently.",
+        description: t("home.item.aired_recently.description"),
     },
     "missed-sequels": {
-        name: "Missed Sequels",
+        name: t("home.item.missed_sequels.name"),
         kind: ["row"],
         schemaVersion: 1,
-        description: "Display a carousel of sequels that aren't in your collection.",
+        description: t("home.item.missed_sequels.description"),
     },
     "anime-schedule-calendar": {
-        name: "Anime Schedule Calendar",
+        name: t("home.item.anime_schedule_calendar.name"),
         kind: ["row"],
         schemaVersion: 2,
-        description: "Display a calendar of anime episodes based on their airing schedule.",
+        description: t("home.item.anime_schedule_calendar.description"),
         options: [
             {
-                label: "Type",
+                label: t("home.option.type"),
                 name: "type",
                 type: "select",
                 options: [
                     {
-                        label: "My lists",
+                        label: t("navigation.item.lists"),
                         value: "my-lists",
                     },
                     {
-                        label: "Global",
+                        label: t("home.option.type.global"),
                         value: "global",
                     },
                 ],
@@ -380,40 +381,40 @@ export const HOME_ITEMS = {
         ],
     },
     "local-anime-library-stats": {
-        name: "Local Anime Library Stats",
+        name: t("home.item.local_anime_library_stats.name"),
         kind: ["row"],
         schemaVersion: 1,
-        description: "Display the stats for your local anime library.",
+        description: t("home.item.local_anime_library_stats.description"),
     },
     "discover-header": {
-        name: "Discover Header",
+        name: t("home.item.discover_header.name"),
         kind: ["header"],
         schemaVersion: 1,
-        description: "Display a header with a carousel of anime that are trending.",
+        description: t("home.item.discover_header.description"),
     },
     "anime-carousel": {
-        name: "Anime Carousel",
+        name: t("home.item.anime_carousel.name"),
         kind: ["row"],
         schemaVersion: 3,
         options: _carouselOptions,
-        description: "Display a carousel of anime based on the selected options.",
+        description: t("home.item.anime_carousel.description"),
     },
     "manga-carousel": {
-        name: "Manga Carousel",
+        name: t("home.item.manga_carousel.name"),
         kind: ["row"],
         schemaVersion: 1,
-        description: "Display a carousel of manga based on the selected options.",
+        description: t("home.item.manga_carousel.description"),
         options: _carouselOptions.map(n => {
             if (n.name === "format") {
                 return {
                     ...n,
                     options: [
                         {
-                            label: "Manga",
+                            label: t("search.type.manga"),
                             value: "MANGA",
                         },
                         {
-                            label: "One Shot",
+                            label: t("home.option.format.one_shot"),
                             value: "ONE_SHOT",
                         },
                     ],
@@ -423,37 +424,37 @@ export const HOME_ITEMS = {
         }),
     },
     "manga-library": {
-        name: "Manga Library",
+        name: t("home.item.manga_library.name"),
         kind: ["row", "header"],
         schemaVersion: 2,
-        description: "Display a list of manga you have in your library by status.",
+        description: t("home.item.manga_library.description"),
         options: [
             {
-                label: "Statuses",
+                label: t("library.filter.status"),
                 name: "statuses",
                 type: "multi-select",
                 options: [
                     {
                         value: "CURRENT",
-                        label: "Currently Reading",
+                        label: t("common.state.reading"),
                     },
                     {
                         value: "PAUSED",
-                        label: "Paused",
+                        label: t("common.state.paused"),
                     },
                 ],
             },
             {
-                label: "Layout",
+                label: t("home.option.layout"),
                 name: "layout",
                 type: "select",
                 options: [
                     {
-                        label: "Grid",
+                        label: t("home.option.layout.grid"),
                         value: "grid",
                     },
                     {
-                        label: "Carousel",
+                        label: t("home.option.layout.carousel"),
                         value: "carousel",
                     },
                 ],

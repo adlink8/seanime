@@ -16,6 +16,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { NumberInput } from "@/components/ui/number-input"
 import { RadioGroup } from "@/components/ui/radio-group"
 import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -123,7 +124,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
             onSuccess: data => {
                 setTimeout(() => {
                     if (!data?.length) {
-                        toast.warning("No suggestions found, try searching manually")
+                        toast.warning(t("library.unmatched.no_suggestions"))
                     }
                 }, 500)
             },
@@ -138,7 +139,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
             }, {
                 onSuccess: () => {
                     onActionSuccess()
-                    toast.success("Files ignored")
+                    toast.success(t("library.unmatched.files_ignored"))
                 },
             })
         }
@@ -181,7 +182,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
             onOpenChange={() => setIsOpen(false)}
             // contentClass="max-w-5xl"
             size="xl"
-            title="Unmatched files"
+            title={t("library.common.unmatched_files")}
         >
             <AppLayoutStack className="mt-4">
 
@@ -194,7 +195,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
                             setPage(p => p - 1)
                         }}
                         className={cn("transition-opacity", { "opacity-0": page === 0 })}
-                    >Previous</Button>
+                    >{t("library.unmatched.previous")}</Button>
 
                     <p>
                         {page + 1} / {maxPage + 1}
@@ -208,7 +209,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
                             setPage(p => p + 1)
                         }}
                         className={cn("transition-opacity", { "opacity-0": page >= maxPage })}
-                    >Next</Button>
+                    >{t("library.unmatched.next")}</Button>
                 </div>
 
                 <div
@@ -236,7 +237,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
                             intent="white"
                             onClick={handleMatchSelected}
                             disabled={isUpdating}
-                        >Match selection</Button>
+                        >{t("library.unmatched.match_selection")}</Button>
                     </div>
 
                     {/*<div className="flex flex-1">*/}
@@ -247,7 +248,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
 
                     <div className="p-2">
                         <Checkbox
-                            label={`Select all files`}
+                            label={t("library.common.select_all_files")}
                             value={(selectedPaths.length === currentGroup?.localFiles?.length) ? true : (selectedPaths.length === 0
                                 ? false
                                 : "indeterminate")}
@@ -306,7 +307,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
                         intent="white-link"
                         onClick={handleFetchSuggestions}
                     >
-                        Fetch suggestions
+                        {t("library.unmatched.fetch_suggestions")}
                     </Button>
 
                     {/*<SeaLink*/}
@@ -317,7 +318,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
                         intent="white-subtle"
                         onClick={handleSearchAnime}
                     >
-                        Search on AniList
+                        {t("library.unmatched.search_on_anilist")}
                     </Button>
                     {/*</SeaLink>*/}
 
@@ -333,7 +334,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
                         disabled={isUpdating}
                         onClick={handleIgnoreSelected}
                     >
-                        Ignore selection
+                        {t("library.unmatched.ignore_selection")}
                     </Button>
                 </div>
 
@@ -343,7 +344,7 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
                     defaultValue="1"
                     fieldClass="w-full"
                     fieldLabelClass="text-md"
-                    label="Select Anime"
+                    label={t("library.unmatched.select_anime")}
                     value={String(anilistId)}
                     onValueChange={handleSelectAnime}
                     options={suggestions?.map((media) => (
@@ -365,20 +366,20 @@ export function UnmatchedFileManager(props: UnmatchedFileManagerProps) {
                                         />
                                     </div>}
                                     <div className="text-[--muted]">
-                                        <p>Type: <span
+                                        <p>{t("library.unmatched.label_type")} <span
                                             className="text-gray-200 font-semibold"
                                         >{media.format}</span>
                                         </p>
-                                        <p>Aired: {media.startDate?.year ? new Intl.DateTimeFormat("en-US", {
+                                        <p>{t("library.unmatched.label_aired")} {media.startDate?.year ? new Intl.DateTimeFormat("en-US", {
                                             year: "numeric",
                                         }).format(new Date(media.startDate?.year || 0, media.startDate?.month || 0)) : "-"}</p>
-                                        <p>Status: {media.status}</p>
+                                        <p>{t("library.unmatched.label_status")} {media.status}</p>
                                         <SeaLink href={`https://anilist.co/anime/${media.id}`} target="_blank">
                                             <Button
                                                 intent="primary-link"
                                                 size="sm"
                                                 className="px-0"
-                                            >Open on AniList</Button>
+                                            >{t("library.unmatched.open_on_anilist")}</Button>
                                         </SeaLink>
                                     </div>
                                 </div>

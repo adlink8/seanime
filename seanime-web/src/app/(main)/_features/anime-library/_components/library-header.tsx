@@ -3,6 +3,7 @@ import { __libraryHeaderEpisodeAtom } from "@/app/(main)/_features/anime-library
 import { TRANSPARENT_SIDEBAR_BANNER_IMG_STYLE } from "@/app/(main)/_features/custom-ui/styles"
 import { SeaImage } from "@/components/shared/sea-image"
 import { cn } from "@/components/ui/core/styling"
+import { t } from "@/lib/i18n"
 import { getImageUrl } from "@/lib/server/assets"
 import { ThemeMediaPageBannerType, useThemeSettings } from "@/lib/theme/theme-hooks"
 import { __isDesktop__ } from "@/types/constants"
@@ -49,7 +50,7 @@ export function LibraryHeader({ list }: { list: Anime_Episode[] }) {
     }, [image])
 
     React.useLayoutEffect(() => {
-        const t = setTimeout(() => {
+        const timeoutId = setTimeout(() => {
             if (image != actualImage) {
                 setActualImage(bannerImage)
                 setHeaderEpisode(list.find(ep => ep.baseAnime?.bannerImage === image?.episodeImage || ep.baseAnime?.coverImage?.extraLarge === image?.episodeImage || ep.episodeMetadata?.image === image?.episodeImage) || null)
@@ -57,7 +58,7 @@ export function LibraryHeader({ list }: { list: Anime_Episode[] }) {
         }, 600)
 
         return () => {
-            clearTimeout(t)
+            clearTimeout(timeoutId)
         }
     }, [image])
 
@@ -138,7 +139,7 @@ export function LibraryHeader({ list }: { list: Anime_Episode[] }) {
                                 <MotionImage
                                     data-library-header-banner-image
                                     src={getImageUrl(actualImage || prevImage!)}
-                                    alt="banner image"
+                                    alt={t("library.alt.banner_image")}
                                     fill
                                     quality={100}
                                     sizes="100vw"

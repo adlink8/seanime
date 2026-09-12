@@ -1,7 +1,9 @@
 import type { Dictionary } from "../../types"
 
 import { commonDictionary } from "./common"
+import { homeDictionary } from "./home"
 import { libraryDictionary } from "./library"
+import { mediaDictionary } from "./media"
 import { navigationDictionary } from "./navigation"
 import { playerDictionary } from "./player"
 import { searchDictionary } from "./search"
@@ -15,6 +17,8 @@ const moduleDictionaries: readonly [string, Dictionary][] = [
     ["search", searchDictionary],
     ["settings", settingsDictionary],
     ["player", playerDictionary],
+    ["home", homeDictionary],
+    ["media", mediaDictionary],
 ]
 
 /** 合并后的 zh-CN 单一字典 */
@@ -25,6 +29,8 @@ export const zhCN = {
     ...searchDictionary,
     ...settingsDictionary,
     ...playerDictionary,
+    ...homeDictionary,
+    ...mediaDictionary,
 } satisfies Dictionary
 
 /** 全部合法词条 key */

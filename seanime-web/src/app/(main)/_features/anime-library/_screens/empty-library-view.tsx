@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { HorizontalDraggableScroll } from "@/components/ui/horizontal-draggable-scroll"
 import { StaticTabs } from "@/components/ui/tabs"
 import { useDebounce } from "@/hooks/use-debounce"
+import { t } from "@/lib/i18n"
 import { useSetAtom } from "jotai"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -44,7 +45,7 @@ export function EmptyLibraryView(props: EmptyLibraryViewProps) {
                 <div className="text-center space-y-4">
                     <div className="w-fit mx-auto space-y-4">
                         {!!serverStatus?.settings?.library?.libraryPath ? <>
-                            <h2>Empty library</h2>
+                            <h2>{t("library.empty.title")}</h2>
                             <Button
                                 intent="primary-outline"
                                 leftIcon={<FiSearch />}
@@ -52,37 +53,37 @@ export function EmptyLibraryView(props: EmptyLibraryViewProps) {
                                 rounded
                                 onClick={() => setScannerModalOpen(true)}
                             >
-                                Scan your library
+                                {t("library.empty.scan_library")}
                             </Button>
                         </> : (
                             <LuffyError
-                                title="Your library is empty"
+                                title={t("library.empty.your_library_is_empty")}
                                 className=""
                             >
                                 <div className="text-center space-y-4">
                                     <SeaLink href="/settings?tab=library">
                                         <Button intent="primary-subtle" leftIcon={<LuCog className="text-xl" />}>
-                                            Set the path to your local library and scan it
+                                            {t("library.empty.set_path")}
                                         </Button>
                                     </SeaLink>
                                     {serverStatus?.settings?.library?.enableOnlinestream && <p>
                                         <SeaLink href="/settings?tab=onlinestream">
                                             <Button intent="primary-subtle" leftIcon={<LuCog className="text-xl" />}>
-                                                Include online streaming in your library
+                                                {t("library.empty.include_online_stream")}
                                             </Button>
                                         </SeaLink>
                                     </p>}
                                     {serverStatus?.torrentstreamSettings?.enabled && <p>
                                         <SeaLink href="/settings?tab=torrentstream">
                                             <Button intent="primary-subtle" leftIcon={<LuCog className="text-xl" />}>
-                                                Include torrent streaming in your library
+                                                {t("library.empty.include_torrent_stream")}
                                             </Button>
                                         </SeaLink>
                                     </p>}
                                     {serverStatus?.debridSettings?.enabled && <p>
                                         <SeaLink href="/settings?tab=debrid">
                                             <Button intent="primary-subtle" leftIcon={<LuCog className="text-xl" />}>
-                                                Include debrid streaming in your library
+                                                {t("library.empty.include_debrid_stream")}
                                             </Button>
                                         </SeaLink>
                                     </p>}
@@ -92,7 +93,7 @@ export function EmptyLibraryView(props: EmptyLibraryViewProps) {
                     </div>
                 </div>
                 <div className="">
-                    <h3>Trending this season</h3>
+                    <h3>{t("library.empty.trending_this_season")}</h3>
                     <DiscoverTrending />
                 </div>
             </PageWrapper>

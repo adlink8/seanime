@@ -1,6 +1,7 @@
 import { LuffyError } from "@/components/shared/luffy-error"
 import { cn } from "@/components/ui/core/styling"
 import { Skeleton } from "@/components/ui/skeleton"
+import { t } from "@/lib/i18n"
 import React from "react"
 
 const gridClass = cn(
@@ -34,7 +35,7 @@ export function MediaCardGrid(props: MediaCardGridProps) {
 
     if (React.Children.toArray(children).length === 0) {
         return <LuffyError title={null}>
-            <p>暂无内容</p>
+            <p>{t("common.empty.title")}</p>
         </LuffyError>
     }
 
@@ -69,7 +70,7 @@ export function MediaCardLazyGrid({
 }: MediaCardLazyGridProps) {
     if (itemCount === 0) {
         return <LuffyError title={null}>
-            <p>暂无内容</p>
+            <p>{t("common.empty.title")}</p>
         </LuffyError>
     }
 

@@ -13,6 +13,7 @@ import { TextGenerateEffect } from "@/components/shared/text-generate-effect"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { t } from "@/lib/i18n"
 import { useRouter } from "@/lib/navigation"
 import { getAssetUrl } from "@/lib/server/assets"
 import { useContinueWatchingSpoilers } from "@/lib/theme/anime-spoilers"
@@ -82,7 +83,7 @@ function HeaderCarouselDots({ totalEpisodes, currentIndex, onIndexChange, classN
                         index === currentIndex ? "w-6 bg-[--muted]" : "w-3 bg-[--subtle] hover:bg-gray-300",
                     )}
                     onClick={() => onIndexChange(index)}
-                    aria-label={`Go to episode ${index + 1}`}
+                    aria-label={t("library.continue_watching.go_to_episode", { number: index + 1 })}
                 />
             ))}
         </div>
@@ -164,7 +165,7 @@ function MediaMetadata({ episode, episodes, onHoverChange }: MediaMetadataProps)
                             <div className="w-[180px] h-[280px] relative rounded-[--radius-md] overflow-hidden bg-[--background] shadow-md">
                                 <SeaImage
                                     src={anime.coverImage.large}
-                                    alt="cover image"
+                                    alt={t("library.alt.cover_image")}
                                     fill
                                     priority
                                     placeholder={imageShimmer(700, 475)}
@@ -209,7 +210,7 @@ function MediaMetadata({ episode, episodes, onHoverChange }: MediaMetadataProps)
 
                         {anime.nextAiringEpisode?.airingAt && (
                             <p className="text-base text-brand-200 inline-flex items-center gap-1.5">
-                                <RiSignalTowerLine /> Releasing now
+                                <RiSignalTowerLine /> {t("library.continue_watching.releasing_now")}
                             </p>
                         )}
                     </div>
@@ -230,7 +231,7 @@ function MediaMetadata({ episode, episodes, onHoverChange }: MediaMetadataProps)
                             className="rounded-full"
                             onClick={() => setPreviewModalMediaId(anime.id, "anime")}
                         >
-                            Preview
+                            {t("library.continue_watching.preview")}
                         </Button>
                     </motion.div>
                 </motion.div>
@@ -381,7 +382,7 @@ function BannerImage({ episode, isTransitioning, shouldBlurBanner }: BannerImage
                     {bannerImage && (
                         <MotionImage
                             src={bannerImage}
-                            alt="banner image"
+                            alt={t("library.alt.banner_image")}
                             fill
                             quality={100}
                             priority

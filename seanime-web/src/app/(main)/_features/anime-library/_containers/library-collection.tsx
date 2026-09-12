@@ -7,6 +7,7 @@ import { IconButton } from "@/components/ui/button"
 import { Carousel, CarouselContent, CarouselDotButtons } from "@/components/ui/carousel"
 import { cn } from "@/components/ui/core/styling"
 import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { t } from "@/lib/i18n"
 import { getLibraryCollectionTitle } from "@/lib/server/utils"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -141,7 +142,7 @@ export const LibraryCollectionListItem = React.memo(({ list, streamingMediaIds, 
                             })
                         }}
                     >
-                        {params.continueWatchingOnly ? "Show all" : "Show unwatched only"}
+                        {params.continueWatchingOnly ? t("library.collection.show_all") : t("library.collection.show_unwatched_only")}
                     </DropdownMenuItem>
                 </DropdownMenu>}
             </div>
@@ -176,7 +177,7 @@ export const LibraryCollectionListItem = React.memo(({ list, streamingMediaIds, 
 
 export const LibraryCollectionEntryItem = React.memo(({ entry, streamingMediaIds, type }: {
     entry: Anime_LibraryCollectionEntry,
-    streamingMediaIds: number[],
+    streamingMediaIds: number[]
     type: "carousel" | "grid"
 }) => {
     return (

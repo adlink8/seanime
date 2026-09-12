@@ -27,4 +27,29 @@ export const commonDictionary = {
     "common.home.empty_title": "你的首页暂无番剧内容", // src/app/(main)/_features/home/home-screen.tsx
     "common.home.scan_library": "扫描本地番剧媒体库", // src/app/(main)/_features/home/home-screen.tsx
     "common.home.trending": "当前热门番剧", // src/app/(main)/_features/home/home-screen.tsx
+
+    // —— 加载层 ——
+    "common.loading.alt": "正在加载...", // src/components/shared/loading-overlay-with-logo.tsx
+    "common.loading.default": "正 在 加 载 中 . . .", // src/components/shared/loading-overlay-with-logo.tsx
+    "common.loading.server_data": "服 务 加 载 中 . . .", // src/app/(main)/server-data-wrapper.tsx
+    "common.action.reload": "重新加载", // src/components/shared/loading-overlay-with-logo.tsx
+
+    // —— 错误边界 / 错误页 ——
+    "common.error.client_side": "客户端错误", // src/app/(main)/error.tsx, src/components/shared/app-error-boundary.tsx
+    "common.error.unexpected": "发生了意料之外的错误。", // src/app/(main)/error.tsx, src/components/shared/app-error-boundary.tsx
+    "common.error.title": "出错了！", // src/components/shared/luffy-error.tsx
+    "common.error.transcode_disabled": "转码功能尚未启用", // src/app/(main)/server-data-wrapper.tsx
+    "common.action.retry": "重试", // src/components/shared/luffy-error.tsx, src/app/(main)/error.tsx
+
+    // —— 服务数据包装器（服务端未就绪 / 未登录引导）——
+    "common.status.updating": "Seanime 正在更新中。更新完成并恢复连接后请刷新页面。", // src/app/(main)/server-data-wrapper.tsx
+    "common.welcome.title": "欢迎使用 Seanime！", // src/app/(main)/server-data-wrapper.tsx
+    "common.action.get_anilist_token": "获取 AniList 授权 Token", // src/app/(main)/server-data-wrapper.tsx
+    "common.action.login_anilist_account": "登录 AniList 账号", // src/app/(main)/server-data-wrapper.tsx
+    "common.action.continue_and_login": "继续并登录", // src/app/(main)/server-data-wrapper.tsx
+    "common.form.token_required": "必须输入 Token", // src/app/(main)/server-data-wrapper.tsx, src/app/(main)/_features/navigation/main-sidebar.tsx
+    "common.form.token_label": "输入授权 Token", // src/app/(main)/server-data-wrapper.tsx
+
+    // —— 通用确认 ——
+    "common.action.yes": "是", // src/app/(main)/_features/navigation/offline-sidebar.tsx
 } satisfies Dictionary

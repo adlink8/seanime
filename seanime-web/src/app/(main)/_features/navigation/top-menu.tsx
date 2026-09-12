@@ -1,6 +1,7 @@
 import { useMissingEpisodeCount } from "@/app/(main)/_hooks/missing-episodes-loader"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { NavigationMenu, NavigationMenuProps } from "@/components/ui/navigation-menu"
+import { t } from "@/lib/i18n"
 import { usePathname } from "@/lib/navigation"
 import React, { useMemo } from "react"
 
@@ -25,13 +26,13 @@ export const TopMenu: React.FC<TopMenuProps> = (props) => {
                 href: "/",
                 // icon: IoLibrary,
                 isCurrent: pathname === "/",
-                name: "首页",
+                name: t("navigation.item.home"),
             },
             {
                 href: "/schedule",
                 icon: null,
                 isCurrent: pathname.startsWith("/schedule"),
-                name: "放送日历",
+                name: t("navigation.item.schedule"),
                 // addon: missingEpisodeCount > 0 ? <Badge
                 //     className="absolute -top-1 right-2 h-2 w-2 p-0 z-[5]" size="sm"
                 //     intent="alert-solid"
@@ -41,19 +42,19 @@ export const TopMenu: React.FC<TopMenuProps> = (props) => {
                 href: "/manga",
                 icon: null,
                 isCurrent: pathname.startsWith("/manga"),
-                name: "漫画",
+                name: t("navigation.item.manga"),
             }].filter(Boolean) as NavigationMenuProps["items"],
             {
                 href: "/lists",
                 icon: null,
                 isCurrent: pathname.startsWith("/lists"),
-                name: "我的片单",
+                name: t("navigation.item.lists"),
             },
             {
                 href: "/discover",
                 icon: null,
                 isCurrent: pathname.startsWith("/discover") || pathname.startsWith("/search"),
-                name: "探索发现",
+                name: t("navigation.item.discover"),
             },
         ].filter(Boolean)
     }, [pathname, missingEpisodeCount, serverStatus?.settings?.library?.enableManga])

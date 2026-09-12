@@ -2,6 +2,7 @@ import { useAnimeEntryBulkAction } from "@/api/hooks/anime_entries.hooks"
 import { IconButton, IconButtonProps } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import React, { memo } from "react"
 import { BiLockOpenAlt } from "react-icons/bi"
 import { VscVerified } from "react-icons/vsc"
@@ -45,7 +46,7 @@ export const ToggleLockFilesButton = memo((props: ToggleLockFilesButtonProps) =>
                 />
             }
         >
-            {isLocked ? "Unlock all files" : "Lock all files"}
+            {isLocked ? t("library.common.unlock_all_files") : t("library.common.lock_all_files")}
         </Tooltip>
     )
 })

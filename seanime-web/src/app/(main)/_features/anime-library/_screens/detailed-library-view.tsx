@@ -33,6 +33,7 @@ import { StaticTabs } from "@/components/ui/tabs"
 import { TextInput } from "@/components/ui/text-input"
 import { useDebounce } from "@/hooks/use-debounce"
 import { ANIME_COLLECTION_SORTING_OPTIONS } from "@/lib/helpers/filtering"
+import { t } from "@/lib/i18n"
 import { getLibraryCollectionTitle } from "@/lib/server/utils"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
 import { getYear } from "date-fns"
@@ -114,9 +115,9 @@ export function DetailedLibraryView(props: LibraryViewProps) {
                         size="sm"
                         onClick={() => setView("base")}
                     />
-                    {!isNakamaLibrary && <h3 className="text-ellipsis truncate">Home</h3>}
+                    {!isNakamaLibrary && <h3 className="text-ellipsis truncate">{t("library.header.home")}</h3>}
                     {isNakamaLibrary &&
-                        <h3 className="text-ellipsis truncate">{nakamaStatus?.hostConnectionStatus?.username || "Host"}'s Library</h3>}
+                        <h3 className="text-ellipsis truncate">{t("library.header.host_library", { name: nakamaStatus?.hostConnectionStatus?.username || "Host" })}</h3>}
                 </div>
 
                 <SearchInput />
@@ -131,27 +132,27 @@ export function DetailedLibraryView(props: LibraryViewProps) {
             >
                 {!isNakamaLibrary && <div>
                     <h3>{stats?.totalSize}</h3>
-                    <p>媒体库大小</p>
+                    <p>{t("library.stats.size")}</p>
                 </div>}
                 <div>
                     <h3>{stats?.totalFiles}</h3>
-                    <p>文件数</p>
+                    <p>{t("library.stats.file_count")}</p>
                 </div>
                 <div>
                     <h3>{stats?.totalEntries}</h3>
-                    <p>条目数</p>
+                    <p>{t("library.stats.entry_count")}</p>
                 </div>
                 <div>
                     <h3>{stats?.totalShows}</h3>
-                    <p>剧集</p>
+                    <p>{t("library.stats.episodes")}</p>
                 </div>
                 <div>
                     <h3>{stats?.totalMovies}</h3>
-                    <p>剧场版</p>
+                    <p>{t("library.stats.movies")}</p>
                 </div>
                 <div>
                     <h3>{stats?.totalSpecials}</h3>
-                    <p>特别篇</p>
+                    <p>{t("library.stats.specials")}</p>
                 </div>
             </div>}
 
@@ -302,13 +303,13 @@ export function SearchOptions() {
                     className="w-fit mb-6"
                     triggerClass="px-4 py-1"
                     items={[
-                        { name: "Lists", isCurrent: selectedIndex === "-", onClick: () => setSelectedIndex("-") },
-                        { name: "All", isCurrent: selectedIndex === "all", onClick: () => setSelectedIndex("all") },
-                        { name: "Watching", isCurrent: selectedIndex === "CURRENT", onClick: () => setSelectedIndex("CURRENT") },
-                        { name: "Planning", isCurrent: selectedIndex === "PLANNING", onClick: () => setSelectedIndex("PLANNING") },
-                        { name: "Paused", isCurrent: selectedIndex === "PAUSED", onClick: () => setSelectedIndex("PAUSED") },
-                        { name: "Completed", isCurrent: selectedIndex === "COMPLETED", onClick: () => setSelectedIndex("COMPLETED") },
-                        { name: "Dropped", isCurrent: selectedIndex === "DROPPED", onClick: () => setSelectedIndex("DROPPED") },
+                        { name: t("library.list.lists"), isCurrent: selectedIndex === "-", onClick: () => setSelectedIndex("-") },
+                        { name: t("library.filter.all"), isCurrent: selectedIndex === "all", onClick: () => setSelectedIndex("all") },
+                        { name: t("common.state.watching"), isCurrent: selectedIndex === "CURRENT", onClick: () => setSelectedIndex("CURRENT") },
+                        { name: t("common.state.planning"), isCurrent: selectedIndex === "PLANNING", onClick: () => setSelectedIndex("PLANNING") },
+                        { name: t("common.state.paused"), isCurrent: selectedIndex === "PAUSED", onClick: () => setSelectedIndex("PAUSED") },
+                        { name: t("common.state.completed"), isCurrent: selectedIndex === "COMPLETED", onClick: () => setSelectedIndex("COMPLETED") },
+                        { name: t("common.state.dropped"), isCurrent: selectedIndex === "DROPPED", onClick: () => setSelectedIndex("DROPPED") },
                     ]}
                 />
             </div>
@@ -317,7 +318,7 @@ export function SearchOptions() {
                 data-detailed-library-view-search-options-grid
             >
                 <Select
-                    label="Sorting"
+                    label={t("library.search.sorting")}
                     leftAddon={<FaSortAmountDown className={cn(params.sorting !== "TITLE" && "text-indigo-300 font-bold text-xl")} />}
                     className="w-full"
                     fieldClass="flex items-center"
@@ -334,7 +335,7 @@ export function SearchOptions() {
                 <Select
                     leftAddon={
                         <MdPersonalVideo className={cn((params.format as any) !== null && (params.format as any) !== "" && "text-indigo-300 font-bold text-xl")} />}
-                    label="格式" placeholder="全部格式"
+                    label={t("library.filter.format")} placeholder={t("library.filter.format_all")}
                     className="w-full"
                     fieldClass="w-full"
                     options={ADVANCED_SEARCH_FORMATS}
@@ -348,7 +349,7 @@ export function SearchOptions() {
                 <Select
                     leftAddon={
                         <RiSignalTowerLine className={cn((params.status as any) !== null && (params.status as any) !== "" && "text-indigo-300 font-bold text-xl")} />}
-                    label="状态" placeholder="全部状态"
+                    label={t("library.filter.status")} placeholder={t("library.filter.status_all")}
                     className="w-full"
                     fieldClass="w-full"
                     options={[
@@ -365,9 +366,9 @@ export function SearchOptions() {
                     multiple
                     leftAddon={!params.tags &&
                         <LuTags />}
-                    emptyMessage="未找到标签"
-                    label="标签"
-                    placeholder="全部标签"
+                    emptyMessage={t("library.filter.tags_empty")}
+                    label={t("library.filter.tags")}
+                    placeholder={t("library.filter.tags_all")}
                     className="w-full"
                     fieldClass="w-full"
                     options={ADVANCED_SEARCH_MEDIA_TAGS
@@ -388,8 +389,8 @@ export function SearchOptions() {
                 <Select
                     leftAddon={
                         <LuLeaf className={cn((params.season as any) !== null && (params.season as any) !== "" && "text-indigo-300 font-bold text-xl")} />}
-                    label="季度"
-                    placeholder="全部季度"
+                    label={t("library.filter.season")}
+                    placeholder={t("library.filter.season_all")}
                     className="w-full"
                     fieldClass="w-full flex items-center"
                     inputContainerClass="w-full"
@@ -403,7 +404,7 @@ export function SearchOptions() {
                 />
                 <Select
                     leftAddon={<LuCalendar className={cn((params.year !== null && params.year !== "") && "text-indigo-300 font-bold text-xl")} />}
-                    label="年份" placeholder="不限年份"
+                    label={t("library.filter.year")} placeholder={t("library.filter.year_any")}
                     className="w-full"
                     fieldClass="w-full"
                     options={[...Array(70)].map((v, idx) => getYear(new Date()) - idx).map(year => ({
@@ -426,7 +427,7 @@ export function SearchOptions() {
                 </div>
                 {serverStatus?.settings?.anilist?.enableAdultContent && <div className="flex h-full items-center">
                     <Switch
-                        label="成人内容 (R18)"
+                        label={t("library.filter.adult")}
                         value={params.isAdult}
                         onValueChange={v => setParams(draft => {
                             draft.isAdult = v
@@ -447,7 +448,7 @@ function GenreSelector({ genres }: { genres: string[] }) {
         <MediaGenreSelector
             items={[
                 {
-                    name: "全部",
+                    name: t("library.filter.all"),
                     isCurrent: !params!.genre?.length,
                     onClick: () => setParams(draft => {
                         draft.genre = []

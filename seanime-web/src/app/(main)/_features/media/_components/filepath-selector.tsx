@@ -2,6 +2,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/components/ui/core/styling"
 import { Separator } from "@/components/ui/separator"
 import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import React from "react"
 
 type FilepathSelectorProps = {
@@ -34,7 +35,7 @@ export function FilepathSelector(props: FilepathSelectorProps) {
 
                 <div className="">
                     <Checkbox
-                        label="Select all files"
+                        label={t("media.file_path.select_all")}
                         value={allFilesChecked ? true : filepaths.length === 0 ? false : "indeterminate"}
                         onValueChange={checked => {
                             if (typeof checked === "boolean") {

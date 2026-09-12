@@ -9,6 +9,7 @@ import { LuffyError } from "@/components/shared/luffy-error"
 import { Button, IconButton } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { useBoolean } from "@/hooks/use-disclosure"
+import { t } from "@/lib/i18n"
 import { useAtomValue } from "jotai/react"
 import React from "react"
 import { BiPlus } from "react-icons/bi"
@@ -43,7 +44,7 @@ export function AnimeAutoDownloaderButton(props: AnimeAutoDownloaderButtonProps)
     return (
         <>
             <Modal
-                title="Auto Downloader"
+                title={t("library.auto_downloader.title")}
                 contentClass="max-w-3xl"
                 open={isModalOpen}
                 onOpenChange={setIsModalOpen}
@@ -87,7 +88,7 @@ export function Content(props: ContentProps) {
                 <Modal
                     open={createRuleModal.active}
                     onOpenChange={createRuleModal.set}
-                    title="Create a new rule"
+                    title={t("library.auto_downloader.new_rule")}
                     contentClass="max-w-3xl"
                     trigger={<Button
                         className="rounded-full"
@@ -97,7 +98,7 @@ export function Content(props: ContentProps) {
                             createRuleModal.on()
                         }}
                     >
-                        New Rule
+                        {t("library.auto_downloader.new_rule")}
                     </Button>}
                 >
                     <AutoDownloaderRuleForm
@@ -110,7 +111,7 @@ export function Content(props: ContentProps) {
 
             {!rules?.length && (
                 <LuffyError title={null}>
-                    No rules found for this anime.
+                    {t("library.auto_downloader.no_rules")}
                 </LuffyError>
             )}
 

@@ -7,6 +7,7 @@ import { AppLayoutStack } from "@/components/ui/app-layout"
 import { Button } from "@/components/ui/button"
 import { Drawer } from "@/components/ui/drawer"
 import { upath } from "@/lib/helpers/upath.ts"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
 import React, { useCallback } from "react"
@@ -62,7 +63,7 @@ export function UnknownMediaManager(props: UnknownMediaManagerProps) {
             action: "unmatch",
         }, {
             onSuccess: () => {
-                toast.success("Media unmatched")
+                toast.success(t("library.unknown.media_unmatched"))
                 onActionComplete?.()
             },
         })
@@ -84,18 +85,15 @@ export function UnknownMediaManager(props: UnknownMediaManagerProps) {
                 }
             }}
             size="xl"
-            title="Hidden Media"
+            title={t("library.unknown.title")}
 
         >
             <AppLayoutStack className="mt-4">
 
                 <p className="">
-                    Seanime matched {unknownGroups.length} group{unknownGroups.length === 1 ? "" : "s"} to {unknownGroups.length === 1 ? "a " : ""}series
-                    that {unknownGroups.length === 1
-                    ? "is"
-                    : "are"} absent from your
-                    {!hasCustomSources ? "AniList" : ""} collection.<br />
-                    Add the media to be able to see entries in your library or unmatch them if incorrect.
+                    {t("library.unknown.description", { count: unknownGroups.length, source: !hasCustomSources ? "AniList" : "" })}
+                    <br />
+                    {t("library.unknown.description_hint")}
                 </p>
 
                 <Button
@@ -104,7 +102,7 @@ export function UnknownMediaManager(props: UnknownMediaManagerProps) {
                     loading={isAdding}
                     disabled={isUnmatching}
                 >
-                    Add all to {!hasCustomSources ? "AniList" : "collection"}
+                    {!hasCustomSources ? t("library.unknown.add_all_to_anilist") : t("library.unknown.add_all_to_collection")}
                 </Button>
 
                 <div className="divide divide-y divide-[--border] space-y-4">
@@ -114,7 +112,7 @@ export function UnknownMediaManager(props: UnknownMediaManagerProps) {
                             <div key={group.mediaId} className="pt-4 space-y-2">
                                 <div className="flex items-center w-full justify-between">
                                     <h4 className="font-semibold flex gap-2 items-center">
-                                        <span>Matched to{" "}</span>
+                                        <span>{t("library.unknown.matched_to")}{" "}</span>
                                         <p
                                             className="underline cursor-pointer text-brand-200 flex gap-1.5 items-center"
                                             onClick={() => { setPreviewModalMediaId(group.mediaId, "anime") }}
@@ -137,7 +135,7 @@ export function UnknownMediaManager(props: UnknownMediaManagerProps) {
                                             leftIcon={<BiPlus />}
                                             className="rounded-full"
                                         >
-                                            Add to {!hasCustomSources ? "AniList" : "collection"}
+                                            {!hasCustomSources ? t("library.unknown.add_to_anilist") : t("library.unknown.add_to_collection")}
                                         </Button>
                                         <Button
                                             size="sm"
@@ -146,7 +144,7 @@ export function UnknownMediaManager(props: UnknownMediaManagerProps) {
                                             onClick={() => handleUnmatchMedia(group.mediaId)}
                                             className="rounded-full"
                                         >
-                                            Unmatch
+                                            {t("library.unknown.unmatch")}
                                         </Button>
                                     </div>
                                 </div>

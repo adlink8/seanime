@@ -13,6 +13,7 @@ import { NumberInput } from "@/components/ui/number-input"
 import { Popover, PopoverProps } from "@/components/ui/popover"
 import { Tooltip } from "@/components/ui/tooltip"
 import { normalizeDate } from "@/lib/helpers/date"
+import { t } from "@/lib/i18n"
 import { getImageUrl } from "@/lib/server/assets"
 import { useWindowSize } from "@uidotdev/usehooks"
 import React, { Fragment } from "react"
@@ -157,7 +158,7 @@ export const AnilistMediaEntryModal = (props: AnilistMediaEntryModalProps) => {
                         })}
                     />}
                 >
-                    Add to list
+                    {t("media.action.add_to_list")}
                 </Tooltip>}
             </>}
 
@@ -252,7 +253,7 @@ function Content(props: AnilistMediaEntryModalProps & {
                     <StatusField media={media} type={type} />
                     {media?.status !== "NOT_YET_RELEASED" && <>
                         <Field.Number
-                            label="Score"
+                            label={t("media.field.score")}
                             name="score"
                             min={0}
                             max={10}
@@ -264,7 +265,7 @@ function Content(props: AnilistMediaEntryModalProps & {
                             rightIcon={<BiStar />}
                         />
                         <Field.Number
-                            label="Progress"
+                            label={t("media.field.progress")}
                             name="progress"
                             min={0}
                             max={type === "anime" ? (!!(media as AL_BaseAnime)?.nextAiringEpisode?.episode
@@ -283,13 +284,13 @@ function Content(props: AnilistMediaEntryModalProps & {
                 </div>
                 {media?.status !== "NOT_YET_RELEASED" && <div className="flex flex-col sm:flex-row gap-4">
                     <Field.DatePicker
-                        label="Start date"
+                        label={t("media.field.start_date")}
                         name="startedAt"
                         // defaultValue={(state.startedAt && state.startedAt.year) ? parseAbsoluteToLocal(new Date(state.startedAt.year,
                         // (state.startedAt.month || 1)-1, state.startedAt.day || 1).toISOString()) : undefined}
                     />
                     <Field.DatePicker
-                        label="Completion date"
+                        label={t("media.field.completion_date")}
                         name="completedAt"
                         // defaultValue={(state.completedAt && state.completedAt.year) ? parseAbsoluteToLocal(new Date(state.completedAt.year,
                         // (state.completedAt.month || 1)-1, state.completedAt.day || 1).toISOString()) : undefined}
@@ -297,7 +298,7 @@ function Content(props: AnilistMediaEntryModalProps & {
 
                     <NumberInput
                         name="repeat"
-                        label={type === "anime" ? "Total rewatches" : "Total rereads"}
+                        label={type === "anime" ? t("media.field.total_rewatches") : t("media.field.total_rereads")}
                         min={0}
                         max={1000}
                         value={repeat}
@@ -332,14 +333,14 @@ function Content(props: AnilistMediaEntryModalProps & {
                                             mediaId: media?.id!,
                                             type: type,
                                         })}
-                                    >Confirm</Button>
+                                    >{t("media.action.confirm")}</Button>
                                 </DisclosureContent>
                             </DisclosureItem>
                         </Disclosure>
                     </div>
 
                     <Field.Submit role="save" disableIfInvalid={true} loading={isEditing} disabled={isDeleting}>
-                        Save
+                        {t("media.action.save")}
                     </Field.Submit>
                 </div>
 
@@ -365,30 +366,30 @@ function StatusField({ media, type }: {
     }
 
     return <Field.Select
-        label="Status"
+        label={t("media.field.status")}
         name="status"
         onChange={handleChange}
         options={[
             media?.status !== "NOT_YET_RELEASED" ? {
                 value: "CURRENT",
-                label: type === "anime" ? "Watching" : "Reading",
+                label: type === "anime" ? t("common.state.watching") : t("common.state.reading"),
             } : undefined,
-            { value: "PLANNING", label: "Planning" },
+            { value: "PLANNING", label: t("common.state.planning") },
             media?.status !== "NOT_YET_RELEASED" ? {
                 value: "PAUSED",
-                label: "Paused",
+                label: t("common.state.paused"),
             } : undefined,
             media?.status !== "NOT_YET_RELEASED" ? {
                 value: "COMPLETED",
-                label: "Completed",
+                label: t("common.state.completed"),
             } : undefined,
             media?.status !== "NOT_YET_RELEASED" ? {
                 value: "DROPPED",
-                label: "Dropped",
+                label: t("common.state.dropped"),
             } : undefined,
             media?.status !== "NOT_YET_RELEASED" ? {
                 value: "REPEATING",
-                label: "Repeating",
+                label: t("media.status.repeating"),
             } : undefined,
         ].filter(Boolean)}
     />

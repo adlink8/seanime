@@ -42,6 +42,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ContextMenuGroup, ContextMenuItem, ContextMenuLabel, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { preloadMediaEntry } from "@/lib/entry-preloader"
+import { t } from "@/lib/i18n"
 import { useRouter } from "@/lib/navigation"
 import { __navigationPreloadModeAtom, shouldWarmEntryOnIntent } from "@/lib/navigation-preload-settings"
 import { useAtomValue, useSetAtom } from "jotai/react"
@@ -266,17 +267,17 @@ export function MediaEntryCard<T extends "anime" | "manga">(props: MediaEntryCar
                     {!serverStatus?.isOffline && <ContextMenuItem
                         onClick={handlePreviewClick}
                     >
-                        <LuEye /> Preview
+                        <LuEye /> {t("media.action.preview")}
                     </ContextMenuItem>}
                     {((libraryData || nakamaLibraryData || (listData && hasStreamingEnabled)) && type === "anime") && <ContextMenuItem
                         onClick={handleAddToPlaylistClick}
                     >
-                        <BiAddToQueue /> Add to Playlist
+                        <BiAddToQueue /> {t("media.action.add_to_playlist")}
                     </ContextMenuItem>}
                     {(!!libraryData && type === "anime") && <ContextMenuItem
                         onClick={handleOpenInExplorerClick}
                     >
-                        <LuFolderTree /> Open in Library Explorer
+                        <LuFolderTree /> {t("media.action.open_in_library_explorer")}
                     </ContextMenuItem>}
 
                     <PluginMediaCardContextMenuItems for={type} media={media} />
@@ -336,8 +337,8 @@ export function MediaEntryCard<T extends "anime" | "manga">(props: MediaEntryCar
                                     onClick={handleWatchButtonClicked}
                                 >
                                     {!!listData?.progress && (listData?.status === "CURRENT" || listData?.status === "PAUSED")
-                                        ? "Continue"
-                                        : "Watch"}
+                                        ? t("media.action.continue")
+                                        : t("media.action.watch")}
                                 </Button>}
 
                                 {type === "manga" && <SeaLink
@@ -354,8 +355,8 @@ export function MediaEntryCard<T extends "anime" | "manga">(props: MediaEntryCar
                                         tabIndex={-1}
                                     >
                                         {!!listData?.progress && (listData?.status === "CURRENT" || listData?.status === "PAUSED")
-                                            ? "Continue"
-                                            : "Start Reading"}
+                                            ? t("media.action.continue")
+                                            : t("media.action.start_reading")}
                                     </Button>
                                 </SeaLink>}
                             </div>

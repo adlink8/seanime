@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Drawer } from "@/components/ui/drawer"
 import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -42,7 +43,7 @@ export function IgnoredFileManager(props: IgnoredFileManagerProps) {
                 action: "unignore",
             }, {
                 onSuccess: () => {
-                    toast.success("Files un-ignored")
+                    toast.success(t("library.ignored.files_unignored"))
                 },
             })
         }
@@ -55,7 +56,7 @@ export function IgnoredFileManager(props: IgnoredFileManagerProps) {
             onOpenChange={() => setIsOpen(false)}
             // contentClass="max-w-5xl"
             size="xl"
-            title="Ignored files"
+            title={t("library.common.ignored_files")}
         >
             <AppLayoutStack className="mt-4">
 
@@ -69,12 +70,12 @@ export function IgnoredFileManager(props: IgnoredFileManagerProps) {
                         loading={isUpdating}
                         onClick={handleUnIgnoreSelected}
                     >
-                        Un-ignore selection
+                        {t("library.ignored.unignore_selection")}
                     </Button>
                 </div>}
 
                 {files.length === 0 && <LuffyError title={null}>
-                    No ignored files
+                    {t("library.ignored.empty")}
                 </LuffyError>}
 
                 {files.length > 0 &&
@@ -82,7 +83,7 @@ export function IgnoredFileManager(props: IgnoredFileManagerProps) {
 
                         <div className="p-2">
                             <Checkbox
-                                label={`Select all files`}
+                                label={t("library.common.select_all_files")}
                                 value={(selectedPaths.length === files?.length) ? true : (selectedPaths.length === 0
                                     ? false
                                     : "indeterminate")}

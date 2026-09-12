@@ -1,6 +1,7 @@
 import { TRANSPARENT_SIDEBAR_BANNER_IMG_STYLE } from "@/app/(main)/_features/custom-ui/styles"
 import { SeaImage } from "@/components/shared/sea-image"
 import { cn } from "@/components/ui/core/styling"
+import { t } from "@/lib/i18n"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
 import { __isDesktop__ } from "@/types/constants"
 import React from "react"
@@ -36,7 +37,7 @@ export function MediaEntryPageSmallBanner(props: MediaEntryPageSmallBannerProps)
                     {(!!bannerImage) && <SeaImage
                         data-media-entry-page-small-banner-image
                         src={bannerImage || ""}
-                        alt="banner image"
+                        alt={t("media.alt.banner_image")}
                         fill
                         quality={100}
                         priority

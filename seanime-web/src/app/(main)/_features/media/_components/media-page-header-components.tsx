@@ -9,6 +9,7 @@ import { cn } from "@/components/ui/core/styling"
 import { Popover } from "@/components/ui/popover"
 import { Tooltip } from "@/components/ui/tooltip"
 import { getScoreColor } from "@/lib/helpers/score"
+import { t } from "@/lib/i18n"
 import { getImageUrl } from "@/lib/server/assets"
 import {
     ThemeMediaPageBannerSize,
@@ -157,7 +158,7 @@ export function MediaPageHeader(props: MediaPageHeaderProps) {
                     {(!!bannerImage) && <MotionImage
                         data-media-page-header-banner-image
                         src={getImageUrl(bannerImage || "")}
-                        alt="banner image"
+                        alt={t("media.alt.banner_image")}
                         fill
                         quality={100}
                         priority
@@ -370,7 +371,7 @@ export function MediaPageHeaderEntryDetails(props: MediaPageHeaderEntryDetailsPr
                         <MotionImage
                             data-media-page-header-entry-details-cover-image
                             src={getImageUrl(coverImage)}
-                            alt="cover image"
+                            alt={t("media.alt.cover_image")}
                             fill
                             priority
                             placeholder={imageShimmer(700, 475)}
@@ -426,9 +427,9 @@ export function MediaPageHeaderEntryDetails(props: MediaPageHeaderEntryDetailsPr
                                 <div
                                     data-media-page-header-entry-details-status
                                     className="text-base text-white md:text-md font-medium tracking-wide flex items-center"
-                                >{capitalize(listData?.status === "CURRENT"
-                                    ? type === "anime" ? "watching" : "reading"
-                                    : listData?.status)}
+                                >{listData?.status === "CURRENT"
+                                    ? (type === "anime" ? t("common.state.watching") : t("common.state.reading"))
+                                    : capitalize(listData?.status ?? "")}
                                     {listData?.repeat && <Tooltip
                                         trigger={<Badge
                                             size="md"
@@ -440,9 +441,10 @@ export function MediaPageHeaderEntryDetails(props: MediaPageHeaderEntryDetailsPr
 
                                         </Badge>}
                                     >
-                                        {listData?.repeat} {type === "anime" ? "rewatch" : "reread"}{listData?.repeat > 1
-                                        ? type === "anime" ? "es" : "s"
-                                        : ""}
+                                        {t("media.repeat.count", {
+                                            count: listData?.repeat ?? 0,
+                                            type: type === "anime" ? t("media.repeat.rewatch") : t("media.repeat.reread"),
+                                        })}
                                     </Tooltip>}
                                 </div>}
 

@@ -4,6 +4,7 @@ import { IconButton } from "@/components/ui/button"
 import { Modal, ModalProps } from "@/components/ui/modal"
 import { Popover, PopoverProps } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { AiFillWarning } from "react-icons/ai"
 import { MdInfo } from "react-icons/md"
@@ -69,7 +70,7 @@ export function MediaEpisodeInfoModal(props: MediaEpisodeInfoModalProps) {
                     intent="gray-basic"
                     size="xs"
                 />}
-                title={title || "Episode"}
+                title={title || t("media.episode.default_title")}
                 // contentClass="max-w-2xl"
                 // titleClass="text-xl"
             >
@@ -99,10 +100,10 @@ export function MediaEpisodeInfoModal(props: MediaEpisodeInfoModalProps) {
                         {isInvalid && <AiFillWarning />}
                     </p>
                     {!(!airDate && !length) && <p className="text-[--muted]">
-                        {airDate || "Unknown airing date"} - {length || "N/A"} minutes
+                        {airDate || t("media.episode.unknown_air_date")} - {length || "N/A"} {t("media.episode.minutes")}
                     </p>}
                     <p className="text-gray-300">
-                        {summary?.replaceAll("`", "'") || "No summary"}
+                        {summary?.replaceAll("`", "'") || t("media.episode.no_summary")}
                     </p>
 
                     {filename && <>

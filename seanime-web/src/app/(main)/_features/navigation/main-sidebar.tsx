@@ -25,6 +25,7 @@ import { HoverCard } from "@/components/ui/hover-card"
 import { Modal } from "@/components/ui/modal"
 import { VerticalMenu, VerticalMenuItem } from "@/components/ui/vertical-menu"
 import { openTab } from "@/lib/helpers/browser"
+import { t } from "@/lib/i18n"
 import { usePathname, useRouter } from "@/lib/navigation"
 import { ANILIST_OAUTH_URL, ANILIST_PIN_URL } from "@/lib/server/config"
 import { TORRENT_CLIENT, TORRENT_PROVIDER } from "@/lib/server/settings"
@@ -191,7 +192,7 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
         {
             id: "home",
             iconType: IoHomeOutline,
-            name: "首页",
+            name: t("navigation.item.home"),
             href: "/",
             isCurrent: pathname === "/",
         },
@@ -205,7 +206,7 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
         {
             id: "schedule",
             iconType: LuCalendar,
-            name: "放送日历",
+            name: t("navigation.item.schedule"),
             href: "/schedule",
             isCurrent: pathname === "/schedule",
             addon: missingEpisodeCount > 0 ? <Badge
@@ -216,28 +217,28 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
         ...serverStatus?.settings?.library?.enableManga ? [{
             id: "manga",
             iconType: LuBookOpen,
-            name: "漫画",
+            name: t("navigation.item.manga"),
             href: "/manga",
             isCurrent: pathname.startsWith("/manga"),
         }] : [],
         {
             id: "lists",
             iconType: RiListCheck3,
-            name: "我的片单",
+            name: t("navigation.item.lists"),
             href: "/lists",
             isCurrent: pathname === "/lists",
         },
         {
             id: "discover",
             iconType: LuCompass,
-            name: "探索发现",
+            name: t("navigation.item.discover"),
             href: "/discover",
             isCurrent: pathname === "/discover",
         },
         {
             id: "search",
             iconType: FiSearch,
-            name: "搜索",
+            name: t("navigation.item.search"),
             href: "/search",
             isCurrent: pathname === "/search",
             // onClick: () => {
@@ -254,8 +255,8 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
                     ? SiQbittorrent
                     : serverStatus?.settings?.torrent?.defaultTorrentClient === TORRENT_CLIENT.SEANIME ? SiBittorrent : SiTransmission,
                 name: (activeTorrentCount.seeding === 0 || !serverStatus?.settings?.torrent?.showActiveTorrentCount)
-                    ? "种子下载列表"
-                    : `种子下载列表 (${activeTorrentCount.seeding} 做种中)`,
+                    ? t("navigation.sidebar.torrent_list")
+                    : t("navigation.sidebar.torrent_list_with_seeding", { count: activeTorrentCount.seeding }),
                 href: serverStatus?.settings?.torrent?.defaultTorrentClient === TORRENT_CLIENT.SEANIME ? "/torrent-client" : "/torrent-list",
                 isCurrent: pathname === "/torrent-list" || pathname === "/torrent-client",
                 addon: ((activeTorrentCount.downloading + activeTorrentCount.paused) > 0 && serverStatus?.settings?.torrent?.showActiveTorrentCount)
@@ -268,21 +269,21 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
         ...(serverStatus?.debridSettings?.enabled && !!serverStatus?.debridSettings?.provider) ? [{
             id: "debrid",
             iconType: HiOutlineServerStack,
-            name: "Debrid 云端",
+            name: t("navigation.sidebar.debrid"),
             href: "/debrid",
             isCurrent: pathname === "/debrid",
         }] : [],
         ...(!!serverStatus?.settings?.library?.libraryPath) ? [{
             id: "scan-summaries",
             iconType: TbReportSearch,
-            name: "本地扫描报告",
+            name: t("navigation.sidebar.scan_summaries"),
             href: "/scan-summaries",
             isCurrent: pathname === "/scan-summaries",
         }] : [],
         ...(serverStatus?.settings?.library?.torrentProvider !== TORRENT_PROVIDER.NONE && !!serverStatus?.settings?.library?.libraryPath) ? [{
             id: "auto-downloader",
             iconType: LuRss,
-            name: "自动追番下载",
+            name: t("navigation.sidebar.auto_downloader"),
             href: "/auto-downloader",
             isCurrent: pathname === "/auto-downloader",
             addon: autoDownloaderQueueCount > 0 ? <Badge
@@ -392,7 +393,7 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
         return [
             {
                 iconType: BiChevronRight,
-                name: "更多",
+                name: t("navigation.sidebar.more"),
                 subContent: <VerticalMenu
                     items={allHidden}
                     isSidebar
@@ -427,7 +428,7 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
                     ...unpinnedMenuItems,
                     {
                         iconType: LuRefreshCw,
-                        name: "刷新追番数据",
+                        name: t("navigation.sidebar.refresh_data"),
                         onClick: () => {
                             ctx.setOpen(false)
                             if (isRefreshingAC) return
@@ -503,8 +504,8 @@ function SidebarFooter({ isCollapsed, onLogout }: { isCollapsed: boolean, onLogo
 
     // Sign out
     const confirmSignOut = useConfirmationDialog({
-        title: "退出登录",
-        description: "确定要退出登录吗？",
+        title: t("navigation.action.logout"),
+        description: t("navigation.action.logout_confirm"),
         onConfirm: () => {
             onLogout()
         },
@@ -533,7 +534,7 @@ function SidebarFooter({ isCollapsed, onLogout }: { isCollapsed: boolean, onLogo
                     ...serverStatus?.settings?.nakama?.enabled ? [{
                         iconType: MdOutlineConnectWithoutContact,
                         iconClass: "size-6",
-                        name: "同好联动 (Nakama)",
+                        name: t("navigation.sidebar.nakama"),
                         isCurrent: nakamaModalOpen,
                         onClick: () => {
                             ctx.setOpen(false)
@@ -552,7 +553,7 @@ function SidebarFooter({ isCollapsed, onLogout }: { isCollapsed: boolean, onLogo
                     }] : [],
                     {
                         iconType: BiExtension,
-                        name: "扩展中心",
+                        name: t("navigation.sidebar.extensions"),
                         href: "/extensions",
                         isCurrent: pathname.includes("/extensions"),
                         addon: (!!updateData?.length || !!pluginWithIssuesCount)
@@ -566,7 +567,7 @@ function SidebarFooter({ isCollapsed, onLogout }: { isCollapsed: boolean, onLogo
                     },
                     {
                         iconType: IoCloudOfflineOutline,
-                        name: "离线同步",
+                        name: t("navigation.sidebar.offline_sync"),
                         href: "/sync",
                         isCurrent: pathname.includes("/sync"),
                         addon: (syncIsActive)
@@ -580,14 +581,14 @@ function SidebarFooter({ isCollapsed, onLogout }: { isCollapsed: boolean, onLogo
                     },
                     {
                         iconType: LuSettings,
-                        name: "系统设置",
+                        name: t("navigation.sidebar.settings"),
                         href: "/settings",
                         isCurrent: pathname === ("/settings"),
                     },
                     ...(ctx.isBelowBreakpoint ? [
                         {
                             iconType: user?.isSimulated ? FiLogIn : BiLogOut,
-                            name: user?.isSimulated ? "登录账号" : "退出登录",
+                            name: user?.isSimulated ? t("navigation.action.login") : t("navigation.action.logout"),
                             onClick: user?.isSimulated ? () => setLoginModal(true) : confirmSignOut.open,
                         },
                     ] : []),
@@ -610,8 +611,8 @@ function SidebarUser({ isCollapsed, expandedSidebar, onLogout }: { isCollapsed: 
 
     // Sign out
     const confirmSignOut = useConfirmationDialog({
-        title: "Sign out",
-        description: "Are you sure you want to sign out?",
+        title: t("navigation.action.logout"),
+        description: t("navigation.action.logout_confirm"),
         onConfirm: () => {
             onLogout()
         },
@@ -629,7 +630,7 @@ function SidebarUser({ isCollapsed, expandedSidebar, onLogout }: { isCollapsed: 
                         items={[
                             {
                                 iconType: FiLogIn,
-                                name: "Login",
+                                name: t("navigation.action.login"),
                                 onClick: () => openTab(ANILIST_OAUTH_URL),
                             },
                         ]}
@@ -651,16 +652,16 @@ function SidebarUser({ isCollapsed, expandedSidebar, onLogout }: { isCollapsed: 
                     onOpenChange={setDropdownOpen}
                 >
                     {!user.isSimulated ? <DropdownMenuItem onClick={confirmSignOut.open}>
-                        <BiLogOut /> Sign out
+                        <BiLogOut /> {t("navigation.action.logout")}
                     </DropdownMenuItem> : <DropdownMenuItem onClick={() => setLoginModal(true)}>
-                        <BiLogIn /> Log in with AniList
+                        <BiLogIn /> {t("navigation.main_sidebar.login_title")}
                     </DropdownMenuItem>}
                 </DropdownMenu>
             </div>}
 
             <Modal
-                title="Log in with AniList"
-                description="Using an AniList account is recommended."
+                title={t("navigation.main_sidebar.login_title")}
+                description={t("navigation.main_sidebar.login_description")}
                 open={loginModal && user?.isSimulated}
                 onOpenChange={(v) => setLoginModal(v)}
                 overlayClass="bg-opacity-95 bg-gray-950"
@@ -683,12 +684,12 @@ function SidebarUser({ isCollapsed, expandedSidebar, onLogout }: { isCollapsed: 
                             </svg>}
                             intent="white"
                             size="md"
-                        >Get AniList token</Button>
+                        >{t("navigation.main_sidebar.get_token")}</Button>
                     </SeaLink>
 
                     <Form
                         schema={defineSchema(({ z }) => z.object({
-                            token: z.string().min(1, "Token is required"),
+                            token: z.string().min(1, t("common.form.token_required")),
                         }))}
                         onSubmit={data => {
                             setLoggingIn(true)
@@ -699,10 +700,10 @@ function SidebarUser({ isCollapsed, expandedSidebar, onLogout }: { isCollapsed: 
                     >
                         <Field.Textarea
                             name="token"
-                            label="Enter the token"
+                            label={t("navigation.main_sidebar.enter_token")}
                             fieldClass="px-4"
                         />
-                        <Field.Submit showLoadingOverlayOnSuccess loading={loggingIn}>Continue</Field.Submit>
+                        <Field.Submit showLoadingOverlayOnSuccess loading={loggingIn}>{t("navigation.main_sidebar.continue")}</Field.Submit>
                     </Form>
 
                 </div>

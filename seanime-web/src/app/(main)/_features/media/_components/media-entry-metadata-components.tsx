@@ -7,6 +7,7 @@ import { cn } from "@/components/ui/core/styling"
 import { Disclosure, DisclosureContent, DisclosureItem, DisclosureTrigger } from "@/components/ui/disclosure"
 import { Tooltip } from "@/components/ui/tooltip"
 import { getScoreColor } from "@/lib/helpers/score"
+import { t } from "@/lib/i18n"
 import capitalize from "lodash/capitalize"
 import React from "react"
 import { AiOutlineHeart, AiOutlineStar } from "react-icons/ai"
@@ -112,7 +113,7 @@ export function MediaEntryAudienceScore(props: MediaEntryAudienceScoreProps) {
                                 size="sm"
                             />
                         </DisclosureTrigger>}
-                    >Show audience score</Tooltip>
+                    >{t("media.metadata.show_audience_score")}</Tooltip>
                     <DisclosureContent>
                         <Badge
                             data-media-entry-audience-score
@@ -186,7 +187,7 @@ export function AnimeEntryRankings(props: AnimeEntryRankingsProps) {
                             iconClass="text-yellow-500/70 group-hover/badge:text-yellow-400"
                             className="transition-all hover:opacity-100 rounded-full bg-transparent dark:text-[--muted] border-transparent px-0 hover:bg-transparent dark:hover:text-[--foreground]"
                         >
-                            #{String(allTimeHighestRated.rank)} Highest Rated {formatFormat(allTimeHighestRated.format)}
+                            #{String(allTimeHighestRated.rank)} {t("media.rankings.highest_rated")} {formatFormat(allTimeHighestRated.format)}
                         </Badge>
                     </Link>}
                     {seasonHighestRated && <Link
@@ -222,7 +223,7 @@ export function AnimeEntryRankings(props: AnimeEntryRankingsProps) {
                             iconClass="text-[--muted] group-hover/badge:text-pink-400/70"
                             className="transition-all hover:opacity-100 rounded-full bg-transparent dark:text-[--muted] border-transparent px-0 hover:bg-transparent dark:hover:text-[--foreground]"
                         >
-                            #{(String(seasonMostPopular.rank))} Popular {formatFormat(seasonMostPopular.format)} {capitalize(seasonMostPopular.season!)} {seasonMostPopular.year}
+                            #{(String(seasonMostPopular.rank))} {t("media.rankings.popular")} {formatFormat(seasonMostPopular.format)} {capitalize(seasonMostPopular.season!)} {seasonMostPopular.year}
                         </Badge>
                     </Link>}
                 </div>}

@@ -4,6 +4,7 @@ import { imageShimmer } from "@/components/shared/image-helpers"
 import { SeaImage } from "@/components/shared/sea-image"
 import { SeaLink } from "@/components/shared/sea-link"
 import { cn } from "@/components/ui/core/styling"
+import { t } from "@/lib/i18n"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
 import React from "react"
 import { BiSolidHeart } from "react-icons/bi"
@@ -36,7 +37,7 @@ export function MediaEntryCharactersSection(props: RelationsRecommendationsSecti
         <div className="space-y-4 animate-in fade-in-0 duration-200">
             {/*{!isMangaPage && <Separator />}*/}
 
-            <h2 data-media-entry-characters-section-title>Characters</h2>
+            <h2 data-media-entry-characters-section-title>{t("media.section.characters")}</h2>
 
             <div
                 data-media-entry-characters-section-grid
@@ -78,7 +79,7 @@ export function MediaEntryCharactersSection(props: RelationsRecommendationsSecti
                                 {(edge?.node?.image?.large) && <SeaImage
                                     data-media-entry-characters-section-grid-item-image
                                     src={edge?.node?.image?.large || ""}
-                                    alt="episode image"
+                                    alt={t("media.alt.episode_image")}
                                     fill
                                     quality={60}
                                     placeholder={imageShimmer(700, 475)}
@@ -100,7 +101,7 @@ export function MediaEntryCharactersSection(props: RelationsRecommendationsSecti
                                 </SeaLink>
 
                                 {edge?.node?.age && <p data-media-entry-characters-section-grid-item-content-age className="text-sm">
-                                    {edge?.node?.age} years old
+                                    {t("media.characters.years_old", { age: edge?.node?.age })}
                                 </p>}
 
                                 <p data-media-entry-characters-section-grid-item-content-role className="text-[--muted] text-xs">

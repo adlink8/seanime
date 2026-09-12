@@ -4,6 +4,7 @@ import { ConfirmationDialog, useConfirmationDialog } from "@/components/shared/c
 import { AppLayoutStack } from "@/components/ui/app-layout"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
+import { t } from "@/lib/i18n"
 import { atom, useAtom } from "jotai"
 import React from "react"
 import { BiLockAlt, BiLockOpenAlt } from "react-icons/bi"
@@ -23,7 +24,7 @@ export function BulkActionModal() {
         }, {
             onSuccess: () => {
                 setIsOpen(false)
-                toast.success("Files locked")
+                toast.success(t("library.bulk_actions.files_locked"))
             },
         })
     }
@@ -34,7 +35,7 @@ export function BulkActionModal() {
         }, {
             onSuccess: () => {
                 setIsOpen(false)
-                toast.success("Files unlocked")
+                toast.success(t("library.bulk_actions.files_unlocked"))
             },
         })
     }
@@ -50,8 +51,8 @@ export function BulkActionModal() {
     }
 
     const confirmRemoveEmptyDirs = useConfirmationDialog({
-        title: "Remove empty directories",
-        description: "This action will remove all empty directories in the library. Are you sure you want to continue?",
+        title: t("library.bulk_actions.remove_empty_dirs"),
+        description: t("library.bulk_actions.remove_empty_dirs_desc"),
         onConfirm: () => {
             handleRemoveEmptyDirectories()
         },
@@ -63,18 +64,18 @@ export function BulkActionModal() {
             priority: 1,
             items: [
                 {
-                    id: "lock-files", value: "lock", heading: "Library",
+                    id: "lock-files", value: "lock", heading: t("library.command.heading"),
                     render: () => (
-                        <p>Lock all files</p>
+                        <p>{t("library.common.lock_all_files")}</p>
                     ),
                     onSelect: ({ ctx }) => {
                         handleLockFiles()
                     },
                 },
                 {
-                    id: "unlock-files", value: "unlock", heading: "Library",
+                    id: "unlock-files", value: "unlock", heading: t("library.command.heading"),
                     render: () => (
-                        <p>Unlock all files</p>
+                        <p>{t("library.common.unlock_all_files")}</p>
                     ),
                     onSelect: ({ ctx }) => {
                         handleUnlockFiles()
@@ -94,7 +95,7 @@ export function BulkActionModal() {
 
     return (
         <Modal
-            open={isOpen} onOpenChange={() => setIsOpen(false)} title="Bulk actions"
+            open={isOpen} onOpenChange={() => setIsOpen(false)} title={t("library.bulk_actions.title")}
             contentClass="space-y-4"
         >
             <AppLayoutStack spacing="sm">
@@ -107,7 +108,7 @@ export function BulkActionModal() {
                         disabled={isPending || isRemoving}
                         onClick={handleLockFiles}
                     >
-                        Lock all files
+                        {t("library.common.lock_all_files")}
                     </Button>
                     <Button
                         leftIcon={<BiLockOpenAlt className="text-2xl" />}
@@ -116,7 +117,7 @@ export function BulkActionModal() {
                         disabled={isPending || isRemoving}
                         onClick={handleUnlockFiles}
                     >
-                        Unlock all files
+                        {t("library.common.unlock_all_files")}
                     </Button>
                 </div>
                 <Button
@@ -126,7 +127,7 @@ export function BulkActionModal() {
                     loading={isRemoving}
                     onClick={() => confirmRemoveEmptyDirs.open()}
                 >
-                    Remove empty directories
+                    {t("library.bulk_actions.remove_empty_dirs")}
                 </Button>
             </AppLayoutStack>
             <ConfirmationDialog {...confirmRemoveEmptyDirs} />

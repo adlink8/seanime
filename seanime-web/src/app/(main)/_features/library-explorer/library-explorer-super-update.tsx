@@ -5,6 +5,7 @@ import {
     libraryExplorer_superUpdateDrawerOpenAtom,
 } from "@/app/(main)/_features/library-explorer/library-explorer.atoms"
 import { Button } from "@/components/ui/button"
+import { t } from "@/lib/i18n"
 import { useAtom } from "jotai"
 import React from "react"
 import { FaRegEdit } from "react-icons/fa"
@@ -38,7 +39,7 @@ export function LibraryExplorerSuperUpdate(props: LibraryExplorerSuperUpdateProp
                         intent={"white-link"}
                         onClick={handleOpenSuperUpdate}
                     >
-                        Super update
+                        {t("library.explorer.super_update")}
                     </Button>
                 </>
             )}

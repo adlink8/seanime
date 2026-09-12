@@ -20,6 +20,7 @@ import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Tooltip } from "@/components/ui/tooltip"
 import { TORRENT_PROVIDER } from "@/lib/server/settings"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
+import { t } from "@/lib/i18n"
 import { useAtom, useSetAtom } from "jotai/react"
 import React from "react"
 import { BiCollection, BiDotsVerticalRounded, BiFolder } from "react-icons/bi"
@@ -100,10 +101,10 @@ export function HomeToolbar(props: HomeToolbarProps) {
                                     intent={"warning"}
                                     leftIcon={<HiExclamation className="text-2xl" />}
                                 >
-                                    安装所需扩展
+                                    {t("common.action.install_extensions")}
                                 </Button>}
                             >
-                                未安装种子源扩展。
+                                {t("home.toolbar.missing_extension")}
                             </Tooltip>
                         </span>
                     </SeaLink>}
@@ -117,7 +118,7 @@ export function HomeToolbar(props: HomeToolbarProps) {
                                 onClick={() => setHomeView(p => p === "detailed" ? "base" : "detailed")}
                             />}
                         >
-                            {homeView === "base" ? "本地番剧媒体库" : "首页"}
+                            {homeView === "base" ? t("home.item.anime_library.name") : t("navigation.item.home")}
                         </Tooltip>}
 
                         {(!isStreamingOnly && !isNakamaLibrary && hasLibraryPath) && <Tooltip
@@ -131,7 +132,7 @@ export function HomeToolbar(props: HomeToolbarProps) {
                                 className={cn(unmatchedLocalFiles.length > 0 && "animate-pulse")}
                             />}
                         >
-                            媒体库资源管理器
+                            {t("home.toolbar.library_explorer")}
                         </Tooltip>}
 
                         <Tooltip
@@ -141,7 +142,7 @@ export function HomeToolbar(props: HomeToolbarProps) {
                                 icon={<MdOutlineVideoLibrary className="text-2xl" />}
                                 onClick={() => setModalOpen(true)}
                             />}
-                        >播放列表</Tooltip>
+                        >{t("common.action.playlists")}</Tooltip>
                     </>
                 )}
                 {/*Shows up even when there's no local entries*/}
@@ -154,11 +155,11 @@ export function HomeToolbar(props: HomeToolbarProps) {
                             onClick={() => setScannerModalOpen(true)}
                             hideTextOnSmallScreen
                         >
-                            {hasEntries ? "刷新" : "扫描"}
+                            {hasEntries ? t("common.action.refresh") : t("common.action.scan")}
                         </Button>
                     </div>}
                 >
-                    {hasEntries ? "刷新本地番剧" : "扫描本地番剧"}
+                    {hasEntries ? t("common.action.refresh_library") : t("common.action.scan_library")}
                 </Tooltip>}
                 {(!isNakamaLibrary && unmatchedLocalFiles.length > 0) && <Button
                     data-home-toolbar-unmatched-button
@@ -215,7 +216,7 @@ export function HomeToolbar(props: HomeToolbarProps) {
                             }}
                         >
                             <LuSearch />
-                            <span>在媒体库中搜索</span>
+                            <span>{t("home.toolbar.search_in_library")}</span>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
@@ -227,7 +228,7 @@ export function HomeToolbar(props: HomeToolbarProps) {
                             }}
                         >
                             <BiFolder />
-                            <span>打开本地目录</span>
+                            <span>{t("home.toolbar.open_directory")}</span>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
@@ -237,7 +238,7 @@ export function HomeToolbar(props: HomeToolbarProps) {
                             className={cn({ "!text-[--muted]": !hasEntries })}
                         >
                             <BiCollection />
-                            <span>批量操作</span>
+                            <span>{t("common.action.batch_operations")}</span>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
@@ -247,7 +248,7 @@ export function HomeToolbar(props: HomeToolbarProps) {
                             className={cn({ "!text-[--muted]": !hasEntries })}
                         >
                             <TbFileSad />
-                            <span>已忽略文件</span>
+                            <span>{t("home.toolbar.ignored_files")}</span>
                         </DropdownMenuItem>
 
                         <SeaLink href="/scan-summaries">
@@ -256,7 +257,7 @@ export function HomeToolbar(props: HomeToolbarProps) {
                                 // className={cn({ "!text-[--muted]": !hasEntries })}
                             >
                                 <TbReportSearch />
-                                <span>扫描报告</span>
+                                <span>{t("home.toolbar.scan_summaries")}</span>
                             </DropdownMenuItem>
                         </SeaLink>
 

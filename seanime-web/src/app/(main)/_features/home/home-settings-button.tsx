@@ -1,6 +1,7 @@
 import { __home_settingsModalOpen } from "@/app/(main)/_features/home/home-settings-modal"
 import { IconButton } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import { useAtom } from "jotai/react"
 import { atomWithStorage } from "jotai/utils"
 import React from "react"
@@ -55,7 +56,7 @@ export function HomeSettingsButton(props: HomeSettingsButtonProps) {
                     }}
                 />}
             >
-                Home Settings
+                {t("home.settings.title")}
             </Tooltip>
         </>
     )

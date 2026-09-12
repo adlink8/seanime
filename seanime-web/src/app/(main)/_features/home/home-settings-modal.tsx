@@ -15,6 +15,7 @@ import { NumberInput } from "@/components/ui/number-input"
 import { RadioGroup } from "@/components/ui/radio-group"
 import { Select } from "@/components/ui/select"
 import { TextInput } from "@/components/ui/text-input"
+import { t } from "@/lib/i18n"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
 import { DndContext, DragEndEvent } from "@dnd-kit/core"
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
@@ -149,7 +150,7 @@ export function HomeSettingsModal({ emptyLibrary, isNakamaLibrary }: { emptyLibr
         setCurrentItems(newItems)
         updateHomeItems({ items: newItems }, {
             onSuccess: () => {
-                toast.success("Home item added")
+                toast.success(t("home.toast.item_added"))
             },
         })
     }
@@ -159,7 +160,7 @@ export function HomeSettingsModal({ emptyLibrary, isNakamaLibrary }: { emptyLibr
         setCurrentItems(newItems)
         updateHomeItems({ items: newItems }, {
             onSuccess: () => {
-                toast.success("Home item removed")
+                toast.success(t("home.toast.item_removed"))
             },
         })
     }
@@ -173,7 +174,7 @@ export function HomeSettingsModal({ emptyLibrary, isNakamaLibrary }: { emptyLibr
         setCurrentItems(newItems)
         updateHomeItems({ items: newItems }, {
             onSuccess: () => {
-                toast.success("Home layout updated")
+                toast.success(t("home.toast.layout_updated"))
                 setOptionsModalOpen(null)
             },
         })
@@ -196,7 +197,7 @@ export function HomeSettingsModal({ emptyLibrary, isNakamaLibrary }: { emptyLibr
                 onOpenChange={setIsModalOpen}
                 title={<div className="flex items-center gap-2 w-full justify-center">
                     <IoHomeOutline className="size-5" />
-                    Home
+                    {t("navigation.item.home")}
                 </div>}
                 contentClass={cn(
                     "max-w-5xl sm:rounded-3xl",
@@ -218,7 +219,7 @@ export function HomeSettingsModal({ emptyLibrary, isNakamaLibrary }: { emptyLibr
                     <div>
                         <div className="flex items-center gap-2 mb-4">
                             <LuCirclePlay className="size-5" />
-                            <h4 className="text-lg font-semibold">Anime Library</h4>
+                            <h4 className="text-lg font-semibold">{t("home.settings.anime_library")}</h4>
                         </div>
 
                         <RadioGroup
@@ -252,8 +253,8 @@ export function HomeSettingsModal({ emptyLibrary, isNakamaLibrary }: { emptyLibr
                             }}
                             disabled={isSavingSettings || isSavingTorrentstreamSettings || isSavingDebridSettings}
                             options={[
-                                { label: "Local anime only", value: "local" },
-                                { label: "Local anime + Streaming", value: "stream" },
+                                { label: t("home.settings.local_anime_only"), value: "local" },
+                                { label: t("home.settings.local_anime_streaming"), value: "stream" },
                             ]}
 
                             {...{
@@ -285,8 +286,8 @@ export function HomeSettingsModal({ emptyLibrary, isNakamaLibrary }: { emptyLibr
 
                         <p className="text-sm text-[--muted] pt-4">
                             {animeLibraryType === "local"
-                                ? "Only anime in your local library will be displayed"
-                                : "All anime in your currently watching list will be included in the library"}
+                                ? t("home.settings.anime_library_hint_local")
+                                : t("home.settings.anime_library_hint_stream")}
                         </p>
 
 
@@ -300,7 +301,7 @@ export function HomeSettingsModal({ emptyLibrary, isNakamaLibrary }: { emptyLibr
                     >
                         <div className="flex items-center gap-2 mb-4">
                             <LuLayoutPanelLeft className="size-5" />
-                            <h4 className="text-lg font-semibold">Home Layout</h4>
+                            <h4 className="text-lg font-semibold">{t("home.settings.home_layout")}</h4>
                         </div>
 
                         {isLoadingHomeItems ? (
@@ -316,7 +317,7 @@ export function HomeSettingsModal({ emptyLibrary, isNakamaLibrary }: { emptyLibr
                                     <div className="space-y-2 bg-gray-900/30 rounded-xl p-4 border border-gray-800">
                                         {currentItems.length === 0 ? (
                                             <div className="text-center py-8 text-gray-400">
-                                                No items added yet. Add some items below to customize your home screen.
+                                                {t("home.settings.no_items")}
                                             </div>
                                         ) : (
                                             currentItems.map((item, index) => (
@@ -345,12 +346,12 @@ export function HomeSettingsModal({ emptyLibrary, isNakamaLibrary }: { emptyLibr
                     >
                         <div className="flex items-center gap-2 mb-4">
                             <BiPlus className="size-5" />
-                            <h4 className="text-lg font-semibold">Available Items</h4>
+                            <h4 className="text-lg font-semibold">{t("home.settings.available_items")}</h4>
                         </div>
 
                         {availableItems.length === 0 ? (
                             <div className="text-center py-6 text-gray-400">
-                                All available items have been added to your home screen.
+                                {t("home.settings.all_items_added")}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -429,13 +430,13 @@ function SortableHomeItem({ item, onRemove, onEditOptions, isUpdating, index }: 
             <div className="flex-1">
                 <div className="font-medium text-white">{homeItemConfig.name}{!!item.options?.name && `: "${item.options.name}"`}
                     {(item.type === "centered-title" && item.options?.text) && `: "${item.options.text}"`}
-                    {(item.type === "my-lists") && `: ${item.options?.type === "manga" ? "Manga" : "Anime"}`}
+                    {(item.type === "my-lists") && `: ${item.options?.type === "manga" ? t("search.type.manga") : t("search.type.anime")}`}
                 </div>
                 <p className="text-xs text-[--muted] line-clamp-1">
                     {homeItemConfig.description}
                 </p>
                 <div className="text-sm text-gray-400">
-                    {homeItemConfig.kind.map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(", ")}
+                    {homeItemConfig.kind.map(k => k === "header" ? t("home.settings.kind_header") : t("home.settings.kind_row")).join(", ")}
                 </div>
             </div>
 
@@ -494,7 +495,7 @@ function AvailableHomeItem({ id, type, onAdd, isUpdating }: AvailableHomeItemPro
                     {homeItemConfig.description}
                 </p>
                 <div className="text-sm text-gray-400">
-                    {homeItemConfig.kind.map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(", ")}
+                    {homeItemConfig.kind.map(k => k === "header" ? t("home.settings.kind_header") : t("home.settings.kind_row")).join(", ")}
                 </div>
             </div>
 
@@ -505,7 +506,7 @@ function AvailableHomeItem({ id, type, onAdd, isUpdating }: AvailableHomeItemPro
                 disabled={isUpdating}
                 leftIcon={<BiPlus />}
             >
-                Add
+                {t("home.settings.add")}
             </Button>
         </div>
     )
@@ -552,7 +553,7 @@ function HomeItemOptionsModal({ id, item, isOpen, onClose, onSave, isUpdating }:
             title={
                 <div className="flex items-center gap-2">
                     <BiCog className="size-5" />
-                    Configure {homeItemConfig.name}
+                    {t("home.settings.configure_item", { name: homeItemConfig.name })}
                 </div>
             }
             contentClass="max-w-2xl bg-gray-950 bg-opacity-90 firefox:bg-opacity-100 firefox:backdrop-blur-none sm:rounded-3xl"
@@ -560,7 +561,7 @@ function HomeItemOptionsModal({ id, item, isOpen, onClose, onSave, isUpdating }:
         >
             <div className="space-y-6">
                 <div className="text-sm text-gray-400">
-                    Customize the settings for this home item.
+                    {t("home.settings.customize_hint")}
                 </div>
 
                 <div className="space-y-4">
@@ -580,14 +581,14 @@ function HomeItemOptionsModal({ id, item, isOpen, onClose, onSave, isUpdating }:
                         onClick={onClose}
                         disabled={isUpdating}
                     >
-                        Cancel
+                        {t("home.settings.cancel")}
                     </Button>
                     <Button
                         intent="primary"
                         onClick={handleSave}
                         loading={isUpdating}
                     >
-                        Save
+                        {t("home.settings.save")}
                     </Button>
                 </div>
             </div>
@@ -620,7 +621,7 @@ function OptionField({ option, value, onChange }: OptionFieldProps) {
                     <TextInput
                         value={value || ""}
                         onChange={(e) => onChange(e.target.value)}
-                        placeholder={`Enter ${label.toLowerCase()}`}
+                        placeholder={t("home.settings.placeholder_enter", { label: label.toLowerCase() })}
                     />
                 </div>
             )
@@ -646,7 +647,7 @@ function OptionField({ option, value, onChange }: OptionFieldProps) {
                     <Select
                         value={value || ""}
                         onValueChange={onChange}
-                        placeholder={`Select ${label.toLowerCase()}`}
+                        placeholder={t("home.settings.placeholder_select", { label })}
                         options={[
                             ...options,
                         ]}

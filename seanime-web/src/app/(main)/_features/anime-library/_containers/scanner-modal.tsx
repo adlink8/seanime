@@ -11,6 +11,7 @@ import { RadioGroup } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { useBoolean } from "@/hooks/use-disclosure"
+import { t } from "@/lib/i18n"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
@@ -62,9 +63,9 @@ export function ScannerModal() {
             items: [{
                 id: "refresh",
                 value: "refresh",
-                heading: "Library",
+                heading: t("library.command.heading"),
                 render: () => (
-                    <p>Refresh library</p>
+                    <p>{t("library.scanner.refresh_library")}</p>
                 ),
                 onSelect: ({ ctx }) => {
                     ctx.close()
@@ -96,7 +97,7 @@ export function ScannerModal() {
                     // }
                     setOpen(o)
                 }}
-                title="Library Scanner"
+                title={t("library.scanner.title")}
                 titleClass="text-center"
                 contentClass={cn(
                     "space-y-4 max-w-2xl rounded-xl",
@@ -117,24 +118,23 @@ export function ScannerModal() {
 
 
                 {serverStatus?.user?.isSimulated && <div className="border border-dashed rounded-md py-2 px-4 !mt-5">
-                    Using this feature without an AniList account is not recommended if you have a large library, as it may lead to rate limits and
-                    slower scanning. Please consider using an account for a better experience.
+                    {t("library.scanner.simulated_warning")}
                 </div>}
 
                 <div className="space-y-4" data-scanner-modal-content>
 
                     <AppLayoutStack className="space-y-2">
-                        <h5 className="text-[--muted]">Local files</h5>
+                        <h5 className="text-[--muted]">{t("library.scanner.local_files")}</h5>
                         <Switch
                             side="right"
-                            label="Skip locked files"
+                            label={t("library.scanner.skip_locked_files")}
                             value={skipLockedFiles.active}
                             onValueChange={v => skipLockedFiles.set(v as boolean)}
                             // size="lg"
                         />
                         <Switch
                             side="right"
-                            label="Skip ignored files"
+                            label={t("library.scanner.skip_ignored_files")}
                             value={skipIgnoredFiles.active}
                             onValueChange={v => skipIgnoredFiles.set(v as boolean)}
                             // size="lg"
@@ -143,12 +143,12 @@ export function ScannerModal() {
                         <Separator />
 
                         <AppLayoutStack className="space-y-2">
-                            <h5 className="text-[--muted]">Matching data</h5>
+                            <h5 className="text-[--muted]">{t("library.scanner.matching_data")}</h5>
                             <Switch
                                 side="right"
-                                label="My AniList Collection only"
-                                moreHelp="This is faster but generally less accurate if your collection does not contain all anime in the library."
-                                help={anilistDataOnly.active ? "Matches local files against your AniList collection." : ""}
+                                label={t("library.scanner.anilist_only")}
+                                moreHelp={t("library.scanner.anilist_only_more_help")}
+                                help={anilistDataOnly.active ? t("library.scanner.anilist_only_help") : ""}
                                 value={anilistDataOnly.active}
                                 onValueChange={v => anilistDataOnly.set(v as boolean)}
                                 // className="data-[state=checked]:bg-amber-700 dark:data-[state=checked]:bg-amber-700"
@@ -157,21 +157,19 @@ export function ScannerModal() {
                                 disabled={!userMedia?.length}
                             />
                             {!anilistDataOnly.active && <RadioGroup
-                                label="Enhanced matching method"
+                                label={t("library.scanner.enhanced_method")}
                                 options={[
-                                    { value: "database", label: "Use Anime Offline Database" },
-                                    { value: "anilist", label: "Use AniList API" },
+                                    { value: "database", label: t("library.scanner.use_offline_db") },
+                                    { value: "anilist", label: t("library.scanner.use_anilist_api") },
                                 ]}
                                 size="lg"
                                 stackClass="space-y-2 py-1"
                                 value={enhanceWithOfflineDatabase.active ? "database" : "anilist"}
                                 onValueChange={v => enhanceWithOfflineDatabase.set(v === "database")}
                                 help={enhanceWithOfflineDatabase.active
-                                    ? <span>Matches local files against the entire AniList catalog. Scanning will be slower.</span>
-                                    : <span><span className="text-[--orange]">Slower for large libraries</span>. Seanime will send an API request for
-                                                                                                               each anime title found in the library,
-                                                                                                               which may lead to rate limits and
-                                                                                                               slower scanning.</span>}
+                                    ? <span>{t("library.scanner.enhanced_help")}</span>
+                                    : <span><span className="text-[--orange]">{t("library.scanner.slower_for_large")}</span>.
+                                        {t("library.scanner.enhanced_more_help")}</span>}
                             />}
                         </AppLayoutStack>
 
@@ -185,7 +183,7 @@ export function ScannerModal() {
                     className="w-full"
                     disabled={!serverStatus?.settings?.library?.libraryPath}
                 >
-                    Scan
+                    {t("library.scanner.scan")}
                 </Button>
             </Modal>
         </>

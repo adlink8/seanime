@@ -10,6 +10,7 @@ import { SeaLink } from "@/components/shared/sea-link"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/components/ui/core/styling"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import { getImageUrl } from "@/lib/server/assets"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
 import { __isElectronDesktop__ } from "@/types/constants"
@@ -394,7 +395,7 @@ export function AnimeEntryCardNextAiring(props: AnimeEntryCardNextAiringProps) {
             <div data-anime-entry-card-next-airing-container className="flex gap-1 items-center justify-center">
                 {/*<p className="text-xs min-[2000px]:text-md">Next episode:</p>*/}
                 <p data-anime-entry-card-next-airing className="text-justify font-normal text-xs min-[2000px]:text-md">
-                    Episode <span className="font-semibold">{nextAiring?.episode}</span> {formatDistanceToNow(addSeconds(new Date(),
+                    {t("media.card.episode_prefix")}<span className="font-semibold">{nextAiring?.episode}</span>{t("media.card.episode_suffix")} {formatDistanceToNow(addSeconds(new Date(),
                     nextAiring?.timeUntilAiring), { addSuffix: true })}
                     {/*<Badge*/}
                     {/*    size="sm"*/}
@@ -655,7 +656,7 @@ export const MediaEntryCardHoverPopupBanner = memo(({
                     <Tooltip
                         trigger={<Badge intent={status === "RELEASING" ? "primary-solid" : "zinc-solid"} size="lg"><RiSignalTowerLine /></Badge>}
                     >
-                        {status === "RELEASING" ? "Releasing" : "Not yet released"}
+                        {status === "RELEASING" ? t("media.status.releasing") : t("media.status.not_yet_released")}
                     </Tooltip>
                 </div>}
 

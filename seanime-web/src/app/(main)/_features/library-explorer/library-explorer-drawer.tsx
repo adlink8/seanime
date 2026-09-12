@@ -4,6 +4,7 @@ import { LibraryExplorer } from "@/app/(main)/_features/library-explorer/library
 import { libraryExplorer_drawerOpenAtom } from "@/app/(main)/_features/library-explorer/library-explorer.atoms"
 import { cn } from "@/components/ui/core/styling"
 import { Vaul, VaulContent } from "@/components/vaul"
+import { t } from "@/lib/i18n"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
 import { ScopeProvider } from "jotai-scope"
 import { useAtom } from "jotai/react"
@@ -31,7 +32,7 @@ export function LibraryExplorerDrawer(props: {}) {
                 </ScopeProvider>
                 <div className="block lg:hidden">
                     <p className="text-center text-white text-lg font-semibold py-4">
-                        Library explorer can only be rendered on larger screens.
+                        {t("library.explorer.small_screen_notice")}
                     </p>
                 </div>
             </VaulContent>

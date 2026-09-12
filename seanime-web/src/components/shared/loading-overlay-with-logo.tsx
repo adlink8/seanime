@@ -2,6 +2,7 @@ import { GradientBackground } from "@/components/shared/gradient-background"
 import { TextGenerateEffect } from "@/components/shared/text-generate-effect"
 import { Button } from "@/components/ui/button"
 import { LoadingOverlay } from "@/components/ui/loading-spinner"
+import { t } from "@/lib/i18n"
 import { __isDesktop__ } from "@/types/constants"
 import { SeaImage } from "@/components/shared/sea-image"
 import React from "react"
@@ -10,7 +11,7 @@ export function LoadingOverlayWithLogo({ refetch, title }: { refetch?: () => voi
     return <LoadingOverlay showSpinner={false}>
         <SeaImage
             src="/seanime-logo.png"
-            alt="正在加载..."
+            alt={t("common.loading.alt")}
             priority
             width={100}
             height={100}
@@ -18,7 +19,7 @@ export function LoadingOverlayWithLogo({ refetch, title }: { refetch?: () => voi
         />
         <GradientBackground />
         {/*<div className="absolute inset-0 -z-10 h-full w-full items-center px-5 py-24 [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] opacity-10"></div>*/}
-        <TextGenerateEffect className="text-lg mt-2 text-[--muted] animate-pulse z-[1]" words={title ?? "正 在 加 载 中 . . ."} />
+        <TextGenerateEffect className="text-lg mt-2 text-[--muted] animate-pulse z-[1]" words={title ?? t("common.loading.default")} />
 
         {(__isDesktop__ && !!refetch) && (
             <Button
@@ -26,7 +27,7 @@ export function LoadingOverlayWithLogo({ refetch, title }: { refetch?: () => voi
                 className="mt-4 z-[1]"
                 intent="gray-outline"
                 size="sm"
-            >重新加载</Button>
+            >{t("common.action.reload")}</Button>
         )}
     </LoadingOverlay>
 }

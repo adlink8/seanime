@@ -28,6 +28,7 @@ import { cn } from "@/components/ui/core/styling"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { Skeleton } from "@/components/ui/skeleton"
+import { t } from "@/lib/i18n"
 import { usePathname } from "@/lib/navigation"
 import { getImageUrl } from "@/lib/server/assets"
 import { TORRENT_CLIENT } from "@/lib/server/settings"
@@ -163,7 +164,7 @@ function Content({ entry, entryLoading, detailsLoading, details, type }: {
                 >
                     {(!!bannerImage) && <SeaImage
                         src={getImageUrl(bannerImage || "")}
-                        alt="banner image"
+                        alt={t("media.alt.banner_image")}
                         fill
                         quality={100}
                         priority
@@ -260,14 +261,14 @@ function Content({ entry, entryLoading, detailsLoading, details, type }: {
 
                         <SeaLink href={type === "anime" ? `/entry?id=${media?.id}` : `/manga/entry?id=${media?.id}`}>
                             <Button className="px-0" intent="gray-link">
-                                Open page
+                                {t("media.action.open_page")}
                             </Button>
                         </SeaLink>
 
                         {type === "anime" && !!(entry?.media as AL_BaseAnime)?.trailer?.id && <TrailerModal
                             trailerId={(entry?.media as AL_BaseAnime)?.trailer?.id} trigger={
                             <Button intent="gray-link" className="px-0">
-                                Trailer
+                                {t("media.action.trailer")}
                             </Button>}
                         />}
 

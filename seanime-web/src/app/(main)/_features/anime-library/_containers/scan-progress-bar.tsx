@@ -5,6 +5,7 @@ import { PageWrapper } from "@/components/shared/page-wrapper"
 import { Card, CardDescription, CardHeader } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/loading-spinner"
 import { ProgressBar } from "@/components/ui/progress-bar"
+import { t } from "@/lib/i18n"
 import { WSEvents } from "@/lib/server/ws-events"
 import { useAtom } from "jotai/react"
 import React, { useState } from "react"
@@ -14,12 +15,12 @@ export function ScanProgressBar() {
     const [isScanning] = useAtom(__scanner_isScanningAtom)
 
     const [progress, setProgress] = useState(0)
-    const [status, setStatus] = useState("Scanning...")
+    const [status, setStatus] = useState(t("library.scanner.scanning"))
 
     React.useEffect(() => {
         if (!isScanning) {
             setProgress(0)
-            setStatus("Scanning...")
+            setStatus(t("library.scanner.scanning"))
         }
     }, [isScanning])
 
