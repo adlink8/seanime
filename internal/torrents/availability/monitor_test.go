@@ -3,8 +3,8 @@ package availability
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/testmocks"
 	"sync"
 	"testing"
@@ -22,7 +22,7 @@ type testSearcher struct {
 	release   chan struct{}
 }
 
-func (s *testSearcher) search(ctx context.Context, _ string, _ *anilist.BaseAnime, _ int) (bool, error) {
+func (s *testSearcher) search(ctx context.Context, _ string, _ *media.Anime, _ int) (bool, error) {
 	s.mu.Lock()
 	s.calls++
 	available := s.available
@@ -199,9 +199,9 @@ func TestWithEpisodesUsesEndDateForFinale(t *testing.T) {
 	episode := newTestEpisode(now, 12)
 	episode.EpisodeMetadata.AirDate = ""
 	episode.BaseAnime.NextAiringEpisode = nil
-	episode.BaseAnime.Status = new(anilist.MediaStatusFinished)
+	episode.BaseAnime.Status = new(media.MediaStatusFinished)
 	episode.BaseAnime.Episodes = new(12)
-	episode.BaseAnime.EndDate = &anilist.BaseAnime_EndDate{
+	episode.BaseAnime.EndDate = &media.Anime_EndDate{
 		Year:  new(now.Year()),
 		Month: new(int(now.Month())),
 		Day:   new(now.Day()),
@@ -220,7 +220,7 @@ func TestWithEpisodesDoesNotUseEndDateBeforeFinale(t *testing.T) {
 	episode.EpisodeMetadata.AirDate = ""
 	episode.BaseAnime.NextAiringEpisode = nil
 	episode.BaseAnime.Episodes = new(12)
-	episode.BaseAnime.EndDate = &anilist.BaseAnime_EndDate{
+	episode.BaseAnime.EndDate = &media.Anime_EndDate{
 		Year:  new(now.Year()),
 		Month: new(int(now.Month())),
 		Day:   new(now.Day()),
@@ -260,11 +260,11 @@ func waitForSignal(t *testing.T, ch <-chan struct{}) {
 }
 
 func newTestEpisode(airedAt time.Time, episodeNumber int) *anime.Episode {
-	media := testmocks.NewBaseAnime(100, "Example Show")
-	media.Status = new(anilist.MediaStatusReleasing)
-	media.NextAiringEpisode = new(anilist.BaseAnime_NextAiringEpisode)
+	anime0 := testmocks.NewBaseAnime(100, "Example Show")
+	anime0.Status = new(media.MediaStatusReleasing)
+	anime0.NextAiringEpisode = new(media.Anime_NextAiringEpisode)
 	return &anime.Episode{
-		BaseAnime:      media,
+		BaseAnime:      anime0,
 		EpisodeNumber:  episodeNumber,
 		ProgressNumber: episodeNumber,
 		EpisodeMetadata: &anime.EpisodeMetadata{

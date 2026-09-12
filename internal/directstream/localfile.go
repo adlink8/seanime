@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mkvparser"
 	"seanime/internal/player"
 	"seanime/internal/util"
@@ -325,7 +325,7 @@ func (m *Manager) PlayLocalFile(ctx context.Context, opts PlayLocalFileOptions) 
 	}
 
 	mId := lf.MediaId
-	var media *anilist.BaseAnime
+	var media *media.Anime
 	listEntry, ok := animeCollection.GetListEntryFromAnimeId(mId)
 	if ok {
 		media = listEntry.Media

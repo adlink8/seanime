@@ -3,10 +3,10 @@ package nakama
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	debrid_client "seanime/internal/debrid/client"
 	"seanime/internal/events"
 	"seanime/internal/library/playbackmanager"
+	"seanime/internal/media"
 	"seanime/internal/mediaplayers/mediaplayer"
 	"seanime/internal/player"
 	"seanime/internal/util"
@@ -215,7 +215,7 @@ type hostPlaybackHandleStatusOptions struct {
 	mediaId            int
 	episodeNumber      int
 	aniDbEpisode       string
-	media              *anilist.BaseAnime
+	media              *media.Anime
 	localFilePath      string
 	onlinestreamParams *player.OnlinestreamParams
 	paused             bool

@@ -1,9 +1,9 @@
 package local
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
+	"seanime/internal/media"
 	"seanime/internal/util/result"
 
 	"github.com/pkg/errors"
@@ -17,7 +17,7 @@ type OfflineMetadataProvider struct {
 }
 
 type OfflineAnimeMetadataWrapper struct {
-	anime    *anilist.BaseAnime
+	anime    *media.Anime
 	metadata *metadata.AnimeMetadata
 }
 
@@ -87,7 +87,7 @@ func (mp *OfflineMetadataProvider) GetCache() *result.BoundedCache[string, *meta
 	return mp.animeMetadataCache
 }
 
-func (mp *OfflineMetadataProvider) GetAnimeMetadataWrapper(anime *anilist.BaseAnime, metadata *metadata.AnimeMetadata) metadata_provider.AnimeMetadataWrapper {
+func (mp *OfflineMetadataProvider) GetAnimeMetadataWrapper(anime *media.Anime, metadata *metadata.AnimeMetadata) metadata_provider.AnimeMetadataWrapper {
 	return &OfflineAnimeMetadataWrapper{
 		anime:    anime,
 		metadata: metadata,

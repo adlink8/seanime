@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/customsource"
 	debrid_client "seanime/internal/debrid/client"
 	"seanime/internal/events"
+	"seanime/internal/media"
 	"seanime/internal/player"
 	"seanime/internal/torrentstream"
 	"strings"
@@ -191,7 +191,7 @@ type WatchPartySessionMediaInfo struct {
 	AniDBEpisode  string               `json:"aniDbEpisode"`
 	StreamType    WatchPartyStreamType `json:"streamType"`
 	LocalFilePath string               `json:"localFilePath"` // Path to local file if StreamType is file
-	Media         *anilist.BaseAnime   `json:"media,omitempty"`
+	Media         *media.Anime         `json:"media,omitempty"`
 	// OnlinestreamParams used by peers to start the same stream
 	OnlinestreamParams *player.OnlinestreamParams `json:"onlinestreamParams,omitempty"`
 	// OnlinestreamParams used by peers to start the same stream
@@ -266,7 +266,7 @@ type (
 		Filepath            string                            `json:"filepath"`
 		StreamType          WatchPartyStreamType              `json:"streamType"`
 		LocalFilePath       string                            `json:"localFilePath,omitempty"`
-		Media               *anilist.BaseAnime                `json:"media,omitempty"`
+		Media               *media.Anime                      `json:"media,omitempty"`
 		TorrentStreamParams *torrentstream.StartStreamOptions `json:"torrentStreamParams,omitempty"`
 		DebridStreamParams  *debrid_client.StartStreamOptions `json:"debridStreamParams,omitempty"`
 		OnlinestreamParams  *player.OnlinestreamParams        `json:"onlinestreamParams,omitempty"`
@@ -491,7 +491,7 @@ func (mi *WatchPartySessionMediaInfo) Equals(other *WatchPartySessionMediaInfo) 
 		mi.LocalFilePath == other.LocalFilePath
 }
 
-func (wpm *WatchPartyManager) getSessionMedia(ctx context.Context, info *WatchPartySessionMediaInfo) (*anilist.BaseAnime, error) {
+func (wpm *WatchPartyManager) getSessionMedia(ctx context.Context, info *WatchPartySessionMediaInfo) (*media.Anime, error) {
 	if info == nil {
 		return nil, errors.New("missing media info")
 	}
@@ -504,7 +504,7 @@ func (wpm *WatchPartyManager) getSessionMedia(ctx context.Context, info *WatchPa
 	return wpm.manager.platformRef.Get().GetAnime(ctx, info.MediaId)
 }
 
-func (m *Manager) currentPlaybackMedia() (*anilist.BaseAnime, bool) {
+func (m *Manager) currentPlaybackMedia() (*media.Anime, bool) {
 	if m == nil {
 		return nil, false
 	}
@@ -589,7 +589,7 @@ func getExtensionIdFromSiteUrl(siteUrl *string) (string, bool) {
 	return parts[0], true
 }
 
-func (wpm *WatchPartyManager) getLocalMediaIdOfCustomSource(mediaId int, media *anilist.BaseAnime) int {
+func (wpm *WatchPartyManager) getLocalMediaIdOfCustomSource(mediaId int, media *media.Anime) int {
 	if media == nil || media.SiteURL == nil {
 		return mediaId
 	}

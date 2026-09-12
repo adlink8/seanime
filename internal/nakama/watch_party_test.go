@@ -2,9 +2,9 @@ package nakama
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/customsource"
 	"seanime/internal/extension"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/testmocks"
 	"seanime/internal/util"
@@ -71,7 +71,7 @@ func TestWatchPartyCustomSourceTranslation(t *testing.T) {
 
 	// Peer media URL contains "ext_custom_source_demo-ext"
 	siteURL := "ext_custom_source_demo-ext|END|https://example.com/anime/789"
-	media := &anilist.BaseAnime{
+	media := &media.Anime{
 		ID:      peerMediaId,
 		SiteURL: &siteURL,
 	}

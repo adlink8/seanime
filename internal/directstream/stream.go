@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mkvparser"
 	"seanime/internal/player"
 	"seanime/internal/util/result"
@@ -32,7 +32,7 @@ type Stream interface {
 	// ClientId returns the client ID of the current stream.
 	ClientId() string
 	// Media returns the media of the current stream.
-	Media() *anilist.BaseAnime
+	Media() *media.Anime
 	// Episode returns the episode of the current stream.
 	Episode() *anime.Episode
 	// ListEntryData returns the list entry data for the current stream.
@@ -601,7 +601,7 @@ type BaseStream struct {
 	contentType            string
 	contentTypeOnce        sync.Once
 	episode                *anime.Episode
-	media                  *anilist.BaseAnime
+	media                  *media.Anime
 	listEntryData          *anime.EntryListData
 	episodeCollection      *anime.EpisodeCollection
 	playbackInfo           *player.PlaybackInfo
@@ -648,7 +648,7 @@ func (s *BaseStream) Type() player.PlaybackType {
 	return ""
 }
 
-func (s *BaseStream) Media() *anilist.BaseAnime {
+func (s *BaseStream) Media() *media.Anime {
 	return s.media
 }
 

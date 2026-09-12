@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 )
@@ -18,7 +18,7 @@ func TestNewAnalyzerInitializesFiles(t *testing.T) {
 		filepath.Join(root, "Season 1", "[Seanime] Example Show - 01.mkv"),
 		filepath.Join(root, "Season 1", "[Seanime] Example Show - 02.mkv"),
 	}
-	media := &anilist.CompleteAnime{ID: 42}
+	media := &media.CompleteAnime{ID: 42}
 
 	analyzer := NewAnalyzer(&NewAnalyzerOptions{
 		Filepaths:   paths,
@@ -41,7 +41,7 @@ func TestNewAnalyzerInitializesFiles(t *testing.T) {
 func TestAnalyzeTorrentFilesReturnsErrorWhenPlatformRefAbsent(t *testing.T) {
 	analyzer := NewAnalyzer(&NewAnalyzerOptions{
 		Filepaths: []string{filepath.Join(t.TempDir(), "[Seanime] Example Show - 01.mkv")},
-		Media:     &anilist.CompleteAnime{ID: 42},
+		Media:     &media.CompleteAnime{ID: 42},
 	})
 
 	analysis, err := analyzer.AnalyzeTorrentFiles()
@@ -102,7 +102,7 @@ func newAnalysisFixture(t *testing.T) (*Analysis, []*File) {
 
 	return &Analysis{
 		files: files,
-		media: &anilist.CompleteAnime{ID: 42},
+		media: &media.CompleteAnime{ID: 42},
 	}, files
 }
 

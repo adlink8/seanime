@@ -1,10 +1,10 @@
 package torrent_client_test
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/extension"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/testmocks"
 	"seanime/internal/torrent_clients/torrent_client"
@@ -66,8 +66,8 @@ func testTorrent(providerID string) *hibiketorrent.AnimeTorrent {
 	}
 }
 
-func mediaWithEpisodes(count int) *anilist.CompleteAnime {
-	return &anilist.CompleteAnime{Episodes: &count}
+func mediaWithEpisodes(count int) *media.CompleteAnime {
+	return &media.CompleteAnime{Episodes: &count}
 }
 
 type stubAnimeProvider struct{}

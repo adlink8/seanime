@@ -57,6 +57,9 @@ type MappingService interface {
 	ResolveBangumiToAniDB(bangumiID int, names NameSet) (aniDBID int, ok bool)
 	// QueueUnresolved 将无法解析的条目加入待映射队列（幂等）。
 	QueueUnresolved(bangumiID int, names NameSet)
+	// ResolveMalToAniDB 将 MAL ID 直接解析为 AniDB ID（animap 数据自带双 ID）。
+	// ok=false 表示该 MAL ID 不在数据集中。
+	ResolveMalToAniDB(malID int) (aniDBID int, ok bool)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -74,6 +77,7 @@ type titleNode struct {
 // AnimapResolver 基于 animap 数据的 MappingService 实现。
 type AnimapResolver struct {
 	index      map[string]*titleNode // 归一化标题 -> 索引节点
+	malIndex   map[int]int           // mal ID -> anidb ID（反向查找用）
 	similarity SimilarityFunc        // 可注入的相似度函数
 	queue      Queue                 // 待映射队列
 	resolved   map[int]int           // bangumiID -> anidbID 解析缓存
@@ -114,6 +118,7 @@ func WithQueue(q Queue) ResolverOption {
 func NewAnimapResolver(entries []animap.Anime, opts ...ResolverOption) *AnimapResolver {
 	r := &AnimapResolver{
 		index:      BuildTitleIndex(entries),
+		malIndex:   BuildMalIndex(entries),
 		similarity: Similarity,
 		resolved:   make(map[int]int),
 	}
@@ -122,6 +127,7 @@ func NewAnimapResolver(entries []animap.Anime, opts ...ResolverOption) *AnimapRe
 	}
 	return r
 }
+
 
 // BuildTitleIndex 构建「归一化标题 → anidb ID」反向索引。
 //
@@ -166,8 +172,100 @@ func BuildTitleIndex(entries []animap.Anime) map[string]*titleNode {
 	return index
 }
 
-// ResolveBangumiToAniDB 实现 MappingService。
+// BuildMalIndex 构建「MAL ID → AniDB ID」直查索引（additive，Wave B 反向查找用）。
+// animap 条目的 Mappings 同时携带 anidb_id 与 mal_id，属同一作品的双 ID，
+// 可直接建索引；同一 MAL ID 命中多个不同 AniDB ID 时保守丢弃（宁可缺映射）。
+func BuildMalIndex(entries []animap.Anime) map[int]int {
+	index := make(map[int]int)
+	for _, e := range entries {
+		if e.Mappings == nil || e.Mappings.MalID == 0 || e.Mappings.AnidbID == 0 {
+			continue
+		}
+		if existing, ok := index[e.Mappings.MalID]; ok && existing != e.Mappings.AnidbID {
+			continue // 冲突：保留首个，其余丢弃
+		}
+		index[e.Mappings.MalID] = e.Mappings.AnidbID
+	}
+	return index
+}
+
+// ResolveMalToAniDB 实现 MappingService 的 MAL → AniDB 直查。
+func (r *AnimapResolver) ResolveMalToAniDB(malID int) (int, bool) {
+	if malID <= 0 {
+		return 0, false
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	id, ok := r.malIndex[malID]
+	return id, ok
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// 反向 ID 索引（anidb/mal → bangumi）
+
+// ReverseIDIndex 反向 ID 索引（additive，Wave B 平台层 GetAnimeByMalID 用）。
 //
+// 背景：animap 数据集不含 bangumi ID，无法离线直查 anidb/mal → bangumi。
+// 本索引采用「机会式」填充策略：平台层每次通过正向解析（名称 → anidb）
+// 或其他渠道确认了 bangumi ↔ anidb/mal 的对应关系后调用 Put 记录，
+// 后续 GetAnimeByMalID 先查本索引，命中即零成本直查。
+//
+// 未命中时调用方应自行走降级路径（如入队等待 Phase 4 清偿工具回填），
+// 而不是猜测——错误映射比缺映射危害大。
+type ReverseIDIndex struct {
+	mu             sync.RWMutex
+	anidbToBangumi map[int]int
+	malToBangumi   map[int]int
+}
+
+// NewReverseIDIndex 返回空的反向索引。
+func NewReverseIDIndex() *ReverseIDIndex {
+	return &ReverseIDIndex{
+		anidbToBangumi: make(map[int]int),
+		malToBangumi:   make(map[int]int),
+	}
+}
+
+// Put 记录一组已确认的 ID 对应关系（任意 ID 为 0 时忽略该方向）。
+// 后写覆盖先写（以最近确认为准）。
+func (r *ReverseIDIndex) Put(bangumiID, aniDBID, malID int) {
+	if bangumiID <= 0 {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if aniDBID > 0 {
+		r.anidbToBangumi[aniDBID] = bangumiID
+	}
+	if malID > 0 {
+		r.malToBangumi[malID] = bangumiID
+	}
+}
+
+// BangumiByAniDB 按 AniDB ID 查 bangumi ID。
+func (r *ReverseIDIndex) BangumiByAniDB(aniDBID int) (int, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	id, ok := r.anidbToBangumi[aniDBID]
+	return id, ok
+}
+
+// BangumiByMal 按 MAL ID 查 bangumi ID。
+func (r *ReverseIDIndex) BangumiByMal(malID int) (int, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	id, ok := r.malToBangumi[malID]
+	return id, ok
+}
+
+// Len 返回已记录的 bangumi ID 数（诊断用）。
+func (r *ReverseIDIndex) Len() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return len(r.anidbToBangumi)
+}
+
+// ResolveBangumiToAniDB 实现 MappingService。
 // 解析策略（保守优先）：
 //  1. 已缓存直接返回（同一条目多次解析零开销）；
 //  2. 精确匹配：任一名称归一化后命中索引 → 返回（冲突节点拒绝）；

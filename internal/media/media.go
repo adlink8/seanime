@@ -14,24 +14,27 @@ import (
 	"time"
 )
 
-// MediaType 条目类型。
+// MediaKind 条目类型。
+// 命名说明：Phase 1 原名 MediaType，Wave A 镜像 anilist 领域类型时
+// 与 AniList 枚举 MediaType("ANIME"/"MANGA") 撞名，故改名为 MediaKind。
+// JSON 值（"anime"/"manga"/…）不变。
 // ASMR 类目在 Bangumi 无独立 type（归书籍分区），asmr 锚点使用 asmr.one 的 workID，
 // 由 Media.ASMRWorkID 承载，Phase 2/3 编排层负责填充。
-type MediaType string
+type MediaKind string
 
 const (
-	MediaTypeAnime   MediaType = "anime"
-	MediaTypeManga   MediaType = "manga"
-	MediaTypeNovel   MediaType = "novel"
-	MediaTypeASMR    MediaType = "asmr"
-	MediaTypeUnknown MediaType = ""
+	MediaKindAnime   MediaKind = "anime"
+	MediaKindManga   MediaKind = "manga"
+	MediaKindNovel   MediaKind = "novel"
+	MediaKindASMR    MediaKind = "asmr"
+	MediaKindUnknown MediaKind = ""
 )
 
 // Media 是 Seanime 的统一领域模型。
 // ID 字段为 Bangumi subject ID（项目换锚后的主锚点）。
 type Media struct {
 	ID   int       `json:"id"`   // Bangumi subject ID
-	Type MediaType `json:"type"` // 条目类型
+	Type MediaKind `json:"type"` // 条目类型
 
 	Name   string `json:"name"`    // 原名（日文）
 	NameCN string `json:"nameCN"`  // 中文名
@@ -61,17 +64,18 @@ type Media struct {
 // Phase 2 编排层可直接 json.Unmarshal 进该结构，或编写薄适配器，
 // 从而保持本包对 internal/api/bangumi 零依赖。
 type Subject struct {
-	ID      int            `json:"id"`               // subject ID
-	Type    int            `json:"type"`             // 1书籍/2动画/3音乐/4游戏/6三次元
-	Name    string         `json:"name"`             // 原名（日文）
-	NameCN  string         `json:"name_cn"`          // 中文名
-	Summary string         `json:"summary"`          // 简介（中文）
-	Date    string         `json:"date,omitempty"`   // 放送/出版日期，如 2009-04-03
-	Eps     int            `json:"eps"`              // 话数
-	NSFW    bool           `json:"nsfw"`             // 是否 R18（查 R18 内容必须带 token）
-	Images  *SubjectImages `json:"images,omitempty"` // 封面图（5 尺寸）
-	Tags    []SubjectTag   `json:"tags,omitempty"`   // 标签
-	Rating  *SubjectRating `json:"rating,omitempty"` // 评分
+	ID       int            `json:"id"`               // subject ID
+	Type     int            `json:"type"`             // 1书籍/2动画/3音乐/4游戏/6三次元
+	Name     string         `json:"name"`             // 原名（日文）
+	NameCN   string         `json:"name_cn"`          // 中文名
+	Summary  string         `json:"summary"`          // 简介（中文）
+	Date     string         `json:"date,omitempty"`   // 放送/出版日期，如 2009-04-03
+	Platform string         `json:"platform,omitempty"` // 放送/出版平台（TV / 剧场版 / 漫画 / 小说…，Wave A 新增）
+	Eps      int            `json:"eps"`              // 话数
+	NSFW     bool           `json:"nsfw"`             // 是否 R18（查 R18 内容必须带 token）
+	Images   *SubjectImages `json:"images,omitempty"` // 封面图（5 尺寸）
+	Tags     []SubjectTag   `json:"tags,omitempty"`   // 标签
+	Rating   *SubjectRating `json:"rating,omitempty"` // 评分
 }
 
 type SubjectImages struct {
@@ -142,7 +146,7 @@ func FromSubject(s *Subject) *Media {
 	// ASMR 标签嗅探：命中则标记为音声类目（Phase 2 实测确认 tag 方案后保留/调整）
 	for _, t := range m.Tags {
 		if t == "ASMR" {
-			m.Type = MediaTypeASMR
+			m.Type = MediaKindASMR
 			break
 		}
 	}
@@ -154,14 +158,14 @@ func FromSubject(s *Subject) *Media {
 // 1书籍 / 2动画 / 3音乐 / 4游戏 / 6三次元（无 5）。
 // 书籍分区下混有漫画/轻小说/音声，此处保守地默认归为 novel，
 // 细分（manga/asmr）交由编排层根据 subType/tags 修正。
-func mediaTypeFromBangumi(t int) MediaType {
+func mediaTypeFromBangumi(t int) MediaKind {
 	switch t {
 	case 1:
-		return MediaTypeNovel
+		return MediaKindNovel
 	case 2:
-		return MediaTypeAnime
+		return MediaKindAnime
 	default:
-		return MediaTypeUnknown
+		return MediaKindUnknown
 	}
 }
 

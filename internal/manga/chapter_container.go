@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"seanime/internal/api/anilist"
 	"seanime/internal/extension"
 	hibikemanga "seanime/internal/extension/hibike/manga"
 	"seanime/internal/hook"
 	manga_providers "seanime/internal/manga/providers"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/comparison"
 	"seanime/internal/util/limiter"
@@ -264,7 +264,7 @@ func (r *Repository) GetMangaChapterContainer(opts *GetMangaChapterContainerOpti
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // RefreshChapterContainers deletes all cached chapter containers and refetches them based on the selected provider map.
-func (r *Repository) RefreshChapterContainers(mangaCollection *anilist.MangaCollection, selectedProviderMap map[int]string) (err error) {
+func (r *Repository) RefreshChapterContainers(mangaCollection *media.MangaCollection, selectedProviderMap map[int]string) (err error) {
 	defer util.HandlePanicInModuleWithError("manga/RefreshChapterContainers", &err)
 
 	// first, delete all chapter containers in the cache
@@ -303,7 +303,7 @@ func (r *Repository) RefreshChapterContainers(mangaCollection *anilist.MangaColl
 			}
 
 			// If the manga is not currently reading or repeating, continue
-			if *mangaEntry.GetStatus() != anilist.MediaListStatusCurrent && *mangaEntry.GetStatus() != anilist.MediaListStatusRepeating {
+			if *mangaEntry.GetStatus() != media.MediaListStatusCurrent && *mangaEntry.GetStatus() != media.MediaListStatusRepeating {
 				return
 			}
 

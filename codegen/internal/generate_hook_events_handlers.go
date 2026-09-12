@@ -44,7 +44,7 @@ func GenerateHandlerHookEvents(handlersJsonPath string, outputDir string) {
 	//f.WriteString("\t\"seanime/internal/hook_resolver\"\n")
 
 	imports := []string{
-		"\"seanime/internal/api/anilist\"",
+		"\"seanime/internal/media\"",
 		"\"seanime/internal/api/tvdb\"",
 		"\"seanime/internal/continuity\"",
 		"\"seanime/internal/database/models\"",

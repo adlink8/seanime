@@ -676,16 +676,18 @@ func (a *AppContextImpl) isAllowedPath(ext *extension.Extension, path string, mo
 		return false
 	}
 
-	// Normalize the path to use forward slashes and absolute path
-	normalizedPath := path
-	if !filepath.IsAbs(normalizedPath) {
+	// Normalize the path to use forward slashes and absolute path.
+	// Paths starting with "/" (POSIX-style root, also an absolute path on
+	// Windows where it refers to the current drive's root) are kept as-is so
+	// that matching behaves identically across platforms.
+	normalizedPath := filepath.ToSlash(path)
+	if !filepath.IsAbs(normalizedPath) && !strings.HasPrefix(normalizedPath, "/") {
 		absPath, err := filepath.Abs(normalizedPath)
 		if err != nil {
 			return false
 		}
-		normalizedPath = absPath
+		normalizedPath = filepath.ToSlash(absPath)
 	}
-	normalizedPath = filepath.ToSlash(normalizedPath)
 
 	// Check if the path is a directory
 	isDir := false
@@ -703,8 +705,9 @@ func (a *AppContextImpl) isAllowedPath(ext *extension.Extension, path string, mo
 		resolvedPatterns := a.resolvePattern(pattern)
 
 		for _, resolvedPattern := range resolvedPatterns {
-			// Convert to absolute path if needed
-			if !filepath.IsAbs(resolvedPattern) && !strings.HasPrefix(resolvedPattern, "*") {
+			// Convert to absolute path if needed (keep POSIX-style rooted
+			// patterns like "/test/*.txt" untouched, see above)
+			if !filepath.IsAbs(resolvedPattern) && !strings.HasPrefix(resolvedPattern, "/") && !strings.HasPrefix(resolvedPattern, "*") {
 				resolvedPattern = filepath.Join(filepath.Dir(normalizedPath), resolvedPattern)
 			}
 

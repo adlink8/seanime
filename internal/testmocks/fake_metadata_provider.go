@@ -1,9 +1,9 @@
 package testmocks
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
+	"seanime/internal/media"
 	"seanime/internal/util/result"
 )
 
@@ -77,7 +77,7 @@ func (f *FakeMetadataProvider) GetAnimeMetadata(_ metadata.Platform, mediaID int
 	return nil, nil
 }
 
-func (f *FakeMetadataProvider) GetAnimeMetadataWrapper(anime *anilist.BaseAnime, _ *metadata.AnimeMetadata) metadata_provider.AnimeMetadataWrapper {
+func (f *FakeMetadataProvider) GetAnimeMetadataWrapper(anime *media.Anime, _ *metadata.AnimeMetadata) metadata_provider.AnimeMetadataWrapper {
 	if anime != nil {
 		if wrapper, ok := f.wrappersByID[anime.ID]; ok {
 			return wrapper

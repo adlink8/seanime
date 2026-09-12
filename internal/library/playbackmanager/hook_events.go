@@ -1,9 +1,9 @@
 package playbackmanager
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/hook_resolver"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 )
 
 // LocalFilePlaybackRequestedEvent is triggered when a local file is requested to be played.
@@ -17,10 +17,10 @@ type LocalFilePlaybackRequestedEvent struct {
 // Prevent default to skip the default playback and override the playback.
 type StreamPlaybackRequestedEvent struct {
 	hook_resolver.Event
-	WindowTitle  string             `json:"windowTitle"`
-	Payload      string             `json:"payload"`
-	Media        *anilist.BaseAnime `json:"media"`
-	AniDbEpisode string             `json:"aniDbEpisode"`
+	WindowTitle  string       `json:"windowTitle"`
+	Payload      string       `json:"payload"`
+	Media        *media.Anime `json:"media"`
+	AniDbEpisode string       `json:"aniDbEpisode"`
 }
 
 // PlaybackBeforeTrackingEvent is triggered just before the playback tracking starts.
@@ -41,7 +41,7 @@ type PlaybackLocalFileDetailsRequestedEvent struct {
 	// List of all local files
 	LocalFiles []*anime.LocalFile `json:"localFiles"`
 	// Empty anime list entry
-	AnimeListEntry *anilist.AnimeListEntry `json:"animeListEntry"`
+	AnimeListEntry *media.AnimeListEntry `json:"animeListEntry"`
 	// Empty local file
 	LocalFile *anime.LocalFile `json:"localFile"`
 	// Empty local file wrapper entry
@@ -53,8 +53,8 @@ type PlaybackLocalFileDetailsRequestedEvent struct {
 // In the current implementation, the details are fetched by selecting the anime from the anime collection. If nothing is found, the stream is still tracked.
 type PlaybackStreamDetailsRequestedEvent struct {
 	hook_resolver.Event
-	AnimeCollection *anilist.AnimeCollection `json:"animeCollection"`
-	MediaId         int                      `json:"mediaId"`
+	AnimeCollection *media.AnimeCollection `json:"animeCollection"`
+	MediaId         int                    `json:"mediaId"`
 	// Empty anime list entry
-	AnimeListEntry *anilist.AnimeListEntry `json:"animeListEntry"`
+	AnimeListEntry *media.AnimeListEntry `json:"animeListEntry"`
 }

@@ -3,11 +3,11 @@ package discordrpc_presence
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/constants"
 	"seanime/internal/database/models"
 	discordrpc_client "seanime/internal/discordrpc/client"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"sync"
 	"time"
@@ -281,7 +281,7 @@ type AnimeActivity struct {
 	EpisodeTitle        *string `json:"episodeTitle,omitempty"`
 }
 
-func NewAnimeActivity(media *anilist.BaseAnime, episodeNumber int, episodeTitle string, progress int, duration int) *AnimeActivity {
+func NewAnimeActivity(media *media.Anime, episodeNumber int, episodeTitle string, progress int, duration int) *AnimeActivity {
 	var title *string
 	if episodeTitle != "" {
 		title = &episodeTitle
@@ -336,11 +336,11 @@ func (p *Presence) SetAnimeActivity(a *AnimeActivity) {
 
 	activity := defaultActivity
 	activity.Details = a.Title
-	activity.DetailsURL = fmt.Sprintf("https://anilist.co/anime/%d", a.ID)
+	activity.DetailsURL = fmt.Sprintf("https://media.co/anime/%d", a.ID)
 	activity.State = state
 	activity.Assets.LargeImage = a.Image
 	activity.Assets.LargeText = a.Title
-	activity.Assets.LargeURL = fmt.Sprintf("https://anilist.co/anime/%d", a.ID)
+	activity.Assets.LargeURL = fmt.Sprintf("https://media.co/anime/%d", a.ID)
 
 	// Calculate the start time
 	startTime := time.Now()
@@ -367,7 +367,7 @@ func (p *Presence) SetAnimeActivity(a *AnimeActivity) {
 	if p.settings.RichPresenceShowAniListProfileButton {
 		activity.Buttons = append(activity.Buttons, &discordrpc_client.Button{
 			Label: "View Profile",
-			Url:   fmt.Sprintf("https://anilist.co/user/%s", p.username),
+			Url:   fmt.Sprintf("https://media.co/user/%s", p.username),
 		})
 	}
 
@@ -541,11 +541,11 @@ func (p *Presence) LegacySetAnimeActivity(a *LegacyAnimeActivity) {
 
 	activity := defaultActivity
 	activity.Details = a.Title
-	activity.DetailsURL = fmt.Sprintf("https://anilist.co/anime/%d", a.ID)
+	activity.DetailsURL = fmt.Sprintf("https://media.co/anime/%d", a.ID)
 	activity.State = state
 	activity.Assets.LargeImage = a.Image
 	activity.Assets.LargeText = a.Title
-	activity.Assets.LargeURL = fmt.Sprintf("https://anilist.co/anime/%d", a.ID)
+	activity.Assets.LargeURL = fmt.Sprintf("https://media.co/anime/%d", a.ID)
 	activity.Timestamps.Start.Time = time.Now()
 	activity.Timestamps.End = nil
 	activity.Buttons = make([]*discordrpc_client.Button, 0)
@@ -553,7 +553,7 @@ func (p *Presence) LegacySetAnimeActivity(a *LegacyAnimeActivity) {
 	if p.settings.RichPresenceShowAniListProfileButton {
 		activity.Buttons = append(activity.Buttons, &discordrpc_client.Button{
 			Label: "View Profile",
-			Url:   fmt.Sprintf("https://anilist.co/user/%s", p.username),
+			Url:   fmt.Sprintf("https://media.co/user/%s", p.username),
 		})
 	}
 
@@ -599,11 +599,11 @@ func (p *Presence) SetMangaActivity(a *MangaActivity) {
 
 	activity := defaultActivity
 	activity.Details = a.Title
-	activity.DetailsURL = fmt.Sprintf("https://anilist.co/manga/%d", a.ID)
+	activity.DetailsURL = fmt.Sprintf("https://media.co/manga/%d", a.ID)
 	activity.State = fmt.Sprintf("Reading Chapter %s", a.Chapter)
 	activity.Assets.LargeImage = a.Image
 	activity.Assets.LargeText = a.Title
-	activity.Assets.LargeURL = fmt.Sprintf("https://anilist.co/manga/%d", a.ID)
+	activity.Assets.LargeURL = fmt.Sprintf("https://media.co/manga/%d", a.ID)
 
 	now := time.Now()
 	activity.Timestamps.Start.Time = now
@@ -615,7 +615,7 @@ func (p *Presence) SetMangaActivity(a *MangaActivity) {
 	if p.settings.RichPresenceShowAniListProfileButton && p.username != "" {
 		activity.Buttons = append(activity.Buttons, &discordrpc_client.Button{
 			Label: "View Profile",
-			Url:   fmt.Sprintf("https://anilist.co/user/%s", p.username),
+			Url:   fmt.Sprintf("https://media.co/user/%s", p.username),
 		})
 	}
 
@@ -742,7 +742,7 @@ func (p *Presence) SetCustomActivity(a *CustomActivity) {
 		if p.settings.RichPresenceShowAniListProfileButton && p.username != "" {
 			activity.Buttons = append(activity.Buttons, &discordrpc_client.Button{
 				Label: "View Profile",
-				Url:   fmt.Sprintf("https://anilist.co/user/%s", p.username),
+				Url:   fmt.Sprintf("https://media.co/user/%s", p.username),
 			})
 		}
 		if !(p.settings.RichPresenceHideSeanimeRepositoryButton || len(activity.Buttons) > 1) {

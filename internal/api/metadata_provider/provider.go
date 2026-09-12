@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/animap"
 	"seanime/internal/api/anizip"
 	"seanime/internal/api/metadata"
@@ -12,6 +11,7 @@ import (
 	"seanime/internal/database/db"
 	"seanime/internal/extension"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/filecache"
 	"seanime/internal/util/result"
@@ -48,7 +48,7 @@ type (
 		// In this case, the source is api.ani.zip.
 		GetAnimeMetadata(platform metadata.Platform, mId int) (*metadata.AnimeMetadata, error)
 		// GetAnimeMetadataWrapper creates a wrapper for anime metadata.
-		GetAnimeMetadataWrapper(anime *anilist.BaseAnime, metadata *metadata.AnimeMetadata) AnimeMetadataWrapper
+		GetAnimeMetadataWrapper(anime *media.Anime, metadata *metadata.AnimeMetadata) AnimeMetadataWrapper
 		GetCache() *result.BoundedCache[string, *metadata.AnimeMetadata]
 		SetUseFallbackProvider(bool)
 		ClearCache()
@@ -265,7 +265,7 @@ func (p *ProviderImpl) fetchAnimeMetadata(platform metadata.Platform, mId int) (
 //
 //	metadataProvider.GetAnimeMetadataWrapper(media, metadata)
 //	metadataProvider.GetAnimeMetadataWrapper(media, nil)
-func (p *ProviderImpl) GetAnimeMetadataWrapper(media *anilist.BaseAnime, m *metadata.AnimeMetadata) AnimeMetadataWrapper {
+func (p *ProviderImpl) GetAnimeMetadataWrapper(media *media.Anime, m *metadata.AnimeMetadata) AnimeMetadataWrapper {
 	aw := &AnimeWrapperImpl{
 		metadata:   mo.None[*metadata.AnimeMetadata](),
 		baseAnime:  media,

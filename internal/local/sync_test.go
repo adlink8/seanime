@@ -3,9 +3,7 @@ package local
 import (
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
-	"seanime/internal/extension"
-	"seanime/internal/platforms/anilist_platform"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/testmocks"
 	"seanime/internal/testutil"
@@ -16,17 +14,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testSetupManager(t *testing.T) (Manager, *anilist.AnimeCollection, *anilist.MangaCollection) {
+func testSetupManager(t *testing.T) (Manager, *media.AnimeCollection, *media.MangaCollection) {
 	env := testutil.NewTestEnv(t)
 	logger := env.Logger()
 
 	database := env.MustNewDatabase(logger)
-	anilistClient := anilist.NewTestAnilistClient()
-	extensionBankRef := util.NewRef(extension.NewUnifiedBank())
-	anilistPlatform := anilist_platform.NewAnilistPlatform(util.NewRef[anilist.AnilistClient](anilistClient), extensionBankRef, logger, database)
-	animeCollection, err := anilistPlatform.GetAnimeCollection(t.Context(), true)
+	// Bangumi 锚点：测试基建改用 FakePlatform（原 AniList fixture client 已随包裁剪）。
+	// 依赖 test/data AniList fixture 的用例属 CI 跳过名单，此处仅保证结构可用。
+	fakePlatform := testmocks.NewFakePlatformBuilder().Build()
+	animeCollection, err := fakePlatform.GetAnimeCollection(t.Context(), true)
 	require.NoError(t, err)
-	mangaCollection, err := anilistPlatform.GetMangaCollection(t.Context(), true)
+	mangaCollection, err := fakePlatform.GetMangaCollection(t.Context(), true)
 	require.NoError(t, err)
 
 	manager := NewTestManager(t, database)
@@ -70,8 +68,8 @@ func TestSync2(t *testing.T) {
 		break
 	}
 
-	anilist.PatchAnimeCollectionEntry(animeCollection, 130003, anilist.AnimeCollectionEntryPatch{
-		Status:   new(anilist.MediaListStatusCompleted),
+	media.PatchAnimeCollectionEntry(animeCollection, 130003, media.AnimeCollectionEntryPatch{
+		Status:   new(media.MediaListStatusCompleted),
 		Progress: new(12), // Mock progress
 	})
 
@@ -173,42 +171,42 @@ func TestSynchronizeSimulatedCollectionToAnilistCreatesMissingEntries(t *testing
 	}
 }
 
-func newEmptyAnimeCollection() *anilist.AnimeCollection {
-	return &anilist.AnimeCollection{
-		MediaListCollection: &anilist.AnimeCollection_MediaListCollection{
-			Lists: []*anilist.AnimeCollection_MediaListCollection_Lists{},
+func newEmptyAnimeCollection() *media.AnimeCollection {
+	return &media.AnimeCollection{
+		MediaListCollection: &media.AnimeCollection_MediaListCollection{
+			Lists: []*media.AnimeCollection_MediaListCollection_Lists{},
 		},
 	}
 }
 
-func newEmptyMangaCollection() *anilist.MangaCollection {
-	return &anilist.MangaCollection{
-		MediaListCollection: &anilist.MangaCollection_MediaListCollection{
-			Lists: []*anilist.MangaCollection_MediaListCollection_Lists{},
+func newEmptyMangaCollection() *media.MangaCollection {
+	return &media.MangaCollection{
+		MediaListCollection: &media.MangaCollection_MediaListCollection{
+			Lists: []*media.MangaCollection_MediaListCollection_Lists{},
 		},
 	}
 }
 
-func newSingleAnimeCollection(entry *anilist.AnimeListEntry) *anilist.AnimeCollection {
-	return &anilist.AnimeCollection{
-		MediaListCollection: &anilist.AnimeCollection_MediaListCollection{
-			Lists: []*anilist.AnimeCollection_MediaListCollection_Lists{
+func newSingleAnimeCollection(entry *media.AnimeListEntry) *media.AnimeCollection {
+	return &media.AnimeCollection{
+		MediaListCollection: &media.AnimeCollection_MediaListCollection{
+			Lists: []*media.AnimeCollection_MediaListCollection_Lists{
 				{
 					Status:  entry.Status,
-					Entries: []*anilist.AnimeCollection_MediaListCollection_Lists_Entries{entry},
+					Entries: []*media.AnimeCollection_MediaListCollection_Lists_Entries{entry},
 				},
 			},
 		},
 	}
 }
 
-func newSingleMangaCollection(entry *anilist.MangaListEntry) *anilist.MangaCollection {
-	return &anilist.MangaCollection{
-		MediaListCollection: &anilist.MangaCollection_MediaListCollection{
-			Lists: []*anilist.MangaCollection_MediaListCollection_Lists{
+func newSingleMangaCollection(entry *media.MangaListEntry) *media.MangaCollection {
+	return &media.MangaCollection{
+		MediaListCollection: &media.MangaCollection_MediaListCollection{
+			Lists: []*media.MangaCollection_MediaListCollection_Lists{
 				{
 					Status:  entry.Status,
-					Entries: []*anilist.MangaCollection_MediaListCollection_Lists_Entries{entry},
+					Entries: []*media.MangaCollection_MediaListCollection_Lists_Entries{entry},
 				},
 			},
 		},

@@ -3,12 +3,14 @@ package core
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
+	"seanime/internal/api/bangumi"
 	"seanime/internal/database/models"
 	"seanime/internal/events"
-	"seanime/internal/platforms/anilist_platform"
+	"seanime/internal/media"
+	"seanime/internal/platforms/bangumi_platform"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/platforms/simulated_platform"
+	"seanime/internal/plugin"
 	"seanime/internal/user"
 	"seanime/internal/util"
 	"time"
@@ -56,121 +58,24 @@ func (a *App) UpdatePlatform(platform platform.Platform) {
 	})
 }
 
-// UpdateAnilistClientToken will update the Anilist Client Wrapper token.
-// This function should be called when a user logs in
+// UpdateAnilistClientToken will update the Bangumi client token.
+// This function should be called when a user logs in.
+// Bangumi 锚点：token 沿用 account 表存储，函数名保留（Phase 4 统一清理命名）。
 func (a *App) UpdateAnilistClientToken(token string) {
-	ac := anilist.NewAnilistClient(token, a.AnilistCacheDir)
-	a.AnilistClientRef.Set(ac)
+	a.BangumiClientRef.Set(bangumi.New(token))
 }
 
+// UseOfficialAnilistClient Bangumi 锚点下 AniList client 运行时切换已停用。
+// 保留函数以满足插件 API 装配（plugin.AnilistActions），调用时返回错误。
 func (a *App) UseOfficialAnilistClient() error {
-	previousProvider := anilist.CurrentRequestProvider()
-	anilist.UseOfficialAPI()
-
-	if err := a.applyRuntimeAnilistClient(anilist.NewAnilistClient(a.Database.GetAnilistToken(), a.AnilistCacheDir)); err != nil {
-		_ = anilist.SetRequestProvider(previousProvider)
-		return err
-	}
-
-	return nil
+	return errors.New("AniList client runtime switching is not supported: the data provider is now Bangumi")
 }
 
-func (a *App) UseCustomAnimeClient(config anilist.CustomClientConfig) error {
-	previousProvider := anilist.CurrentRequestProvider()
-	if err := anilist.UseCustomAPI(config); err != nil {
-		return err
-	}
-
-	if err := a.applyRuntimeAnilistClient(anilist.NewAnilistClient(config.Token, a.AnilistCacheDir)); err != nil {
-		_ = anilist.SetRequestProvider(previousProvider)
-		return err
-	}
-
-	return nil
-}
-
-func (a *App) applyRuntimeAnilistClient(client anilist.AnilistClient) error {
-	if a.IsOffline() {
-		return errors.New("anilist runtime switch is unavailable in offline mode")
-	}
-
-	nextUser := user.NewSimulatedUser()
-	provider := anilist.CurrentRequestProviderName()
-
-	if client.IsAuthenticated() {
-		viewer, err := fetchRuntimeViewer(provider, func() (*anilist.GetViewer, error) {
-			return client.GetViewer(context.Background())
-		}, time.Sleep)
-		if err != nil {
-			return err
-		}
-
-		token := ""
-		if provider == anilist.OfficialRequestProviderName {
-			token = a.Database.GetAnilistToken()
-		}
-
-		nextUser = &user.User{
-			Viewer: viewer.GetViewer(),
-			Token:  token,
-		}
-	}
-
-	a.AnilistClientRef.Set(client)
-
-	var nextPlatform platform.Platform
-	var err error
-	if client.IsAuthenticated() {
-		nextPlatform = anilist_platform.NewAnilistPlatform(a.AnilistClientRef, a.ExtensionBankRef, a.Logger, a.Database, a.LogoutFromAnilist)
-	} else {
-		nextPlatform, err = simulated_platform.NewSimulatedPlatform(a.LocalManager, a.AnilistClientRef, a.ExtensionBankRef, a.Logger, a.Database)
-		if err != nil {
-			return err
-		}
-	}
-
-	a.UpdatePlatform(nextPlatform)
-	a.user = nextUser
-	a.AnilistPlatformRef.Get().SetUsername(nextUser.Viewer.Name)
-	a.InitOrRefreshModules()
-
-	if a.DiscordPresence != nil {
-		a.DiscordPresence.SetUsername(nextUser.Viewer.Name)
-	}
-
-	if _, err := a.RefreshAnimeCollection(); err != nil {
-		return err
-	}
-
-	if _, err := a.RefreshMangaCollection(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-var customClientViewerRetryDelays = []time.Duration{
-	500 * time.Millisecond,
-	time.Second,
-	2 * time.Second,
-	3 * time.Second,
-}
-
-func fetchRuntimeViewer(provider string, getViewer func() (*anilist.GetViewer, error), sleep func(time.Duration)) (*anilist.GetViewer, error) {
-	viewer, err := getViewer()
-	if err == nil || provider == anilist.OfficialRequestProviderName {
-		return viewer, err
-	}
-
-	for _, delay := range customClientViewerRetryDelays {
-		sleep(delay)
-		viewer, err = getViewer()
-		if err == nil {
-			return viewer, nil
-		}
-	}
-
-	return nil, err
+// UseCustomAnimeClient Bangumi 锚点下 AniList client 运行时切换已停用。
+// 保留函数以满足插件 API 装配（plugin.AnilistActions），调用时返回错误。
+func (a *App) UseCustomAnimeClient(config plugin.CustomClientConfig) error {
+	_ = config
+	return errors.New("AniList client runtime switching is not supported: the data provider is now Bangumi")
 }
 
 func (a *App) LoginToAnilist(token string) error {
@@ -180,17 +85,23 @@ func (a *App) LoginToAnilist(token string) error {
 
 	a.UpdateAnilistClientToken(token)
 
-	getViewer, err := a.AnilistClientRef.Get().GetViewer(context.Background())
+	// Bangumi 锚点：原 AniList GetViewer 校验改为 Bangumi GetMe。
+	me, err := a.BangumiClientRef.Get().GetMe(context.Background())
 	if err != nil {
-		a.Logger.Error().Msg("Could not authenticate to AniList")
+		a.Logger.Error().Msg("Could not authenticate to Bangumi")
 		return err
 	}
 
-	if len(getViewer.Viewer.Name) == 0 {
+	if len(me.Username) == 0 {
 		return errors.New("could not find user")
 	}
 
-	bytes, err := json.Marshal(getViewer.Viewer)
+	// user.User.Viewer 形状沿用 media.GetViewer_Viewer（前端契约不破），Bangumi 昵称填入 Name。
+	viewer := &media.GetViewer_Viewer{
+		Name: me.Username,
+	}
+
+	bytes, err := json.Marshal(viewer)
 	if err != nil {
 		a.Logger.Err(err).Msg("scan: could not save local files")
 	}
@@ -200,7 +111,7 @@ func (a *App) LoginToAnilist(token string) error {
 			ID:        1,
 			UpdatedAt: time.Now(),
 		},
-		Username: getViewer.Viewer.Name,
+		Username: me.Username,
 		Token:    token,
 		Viewer:   bytes,
 	})
@@ -208,10 +119,10 @@ func (a *App) LoginToAnilist(token string) error {
 		return err
 	}
 
-	a.Logger.Info().Msg("app: Authenticated to AniList")
+	a.Logger.Info().Msg("app: Authenticated to Bangumi")
 
-	anilistPlatform := anilist_platform.NewAnilistPlatform(a.AnilistClientRef, a.ExtensionBankRef, a.Logger, a.Database, a.LogoutFromAnilist)
-	a.UpdatePlatform(anilistPlatform)
+	bangumiPlatform := bangumi_platform.NewBangumiPlatform(a.BangumiClientRef.Get(), a.BangumiCacheDir, a.ExtensionBankRef, a.Logger, a.Database, a.LogoutFromAnilist)
+	a.UpdatePlatform(bangumiPlatform)
 
 	a.InitOrRefreshAnilistData()
 	a.InitOrRefreshModules()
@@ -237,7 +148,7 @@ func (a *App) LogoutFromAnilist() {
 
 	a.UpdateAnilistClientToken("")
 
-	simulatedPlatform, err := simulated_platform.NewSimulatedPlatform(a.LocalManager, a.AnilistClientRef, a.ExtensionBankRef, a.Logger, a.Database)
+	simulatedPlatform, err := simulated_platform.NewSimulatedPlatform(a.LocalManager, a.BangumiClientRef.Get(), a.BangumiCacheDir, a.ExtensionBankRef, a.Logger, a.Database)
 	if err != nil {
 		a.Logger.Error().Err(err).Msg("app: Failed to create simulated platform during auto-logout")
 	} else {
@@ -262,12 +173,12 @@ func (a *App) LogoutFromAnilist() {
 
 // GetAnimeCollection returns the user's Anilist collection if it in the cache, otherwise it queries Anilist for the user's collection.
 // When bypassCache is true, it will always query Anilist for the user's collection
-func (a *App) GetAnimeCollection(bypassCache bool) (*anilist.AnimeCollection, error) {
+func (a *App) GetAnimeCollection(bypassCache bool) (*media.AnimeCollection, error) {
 	return a.AnilistPlatformRef.Get().GetAnimeCollection(context.Background(), bypassCache)
 }
 
 // GetRawAnimeCollection is the same as GetAnimeCollection but returns the raw collection that includes custom lists
-func (a *App) GetRawAnimeCollection(bypassCache bool) (*anilist.AnimeCollection, error) {
+func (a *App) GetRawAnimeCollection(bypassCache bool) (*media.AnimeCollection, error) {
 	return a.AnilistPlatformRef.Get().GetRawAnimeCollection(context.Background(), bypassCache)
 }
 
@@ -282,7 +193,7 @@ func (a *App) SyncAnilistToSimulatedCollection() {
 }
 
 // RefreshAnimeCollection queries Anilist for the user's collection
-func (a *App) RefreshAnimeCollection() (*anilist.AnimeCollection, error) {
+func (a *App) RefreshAnimeCollection() (*media.AnimeCollection, error) {
 	go func() {
 		a.OnRefreshAnilistCollectionFuncs.Range(func(key string, f func()) bool {
 			go f()
@@ -323,17 +234,17 @@ func (a *App) RefreshAnimeCollection() (*anilist.AnimeCollection, error) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // GetMangaCollection is the same as GetAnimeCollection but for manga
-func (a *App) GetMangaCollection(bypassCache bool) (*anilist.MangaCollection, error) {
+func (a *App) GetMangaCollection(bypassCache bool) (*media.MangaCollection, error) {
 	return a.AnilistPlatformRef.Get().GetMangaCollection(context.Background(), bypassCache)
 }
 
 // GetRawMangaCollection does not exclude custom lists
-func (a *App) GetRawMangaCollection(bypassCache bool) (*anilist.MangaCollection, error) {
+func (a *App) GetRawMangaCollection(bypassCache bool) (*media.MangaCollection, error) {
 	return a.AnilistPlatformRef.Get().GetRawMangaCollection(context.Background(), bypassCache)
 }
 
 // RefreshMangaCollection queries Anilist for the user's manga collection
-func (a *App) RefreshMangaCollection() (*anilist.MangaCollection, error) {
+func (a *App) RefreshMangaCollection() (*media.MangaCollection, error) {
 	mc, err := a.AnilistPlatformRef.Get().RefreshMangaCollection(context.Background())
 
 	if err != nil {

@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	debrid_client "seanime/internal/debrid/client"
 	"seanime/internal/debrid/debrid"
 	"seanime/internal/extension"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/goja/goja_bindings"
+	"seanime/internal/media"
 	"seanime/internal/torrentstream"
 	gojautil "seanime/internal/util/goja"
 
@@ -21,7 +21,7 @@ import (
 type debridGetTorrentFilePreviewsOptions struct {
 	Torrent       *hibiketorrent.AnimeTorrent `json:"torrent"`
 	EpisodeNumber int                         `json:"episodeNumber"`
-	Media         *anilist.BaseAnime          `json:"media"`
+	Media         *media.Anime                `json:"media"`
 }
 
 type debridAddTorrentOptions struct {

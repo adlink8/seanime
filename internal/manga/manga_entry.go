@@ -3,8 +3,8 @@ package manga
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"seanime/internal/util/filecache"
@@ -15,18 +15,18 @@ import (
 type (
 	// Entry is fetched when the user goes to the manga entry page.
 	Entry struct {
-		MediaId       int                `json:"mediaId"`
-		Media         *anilist.BaseManga `json:"media"`
-		EntryListData *EntryListData     `json:"listData,omitempty"`
+		MediaId       int            `json:"mediaId"`
+		Media         *media.Manga   `json:"media"`
+		EntryListData *EntryListData `json:"listData,omitempty"`
 	}
 
 	EntryListData struct {
-		Progress    int                      `json:"progress,omitempty"`
-		Score       float64                  `json:"score,omitempty"`
-		Status      *anilist.MediaListStatus `json:"status,omitempty"`
-		Repeat      int                      `json:"repeat,omitempty"`
-		StartedAt   string                   `json:"startedAt,omitempty"`
-		CompletedAt string                   `json:"completedAt,omitempty"`
+		Progress    int                    `json:"progress,omitempty"`
+		Score       float64                `json:"score,omitempty"`
+		Status      *media.MediaListStatus `json:"status,omitempty"`
+		Repeat      int                    `json:"repeat,omitempty"`
+		StartedAt   string                 `json:"startedAt,omitempty"`
+		CompletedAt string                 `json:"completedAt,omitempty"`
 	}
 )
 
@@ -36,7 +36,7 @@ type (
 		MediaId         int
 		Logger          *zerolog.Logger
 		FileCacher      *filecache.Cacher
-		MangaCollection *anilist.MangaCollection
+		MangaCollection *media.MangaCollection
 		PlatformRef     *util.Ref[platform.Platform]
 	}
 )
@@ -98,8 +98,8 @@ func NewEntry(ctx context.Context, opts *NewEntryOptions) (entry *Entry, err err
 			Score:       *anilistEntry.Score,
 			Status:      anilistEntry.Status,
 			Repeat:      anilistEntry.GetRepeatSafe(),
-			StartedAt:   anilist.FuzzyDateToString(anilistEntry.StartedAt),
-			CompletedAt: anilist.FuzzyDateToString(anilistEntry.CompletedAt),
+			StartedAt:   media.FuzzyDateToString(anilistEntry.StartedAt),
+			CompletedAt: media.FuzzyDateToString(anilistEntry.CompletedAt),
 		}
 	}
 

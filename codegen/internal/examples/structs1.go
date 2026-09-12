@@ -1,8 +1,8 @@
 package codegen
 
 import (
-	"seanime/internal/api/anilist"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
+	"seanime/internal/media"
 )
 
 //type Struct1 struct {
@@ -22,5 +22,5 @@ type Struct4 struct {
 		Enabled               bool  `json:"enabled"`
 		MissingEpisodeNumbers []int `json:"missingEpisodeNumbers"`
 	} `json:"smartSelect"`
-	Media *anilist.BaseAnime `json:"media"`
+	Media *media.Anime `json:"media"`
 }

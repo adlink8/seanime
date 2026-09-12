@@ -2,7 +2,7 @@ package hibiketracker
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
+	"seanime/internal/media"
 	"time"
 )
 
@@ -41,7 +41,7 @@ type (
 		// MediaType is either "ANIME" or "MANGA"
 		MediaType string `json:"mediaType"`
 		// Status is the watching/reading status
-		Status *anilist.MediaListStatus `json:"status,omitempty"`
+		Status *media.MediaListStatus `json:"status,omitempty"`
 		// Score is 0-100 scale (extensions should convert to their service's scale)
 		Score *int `json:"score,omitempty"`
 		// Progress is the number of episodes/chapters consumed
@@ -49,9 +49,9 @@ type (
 		// Repeat is the number of times rewatched/reread (applies to both anime and manga)
 		Repeat *int `json:"repeat,omitempty"`
 		// StartedAt is when the user started watching/reading
-		StartedAt *anilist.FuzzyDateInput `json:"startedAt,omitempty"`
+		StartedAt *media.FuzzyDateInput `json:"startedAt,omitempty"`
 		// CompletedAt is when the user completed the entry
-		CompletedAt *anilist.FuzzyDateInput `json:"completedAt,omitempty"`
+		CompletedAt *media.FuzzyDateInput `json:"completedAt,omitempty"`
 		// UpdatedAt is used for conflict resolution in bidirectional sync
 		UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 	}

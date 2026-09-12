@@ -1,13 +1,13 @@
 package autodownloader
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/db"
 	"seanime/internal/database/models"
 	"seanime/internal/events"
 	"seanime/internal/extension"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
+	"seanime/internal/media"
 	"seanime/internal/testutil"
 	"seanime/internal/torrents/torrent"
 	"seanime/internal/util"
@@ -137,7 +137,7 @@ func (f *TestWrapper) New(t *testing.T) *AutoDownloader {
 		EnableSeasonCheck:     false,
 		UseDebrid:             false,
 	})
-	ad.SetAnimeCollection(&anilist.AnimeCollection{})
+	ad.SetAnimeCollection(&media.AnimeCollection{})
 
 	return ad
 }

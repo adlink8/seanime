@@ -4,13 +4,13 @@ import (
 	"errors"
 	"net/http"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/database/models"
 	debrid_client "seanime/internal/debrid/client"
 	"seanime/internal/debrid/debrid"
 	"seanime/internal/events"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
+	"seanime/internal/media"
 
 	"github.com/labstack/echo/v4"
 )
@@ -124,7 +124,7 @@ func (h *Handler) HandleDebridAddTorrents(c echo.Context) error {
 
 	type body struct {
 		Torrents    []hibiketorrent.AnimeTorrent `json:"torrents"`
-		Media       *anilist.BaseAnime           `json:"media"`
+		Media       *media.Anime                 `json:"media"`
 		Destination string                       `json:"destination"`
 	}
 
@@ -376,7 +376,7 @@ func (h *Handler) HandleDebridGetTorrentFilePreviews(c echo.Context) error {
 	type body struct {
 		Torrent       *hibiketorrent.AnimeTorrent `json:"torrent"`
 		EpisodeNumber int                         `json:"episodeNumber"`
-		Media         *anilist.BaseAnime          `json:"media"`
+		Media         *media.Anime                `json:"media"`
 	}
 
 	var b body

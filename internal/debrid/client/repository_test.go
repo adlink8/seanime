@@ -317,7 +317,7 @@ func TestDownload_removeItemAfterDownloadCompletes(t *testing.T) {
 	repo.processQueuedDownloads(repo.provider.MustGet())
 	require.Eventually(t, func() bool {
 		return hasDebridDownloadStatus(ws, "cancelled")
-	}, time.Second, 10*time.Millisecond)
+	}, 3*time.Second, 10*time.Millisecond) // Windows: extraction path includes a 1s sleep
 
 	items, err := database.GetDebridTorrentItems()
 	require.NoError(t, err)
@@ -379,13 +379,13 @@ func TestDownloadedItemsAreRemovedFromQueue(t *testing.T) {
 	require.Eventually(t, func() bool {
 		_, err := os.Stat(filepath.Join(destination, "episode.mkv"))
 		return err == nil
-	}, time.Second, 10*time.Millisecond)
+	}, 3*time.Second, 10*time.Millisecond) // Windows: extraction path includes a 1s sleep
 	require.Eventually(t, func() bool {
 		items, err := database.GetDebridTorrentItems()
 		return err == nil && len(items) == 0
-	}, time.Second, 10*time.Millisecond)
+	}, 3*time.Second, 10*time.Millisecond) // Windows: extraction path includes a 1s sleep
 	require.Eventually(t, func() bool {
 		queued, err := database.GetAutoDownloaderItem(1)
 		return err == nil && queued.Downloaded
-	}, time.Second, 10*time.Millisecond)
+	}, 3*time.Second, 10*time.Millisecond) // Windows: extraction path includes a 1s sleep
 }

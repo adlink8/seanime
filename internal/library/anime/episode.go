@@ -1,9 +1,9 @@
 package anime
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
+	"seanime/internal/media"
 	"strconv"
 	"strings"
 )
@@ -26,7 +26,7 @@ type (
 		FileMetadata          *LocalFileMetadata         `json:"fileMetadata"`            // (episode, aniDBEpisode, type...)
 		IsInvalid             bool                       `json:"isInvalid"`               // No AniDB data
 		MetadataIssue         string                     `json:"metadataIssue,omitempty"` // Alerts the user that there is a discrepancy between AniList and AniDB
-		BaseAnime             *anilist.BaseAnime         `json:"baseAnime,omitempty"`
+		BaseAnime             *media.Anime               `json:"baseAnime,omitempty"`
 		TorrentAvailability   EpisodeTorrentAvailability `json:"torrentAvailability,omitempty"`
 		IsMissingGroup        bool                       `json:"isMissingGroup,omitempty"`
 		// IsNakamaEpisode indicates that this episode is from the Nakama host's anime library.
@@ -60,7 +60,7 @@ type (
 	NewEpisodeOptions struct {
 		LocalFile            *LocalFile
 		AnimeMetadata        *metadata.AnimeMetadata // optional
-		Media                *anilist.BaseAnime
+		Media                *media.Anime
 		MetadataWrapper      metadata_provider.AnimeMetadataWrapper
 		OptionalAniDBEpisode string
 		// ProgressOffset will offset the ProgressNumber for a specific MAIN file
@@ -75,7 +75,7 @@ type (
 	// Unlike NewEpisodeOptions, this struct does not require Animap data. It is used to list episodes without AniDB metadata.
 	NewSimpleEpisodeOptions struct {
 		LocalFile       *LocalFile
-		Media           *anilist.BaseAnime
+		Media           *media.Anime
 		IsDownloaded    bool
 		MetadataWrapper metadata_provider.AnimeMetadataWrapper
 	}
@@ -150,7 +150,7 @@ func NewEpisode(opts *NewEpisodeOptions) *Episode {
 			case LocalFileTypeMain:
 				if foundAnimapEpisode {
 					entryEp.AniDBEpisode = aniDBEp
-					if *opts.Media.GetFormat() == anilist.MediaFormatMovie {
+					if *opts.Media.GetFormat() == media.MediaFormatMovie {
 						entryEp.DisplayTitle = opts.Media.GetPreferredTitle()
 						entryEp.EpisodeTitle = "Complete Movie"
 					} else {
@@ -158,7 +158,7 @@ func NewEpisode(opts *NewEpisodeOptions) *Episode {
 						entryEp.EpisodeTitle = episodeMetadata.GetTitle()
 					}
 				} else {
-					if *opts.Media.GetFormat() == anilist.MediaFormatMovie {
+					if *opts.Media.GetFormat() == media.MediaFormatMovie {
 						entryEp.DisplayTitle = opts.Media.GetPreferredTitle()
 						entryEp.EpisodeTitle = "Complete Movie"
 					} else {
@@ -225,7 +225,7 @@ func NewEpisode(opts *NewEpisodeOptions) *Episode {
 				entryEp.AbsoluteEpisodeNumber = entryEp.EpisodeNumber + opts.AnimeMetadata.GetOffset()
 				switch entryEp.Type {
 				case LocalFileTypeMain:
-					if *opts.Media.GetFormat() == anilist.MediaFormatMovie {
+					if *opts.Media.GetFormat() == media.MediaFormatMovie {
 						entryEp.DisplayTitle = opts.Media.GetPreferredTitle()
 						entryEp.EpisodeTitle = "Complete Movie"
 					} else {
@@ -274,7 +274,7 @@ func NewEpisodeMetadata(
 	aw metadata_provider.AnimeMetadataWrapper,
 	episode *metadata.EpisodeMetadata,
 	aniDbEpisode string,
-	media *anilist.BaseAnime,
+	media *media.Anime,
 ) *EpisodeMetadata {
 	md := new(EpisodeMetadata)
 	if episode != nil {
@@ -335,7 +335,7 @@ func NewSimpleEpisode(opts *NewSimpleEpisodeOptions) *Episode {
 		if len(entryEp.DisplayTitle) == 0 {
 			switch opts.LocalFile.Metadata.Type {
 			case LocalFileTypeMain:
-				if *opts.Media.GetFormat() == anilist.MediaFormatMovie {
+				if *opts.Media.GetFormat() == media.MediaFormatMovie {
 					entryEp.DisplayTitle = opts.Media.GetPreferredTitle()
 					entryEp.EpisodeTitle = "Complete Movie"
 				} else {

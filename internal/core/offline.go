@@ -2,7 +2,7 @@ package core
 
 import (
 	"seanime/internal/api/metadata_provider"
-	"seanime/internal/platforms/anilist_platform"
+	"seanime/internal/platforms/bangumi_platform"
 	"seanime/internal/platforms/offline_platform"
 
 	"github.com/spf13/viper"
@@ -34,13 +34,13 @@ func (a *App) SetOfflineMode(enabled bool) {
 			a.NakamaManager.Stop()
 		}
 
-		anilistPlatform, _ := offline_platform.NewOfflinePlatform(a.LocalManager, a.AnilistClientRef, a.Logger)
-		a.AnilistPlatformRef.Set(anilistPlatform)
+		offlinePlatform, _ := offline_platform.NewOfflinePlatform(a.LocalManager, a.Logger)
+		a.AnilistPlatformRef.Set(offlinePlatform)
 		a.MetadataProviderRef.Set(a.LocalManager.GetOfflineMetadataProvider())
 	} else {
 		// DEVNOTE: We don't handle local platform since the feature doesn't allow offline mode
-		anilistPlatform := anilist_platform.NewAnilistPlatform(a.AnilistClientRef, a.ExtensionBankRef, a.Logger, a.Database, a.LogoutFromAnilist)
-		a.AnilistPlatformRef.Set(anilistPlatform)
+		bangumiPlatform := bangumi_platform.NewBangumiPlatform(a.BangumiClientRef.Get(), a.BangumiCacheDir, a.ExtensionBankRef, a.Logger, a.Database, a.LogoutFromAnilist)
+		a.AnilistPlatformRef.Set(bangumiPlatform)
 		a.MetadataProviderRef.Set(metadata_provider.NewProvider(&metadata_provider.NewProviderImplOptions{
 			Logger:           a.Logger,
 			FileCacher:       a.FileCacher,

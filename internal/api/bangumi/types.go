@@ -3,6 +3,8 @@ package bangumi
 // 手写最小响应类型集，字段对齐 Bangumi API v0 OpenAPI 规范。
 // 自用客户端，不做全套代码生成（YAGNI）；服务端新增字段会被 json 忽略。
 
+import "encoding/json"
+
 // SubjectType 枚举（无 5）
 const (
 	SubjectBook  = 1 // 书籍（音声作品归此分区下的「音声」子分类）
@@ -28,6 +30,14 @@ const (
 	ProgressDropped = "dropped" // 抛弃
 )
 
+// InfoboxItem 条目信息箱条目（GET /v0/subjects/{id} 的 infobox 字段，Wave B additive）。
+// Value 形态不固定：单值时为 JSON 字符串（如 "TV"），
+// 多值时为 [{"v":"京都动画"}] 对象数组，统一用 json.RawMessage 延迟解析。
+type InfoboxItem struct {
+	Key   string          `json:"key"`
+	Value json.RawMessage `json:"value"`
+}
+
 // Subject 条目详情（GET /v0/subjects/{id} / 搜索结果元素）
 type Subject struct {
 	ID       int            `json:"id"`
@@ -42,6 +52,7 @@ type Subject struct {
 	Eps      int            `json:"eps"` // 章节数
 	Rating   *SubjectRating `json:"rating,omitempty"`
 	Tags     []SubjectTag   `json:"tags,omitempty"`
+	Infobox  []InfoboxItem  `json:"infobox,omitempty"` // 信息箱（制作公司等，Wave B additive）
 }
 
 type SubjectImages struct {

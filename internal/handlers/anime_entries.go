@@ -4,13 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"seanime/internal/api/anilist"
+	"seanime/internal/api/bangumi"
 	"seanime/internal/customsource"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
 	"seanime/internal/library/scanner"
 	"seanime/internal/library/summary"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/limiter"
 	"seanime/internal/util/result"
@@ -241,7 +242,7 @@ func (h *Handler) HandleOpenAnimeEntryInExplorer(c echo.Context) error {
 //----------------------------------------------------------------------------------------------------------------------
 
 var (
-	entriesSuggestionsCache = result.NewCache[string, []*anilist.BaseAnime]()
+	entriesSuggestionsCache = result.NewCache[string, []*media.Anime]()
 )
 
 // HandleFetchAnimeEntrySuggestions
@@ -250,7 +251,7 @@ var (
 //	@desc This is used by the "Resolve unmatched media" feature to suggest media entries for the local files in the given directory.
 //	@desc If some matches files are found in the directory, it will ignore them and base the suggestions on the remaining files.
 //	@route /api/v1/library/anime-entry/suggestions [POST]
-//	@returns []anilist.BaseAnime
+//	@returns []media.Anime
 func (h *Handler) HandleFetchAnimeEntrySuggestions(c echo.Context) error {
 
 	type body struct {
@@ -294,32 +295,33 @@ func (h *Handler) HandleFetchAnimeEntrySuggestions(c echo.Context) error {
 
 	h.App.Logger.Info().Str("title", title).Msg("handlers: Fetching anime suggestions")
 
-	res, err := anilist.ListAnimeM(
-		h.App.AnilistPlatformRef.Get().GetAnilistClient(),
-		new(1),
-		&title,
-		new(8),
-		nil,
-		[]*anilist.MediaStatus{new(anilist.MediaStatusFinished), new(anilist.MediaStatusReleasing), new(anilist.MediaStatusCancelled), new(anilist.MediaStatusHiatus)},
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		h.App.Logger,
-		h.App.GetUserAnilistToken(),
-	)
+	// Bangumi 锚点：原 AniList 按标题搜索改为 SearchSubjects（仅关键词可映射）。
+	client := h.App.AnilistPlatformRef.Get().GetBangumiClient()
+	if client == nil {
+		return h.RespondWithData(c, []*media.Anime{})
+	}
+
+	res, err := client.SearchSubjects(c.Request().Context(), bangumi.SearchSubjectsOpts{
+		Keyword: title,
+		Sort:    "match",
+		Filter:  bangumi.SearchFilter{Type: []int{2}}, // 2=动画
+		Limit:   8,
+	})
 	if err != nil {
 		return h.RespondWithError(c, err)
 	}
 
-	// Cache the results
-	entriesSuggestionsCache.Set(b.Dir, res.GetPage().GetMedia())
+	suggestions = make([]*media.Anime, 0, len(res.Data))
+	for i := range res.Data {
+		if sug := media.AnimeFromSubject(bangumi.SubjectToMedia(&res.Data[i])); sug != nil {
+			suggestions = append(suggestions, sug)
+		}
+	}
 
-	return h.RespondWithData(c, res.GetPage().GetMedia())
+	// Cache the results
+	entriesSuggestionsCache.Set(b.Dir, suggestions)
+
+	return h.RespondWithData(c, suggestions)
 
 }
 
@@ -376,14 +378,14 @@ func (h *Handler) HandleAnimeEntryManualMatch(c echo.Context) error {
 	})
 
 	// Get the media
-	media, err := h.App.AnilistPlatformRef.Get().GetAnime(c.Request().Context(), b.MediaId)
+	an, err := h.App.AnilistPlatformRef.Get().GetAnime(c.Request().Context(), b.MediaId)
 	if err != nil {
 		return h.RespondWithError(c, err)
 	}
 
 	// Create a slice of normalized media
 	normalizedMedia := []*anime.NormalizedMedia{
-		anime.NewNormalizedMedia(media),
+		anime.NewNormalizedMedia(an),
 	}
 
 	scanLogger, err := scanner.NewScanLogger(h.App.Config.Logs.Dir)
@@ -396,7 +398,7 @@ func (h *Handler) HandleAnimeEntryManualMatch(c echo.Context) error {
 
 	fh := scanner.FileHydrator{
 		LocalFiles:          selectedLfs,
-		CompleteAnimeCache:  anilist.NewCompleteAnimeCache(),
+		CompleteAnimeCache:  media.NewCompleteAnimeCache(),
 		PlatformRef:         h.App.AnilistPlatformRef,
 		MetadataProviderRef: h.App.MetadataProviderRef,
 		AnilistRateLimiter:  limiter.NewAnilistLimiter(),
@@ -404,7 +406,7 @@ func (h *Handler) HandleAnimeEntryManualMatch(c echo.Context) error {
 		ScanLogger:          scanLogger,
 		ScanSummaryLogger:   scanSummaryLogger,
 		AllMedia:            normalizedMedia,
-		ForceMediaId:        media.GetID(),
+		ForceMediaId:        an.GetID(),
 	}
 
 	fh.HydrateMetadata()

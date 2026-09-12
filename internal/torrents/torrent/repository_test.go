@@ -2,13 +2,13 @@ package torrent
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/extension"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/hook"
 	"seanime/internal/hook_resolver"
+	"seanime/internal/media"
 	"seanime/internal/testmocks"
 	"seanime/internal/util"
 	"sync"
@@ -257,7 +257,7 @@ func TestSearchAnimeFreshUpdatesCache(t *testing.T) {
 
 func TestSearchCacheTTL(t *testing.T) {
 	finished := testmocks.NewBaseAnime(104, "Finished Show")
-	releasing := testmocks.NewBaseAnimeBuilder(105, "Releasing Show").WithStatus(anilist.MediaStatusReleasing).Build()
+	releasing := testmocks.NewBaseAnimeBuilder(105, "Releasing Show").WithStatus(media.MediaStatusReleasing).Build()
 	result := &SearchData{Torrents: []*hibiketorrent.AnimeTorrent{{InfoHash: "hash"}}}
 
 	require.Equal(t, searchMissTTL, searchCacheTTL(&SearchData{}, AnimeSearchOptions{Media: finished, Type: AnimeSearchTypeSimple}))

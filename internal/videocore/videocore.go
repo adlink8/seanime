@@ -3,12 +3,12 @@ package videocore
 import (
 	"context"
 	"encoding/json"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/continuity"
 	"seanime/internal/database/models"
 	discordrpc_presence "seanime/internal/discordrpc/presence"
 	"seanime/internal/events"
+	"seanime/internal/media"
 	"seanime/internal/mkvparser"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
@@ -310,7 +310,7 @@ func (vc *VideoCore) GetCurrentPlaybackInfo() (*VideoPlaybackInfo, bool) {
 
 // GetCurrentMedia returns the current media.
 // This will return nil right after VideoTerminatedEvent is received.
-func (vc *VideoCore) GetCurrentMedia() (*anilist.BaseAnime, bool) {
+func (vc *VideoCore) GetCurrentMedia() (*media.Anime, bool) {
 	info, ok := vc.GetCurrentPlaybackInfo()
 	if !ok {
 		return nil, false

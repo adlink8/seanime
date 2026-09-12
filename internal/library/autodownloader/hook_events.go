@@ -1,10 +1,10 @@
 package autodownloader
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/models"
 	"seanime/internal/hook_resolver"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 )
 
 // AutoDownloaderRunStartedEvent is triggered when the autodownloader starts checking for new episodes.
@@ -52,7 +52,7 @@ type AutoDownloaderMatchVerifiedEvent struct {
 	// Fetched torrent
 	Torrent    *NormalizedTorrent           `json:"torrent"`
 	Rule       *anime.AutoDownloaderRule    `json:"rule"`
-	ListEntry  *anilist.AnimeListEntry      `json:"listEntry"`
+	ListEntry  *media.AnimeListEntry        `json:"listEntry"`
 	LocalEntry *anime.LocalFileWrapperEntry `json:"localEntry"`
 	// The episode number found for the match
 	// If the match failed, this will be 0

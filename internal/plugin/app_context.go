@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/continuity"
 	"seanime/internal/database/db"
@@ -78,7 +77,7 @@ type AuthActions struct {
 
 type AnilistActions struct {
 	UseOfficialClient func() error
-	UseCustomClient   func(config anilist.CustomClientConfig) error
+	UseCustomClient   func(config CustomClientConfig) error
 }
 
 type SettingsActions struct {

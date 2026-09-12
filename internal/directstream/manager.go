@@ -2,12 +2,12 @@ package directstream
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/continuity"
 	discordrpc_presence "seanime/internal/discordrpc/presence"
 	"seanime/internal/events"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mediacore"
 	"seanime/internal/mkvparser"
 	"seanime/internal/nativeplayer"
@@ -70,8 +70,8 @@ type (
 		settings *Settings
 
 		isOfflineRef    *util.Ref[bool]
-		animeCollection mo.Option[*anilist.AnimeCollection]
-		animeCache      *result.Cache[int, *anilist.BaseAnime]
+		animeCollection mo.Option[*media.AnimeCollection]
+		animeCache      *result.Cache[int, *media.Anime]
 
 		parserCache *result.Cache[string, *mkvparser.MetadataParser]
 		//playbackStatusSubscribers *result.Map[string, *PlaybackStatusSubscriber]
@@ -146,7 +146,7 @@ func (m *Manager) GetPlaybackTarget() PlaybackTarget {
 	return m.defaultPlaybackTarget
 }
 
-func (m *Manager) SetAnimeCollection(ac *anilist.AnimeCollection) {
+func (m *Manager) SetAnimeCollection(ac *media.AnimeCollection) {
 	m.animeCollection = mo.Some(ac)
 }
 
@@ -164,7 +164,7 @@ func (m *Manager) GetHMACTokenQueryParam(endpoint string, symbol string) string 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (m *Manager) getAnime(ctx context.Context, mediaId int) (*anilist.BaseAnime, error) {
+func (m *Manager) getAnime(ctx context.Context, mediaId int) (*media.Anime, error) {
 	media, ok := m.animeCache.Get(mediaId)
 	if ok {
 		return media, nil

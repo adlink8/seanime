@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"seanime/internal/api/anilist"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mkvparser"
 	"seanime/internal/player"
 	"seanime/internal/util/result"
@@ -45,7 +45,7 @@ type PlayNakamaStreamOptions struct {
 	StreamUrl          string
 	MediaId            int
 	AnidbEpisode       string // Animap episode
-	Media              *anilist.BaseAnime
+	Media              *media.Anime
 	NakamaHostPassword string
 	ClientId           string
 }

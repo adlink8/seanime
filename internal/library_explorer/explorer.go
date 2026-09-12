@@ -2,8 +2,8 @@ package library_explorer
 
 import (
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"sync"
@@ -13,7 +13,7 @@ import (
 
 type LibraryExplorer struct {
 	mu              sync.RWMutex
-	animeCollection *anilist.AnimeCollection
+	animeCollection *media.AnimeCollection
 	platformRef     *util.Ref[platform.Platform]
 	libraryPaths    []string
 	logger          *zerolog.Logger
@@ -37,7 +37,7 @@ func NewLibraryExplorer(opts NewLibraryExplorerOptions) *LibraryExplorer {
 	}
 }
 
-func (l *LibraryExplorer) SetAnimeCollection(collection *anilist.AnimeCollection) {
+func (l *LibraryExplorer) SetAnimeCollection(collection *media.AnimeCollection) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.animeCollection = collection

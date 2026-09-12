@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/continuity"
 	"seanime/internal/database/db"
@@ -12,6 +11,7 @@ import (
 	"seanime/internal/events"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mediaplayers/mediaplayer"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
@@ -75,7 +75,7 @@ type (
 		// For Local file playback, it MUST be set
 		// For Stream playback, it is optional
 		// See [progress_tracking.go] for how it is handled
-		currentMediaListEntry mo.Option[*anilist.AnimeListEntry] // List Entry for the current video playback
+		currentMediaListEntry mo.Option[*media.AnimeListEntry] // List Entry for the current video playback
 
 		// \/ Local file playback
 		currentLocalFile             mo.Option[*anime.LocalFile]             // Local file for the current video playback
@@ -85,7 +85,7 @@ type (
 		// The current episode being streamed, set in [StartStreamingUsingMediaPlayer] by finding the episode in currentStreamEpisodeCollection
 		currentStreamEpisode mo.Option[*anime.Episode]
 		// The current media being streamed, set in [StartStreamingUsingMediaPlayer]
-		currentStreamMedia        mo.Option[*anilist.BaseAnime]
+		currentStreamMedia        mo.Option[*media.Anime]
 		currentStreamAniDbEpisode mo.Option[string]
 
 		// \/ Manual progress tracking (non-integrated external player)
@@ -96,7 +96,7 @@ type (
 		manualTrackingWg            sync.WaitGroup
 
 		isOfflineRef    *util.Ref[bool]
-		animeCollection mo.Option[*anilist.AnimeCollection]
+		animeCollection mo.Option[*media.AnimeCollection]
 
 		playbackStatusSubscribers *result.Map[string, *PlaybackStatusSubscriber]
 
@@ -117,7 +117,7 @@ type (
 	PlaybackStartingEvent struct {
 		Filepath      string
 		PlaybackType  PlaybackType
-		Media         *anilist.BaseAnime
+		Media         *media.Anime
 		AniDbEpisode  string
 		EpisodeNumber int
 		WindowTitle   string
@@ -223,13 +223,13 @@ func New(opts *NewPlaybackManagerOptions) *PlaybackManager {
 		isOfflineRef:                 opts.IsOfflineRef,
 		nextEpisodeLocalFile:         mo.None[*anime.LocalFile](),
 		currentStreamEpisode:         mo.None[*anime.Episode](),
-		currentStreamMedia:           mo.None[*anilist.BaseAnime](),
+		currentStreamMedia:           mo.None[*media.Anime](),
 		currentStreamAniDbEpisode:    mo.None[string](),
-		animeCollection:              mo.None[*anilist.AnimeCollection](),
+		animeCollection:              mo.None[*media.AnimeCollection](),
 		currentManualTrackingState:   mo.None[*ManualTrackingState](),
 		currentLocalFile:             mo.None[*anime.LocalFile](),
 		currentLocalFileWrapperEntry: mo.None[*anime.LocalFileWrapperEntry](),
-		currentMediaListEntry:        mo.None[*anilist.AnimeListEntry](),
+		currentMediaListEntry:        mo.None[*media.AnimeListEntry](),
 		continuityManager:            opts.ContinuityManager,
 		playbackStatusSubscribers:    result.NewMap[string, *PlaybackStatusSubscriber](),
 	}
@@ -237,11 +237,11 @@ func New(opts *NewPlaybackManagerOptions) *PlaybackManager {
 	return pm
 }
 
-func (pm *PlaybackManager) SetAnimeCollection(ac *anilist.AnimeCollection) {
+func (pm *PlaybackManager) SetAnimeCollection(ac *media.AnimeCollection) {
 	pm.animeCollection = mo.Some(ac)
 }
 
-func (pm *PlaybackManager) GetCurrentMedia() (*anilist.BaseAnime, bool) {
+func (pm *PlaybackManager) GetCurrentMedia() (*media.Anime, bool) {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
 
@@ -397,7 +397,7 @@ func (pm *PlaybackManager) StartUntrackedStreamingUsingMediaPlayer(windowTitle s
 // StartStreamingUsingMediaPlayer starts streaming a video using the media player.
 // This sets PlaybackManager.currentStreamMedia and PlaybackManager.currentStreamEpisode used for progress tracking.
 // Note that PlaybackManager.currentStreamEpisodeCollection is not required to start streaming but is needed for progress tracking.
-func (pm *PlaybackManager) StartStreamingUsingMediaPlayer(windowTitle string, opts *StartPlayingOptions, media *anilist.BaseAnime, aniDbEpisode string) (err error) {
+func (pm *PlaybackManager) StartStreamingUsingMediaPlayer(windowTitle string, opts *StartPlayingOptions, media *media.Anime, aniDbEpisode string) (err error) {
 	defer util.HandlePanicInModuleWithError("library/playbackmanager/StartStreamingUsingMediaPlayer", &err)
 
 	event := &StreamPlaybackRequestedEvent{

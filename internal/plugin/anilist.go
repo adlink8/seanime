@@ -3,11 +3,13 @@ package plugin
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
+	"seanime/internal/api/bangumi"
 	"seanime/internal/extension"
 	"seanime/internal/extension_repo/prompt"
 	"seanime/internal/goja/goja_bindings"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
+	"seanime/internal/platforms/platform"
 	gojautil "seanime/internal/util/goja"
 
 	"github.com/dop251/goja"
@@ -34,14 +36,15 @@ func (a *AppContextImpl) BindAnilist(vm *goja.Runtime, logger *zerolog.Logger, e
 	anilistObj := getAnilistObj(vm)
 	_ = anilistObj.Set("refreshAnimeCollection", al.RefreshAnimeCollection)
 	_ = anilistObj.Set("refreshMangaCollection", al.RefreshMangaCollection)
+	// Bangumi 锚点：请求提供者概念随 AniList client 移除，保留方法名返回固定值（插件兼容）。
 	_ = anilistObj.Set("getRequestProvider", func() string {
-		return anilist.CurrentRequestProviderName()
+		return "official"
 	})
 
 	// Bind anilist platform
 	anilistPlatformRef, ok := a.anilistPlatformRef.Get()
 	if ok {
-		_ = anilistObj.Set("updateEntry", func(mediaID int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput) error {
+		_ = anilistObj.Set("updateEntry", func(mediaID int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
 			return anilistPlatformRef.Get().UpdateEntry(context.Background(), mediaID, status, scoreRaw, progress, startedAt, completedAt)
 		})
 		_ = anilistObj.Set("updateEntryProgress", func(mediaID int, progress int, totalEpisodes *int) error {
@@ -53,47 +56,50 @@ func (a *AppContextImpl) BindAnilist(vm *goja.Runtime, logger *zerolog.Logger, e
 		_ = anilistObj.Set("deleteEntry", func(mediaID int, entryId int) error {
 			return anilistPlatformRef.Get().DeleteEntry(context.Background(), mediaID, entryId)
 		})
-		_ = anilistObj.Set("getAnimeCollection", func(bypassCache bool) (*anilist.AnimeCollection, error) {
+		_ = anilistObj.Set("getAnimeCollection", func(bypassCache bool) (*media.AnimeCollection, error) {
 			return anilistPlatformRef.Get().GetAnimeCollection(context.Background(), bypassCache)
 		})
-		_ = anilistObj.Set("getRawAnimeCollection", func(bypassCache bool) (*anilist.AnimeCollection, error) {
+		_ = anilistObj.Set("getRawAnimeCollection", func(bypassCache bool) (*media.AnimeCollection, error) {
 			return anilistPlatformRef.Get().GetRawAnimeCollection(context.Background(), bypassCache)
 		})
-		_ = anilistObj.Set("getMangaCollection", func(bypassCache bool) (*anilist.MangaCollection, error) {
+		_ = anilistObj.Set("getMangaCollection", func(bypassCache bool) (*media.MangaCollection, error) {
 			return anilistPlatformRef.Get().GetMangaCollection(context.Background(), bypassCache)
 		})
-		_ = anilistObj.Set("getRawMangaCollection", func(bypassCache bool) (*anilist.MangaCollection, error) {
+		_ = anilistObj.Set("getRawMangaCollection", func(bypassCache bool) (*media.MangaCollection, error) {
 			return anilistPlatformRef.Get().GetRawMangaCollection(context.Background(), bypassCache)
 		})
-		_ = anilistObj.Set("getAnime", func(mediaID int) (*anilist.BaseAnime, error) {
+		_ = anilistObj.Set("getAnime", func(mediaID int) (*media.Anime, error) {
 			return anilistPlatformRef.Get().GetAnime(context.Background(), mediaID)
 		})
-		_ = anilistObj.Set("getManga", func(mediaID int) (*anilist.BaseManga, error) {
+		_ = anilistObj.Set("getManga", func(mediaID int) (*media.Manga, error) {
 			return anilistPlatformRef.Get().GetManga(context.Background(), mediaID)
 		})
-		_ = anilistObj.Set("getAnimeDetails", func(mediaID int) (*anilist.AnimeDetailsById_Media, error) {
+		_ = anilistObj.Set("getAnimeDetails", func(mediaID int) (*media.AnimeDetails, error) {
 			return anilistPlatformRef.Get().GetAnimeDetails(context.Background(), mediaID)
 		})
-		_ = anilistObj.Set("getMangaDetails", func(mediaID int) (*anilist.MangaDetailsById_Media, error) {
+		_ = anilistObj.Set("getMangaDetails", func(mediaID int) (*media.MangaDetails, error) {
 			return anilistPlatformRef.Get().GetMangaDetails(context.Background(), mediaID)
 		})
-		_ = anilistObj.Set("getAnimeCollectionWithRelations", func() (*anilist.AnimeCollectionWithRelations, error) {
+		_ = anilistObj.Set("getAnimeCollectionWithRelations", func() (*media.AnimeCollectionWithRelations, error) {
 			return anilistPlatformRef.Get().GetAnimeCollectionWithRelations(context.Background())
 		})
 		_ = anilistObj.Set("addMediaToCollection", func(mIds []int) error {
 			return anilistPlatformRef.Get().AddMediaToCollection(context.Background(), mIds)
 		})
-		_ = anilistObj.Set("getStudioDetails", func(studioID int) (*anilist.StudioDetails, error) {
+		_ = anilistObj.Set("getStudioDetails", func(studioID int) (*media.StudioDetails, error) {
 			return anilistPlatformRef.Get().GetStudioDetails(context.Background(), studioID)
 		})
-		_ = anilistObj.Set("listAnime", func(page *int, search *string, perPage *int, sort []*anilist.MediaSort, status []*anilist.MediaStatus, genres []*string, tags []*string, averageScoreGreater *int, season *anilist.MediaSeason, seasonYear *int, format *anilist.MediaFormat, isAdult *bool) (*anilist.ListAnime, error) {
-			return anilistPlatformRef.Get().GetAnilistClient().ListAnime(context.Background(), page, search, perPage, sort, status, genres, tags, averageScoreGreater, season, seasonYear, format, isAdult)
+		_ = anilistObj.Set("listAnime", func(page *int, search *string, perPage *int, sort []*media.MediaSort, status []*media.MediaStatus, genres []*string, tags []*string, averageScoreGreater *int, season *media.MediaSeason, seasonYear *int, format *media.MediaFormat, isAdult *bool) (*media.ListAnime, error) {
+			// Bangumi 锚点：仅关键词搜索可映射，其余过滤参数忽略（TODO(M4)）。
+			return searchAnimeViaBangumi(anilistPlatformRef.Get(), page, search, perPage)
 		})
-		_ = anilistObj.Set("listManga", func(page *int, search *string, perPage *int, sort []*anilist.MediaSort, status []*anilist.MediaStatus, genres []*string, tags []*string, averageScoreGreater *int, startDateGreater *string, startDateLesser *string, format *anilist.MediaFormat, countryOfOrigin *string, isAdult *bool) (*anilist.ListManga, error) {
-			return anilistPlatformRef.Get().GetAnilistClient().ListManga(context.Background(), page, search, perPage, sort, status, genres, tags, averageScoreGreater, startDateGreater, startDateLesser, format, countryOfOrigin, isAdult)
+		_ = anilistObj.Set("listManga", func(page *int, search *string, perPage *int, sort []*media.MediaSort, status []*media.MediaStatus, genres []*string, tags []*string, averageScoreGreater *int, startDateGreater *string, startDateLesser *string, format *media.MediaFormat, countryOfOrigin *string, isAdult *bool) (*media.ListManga, error) {
+			// Bangumi 锚点：仅关键词搜索可映射，其余过滤参数忽略（TODO(M4)）。
+			return searchMangaViaBangumi(anilistPlatformRef.Get(), page, search, perPage)
 		})
-		_ = anilistObj.Set("listRecentAnime", func(page *int, perPage *int, airingAtGreater *int, airingAtLesser *int, notYetAired *bool) (*anilist.ListRecentAnime, error) {
-			return anilistPlatformRef.Get().GetAnilistClient().ListRecentAnime(context.Background(), page, perPage, airingAtGreater, airingAtLesser, notYetAired)
+		_ = anilistObj.Set("listRecentAnime", func(page *int, perPage *int, airingAtGreater *int, airingAtLesser *int, notYetAired *bool) (*media.ListRecentAnime, error) {
+			// Bangumi 锚点降级：无逐集放送时间戳端点，返回空列表（M4 补齐）。
+			return &media.ListRecentAnime{}, nil
 		})
 		_ = anilistObj.Set("clearCache", func() {
 			anilistPlatformRef.Get().ClearCache()
@@ -102,7 +108,8 @@ func (a *AppContextImpl) BindAnilist(vm *goja.Runtime, logger *zerolog.Logger, e
 			anime.ClearScheduleCache()
 		})
 		_ = anilistObj.Set("customQuery", func(body map[string]interface{}, token string) (interface{}, error) {
-			return anilist.CustomQuery(body, a.logger, token)
+			// Bangumi 锚点：无自定义 GraphQL 查询入口，保留方法名并返回错误（插件兼容）。
+			return nil, errors.New("customQuery is not supported: the AniList GraphQL endpoint has been replaced by Bangumi")
 		})
 
 	}
@@ -121,8 +128,9 @@ func (a *AppContextImpl) BindAnilistCustomClient(vm *goja.Runtime, logger *zerol
 		scheduler: scheduler,
 	}
 	anilistObj := getAnilistObj(vm)
+	// Bangumi 锚点：请求提供者概念随 AniList client 移除，保留方法名返回固定值（插件兼容）。
 	_ = anilistObj.Set("getRequestProvider", func() string {
-		return anilist.CurrentRequestProviderName()
+		return "official"
 	})
 	_ = anilistObj.Set("useOfficialApi", func() goja.Value {
 		return al.runAction(vm, func() error {
@@ -136,11 +144,8 @@ func (a *AppContextImpl) BindAnilistCustomClient(vm *goja.Runtime, logger *zerol
 				return err
 			}
 
-			if al.ctx.anilist.UseOfficialClient == nil {
-				return errors.New("anilist runtime switch is not configured")
-			}
-
-			return al.ctx.anilist.UseOfficialClient()
+			// Bangumi 锚点：AniList client 运行时切换已停用，保留方法名并返回错误（插件兼容）。
+			return errors.New("useOfficialApi is not supported: the AniList client has been replaced by Bangumi")
 		})
 	})
 	_ = anilistObj.Set("useCustomApi", func(value goja.Value) goja.Value {
@@ -153,11 +158,9 @@ func (a *AppContextImpl) BindAnilistCustomClient(vm *goja.Runtime, logger *zerol
 				return err
 			}
 
-			if al.ctx.anilist.UseCustomClient == nil {
-				return errors.New("anilist runtime switch is not configured")
-			}
-
-			return al.ctx.anilist.UseCustomClient(config)
+			// Bangumi 锚点：AniList client 运行时切换已停用，保留方法名并返回错误（插件兼容）。
+			_ = config
+			return errors.New("useCustomApi is not supported: the AniList client has been replaced by Bangumi")
 		})
 	})
 
@@ -175,10 +178,20 @@ func getAnilistObj(vm *goja.Runtime) *goja.Object {
 	return obj
 }
 
-func customClientPromptOptions(ext *extension.Extension, config anilist.CustomClientConfig) prompt.Options {
+// CustomClientConfig AniList 自定义端点配置。
+// Bangumi 锚点下仅保留结构以兼容插件 API 形状，运行时切换已停用。
+type CustomClientConfig struct {
+	Name          string
+	Endpoint      string
+	Token         string
+	Authenticated bool
+	Headers       map[string]string
+}
+
+func customClientPromptOptions(ext *extension.Extension, config CustomClientConfig) prompt.Options {
 	name := config.Name
 	if name == "" {
-		name = anilist.CustomRequestProviderName
+		name = "custom"
 	}
 
 	details := []string{"Endpoint: " + config.Endpoint}
@@ -196,13 +209,13 @@ func customClientPromptOptions(ext *extension.Extension, config anilist.CustomCl
 	}
 }
 
-func readCustomClientConfig(vm *goja.Runtime, value goja.Value) (anilist.CustomClientConfig, error) {
+func readCustomClientConfig(vm *goja.Runtime, value goja.Value) (CustomClientConfig, error) {
 	if value == nil || goja.IsUndefined(value) || goja.IsNull(value) {
-		return anilist.CustomClientConfig{}, errors.New("anilist custom client options are required")
+		return CustomClientConfig{}, errors.New("anilist custom client options are required")
 	}
 
 	obj := value.ToObject(vm)
-	config := anilist.CustomClientConfig{
+	config := CustomClientConfig{
 		Name:          readString(obj, "name"),
 		Endpoint:      readString(obj, "endpoint"),
 		Token:         readString(obj, "token"),
@@ -243,6 +256,90 @@ func readStringMap(vm *goja.Runtime, value goja.Value) map[string]string {
 	}
 
 	return ret
+}
+
+// searchAnimeViaBangumi 通过 Bangumi 搜索接口实现插件 listAnime。
+func searchAnimeViaBangumi(p platform.Platform, page *int, search *string, perPage *int) (*media.ListAnime, error) {
+	client := p.GetBangumiClient()
+	if client == nil {
+		return nil, errors.New("bangumi client not available")
+	}
+	pageN, perPageN := 1, 20
+	if page != nil {
+		pageN = *page
+	}
+	if perPage != nil {
+		perPageN = *perPage
+	}
+	keyword := ""
+	if search != nil {
+		keyword = *search
+	}
+	res, err := client.SearchSubjects(context.Background(), bangumi.SearchSubjectsOpts{
+		Keyword: keyword,
+		Sort:    "match",
+		Filter:  bangumi.SearchFilter{Type: []int{2}},
+		Limit:   perPageN,
+		Offset:  (pageN - 1) * perPageN,
+	})
+	if err != nil {
+		return nil, err
+	}
+	mediaList := make([]*media.Anime, 0, len(res.Data))
+	for i := range res.Data {
+		if an := media.AnimeFromSubject(bangumi.SubjectToMedia(&res.Data[i])); an != nil {
+			mediaList = append(mediaList, an)
+		}
+	}
+	hasNextPage := res.Offset+len(res.Data) < res.Total
+	total := res.Total
+	pi := perPageN
+	return &media.ListAnime{Page: &media.ListAnime_Page{
+		Media:    mediaList,
+		PageInfo: &media.PageInfo{CurrentPage: &pageN, PerPage: &pi, Total: &total, HasNextPage: &hasNextPage},
+	}}, nil
+}
+
+// searchMangaViaBangumi 通过 Bangumi 搜索接口实现插件 listManga。
+func searchMangaViaBangumi(p platform.Platform, page *int, search *string, perPage *int) (*media.ListManga, error) {
+	client := p.GetBangumiClient()
+	if client == nil {
+		return nil, errors.New("bangumi client not available")
+	}
+	pageN, perPageN := 1, 20
+	if page != nil {
+		pageN = *page
+	}
+	if perPage != nil {
+		perPageN = *perPage
+	}
+	keyword := ""
+	if search != nil {
+		keyword = *search
+	}
+	res, err := client.SearchSubjects(context.Background(), bangumi.SearchSubjectsOpts{
+		Keyword: keyword,
+		Sort:    "match",
+		Filter:  bangumi.SearchFilter{Type: []int{1}},
+		Limit:   perPageN,
+		Offset:  (pageN - 1) * perPageN,
+	})
+	if err != nil {
+		return nil, err
+	}
+	mediaList := make([]*media.Manga, 0, len(res.Data))
+	for i := range res.Data {
+		if m := media.MangaFromSubject(bangumi.SubjectToMedia(&res.Data[i])); m != nil {
+			mediaList = append(mediaList, m)
+		}
+	}
+	hasNextPage := res.Offset+len(res.Data) < res.Total
+	total := res.Total
+	pi := perPageN
+	return &media.ListManga{Page: &media.ListManga_Page{
+		Media:    mediaList,
+		PageInfo: &media.PageInfo{CurrentPage: &pageN, PerPage: &pi, Total: &total, HasNextPage: &hasNextPage},
+	}}, nil
 }
 
 func (a *Anilist) RefreshAnimeCollection() {

@@ -50,6 +50,14 @@ func (c *Client) PatchCollection(ctx context.Context, subjectID int, body Collec
 		fmt.Sprintf("/v0/users/-/collections/%d", subjectID), nil, body, nil)
 }
 
+// DeleteCollection 删除收藏（DELETE /v0/users/-/collections/{subject_id}），
+// 成功时服务端返回 204 空响应体。
+// （Wave B additive：平台层 DeleteEntry 使用）
+func (c *Client) DeleteCollection(ctx context.Context, subjectID int) error {
+	return c.doWrite(ctx, http.MethodDelete,
+		fmt.Sprintf("/v0/users/-/collections/%d", subjectID), nil, nil, nil)
+}
+
 // GetEpisodeCollections 查询某条目的章节观看进度
 // （GET /v0/users/-/collections/{subject_id}/episodes）。
 func (c *Client) GetEpisodeCollections(ctx context.Context, subjectID int) (*EpisodeCollectionsResult, error) {

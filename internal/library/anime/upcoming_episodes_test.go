@@ -1,7 +1,7 @@
 package anime_test
 
 import (
-	"seanime/internal/api/anilist"
+	"seanime/internal/media"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,24 +13,24 @@ func TestNewUpcomingEpisodesSortsAndHydratesMetadata(t *testing.T) {
 	h := newAnimeTestWrapper(t)
 	h.clearAllNextAiringEpisodes()
 
-	patchAnimeCollectionEntry(t, h.animeCollection, 154587, anilist.AnimeCollectionEntryPatch{
-		Status:            new(anilist.MediaListStatusCurrent),
-		NextAiringEpisode: &anilist.BaseAnime_NextAiringEpisode{Episode: 8, AiringAt: 1_700_000_200, TimeUntilAiring: 200},
+	patchAnimeCollectionEntry(t, h.animeCollection, 154587, media.AnimeCollectionEntryPatch{
+		Status:            new(media.MediaListStatusCurrent),
+		NextAiringEpisode: &media.Anime_NextAiringEpisode{Episode: 8, AiringAt: 1_700_000_200, TimeUntilAiring: 200},
 	})
 	frierenMetadata := h.setEpisodeMetadata(t, 154587, []int{1, 2, 3, 4, 5, 6, 7, 8}, nil)
 	frierenMetadata.Episodes["8"].Title = "frieren next"
 
-	patchAnimeCollectionEntry(t, h.animeCollection, 146065, anilist.AnimeCollectionEntryPatch{
-		Status:            new(anilist.MediaListStatusCurrent),
-		NextAiringEpisode: &anilist.BaseAnime_NextAiringEpisode{Episode: 3, AiringAt: 1_700_000_050, TimeUntilAiring: 50},
+	patchAnimeCollectionEntry(t, h.animeCollection, 146065, media.AnimeCollectionEntryPatch{
+		Status:            new(media.MediaListStatusCurrent),
+		NextAiringEpisode: &media.Anime_NextAiringEpisode{Episode: 3, AiringAt: 1_700_000_050, TimeUntilAiring: 50},
 	})
 	mushokuMetadata := h.setEpisodeMetadata(t, 146065, []int{1, 2, 3}, nil)
 	mushokuMetadata.Episodes["3"].Title = "mushoku next"
 
 	// dropped entries still have next-airing data in fixtures sometimes, but they should be filtered out.
-	patchAnimeCollectionEntry(t, h.animeCollection, 21, anilist.AnimeCollectionEntryPatch{
-		Status:            new(anilist.MediaListStatusDropped),
-		NextAiringEpisode: &anilist.BaseAnime_NextAiringEpisode{Episode: 1100, AiringAt: 1_700_000_010, TimeUntilAiring: 10},
+	patchAnimeCollectionEntry(t, h.animeCollection, 21, media.AnimeCollectionEntryPatch{
+		Status:            new(media.MediaListStatusDropped),
+		NextAiringEpisode: &media.Anime_NextAiringEpisode{Episode: 1100, AiringAt: 1_700_000_010, TimeUntilAiring: 10},
 	})
 
 	upcoming := h.newUpcomingEpisodes(t)

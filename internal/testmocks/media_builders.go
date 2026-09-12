@@ -1,26 +1,26 @@
 package testmocks
 
-import "seanime/internal/api/anilist"
+import "seanime/internal/media"
 
 type BaseAnimeBuilder struct {
-	anime *anilist.BaseAnime
+	anime *media.Anime
 }
 
 func NewBaseAnimeBuilder(id int, title string) *BaseAnimeBuilder {
-	return &BaseAnimeBuilder{anime: &anilist.BaseAnime{
+	return &BaseAnimeBuilder{anime: &media.Anime{
 		ID:       id,
 		IDMal:    new(501),
-		Status:   new(anilist.MediaStatusFinished),
-		Type:     new(anilist.MediaTypeAnime),
-		Format:   new(anilist.MediaFormatTv),
+		Status:   new(media.MediaStatusFinished),
+		Type:     new(media.MediaTypeAnime),
+		Format:   new(media.MediaFormatTv),
 		Episodes: new(12),
 		IsAdult:  new(false),
-		Title: &anilist.BaseAnime_Title{
+		Title: &media.Anime_Title{
 			English: new(title),
 			Romaji:  new(title),
 		},
 		Synonyms: []*string{new(title), new("Sample Anime Season 1")},
-		StartDate: &anilist.BaseAnime_StartDate{
+		StartDate: &media.Anime_StartDate{
 			Year:  new(2024),
 			Month: new(1),
 			Day:   new(2),
@@ -28,7 +28,7 @@ func NewBaseAnimeBuilder(id int, title string) *BaseAnimeBuilder {
 	}}
 }
 
-func NewBaseAnime(id int, title string) *anilist.BaseAnime {
+func NewBaseAnime(id int, title string) *media.Anime {
 	return NewBaseAnimeBuilder(id, title).Build()
 }
 
@@ -75,12 +75,12 @@ func (b *BaseAnimeBuilder) WithUserPreferredTitle(title string) *BaseAnimeBuilde
 	return b
 }
 
-func (b *BaseAnimeBuilder) WithStatus(status anilist.MediaStatus) *BaseAnimeBuilder {
+func (b *BaseAnimeBuilder) WithStatus(status media.MediaStatus) *BaseAnimeBuilder {
 	b.anime.Status = new(status)
 	return b
 }
 
-func (b *BaseAnimeBuilder) WithFormat(format anilist.MediaFormat) *BaseAnimeBuilder {
+func (b *BaseAnimeBuilder) WithFormat(format media.MediaFormat) *BaseAnimeBuilder {
 	b.anime.Format = new(format)
 	return b
 }
@@ -101,7 +101,7 @@ func (b *BaseAnimeBuilder) WithSynonyms(synonyms ...string) *BaseAnimeBuilder {
 }
 
 func (b *BaseAnimeBuilder) WithStartDate(year int, month int, day int) *BaseAnimeBuilder {
-	b.anime.StartDate = &anilist.BaseAnime_StartDate{
+	b.anime.StartDate = &media.Anime_StartDate{
 		Year:  new(year),
 		Month: new(month),
 		Day:   new(day),
@@ -110,7 +110,7 @@ func (b *BaseAnimeBuilder) WithStartDate(year int, month int, day int) *BaseAnim
 }
 
 func (b *BaseAnimeBuilder) WithEndDate(year int, month int, day int) *BaseAnimeBuilder {
-	b.anime.EndDate = &anilist.BaseAnime_EndDate{
+	b.anime.EndDate = &media.Anime_EndDate{
 		Year:  new(year),
 		Month: new(month),
 		Day:   new(day),
@@ -119,7 +119,7 @@ func (b *BaseAnimeBuilder) WithEndDate(year int, month int, day int) *BaseAnimeB
 }
 
 func (b *BaseAnimeBuilder) WithCoverImage(url string) *BaseAnimeBuilder {
-	b.anime.CoverImage = &anilist.BaseAnime_CoverImage{
+	b.anime.CoverImage = &media.Anime_CoverImage{
 		ExtraLarge: new(url),
 		Large:      new(url),
 		Medium:     new(url),
@@ -133,7 +133,7 @@ func (b *BaseAnimeBuilder) WithBannerImage(url string) *BaseAnimeBuilder {
 }
 
 func (b *BaseAnimeBuilder) WithNextAiringEpisode(episode int, airingAt int, timeUntilAiring int) *BaseAnimeBuilder {
-	b.anime.NextAiringEpisode = &anilist.BaseAnime_NextAiringEpisode{
+	b.anime.NextAiringEpisode = &media.Anime_NextAiringEpisode{
 		Episode:         episode,
 		AiringAt:        airingAt,
 		TimeUntilAiring: timeUntilAiring,
@@ -141,33 +141,33 @@ func (b *BaseAnimeBuilder) WithNextAiringEpisode(episode int, airingAt int, time
 	return b
 }
 
-func (b *BaseAnimeBuilder) Build() *anilist.BaseAnime {
+func (b *BaseAnimeBuilder) Build() *media.Anime {
 	return b.anime
 }
 
 type BaseMangaBuilder struct {
-	manga *anilist.BaseManga
+	manga *media.Manga
 }
 
 func NewBaseMangaBuilder(id int, title string) *BaseMangaBuilder {
-	return &BaseMangaBuilder{manga: &anilist.BaseManga{
+	return &BaseMangaBuilder{manga: &media.Manga{
 		ID:      id,
-		Status:  new(anilist.MediaStatusFinished),
-		Type:    new(anilist.MediaTypeManga),
-		Format:  new(anilist.MediaFormatManga),
+		Status:  new(media.MediaStatusFinished),
+		Type:    new(media.MediaTypeManga),
+		Format:  new(media.MediaFormatManga),
 		IsAdult: new(false),
-		Title: &anilist.BaseManga_Title{
+		Title: &media.Manga_Title{
 			English: new(title),
 			Romaji:  new(title),
 		},
 		Synonyms: []*string{new(title), new(title + " Alternative")},
-		StartDate: &anilist.BaseManga_StartDate{
+		StartDate: &media.Manga_StartDate{
 			Year: new(2023),
 		},
 	}}
 }
 
-func NewBaseManga(id int, title string) *anilist.BaseManga {
+func NewBaseManga(id int, title string) *media.Manga {
 	return NewBaseMangaBuilder(id, title).Build()
 }
 
@@ -214,12 +214,12 @@ func (b *BaseMangaBuilder) WithUserPreferredTitle(title string) *BaseMangaBuilde
 	return b
 }
 
-func (b *BaseMangaBuilder) WithStatus(status anilist.MediaStatus) *BaseMangaBuilder {
+func (b *BaseMangaBuilder) WithStatus(status media.MediaStatus) *BaseMangaBuilder {
 	b.manga.Status = new(status)
 	return b
 }
 
-func (b *BaseMangaBuilder) WithFormat(format anilist.MediaFormat) *BaseMangaBuilder {
+func (b *BaseMangaBuilder) WithFormat(format media.MediaFormat) *BaseMangaBuilder {
 	b.manga.Format = new(format)
 	return b
 }
@@ -245,7 +245,7 @@ func (b *BaseMangaBuilder) WithSynonyms(synonyms ...string) *BaseMangaBuilder {
 }
 
 func (b *BaseMangaBuilder) WithStartDate(year int, month int, day int) *BaseMangaBuilder {
-	b.manga.StartDate = &anilist.BaseManga_StartDate{
+	b.manga.StartDate = &media.Manga_StartDate{
 		Year:  new(year),
 		Month: new(month),
 		Day:   new(day),
@@ -254,7 +254,7 @@ func (b *BaseMangaBuilder) WithStartDate(year int, month int, day int) *BaseMang
 }
 
 func (b *BaseMangaBuilder) WithEndDate(year int, month int, day int) *BaseMangaBuilder {
-	b.manga.EndDate = &anilist.BaseManga_EndDate{
+	b.manga.EndDate = &media.Manga_EndDate{
 		Year:  new(year),
 		Month: new(month),
 		Day:   new(day),
@@ -263,7 +263,7 @@ func (b *BaseMangaBuilder) WithEndDate(year int, month int, day int) *BaseMangaB
 }
 
 func (b *BaseMangaBuilder) WithCoverImage(url string) *BaseMangaBuilder {
-	b.manga.CoverImage = &anilist.BaseManga_CoverImage{
+	b.manga.CoverImage = &media.Manga_CoverImage{
 		ExtraLarge: new(url),
 		Large:      new(url),
 		Medium:     new(url),
@@ -276,19 +276,19 @@ func (b *BaseMangaBuilder) WithBannerImage(url string) *BaseMangaBuilder {
 	return b
 }
 
-func (b *BaseMangaBuilder) Build() *anilist.BaseManga {
+func (b *BaseMangaBuilder) Build() *media.Manga {
 	return b.manga
 }
 
-func ensureAnimeTitle(anime *anilist.BaseAnime) {
+func ensureAnimeTitle(anime *media.Anime) {
 	if anime.Title == nil {
-		anime.Title = &anilist.BaseAnime_Title{}
+		anime.Title = &media.Anime_Title{}
 	}
 }
 
-func ensureMangaTitle(manga *anilist.BaseManga) {
+func ensureMangaTitle(manga *media.Manga) {
 	if manga.Title == nil {
-		manga.Title = &anilist.BaseManga_Title{}
+		manga.Title = &media.Manga_Title{}
 	}
 }
 

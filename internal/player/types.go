@@ -1,8 +1,8 @@
 package player
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mkvparser"
 
 	"github.com/samber/mo"
@@ -115,7 +115,7 @@ type PlaybackInfo struct {
 	DisableRestoreFromContinuity   *bool                                `json:"disableRestoreFromContinuity,omitempty"`
 	InitialState                   *InitialState                        `json:"initialState,omitempty"`
 	EntryListData                  *anime.EntryListData                 `json:"entryListData,omitempty"`
-	Media                          *anilist.BaseAnime                   `json:"media"`
+	Media                          *media.Anime                         `json:"media"`
 	Episode                        *anime.Episode                       `json:"episode"`
 	LocalFile                      *anime.LocalFile                     `json:"localFile,omitempty"`
 	OnlinestreamParams             *OnlinestreamParams                  `json:"onlinestreamParams,omitempty"`

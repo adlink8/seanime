@@ -1,8 +1,8 @@
 package anime_test
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,10 +14,10 @@ func TestNewEntryDownloadInfoEpisodeZeroDiscrepancy(t *testing.T) {
 	h := newAnimeTestWrapper(t)
 	mediaID := 146065
 
-	patchEntryMediaStatus(t, h.animeCollection, mediaID, anilist.MediaStatusReleasing)
-	patchAnimeCollectionEntry(t, h.animeCollection, mediaID, anilist.AnimeCollectionEntryPatch{
+	patchEntryMediaStatus(t, h.animeCollection, mediaID, media.MediaStatusReleasing)
+	patchAnimeCollectionEntry(t, h.animeCollection, mediaID, media.AnimeCollectionEntryPatch{
 		AiredEpisodes:     new(6),
-		NextAiringEpisode: &anilist.BaseAnime_NextAiringEpisode{Episode: 7},
+		NextAiringEpisode: &media.Anime_NextAiringEpisode{Episode: 7},
 	})
 	h.setEpisodeMetadata(t, mediaID, []int{1, 2, 3, 4, 5}, map[string]int{"S1": 1})
 
@@ -41,7 +41,7 @@ func TestNewEntryDownloadInfoEpisodeZeroDiscrepancy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// we only care about the logical episode list here, not local download state.
-			info := h.newEntryDownloadInfo(t, mediaID, nil, tt.progress, anilist.MediaListStatusCurrent)
+			info := h.newEntryDownloadInfo(t, mediaID, nil, tt.progress, media.MediaListStatusCurrent)
 
 			require.ElementsMatch(t, tt.expectedEpisodes, collectDownloadEpisodes(info))
 			require.False(t, info.HasInaccurateSchedule)
@@ -61,11 +61,11 @@ func TestNewEntryDownloadInfoSpecialsDiscrepancyAndBatchFlags(t *testing.T) {
 	mediaID := 154587
 
 	patchCollectionEntryEpisodeCount(t, h.animeCollection, mediaID, 6)
-	patchEntryMediaStatus(t, h.animeCollection, mediaID, anilist.MediaStatusFinished)
+	patchEntryMediaStatus(t, h.animeCollection, mediaID, media.MediaStatusFinished)
 	metadataOverride := h.setEpisodeMetadata(t, mediaID, []int{1, 2, 3, 4}, map[string]int{"S1": 1, "S2": 2})
 	metadataOverride.Episodes["1"].AbsoluteEpisodeNumber = 13
 
-	info := h.newEntryDownloadInfo(t, mediaID, nil, 0, anilist.MediaListStatusCurrent)
+	info := h.newEntryDownloadInfo(t, mediaID, nil, 0, media.MediaListStatusCurrent)
 
 	require.ElementsMatch(t, []downloadEpisodeExpectation{{1, "1"}, {2, "2"}, {3, "3"}, {4, "4"}, {6, "S1"}, {5, "S2"}}, collectDownloadEpisodes(info))
 	require.True(t, info.CanBatch)
@@ -81,7 +81,7 @@ func TestNewEntryDownloadInfoCompletedRewatchFiltersDownloadedEpisodes(t *testin
 	mediaID := 154587
 
 	patchCollectionEntryEpisodeCount(t, h.animeCollection, mediaID, 5)
-	patchEntryMediaStatus(t, h.animeCollection, mediaID, anilist.MediaStatusFinished)
+	patchEntryMediaStatus(t, h.animeCollection, mediaID, media.MediaStatusFinished)
 	h.setEpisodeMetadata(t, mediaID, []int{1, 2, 3, 4, 5}, nil)
 
 	localFiles := anime.NewTestLocalFiles(
@@ -96,7 +96,7 @@ func TestNewEntryDownloadInfoCompletedRewatchFiltersDownloadedEpisodes(t *testin
 		},
 	)
 
-	info := h.newEntryDownloadInfo(t, mediaID, localFiles, 4, anilist.MediaListStatusCompleted)
+	info := h.newEntryDownloadInfo(t, mediaID, localFiles, 4, media.MediaListStatusCompleted)
 
 	require.ElementsMatch(t, []downloadEpisodeExpectation{{2, "2"}, {4, "4"}, {5, "5"}}, collectDownloadEpisodes(info))
 	require.True(t, info.CanBatch)
@@ -112,11 +112,11 @@ func TestNewEntryDownloadInfoScheduleFlags(t *testing.T) {
 		mediaID := 154587
 
 		patchCollectionEntryEpisodeCount(t, h.animeCollection, mediaID, 5)
-		patchEntryMediaStatus(t, h.animeCollection, mediaID, anilist.MediaStatusReleasing)
+		patchEntryMediaStatus(t, h.animeCollection, mediaID, media.MediaStatusReleasing)
 		h.clearNextAiringEpisode(t, mediaID)
 		h.setEpisodeMetadata(t, mediaID, []int{1, 2, 3, 4, 5}, nil)
 
-		info := h.newEntryDownloadInfo(t, mediaID, nil, 0, anilist.MediaListStatusCurrent)
+		info := h.newEntryDownloadInfo(t, mediaID, nil, 0, media.MediaListStatusCurrent)
 
 		require.ElementsMatch(t, []downloadEpisodeExpectation{{1, "1"}, {2, "2"}, {3, "3"}, {4, "4"}, {5, "5"}}, collectDownloadEpisodes(info))
 		require.True(t, info.HasInaccurateSchedule)
@@ -128,13 +128,13 @@ func TestNewEntryDownloadInfoScheduleFlags(t *testing.T) {
 		mediaID := 154587
 
 		patchCollectionEntryEpisodeCount(t, h.animeCollection, mediaID, 12)
-		patchEntryMediaStatus(t, h.animeCollection, mediaID, anilist.MediaStatusReleasing)
-		patchAnimeCollectionEntry(t, h.animeCollection, mediaID, anilist.AnimeCollectionEntryPatch{
-			NextAiringEpisode: &anilist.BaseAnime_NextAiringEpisode{Episode: 4},
+		patchEntryMediaStatus(t, h.animeCollection, mediaID, media.MediaStatusReleasing)
+		patchAnimeCollectionEntry(t, h.animeCollection, mediaID, media.AnimeCollectionEntryPatch{
+			NextAiringEpisode: &media.Anime_NextAiringEpisode{Episode: 4},
 		})
 		h.setEpisodeMetadata(t, mediaID, []int{1, 2, 3, 4, 5, 6}, nil)
 
-		info := h.newEntryDownloadInfo(t, mediaID, nil, 0, anilist.MediaListStatusCurrent)
+		info := h.newEntryDownloadInfo(t, mediaID, nil, 0, media.MediaListStatusCurrent)
 
 		require.ElementsMatch(t, []downloadEpisodeExpectation{{1, "1"}, {2, "2"}, {3, "3"}}, collectDownloadEpisodes(info))
 		require.False(t, info.HasInaccurateSchedule)
@@ -147,7 +147,7 @@ func TestNewEntryDownloadInfoFallsBackToMetadataCurrentEpisodeCount(t *testing.T
 	h := newAnimeTestWrapper(t)
 	mediaID := 154587
 
-	patchEntryMediaStatus(t, h.animeCollection, mediaID, anilist.MediaStatusFinished)
+	patchEntryMediaStatus(t, h.animeCollection, mediaID, media.MediaStatusFinished)
 	h.clearEpisodeCount(t, mediaID)
 	h.clearNextAiringEpisode(t, mediaID)
 	h.setCustomMetadata(mediaID, h.newMetadataWithAirDates(t, mediaID, map[int]string{
@@ -156,7 +156,7 @@ func TestNewEntryDownloadInfoFallsBackToMetadataCurrentEpisodeCount(t *testing.T
 		3: "2099-01-01",
 	}))
 
-	info := h.newEntryDownloadInfo(t, mediaID, nil, 0, anilist.MediaListStatusCurrent)
+	info := h.newEntryDownloadInfo(t, mediaID, nil, 0, media.MediaListStatusCurrent)
 
 	require.ElementsMatch(t, []downloadEpisodeExpectation{{1, "1"}, {2, "2"}}, collectDownloadEpisodes(info))
 }
@@ -167,10 +167,10 @@ func TestNewEntryDownloadInfoEarlyReturnsAndErrors(t *testing.T) {
 		h := newAnimeTestWrapper(t)
 		mediaID := 154587
 
-		patchEntryMediaStatus(t, h.animeCollection, mediaID, anilist.MediaStatusNotYetReleased)
+		patchEntryMediaStatus(t, h.animeCollection, mediaID, media.MediaStatusNotYetReleased)
 		h.setEpisodeMetadata(t, mediaID, []int{1, 2, 3}, nil)
 
-		info := h.newEntryDownloadInfo(t, mediaID, nil, 0, anilist.MediaListStatusCurrent)
+		info := h.newEntryDownloadInfo(t, mediaID, nil, 0, media.MediaListStatusCurrent)
 
 		require.Empty(t, info.EpisodesToDownload)
 		require.False(t, info.CanBatch)
@@ -186,7 +186,7 @@ func TestNewEntryDownloadInfoEarlyReturnsAndErrors(t *testing.T) {
 		_, err := anime.NewEntryDownloadInfo(&anime.NewEntryDownloadInfoOptions{
 			LocalFiles:          nil,
 			Progress:            new(0),
-			Status:              new(anilist.MediaListStatusCurrent),
+			Status:              new(media.MediaListStatusCurrent),
 			Media:               entry.Media,
 			MetadataProviderRef: h.metadataProviderRef,
 			AnimeMetadata:       nil,
@@ -200,13 +200,13 @@ func TestNewEntryDownloadInfoEarlyReturnsAndErrors(t *testing.T) {
 		mediaID := 154587
 		h := newAnimeTestWrapper(t)
 
-		patchEntryMediaStatus(t, h.animeCollection, mediaID, anilist.MediaStatusFinished)
+		patchEntryMediaStatus(t, h.animeCollection, mediaID, media.MediaStatusFinished)
 		h.clearEpisodeCount(t, mediaID)
 		h.clearNextAiringEpisode(t, mediaID)
 		h.setCustomMetadata(mediaID, h.setEpisodeMetadata(t, mediaID, []int{1, 2, 3}, nil))
 		h.clearMetadataAirDates(mediaID)
 
-		info := h.newEntryDownloadInfo(t, mediaID, nil, 0, anilist.MediaListStatusCurrent)
+		info := h.newEntryDownloadInfo(t, mediaID, nil, 0, media.MediaListStatusCurrent)
 
 		require.Empty(t, info.EpisodesToDownload)
 	})

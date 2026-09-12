@@ -5,14 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
+	"seanime/internal/api/bangumi"
+	"seanime/internal/media"
 	"seanime/internal/util/filecache"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gqlgo/gqlgenc/clientv2"
 )
 
 const (
@@ -22,17 +21,19 @@ const (
 	queueRetryDelayMax = 5 * time.Minute
 )
 
+// queuedMediaListUpdate 待同步的收藏更新（API 不可用时入队，恢复后重放）。
+// 字段为 media 镜像类型；重放时转换为 Bangumi 收藏 upsert/patch 请求体。
 type queuedMediaListUpdate struct {
-	MediaID       int                      `json:"mediaId"`
-	Status        *anilist.MediaListStatus `json:"status,omitempty"`
-	ScoreRaw      *int                     `json:"scoreRaw,omitempty"`
-	Progress      *int                     `json:"progress,omitempty"`
-	StartedAt     *anilist.FuzzyDateInput  `json:"startedAt,omitempty"`
-	CompletedAt   *anilist.FuzzyDateInput  `json:"completedAt,omitempty"`
-	FullUpdate    bool                     `json:"fullUpdate,omitempty"`
-	Attempts      int                      `json:"attempts,omitempty"`
-	UpdatedAt     time.Time                `json:"updatedAt"`
-	NextAttemptAt *time.Time               `json:"nextAttemptAt,omitempty"`
+	MediaID       int                   `json:"mediaId"`
+	Status        *media.MediaListStatus `json:"status,omitempty"`
+	ScoreRaw      *int                  `json:"scoreRaw,omitempty"`
+	Progress      *int                  `json:"progress,omitempty"`
+	StartedAt     *media.FuzzyDateInput `json:"startedAt,omitempty"`
+	CompletedAt   *media.FuzzyDateInput `json:"completedAt,omitempty"`
+	FullUpdate    bool                  `json:"fullUpdate,omitempty"`
+	Attempts      int                   `json:"attempts,omitempty"`
+	UpdatedAt     time.Time             `json:"updatedAt"`
+	NextAttemptAt *time.Time            `json:"nextAttemptAt,omitempty"`
 }
 
 func (c *CacheLayer) startQueuedUpdateSync() {
@@ -48,16 +49,18 @@ func (c *CacheLayer) startQueuedUpdateSync() {
 	}()
 }
 
+// shouldQueueMediaListUpdate 判断写失败是否可入队重试。
+// 鉴权/资源不存在类错误不可重试；网络/服务端/限流类错误可重试。
 func shouldQueueMediaListUpdate(err error) bool {
 	if err == nil {
 		return false
 	}
-	if errors.Is(err, context.Canceled) || errors.Is(err, anilist.ErrNotAuthenticated) {
+	if errors.Is(err, context.Canceled) || errors.Is(err, bangumi.ErrUnauthorized) {
 		return false
 	}
 
 	errStr := strings.ToLower(err.Error())
-	if isAnilistAuthError(err) || strings.Contains(errStr, "not authenticated") {
+	if isBangumiAuthError(err) {
 		return false
 	}
 	if strings.Contains(errStr, "401") || strings.Contains(errStr, "403") || strings.Contains(errStr, "404") {
@@ -89,13 +92,28 @@ func shouldQueueMediaListUpdate(err error) bool {
 	})
 }
 
-func (c *CacheLayer) queueMediaListEntryUpdate(mediaID *int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput) (int, error) {
-	if mediaID == nil {
-		return 0, errors.New("anilist cache: media ID is required to queue list update")
+// collectionUpsertBodyFromValues 将收藏字段值转换为 Bangumi upsert 请求体。
+// 评分换算：AniList raw 0-100 → Bangumi rate 0-10（÷10，四舍五入）。
+func collectionUpsertBodyFromValues(status *media.MediaListStatus, scoreRaw *int, progress *int) bangumi.CollectionUpsertBody {
+	body := bangumi.CollectionUpsertBody{}
+	if status != nil {
+		if t, ok := bangumi.MediaListStatusToBangumiType(*status); ok {
+			body.Type = &t
+		}
 	}
+	if scoreRaw != nil && *scoreRaw > 0 {
+		rate := (*scoreRaw + 5) / 10 // 0-100 → 0-10
+		body.Rate = &rate
+	}
+	if progress != nil {
+		body.EpStatus = progress
+	}
+	return body
+}
 
+func (c *CacheLayer) queueMediaListEntryUpdate(mediaID int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
 	update := queuedMediaListUpdate{
-		MediaID:     *mediaID,
+		MediaID:     mediaID,
 		Status:      newCloned(status),
 		ScoreRaw:    newCloned(scoreRaw),
 		Progress:    newCloned(progress),
@@ -107,23 +125,19 @@ func (c *CacheLayer) queueMediaListEntryUpdate(mediaID *int, status *anilist.Med
 	return c.queueMediaListUpdate(update)
 }
 
-func (c *CacheLayer) queueMediaListEntryProgressUpdate(mediaID *int, progress *int, status *anilist.MediaListStatus) (int, error) {
-	if mediaID == nil {
-		return 0, errors.New("anilist cache: media ID is required to queue progress update")
-	}
-
+func (c *CacheLayer) queueMediaListEntryProgressUpdate(mediaID int, progress int, status *media.MediaListStatus) error {
 	update := queuedMediaListUpdate{
-		MediaID:  *mediaID,
+		MediaID:  mediaID,
 		Status:   newCloned(status),
-		Progress: newCloned(progress),
+		Progress: &progress,
 	}
 
 	return c.queueMediaListUpdate(update)
 }
 
-func (c *CacheLayer) queueMediaListUpdate(update queuedMediaListUpdate) (int, error) {
+func (c *CacheLayer) queueMediaListUpdate(update queuedMediaListUpdate) error {
 	if !ShouldCache.Load() {
-		return 0, errors.New("anilist cache: cache layer is disabled, list update cannot be queued")
+		return errors.New("bangumi cache: cache layer is disabled, list update cannot be queued")
 	}
 
 	c.pendingUpdateSyncMutex.Lock()
@@ -131,59 +145,56 @@ func (c *CacheLayer) queueMediaListUpdate(update queuedMediaListUpdate) (int, er
 
 	queued, err := c.saveQueuedMediaListUpdate(update)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	entryID, patched, err := c.applyQueuedUpdateToCache(queued)
 	if err != nil {
-		c.logger.Warn().Err(err).Int("mediaId", queued.MediaID).Msg("anilist cache: Failed to apply queued list update to cache")
+		c.logger.Warn().Err(err).Int("mediaId", queued.MediaID).Msg("bangumi cache: Failed to apply queued list update to cache")
 	}
 	if !patched {
-		c.logger.Debug().Int("mediaId", queued.MediaID).Msg("anilist cache: Queued list update without a cached collection entry")
+		c.logger.Debug().Int("mediaId", queued.MediaID).Msg("bangumi cache: Queued list update without a cached collection entry")
 	}
+	_ = entryID
 
-	c.logger.Info().Int("mediaId", queued.MediaID).Msg("anilist cache: Queued list update for retry")
-	return entryID, nil
+	c.logger.Info().Int("mediaId", queued.MediaID).Msg("bangumi cache: Queued list update for retry")
+	return nil
 }
 
-func (c *CacheLayer) sendMediaListEntryUpdate(ctx context.Context, mediaID *int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput, interceptors ...clientv2.RequestInterceptor) (*anilist.UpdateMediaListEntry, error) {
-	if mediaID == nil {
-		return c.anilistClientRef.Get().UpdateMediaListEntry(ctx, mediaID, status, scoreRaw, progress, startedAt, completedAt, interceptors...)
+// syncQueuedUpdate 重放一条排队更新。
+// 完整更新（或含评分/日期）走 upsert；纯进度/状态更新走 patch（避免覆盖评论等字段）。
+func (c *CacheLayer) syncQueuedUpdate(ctx context.Context, update queuedMediaListUpdate) error {
+	if update.FullUpdate || update.ScoreRaw != nil || update.StartedAt != nil || update.CompletedAt != nil {
+		return c.client().UpsertCollection(ctx, update.MediaID, collectionUpsertBodyFromUpdate(update))
 	}
 
-	c.pendingUpdateSyncMutex.Lock()
-	defer c.pendingUpdateSyncMutex.Unlock()
-
-	res, err := c.anilistClientRef.Get().UpdateMediaListEntry(ctx, mediaID, status, scoreRaw, progress, startedAt, completedAt, interceptors...)
-	if err == nil {
-		c.deleteQueuedUpdate(*mediaID)
+	if update.Progress == nil && update.Status == nil {
+		return fmt.Errorf("queued list update for media %d has no fields", update.MediaID)
 	}
-	return res, err
+
+	body := collectionUpsertBodyFromUpdate(update)
+	return c.client().PatchCollection(ctx, update.MediaID, body)
 }
 
-func (c *CacheLayer) sendMediaListEntryProgressUpdate(ctx context.Context, mediaID *int, progress *int, status *anilist.MediaListStatus, interceptors ...clientv2.RequestInterceptor) (*anilist.UpdateMediaListEntryProgress, error) {
-	if mediaID == nil {
-		return c.anilistClientRef.Get().UpdateMediaListEntryProgress(ctx, mediaID, progress, status, interceptors...)
-	}
-
-	c.pendingUpdateSyncMutex.Lock()
-	defer c.pendingUpdateSyncMutex.Unlock()
-
-	res, err := c.anilistClientRef.Get().UpdateMediaListEntryProgress(ctx, mediaID, progress, status, interceptors...)
-	if err == nil {
-		c.deleteQueuedUpdate(*mediaID)
-	}
-	return res, err
+// collectionUpsertBodyFromUpdate 由排队更新构造 Bangumi 请求体。
+func collectionUpsertBodyFromUpdate(update queuedMediaListUpdate) bangumi.CollectionUpsertBody {
+	return collectionUpsertBodyFromValues(update.Status, update.ScoreRaw, update.Progress)
 }
 
 func (c *CacheLayer) deleteQueuedUpdate(mediaID int) {
+	if c.fileCacher == nil {
+		return
+	}
 	bucket := c.buckets[PendingMediaListUpdatesBucket]
 	if err := c.fileCacher.DeletePerm(bucket, strconv.Itoa(mediaID)); err != nil {
-		c.logger.Warn().Err(err).Int("mediaId", mediaID).Msg("anilist cache: Failed to delete queued list update")
+		c.logger.Warn().Err(err).Int("mediaId", mediaID).Msg("bangumi cache: Failed to delete queued list update")
 	}
 }
 
 func (c *CacheLayer) saveQueuedMediaListUpdate(update queuedMediaListUpdate) (queuedMediaListUpdate, error) {
+	if c.fileCacher == nil {
+		return update, nil
+	}
 	bucket := c.buckets[PendingMediaListUpdatesBucket]
 	key := strconv.Itoa(update.MediaID)
 	now := time.Now()
@@ -232,6 +243,9 @@ func (c *CacheLayer) saveQueuedMediaListUpdate(update queuedMediaListUpdate) (qu
 }
 
 func (c *CacheLayer) getQueuedMediaListUpdates() ([]queuedMediaListUpdate, error) {
+	if c.fileCacher == nil {
+		return nil, nil
+	}
 	bucket := c.buckets[PendingMediaListUpdatesBucket]
 	data, err := filecache.GetAll[queuedMediaListUpdate](c.fileCacher, filecache.NewBucket(bucket.Name(), 0))
 	if err != nil {
@@ -259,7 +273,7 @@ func (c *CacheLayer) syncQueuedUpdates(ctx context.Context) {
 
 	updates, err := c.getQueuedMediaListUpdates()
 	if err != nil {
-		c.logger.Warn().Err(err).Msg("anilist cache: Failed to load queued list updates")
+		c.logger.Warn().Err(err).Msg("bangumi cache: Failed to load queued list updates")
 		return
 	}
 	if len(updates) == 0 {
@@ -292,26 +306,14 @@ func (c *CacheLayer) syncQueuedUpdates(ctx context.Context) {
 	}
 
 	if synced > 0 {
-		c.logger.Info().Int("count", synced).Msg("anilist cache: Synced queued list updates")
+		c.logger.Info().Int("count", synced).Msg("bangumi cache: Synced queued list updates")
 	}
-}
-
-func (c *CacheLayer) syncQueuedUpdate(ctx context.Context, update queuedMediaListUpdate) error {
-	mediaID := update.MediaID
-	if update.FullUpdate || update.ScoreRaw != nil || update.StartedAt != nil || update.CompletedAt != nil {
-		_, err := c.anilistClientRef.Get().UpdateMediaListEntry(ctx, &mediaID, update.Status, update.ScoreRaw, update.Progress, update.StartedAt, update.CompletedAt)
-		return err
-	}
-
-	if update.Progress == nil && update.Status == nil {
-		return fmt.Errorf("queued list update for media %d has no fields", update.MediaID)
-	}
-
-	_, err := c.anilistClientRef.Get().UpdateMediaListEntryProgress(ctx, &mediaID, update.Progress, update.Status)
-	return err
 }
 
 func (c *CacheLayer) setQueuedUpdateSyncFailed(update queuedMediaListUpdate, syncErr error) {
+	if c.fileCacher == nil {
+		return
+	}
 	bucket := c.buckets[PendingMediaListUpdatesBucket]
 	key := strconv.Itoa(update.MediaID)
 
@@ -324,11 +326,14 @@ func (c *CacheLayer) setQueuedUpdateSyncFailed(update queuedMediaListUpdate, syn
 	current.Attempts++
 	current.NextAttemptAt = new(time.Now().Add(queuedUpdateRetryDelay(current.Attempts)))
 	if err := c.fileCacher.SetPerm(bucket, key, current); err != nil {
-		c.logger.Warn().Err(err).Int("mediaId", update.MediaID).Msg("anilist cache: Failed to update queued list retry state")
+		c.logger.Warn().Err(err).Int("mediaId", update.MediaID).Msg("bangumi cache: Failed to update queued list retry state")
 	}
 }
 
 func (c *CacheLayer) deleteQueuedUpdateIfCurrent(update queuedMediaListUpdate) bool {
+	if c.fileCacher == nil {
+		return true
+	}
 	bucket := c.buckets[PendingMediaListUpdatesBucket]
 	key := strconv.Itoa(update.MediaID)
 
@@ -339,7 +344,7 @@ func (c *CacheLayer) deleteQueuedUpdateIfCurrent(update queuedMediaListUpdate) b
 	}
 
 	if err := c.fileCacher.DeletePerm(bucket, key); err != nil {
-		c.logger.Warn().Err(err).Int("mediaId", update.MediaID).Msg("anilist cache: Failed to delete synced queued list update")
+		c.logger.Warn().Err(err).Int("mediaId", update.MediaID).Msg("bangumi cache: Failed to delete synced queued list update")
 		return false
 	}
 
@@ -366,12 +371,15 @@ func sameQueuedUpdate(a, b queuedMediaListUpdate) bool {
 }
 
 func (c *CacheLayer) applyQueuedUpdateToCache(update queuedMediaListUpdate) (int, bool, error) {
-	cacheKey := c.generateCacheKey("collection", nil)
+	if c.fileCacher == nil {
+		return 0, false, nil
+	}
+	cacheKey := c.generateCacheKey("collection", "-")
 	entryID := 0
 	patched := false
 
 	animeBucket := c.buckets[AnimeCollectionBucket]
-	var animeCollection anilist.AnimeCollection
+	var animeCollection media.AnimeCollection
 	found, err := c.fileCacher.GetPerm(animeBucket, cacheKey, &animeCollection)
 	if err != nil {
 		return 0, false, err
@@ -387,7 +395,7 @@ func (c *CacheLayer) applyQueuedUpdateToCache(update queuedMediaListUpdate) (int
 	}
 
 	mangaBucket := c.buckets[MangaCollectionBucket]
-	var mangaCollection anilist.MangaCollection
+	var mangaCollection media.MangaCollection
 	found, err = c.fileCacher.GetPerm(mangaBucket, cacheKey, &mangaCollection)
 	if err != nil {
 		return entryID, patched, err
@@ -405,10 +413,10 @@ func (c *CacheLayer) applyQueuedUpdateToCache(update queuedMediaListUpdate) (int
 	return entryID, patched, nil
 }
 
-func (c *CacheLayer) applyQueuedUpdatesToAnimeCollection(collection *anilist.AnimeCollection) bool {
+func (c *CacheLayer) applyQueuedUpdatesToAnimeCollection(collection *media.AnimeCollection) bool {
 	updates, err := c.getQueuedMediaListUpdates()
 	if err != nil {
-		c.logger.Warn().Err(err).Msg("anilist cache: Failed to overlay queued anime updates")
+		c.logger.Warn().Err(err).Msg("bangumi cache: Failed to overlay queued anime updates")
 		return false
 	}
 
@@ -421,10 +429,10 @@ func (c *CacheLayer) applyQueuedUpdatesToAnimeCollection(collection *anilist.Ani
 	return updated
 }
 
-func (c *CacheLayer) applyQueuedUpdatesToMangaCollection(collection *anilist.MangaCollection) bool {
+func (c *CacheLayer) applyQueuedUpdatesToMangaCollection(collection *media.MangaCollection) bool {
 	updates, err := c.getQueuedMediaListUpdates()
 	if err != nil {
-		c.logger.Warn().Err(err).Msg("anilist cache: Failed to overlay queued manga updates")
+		c.logger.Warn().Err(err).Msg("bangumi cache: Failed to overlay queued manga updates")
 		return false
 	}
 
@@ -437,7 +445,7 @@ func (c *CacheLayer) applyQueuedUpdatesToMangaCollection(collection *anilist.Man
 	return updated
 }
 
-func applyQueuedUpdateToAnimeCollection(collection *anilist.AnimeCollection, update queuedMediaListUpdate) (int, bool) {
+func applyQueuedUpdateToAnimeCollection(collection *media.AnimeCollection, update queuedMediaListUpdate) (int, bool) {
 	if collection == nil || collection.MediaListCollection == nil {
 		return 0, false
 	}
@@ -464,7 +472,7 @@ func applyQueuedUpdateToAnimeCollection(collection *anilist.AnimeCollection, upd
 	return entryID, updated
 }
 
-func applyQueuedUpdateToMangaCollection(collection *anilist.MangaCollection, update queuedMediaListUpdate) (int, bool) {
+func applyQueuedUpdateToMangaCollection(collection *media.MangaCollection, update queuedMediaListUpdate) (int, bool) {
 	if collection == nil || collection.MediaListCollection == nil {
 		return 0, false
 	}
@@ -491,7 +499,7 @@ func applyQueuedUpdateToMangaCollection(collection *anilist.MangaCollection, upd
 	return entryID, updated
 }
 
-func applyUpdateToAnimeEntry(entry *anilist.AnimeCollection_MediaListCollection_Lists_Entries, update queuedMediaListUpdate) {
+func applyUpdateToAnimeEntry(entry *media.AnimeCollection_MediaListCollection_Lists_Entries, update queuedMediaListUpdate) {
 	if update.Status != nil {
 		entry.Status = newCloned(update.Status)
 	}
@@ -502,14 +510,14 @@ func applyUpdateToAnimeEntry(entry *anilist.AnimeCollection_MediaListCollection_
 		entry.Progress = newCloned(update.Progress)
 	}
 	if update.StartedAt != nil {
-		entry.StartedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
+		entry.StartedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
 			Year:  newCloned(update.StartedAt.Year),
 			Month: newCloned(update.StartedAt.Month),
 			Day:   newCloned(update.StartedAt.Day),
 		}
 	}
 	if update.CompletedAt != nil {
-		entry.CompletedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
+		entry.CompletedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
 			Year:  newCloned(update.CompletedAt.Year),
 			Month: newCloned(update.CompletedAt.Month),
 			Day:   newCloned(update.CompletedAt.Day),
@@ -517,7 +525,7 @@ func applyUpdateToAnimeEntry(entry *anilist.AnimeCollection_MediaListCollection_
 	}
 }
 
-func applyUpdateToMangaEntry(entry *anilist.MangaCollection_MediaListCollection_Lists_Entries, update queuedMediaListUpdate) {
+func applyUpdateToMangaEntry(entry *media.MangaCollection_MediaListCollection_Lists_Entries, update queuedMediaListUpdate) {
 	if update.Status != nil {
 		entry.Status = newCloned(update.Status)
 	}
@@ -528,14 +536,14 @@ func applyUpdateToMangaEntry(entry *anilist.MangaCollection_MediaListCollection_
 		entry.Progress = newCloned(update.Progress)
 	}
 	if update.StartedAt != nil {
-		entry.StartedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
+		entry.StartedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
 			Year:  newCloned(update.StartedAt.Year),
 			Month: newCloned(update.StartedAt.Month),
 			Day:   newCloned(update.StartedAt.Day),
 		}
 	}
 	if update.CompletedAt != nil {
-		entry.CompletedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
+		entry.CompletedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
 			Year:  newCloned(update.CompletedAt.Year),
 			Month: newCloned(update.CompletedAt.Month),
 			Day:   newCloned(update.CompletedAt.Day),
@@ -543,8 +551,8 @@ func applyUpdateToMangaEntry(entry *anilist.MangaCollection_MediaListCollection_
 	}
 }
 
-func rearrangeCachedAnimeCollectionLists(collection *anilist.AnimeCollection) {
-	removedEntries := make([]*anilist.AnimeCollection_MediaListCollection_Lists_Entries, 0)
+func rearrangeCachedAnimeCollectionLists(collection *media.AnimeCollection) {
+	removedEntries := make([]*media.AnimeCollection_MediaListCollection_Lists_Entries, 0)
 	for _, list := range collection.MediaListCollection.Lists {
 		if list == nil || list.GetStatus() == nil || list.GetEntries() == nil {
 			continue
@@ -570,8 +578,8 @@ func rearrangeCachedAnimeCollectionLists(collection *anilist.AnimeCollection) {
 	}
 }
 
-func rearrangeCachedMangaCollectionLists(collection *anilist.MangaCollection) {
-	removedEntries := make([]*anilist.MangaCollection_MediaListCollection_Lists_Entries, 0)
+func rearrangeCachedMangaCollectionLists(collection *media.MangaCollection) {
+	removedEntries := make([]*media.MangaCollection_MediaListCollection_Lists_Entries, 0)
 	for _, list := range collection.MediaListCollection.Lists {
 		if list == nil || list.GetStatus() == nil || list.GetEntries() == nil {
 			continue
@@ -597,35 +605,35 @@ func rearrangeCachedMangaCollectionLists(collection *anilist.MangaCollection) {
 	}
 }
 
-func getOrCreateCachedAnimeList(collection *anilist.AnimeCollection, status anilist.MediaListStatus) *anilist.AnimeCollection_MediaListCollection_Lists {
+func getOrCreateCachedAnimeList(collection *media.AnimeCollection, status media.MediaListStatus) *media.AnimeCollection_MediaListCollection_Lists {
 	for _, list := range collection.MediaListCollection.Lists {
 		if list != nil && list.GetStatus() != nil && *list.GetStatus() == status {
 			return list
 		}
 	}
 
-	list := &anilist.AnimeCollection_MediaListCollection_Lists{
+	list := &media.AnimeCollection_MediaListCollection_Lists{
 		Status:       newCloned(&status),
 		Name:         new(string(status)),
 		IsCustomList: new(false),
-		Entries:      []*anilist.AnimeCollection_MediaListCollection_Lists_Entries{},
+		Entries:      []*media.AnimeCollection_MediaListCollection_Lists_Entries{},
 	}
 	collection.MediaListCollection.Lists = append(collection.MediaListCollection.Lists, list)
 	return list
 }
 
-func getOrCreateCachedMangaList(collection *anilist.MangaCollection, status anilist.MediaListStatus) *anilist.MangaCollection_MediaListCollection_Lists {
+func getOrCreateCachedMangaList(collection *media.MangaCollection, status media.MediaListStatus) *media.MangaCollection_MediaListCollection_Lists {
 	for _, list := range collection.MediaListCollection.Lists {
 		if list != nil && list.GetStatus() != nil && *list.GetStatus() == status {
 			return list
 		}
 	}
 
-	list := &anilist.MangaCollection_MediaListCollection_Lists{
+	list := &media.MangaCollection_MediaListCollection_Lists{
 		Status:       newCloned(&status),
 		Name:         new(string(status)),
 		IsCustomList: new(false),
-		Entries:      []*anilist.MangaCollection_MediaListCollection_Lists_Entries{},
+		Entries:      []*media.MangaCollection_MediaListCollection_Lists_Entries{},
 	}
 	collection.MediaListCollection.Lists = append(collection.MediaListCollection.Lists, list)
 	return list
@@ -638,11 +646,11 @@ func newCloned[T any](value *T) *T {
 	return new(*value)
 }
 
-func cloneFuzzyDateInput(value *anilist.FuzzyDateInput) *anilist.FuzzyDateInput {
+func cloneFuzzyDateInput(value *media.FuzzyDateInput) *media.FuzzyDateInput {
 	if value == nil {
 		return nil
 	}
-	return &anilist.FuzzyDateInput{
+	return &media.FuzzyDateInput{
 		Year:  newCloned(value.Year),
 		Month: newCloned(value.Month),
 		Day:   newCloned(value.Day),

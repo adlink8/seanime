@@ -11,7 +11,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"seanime/internal/api/anilist"
+	"seanime/internal/media"
 	"seanime/internal/updater"
 	"seanime/internal/util"
 	"strconv"
@@ -43,10 +43,10 @@ var (
 func (h *Handler) HandleDownloadTorrentFile(c echo.Context) error {
 
 	type body struct {
-		DownloadUrls []string           `json:"download_urls"`
-		Destination  string             `json:"destination"`
-		Media        *anilist.BaseAnime `json:"media"`
-		ClientId     string             `json:"clientId"`
+		DownloadUrls []string     `json:"download_urls"`
+		Destination  string       `json:"destination"`
+		Media        *media.Anime `json:"media"`
+		ClientId     string       `json:"clientId"`
 	}
 
 	var b body

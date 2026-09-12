@@ -2,12 +2,12 @@ package local
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/events"
 	"seanime/internal/library/anime"
 	"seanime/internal/manga"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/result"
 	"sync"
@@ -32,8 +32,8 @@ type (
 		animeJobQueue chan AnimeTask
 		mangaJobQueue chan MangaTask
 
-		failedAnimeQueue *result.Cache[int, *anilist.AnimeListEntry]
-		failedMangaQueue *result.Cache[int, *anilist.MangaListEntry]
+		failedAnimeQueue *result.Cache[int, *media.AnimeListEntry]
+		failedMangaQueue *result.Cache[int, *media.MangaListEntry]
 
 		trackedAnimeMap map[int]*TrackedMedia
 		trackedMangaMap map[int]*TrackedMedia
@@ -71,8 +71,8 @@ func NewQueue(manager *ManagerImpl) *Syncer {
 	ret := &Syncer{
 		animeJobQueue:                make(chan AnimeTask, 100),
 		mangaJobQueue:                make(chan MangaTask, 100),
-		failedAnimeQueue:             result.NewCache[int, *anilist.AnimeListEntry](),
-		failedMangaQueue:             result.NewCache[int, *anilist.MangaListEntry](),
+		failedAnimeQueue:             result.NewCache[int, *media.AnimeListEntry](),
+		failedMangaQueue:             result.NewCache[int, *media.MangaListEntry](),
 		shouldUpdateLocalCollections: false,
 		doneUpdatingLocalCollections: make(chan struct{}, 1),
 		manager:                      manager,
@@ -207,15 +207,15 @@ func (q *Syncer) synchronizeCollections() (err error) {
 		mangaSnapshotMap[snapshot.MediaId] = snapshot
 	}
 
-	localAnimeCollection := &anilist.AnimeCollection{
-		MediaListCollection: &anilist.AnimeCollection_MediaListCollection{
-			Lists: []*anilist.AnimeCollection_MediaListCollection_Lists{},
+	localAnimeCollection := &media.AnimeCollection{
+		MediaListCollection: &media.AnimeCollection_MediaListCollection{
+			Lists: []*media.AnimeCollection_MediaListCollection_Lists{},
 		},
 	}
 
-	localMangaCollection := &anilist.MangaCollection{
-		MediaListCollection: &anilist.MangaCollection_MediaListCollection{
-			Lists: []*anilist.MangaCollection_MediaListCollection_Lists{},
+	localMangaCollection := &media.MangaCollection{
+		MediaListCollection: &media.MangaCollection_MediaListCollection{
+			Lists: []*media.MangaCollection_MediaListCollection_Lists{},
 		},
 	}
 
@@ -224,11 +224,11 @@ func (q *Syncer) synchronizeCollections() (err error) {
 		if _animeList.GetStatus() == nil {
 			continue
 		}
-		list := &anilist.AnimeCollection_MediaListCollection_Lists{
+		list := &media.AnimeCollection_MediaListCollection_Lists{
 			Status:       ToNewPointer(_animeList.Status),
 			Name:         ToNewPointer(_animeList.Name),
 			IsCustomList: ToNewPointer(_animeList.IsCustomList),
-			Entries:      []*anilist.AnimeListEntry{},
+			Entries:      []*media.AnimeListEntry{},
 		}
 		localAnimeCollection.MediaListCollection.Lists = append(localAnimeCollection.MediaListCollection.Lists, list)
 	}
@@ -238,11 +238,11 @@ func (q *Syncer) synchronizeCollections() (err error) {
 		if _mangaList.GetStatus() == nil {
 			continue
 		}
-		list := &anilist.MangaCollection_MediaListCollection_Lists{
+		list := &media.MangaCollection_MediaListCollection_Lists{
 			Status:       ToNewPointer(_mangaList.Status),
 			Name:         ToNewPointer(_mangaList.Name),
 			IsCustomList: ToNewPointer(_mangaList.IsCustomList),
-			Entries:      []*anilist.MangaListEntry{},
+			Entries:      []*media.MangaListEntry{},
 		}
 		localMangaCollection.MediaListCollection.Lists = append(localMangaCollection.MediaListCollection.Lists, list)
 	}
@@ -279,32 +279,32 @@ func (q *Syncer) synchronizeCollections() (err error) {
 
 					editedAnime := BaseAnimeDeepCopy(_animeEntry.GetMedia())
 					editedAnime.BannerImage = FormatAssetUrl(snapshot.MediaId, snapshot.BannerImagePath)
-					editedAnime.CoverImage = &anilist.BaseAnime_CoverImage{
+					editedAnime.CoverImage = &media.Anime_CoverImage{
 						ExtraLarge: FormatAssetUrl(snapshot.MediaId, snapshot.CoverImagePath),
 						Large:      FormatAssetUrl(snapshot.MediaId, snapshot.CoverImagePath),
 						Medium:     FormatAssetUrl(snapshot.MediaId, snapshot.CoverImagePath),
 						Color:      FormatAssetUrl(snapshot.MediaId, snapshot.CoverImagePath),
 					}
 
-					var startedAt *anilist.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt
+					var startedAt *media.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt
 					if _animeEntry.GetStartedAt() != nil {
-						startedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
+						startedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
 							Year:  ToNewPointer(_animeEntry.GetStartedAt().GetYear()),
 							Month: ToNewPointer(_animeEntry.GetStartedAt().GetMonth()),
 							Day:   ToNewPointer(_animeEntry.GetStartedAt().GetDay()),
 						}
 					}
 
-					var completedAt *anilist.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt
+					var completedAt *media.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt
 					if _animeEntry.GetCompletedAt() != nil {
-						completedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
+						completedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
 							Year:  ToNewPointer(_animeEntry.GetCompletedAt().GetYear()),
 							Month: ToNewPointer(_animeEntry.GetCompletedAt().GetMonth()),
 							Day:   ToNewPointer(_animeEntry.GetCompletedAt().GetDay()),
 						}
 					}
 
-					entry := &anilist.AnimeListEntry{
+					entry := &media.AnimeListEntry{
 						ID:          _animeEntry.GetID(),
 						Score:       ToNewPointer(_animeEntry.GetScore()),
 						Progress:    ToNewPointer(_animeEntry.GetProgress()),
@@ -354,32 +354,32 @@ func (q *Syncer) synchronizeCollections() (err error) {
 
 					editedManga := BaseMangaDeepCopy(_mangaEntry.GetMedia())
 					editedManga.BannerImage = FormatAssetUrl(snapshot.MediaId, snapshot.BannerImagePath)
-					editedManga.CoverImage = &anilist.BaseManga_CoverImage{
+					editedManga.CoverImage = &media.Manga_CoverImage{
 						ExtraLarge: FormatAssetUrl(snapshot.MediaId, snapshot.CoverImagePath),
 						Large:      FormatAssetUrl(snapshot.MediaId, snapshot.CoverImagePath),
 						Medium:     FormatAssetUrl(snapshot.MediaId, snapshot.CoverImagePath),
 						Color:      FormatAssetUrl(snapshot.MediaId, snapshot.CoverImagePath),
 					}
 
-					var startedAt *anilist.MangaCollection_MediaListCollection_Lists_Entries_StartedAt
+					var startedAt *media.MangaCollection_MediaListCollection_Lists_Entries_StartedAt
 					if _mangaEntry.GetStartedAt() != nil {
-						startedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
+						startedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
 							Year:  ToNewPointer(_mangaEntry.GetStartedAt().GetYear()),
 							Month: ToNewPointer(_mangaEntry.GetStartedAt().GetMonth()),
 							Day:   ToNewPointer(_mangaEntry.GetStartedAt().GetDay()),
 						}
 					}
 
-					var completedAt *anilist.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt
+					var completedAt *media.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt
 					if _mangaEntry.GetCompletedAt() != nil {
-						completedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
+						completedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
 							Year:  ToNewPointer(_mangaEntry.GetCompletedAt().GetYear()),
 							Month: ToNewPointer(_mangaEntry.GetCompletedAt().GetMonth()),
 							Day:   ToNewPointer(_mangaEntry.GetCompletedAt().GetDay()),
 						}
 					}
 
-					entry := &anilist.MangaListEntry{
+					entry := &media.MangaListEntry{
 						ID:          _mangaEntry.GetID(),
 						Score:       ToNewPointer(_mangaEntry.GetScore()),
 						Progress:    ToNewPointer(_mangaEntry.GetProgress()),
@@ -420,11 +420,11 @@ func (q *Syncer) synchronizeCollections() (err error) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-func (q *Syncer) sendAnimeToFailedQueue(entry *anilist.AnimeListEntry) {
+func (q *Syncer) sendAnimeToFailedQueue(entry *media.AnimeListEntry) {
 	q.failedAnimeQueue.Set(entry.Media.ID, entry)
 }
 
-func (q *Syncer) sendMangaToFailedQueue(entry *anilist.MangaListEntry) {
+func (q *Syncer) sendMangaToFailedQueue(entry *media.MangaListEntry) {
 	q.failedMangaQueue.Set(entry.Media.ID, entry)
 }
 

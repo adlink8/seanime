@@ -2,8 +2,8 @@ package videocore
 
 import (
 	"encoding/json"
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mkvparser"
 )
 
@@ -154,7 +154,7 @@ type VideoPlaybackInfo struct {
 	PlaylistExternalEpisodeNumbers []int                 `json:"playlistExternalEpisodeNumbers"`
 	DisableRestoreFromContinuity   *bool                 `json:"disableRestoreFromContinuity"`
 	InitialState                   *VideoInitialState    `json:"initialState"`
-	Media                          *anilist.BaseAnime    `json:"media"`
+	Media                          *media.Anime          `json:"media"`
 	Episode                        *anime.Episode        `json:"episode"`
 	StreamType                     string                `json:"streamType"` // "native" | "hls" | "unknown"
 	IsNakamaWatchParty             bool                  `json:"isNakamaWatchParty,omitempty"`

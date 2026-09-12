@@ -1,9 +1,9 @@
 package scanner
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
 	"seanime/internal/library/summary"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"testing"
@@ -85,12 +85,11 @@ func TestFileHydrator_HydrateMetadata(t *testing.T) {
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
-			currentStatus := anilist.MediaListStatusCurrent
-			anilist.EnsureAnimeCollectionWithRelationsEntry(
+			currentStatus := media.MediaListStatusCurrent
+			ensureAnimeCollectionWithRelationsEntry(
 				animeCollection,
 				tt.expectedMediaId,
-				anilist.AnimeCollectionEntryPatch{Status: &currentStatus},
-				wrapper.AnilistClient,
+				media.AnimeCollectionEntryPatch{Status: &currentStatus},
 			)
 			allMedia := animeCollection.GetAllAnime()
 

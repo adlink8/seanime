@@ -20,6 +20,9 @@ func TestDatabaseCleanupManager(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test database: %v", err)
 	}
+	// Close the pool before t.TempDir cleanup, otherwise the on-disk sqlite
+	// file stays locked on Windows and RemoveAll fails.
+	t.Cleanup(func() { _ = database.Close() })
 
 	t.Log("Populating database with test data...")
 	populateCleanupTestData(t, database)

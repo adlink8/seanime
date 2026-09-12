@@ -3,7 +3,7 @@ package simulated_platform
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
+	"seanime/internal/media"
 	"time"
 )
 
@@ -22,7 +22,7 @@ func (sp *SimulatedPlatform) GetMangaCollectionWrapper() *CollectionWrapper {
 }
 
 // AddEntry adds a new entry to the collection
-func (cw *CollectionWrapper) AddEntry(mediaId int, status anilist.MediaListStatus) error {
+func (cw *CollectionWrapper) AddEntry(mediaId int, status media.MediaListStatus) error {
 	if cw.isAnime {
 		return cw.addAnimeEntry(mediaId, status)
 	}
@@ -30,7 +30,7 @@ func (cw *CollectionWrapper) AddEntry(mediaId int, status anilist.MediaListStatu
 }
 
 // UpdateEntry updates an existing entry in the collection
-func (cw *CollectionWrapper) UpdateEntry(mediaId int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput) error {
+func (cw *CollectionWrapper) UpdateEntry(mediaId int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
 	if cw.isAnime {
 		return cw.updateAnimeEntry(mediaId, status, scoreRaw, progress, startedAt, completedAt)
 	}
@@ -39,9 +39,9 @@ func (cw *CollectionWrapper) UpdateEntry(mediaId int, status *anilist.MediaListS
 
 // UpdateEntryProgress updates the progress of an entry
 func (cw *CollectionWrapper) UpdateEntryProgress(mediaId int, progress int, totalCount *int) error {
-	status := anilist.MediaListStatusCurrent
+	status := media.MediaListStatusCurrent
 	if totalCount != nil && *totalCount > 0 && progress >= *totalCount {
-		status = anilist.MediaListStatusCompleted
+		status = media.MediaListStatusCompleted
 	}
 
 	return cw.UpdateEntry(mediaId, &status, nil, &progress, nil, nil)
@@ -66,13 +66,13 @@ func (cw *CollectionWrapper) FindEntry(mediaId int, isEntryId ...bool) (interfac
 // UpdateMediaData updates the media data for an entry
 func (cw *CollectionWrapper) UpdateMediaData(mediaId int, mediaData interface{}) error {
 	if cw.isAnime {
-		if baseAnime, ok := mediaData.(*anilist.BaseAnime); ok {
+		if baseAnime, ok := mediaData.(*media.Anime); ok {
 			return cw.updateAnimeMediaData(mediaId, baseAnime)
 		}
 		return errors.New("invalid anime data type")
 	}
 
-	if baseManga, ok := mediaData.(*anilist.BaseManga); ok {
+	if baseManga, ok := mediaData.(*media.Manga); ok {
 		return cw.updateMangaMediaData(mediaId, baseManga)
 	}
 	return errors.New("invalid manga data type")
@@ -82,7 +82,7 @@ func (cw *CollectionWrapper) UpdateMediaData(mediaId int, mediaData interface{})
 // Anime Collection Helper Methods
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (cw *CollectionWrapper) addAnimeEntry(mediaId int, status anilist.MediaListStatus) error {
+func (cw *CollectionWrapper) addAnimeEntry(mediaId int, status media.MediaListStatus) error {
 	collection, err := cw.platform.getOrCreateAnimeCollection()
 	if err != nil {
 		return err
@@ -94,13 +94,13 @@ func (cw *CollectionWrapper) addAnimeEntry(mediaId int, status anilist.MediaList
 	}
 
 	// Fetch media data
-	mediaResp, err := cw.platform.client.BaseAnimeByID(context.Background(), &mediaId)
+	mediaData, err := cw.platform.cacheLayer.BaseAnimeByID(context.Background(), mediaId)
 	if err != nil {
 		return err
 	}
 
 	// Find or create the appropriate list
-	var targetList *anilist.AnimeCollection_MediaListCollection_Lists
+	var targetList *media.AnimeCollection_MediaListCollection_Lists
 	for _, list := range collection.GetMediaListCollection().GetLists() {
 		if list.GetStatus() != nil && *list.GetStatus() == status {
 			targetList = list
@@ -110,27 +110,27 @@ func (cw *CollectionWrapper) addAnimeEntry(mediaId int, status anilist.MediaList
 
 	if targetList == nil {
 		// Create new list
-		targetList = &anilist.AnimeCollection_MediaListCollection_Lists{
+		targetList = &media.AnimeCollection_MediaListCollection_Lists{
 			Status:       &status,
 			Name:         new(string(status)),
 			IsCustomList: new(false),
-			Entries:      []*anilist.AnimeCollection_MediaListCollection_Lists_Entries{},
+			Entries:      []*media.AnimeCollection_MediaListCollection_Lists_Entries{},
 		}
 		collection.GetMediaListCollection().Lists = append(collection.GetMediaListCollection().Lists, targetList)
 	}
 
 	// Create new entry
-	newEntry := &anilist.AnimeCollection_MediaListCollection_Lists_Entries{
+	newEntry := &media.AnimeCollection_MediaListCollection_Lists_Entries{
 		ID:          int(time.Now().UnixNano()), // Generate unique ID
 		Status:      &status,
 		Progress:    new(0),
-		Media:       mediaResp.GetMedia(),
+		Media:       mediaData,
 		Score:       new(0.0),
 		Notes:       nil,
 		Repeat:      new(0),
 		Private:     new(false),
-		StartedAt:   &anilist.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{},
-		CompletedAt: &anilist.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{},
+		StartedAt:   &media.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{},
+		CompletedAt: &media.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{},
 	}
 
 	targetList.Entries = append(targetList.Entries, newEntry)
@@ -140,14 +140,14 @@ func (cw *CollectionWrapper) addAnimeEntry(mediaId int, status anilist.MediaList
 	return nil
 }
 
-func (cw *CollectionWrapper) updateAnimeEntry(mediaId int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput) error {
+func (cw *CollectionWrapper) updateAnimeEntry(mediaId int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
 	collection, err := cw.platform.getOrCreateAnimeCollection()
 	if err != nil {
 		return err
 	}
 
-	var foundEntry *anilist.AnimeCollection_MediaListCollection_Lists_Entries
-	var sourceList *anilist.AnimeCollection_MediaListCollection_Lists
+	var foundEntry *media.AnimeCollection_MediaListCollection_Lists_Entries
+	var sourceList *media.AnimeCollection_MediaListCollection_Lists
 	var entryIndex int
 
 	// Find the entry
@@ -177,14 +177,14 @@ func (cw *CollectionWrapper) updateAnimeEntry(mediaId int, status *anilist.Media
 		foundEntry.Score = new(float64(*scoreRaw))
 	}
 	if startedAt != nil {
-		foundEntry.StartedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
+		foundEntry.StartedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
 			Year:  startedAt.Year,
 			Month: startedAt.Month,
 			Day:   startedAt.Day,
 		}
 	}
 	if completedAt != nil {
-		foundEntry.CompletedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
+		foundEntry.CompletedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
 			Year:  completedAt.Year,
 			Month: completedAt.Month,
 			Day:   completedAt.Day,
@@ -199,7 +199,7 @@ func (cw *CollectionWrapper) updateAnimeEntry(mediaId int, status *anilist.Media
 		sourceList.Entries = append(sourceList.Entries[:entryIndex], sourceList.Entries[entryIndex+1:]...)
 
 		// Find or create target list
-		var targetList *anilist.AnimeCollection_MediaListCollection_Lists
+		var targetList *media.AnimeCollection_MediaListCollection_Lists
 		for _, list := range collection.GetMediaListCollection().GetLists() {
 			if list.GetStatus() != nil && *list.GetStatus() == *status {
 				targetList = list
@@ -208,11 +208,11 @@ func (cw *CollectionWrapper) updateAnimeEntry(mediaId int, status *anilist.Media
 		}
 
 		if targetList == nil {
-			targetList = &anilist.AnimeCollection_MediaListCollection_Lists{
+			targetList = &media.AnimeCollection_MediaListCollection_Lists{
 				Status:       status,
 				Name:         new(string(*status)),
 				IsCustomList: new(false),
-				Entries:      []*anilist.AnimeCollection_MediaListCollection_Lists_Entries{},
+				Entries:      []*media.AnimeCollection_MediaListCollection_Lists_Entries{},
 			}
 			collection.GetMediaListCollection().Lists = append(collection.GetMediaListCollection().Lists, targetList)
 		}
@@ -254,7 +254,7 @@ func (cw *CollectionWrapper) deleteAnimeEntry(mediaId int, isEntryId ...bool) er
 	return ErrMediaNotFound
 }
 
-func (cw *CollectionWrapper) findAnimeEntry(mediaId int, isEntryId ...bool) (*anilist.AnimeCollection_MediaListCollection_Lists_Entries, error) {
+func (cw *CollectionWrapper) findAnimeEntry(mediaId int, isEntryId ...bool) (*media.AnimeCollection_MediaListCollection_Lists_Entries, error) {
 	collection, err := cw.platform.getOrCreateAnimeCollection()
 	if err != nil {
 		return nil, err
@@ -277,7 +277,7 @@ func (cw *CollectionWrapper) findAnimeEntry(mediaId int, isEntryId ...bool) (*an
 	return nil, ErrMediaNotFound
 }
 
-func (cw *CollectionWrapper) updateAnimeMediaData(mediaId int, mediaData *anilist.BaseAnime) error {
+func (cw *CollectionWrapper) updateAnimeMediaData(mediaId int, mediaData *media.Anime) error {
 	collection, err := cw.platform.getOrCreateAnimeCollection()
 	if err != nil {
 		return err
@@ -300,7 +300,7 @@ func (cw *CollectionWrapper) updateAnimeMediaData(mediaId int, mediaData *anilis
 // Manga Collection Helper Methods
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (cw *CollectionWrapper) addMangaEntry(mediaId int, status anilist.MediaListStatus) error {
+func (cw *CollectionWrapper) addMangaEntry(mediaId int, status media.MediaListStatus) error {
 	collection, err := cw.platform.getOrCreateMangaCollection()
 	if err != nil {
 		return err
@@ -312,13 +312,13 @@ func (cw *CollectionWrapper) addMangaEntry(mediaId int, status anilist.MediaList
 	}
 
 	// Fetch media data
-	mediaResp, err := cw.platform.client.BaseMangaByID(context.Background(), &mediaId)
+	mediaData, err := cw.platform.cacheLayer.BaseMangaByID(context.Background(), mediaId)
 	if err != nil {
 		return err
 	}
 
 	// Find or create the appropriate list
-	var targetList *anilist.MangaCollection_MediaListCollection_Lists
+	var targetList *media.MangaCollection_MediaListCollection_Lists
 	for _, list := range collection.GetMediaListCollection().GetLists() {
 		if list.GetStatus() != nil && *list.GetStatus() == status {
 			targetList = list
@@ -328,27 +328,27 @@ func (cw *CollectionWrapper) addMangaEntry(mediaId int, status anilist.MediaList
 
 	if targetList == nil {
 		// Create new list
-		targetList = &anilist.MangaCollection_MediaListCollection_Lists{
+		targetList = &media.MangaCollection_MediaListCollection_Lists{
 			Status:       &status,
 			Name:         new(string(status)),
 			IsCustomList: new(false),
-			Entries:      []*anilist.MangaCollection_MediaListCollection_Lists_Entries{},
+			Entries:      []*media.MangaCollection_MediaListCollection_Lists_Entries{},
 		}
 		collection.GetMediaListCollection().Lists = append(collection.GetMediaListCollection().Lists, targetList)
 	}
 
 	// Create new entry
-	newEntry := &anilist.MangaCollection_MediaListCollection_Lists_Entries{
+	newEntry := &media.MangaCollection_MediaListCollection_Lists_Entries{
 		ID:          int(time.Now().UnixNano()),
 		Status:      &status,
 		Progress:    new(0),
-		Media:       mediaResp.GetMedia(),
+		Media:       mediaData,
 		Score:       new(0.0),
 		Notes:       nil,
 		Repeat:      new(0),
 		Private:     new(false),
-		StartedAt:   &anilist.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{},
-		CompletedAt: &anilist.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{},
+		StartedAt:   &media.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{},
+		CompletedAt: &media.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{},
 	}
 
 	targetList.Entries = append(targetList.Entries, newEntry)
@@ -358,14 +358,14 @@ func (cw *CollectionWrapper) addMangaEntry(mediaId int, status anilist.MediaList
 	return nil
 }
 
-func (cw *CollectionWrapper) updateMangaEntry(mediaId int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput) error {
+func (cw *CollectionWrapper) updateMangaEntry(mediaId int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
 	collection, err := cw.platform.getOrCreateMangaCollection()
 	if err != nil {
 		return err
 	}
 
-	var foundEntry *anilist.MangaCollection_MediaListCollection_Lists_Entries
-	var sourceList *anilist.MangaCollection_MediaListCollection_Lists
+	var foundEntry *media.MangaCollection_MediaListCollection_Lists_Entries
+	var sourceList *media.MangaCollection_MediaListCollection_Lists
 	var entryIndex int
 
 	// Find the entry
@@ -395,14 +395,14 @@ func (cw *CollectionWrapper) updateMangaEntry(mediaId int, status *anilist.Media
 		foundEntry.Score = new(float64(*scoreRaw))
 	}
 	if startedAt != nil {
-		foundEntry.StartedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
+		foundEntry.StartedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
 			Year:  startedAt.Year,
 			Month: startedAt.Month,
 			Day:   startedAt.Day,
 		}
 	}
 	if completedAt != nil {
-		foundEntry.CompletedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
+		foundEntry.CompletedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
 			Year:  completedAt.Year,
 			Month: completedAt.Month,
 			Day:   completedAt.Day,
@@ -417,7 +417,7 @@ func (cw *CollectionWrapper) updateMangaEntry(mediaId int, status *anilist.Media
 		sourceList.Entries = append(sourceList.Entries[:entryIndex], sourceList.Entries[entryIndex+1:]...)
 
 		// Find or create target list
-		var targetList *anilist.MangaCollection_MediaListCollection_Lists
+		var targetList *media.MangaCollection_MediaListCollection_Lists
 		for _, list := range collection.GetMediaListCollection().GetLists() {
 			if list.GetStatus() != nil && *list.GetStatus() == *status {
 				targetList = list
@@ -426,11 +426,11 @@ func (cw *CollectionWrapper) updateMangaEntry(mediaId int, status *anilist.Media
 		}
 
 		if targetList == nil {
-			targetList = &anilist.MangaCollection_MediaListCollection_Lists{
+			targetList = &media.MangaCollection_MediaListCollection_Lists{
 				Status:       status,
 				Name:         new(string(*status)),
 				IsCustomList: new(false),
-				Entries:      []*anilist.MangaCollection_MediaListCollection_Lists_Entries{},
+				Entries:      []*media.MangaCollection_MediaListCollection_Lists_Entries{},
 			}
 			collection.GetMediaListCollection().Lists = append(collection.GetMediaListCollection().Lists, targetList)
 		}
@@ -470,7 +470,7 @@ func (cw *CollectionWrapper) deleteMangaEntry(mediaId int, isEntryId ...bool) er
 	return ErrMediaNotFound
 }
 
-func (cw *CollectionWrapper) findMangaEntry(mediaId int, isEntryId ...bool) (*anilist.MangaCollection_MediaListCollection_Lists_Entries, error) {
+func (cw *CollectionWrapper) findMangaEntry(mediaId int, isEntryId ...bool) (*media.MangaCollection_MediaListCollection_Lists_Entries, error) {
 	collection, err := cw.platform.getOrCreateMangaCollection()
 	if err != nil {
 		return nil, err
@@ -493,7 +493,7 @@ func (cw *CollectionWrapper) findMangaEntry(mediaId int, isEntryId ...bool) (*an
 	return nil, ErrMediaNotFound
 }
 
-func (cw *CollectionWrapper) updateMangaMediaData(mediaId int, mediaData *anilist.BaseManga) error {
+func (cw *CollectionWrapper) updateMangaMediaData(mediaId int, mediaData *media.Manga) error {
 	collection, err := cw.platform.getOrCreateMangaCollection()
 	if err != nil {
 		return err

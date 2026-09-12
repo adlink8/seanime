@@ -3,10 +3,10 @@ package playbackmanager
 import (
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/util"
 
 	"github.com/samber/mo"
@@ -21,7 +21,7 @@ func (pm *PlaybackManager) GetCurrentMediaID() (int, error) {
 }
 
 // GetLocalFilePlaybackDetails is called once everytime a new video is played. It returns the anilist entry, local file and local file wrapper entry.
-func (pm *PlaybackManager) getLocalFilePlaybackDetails(path string) (*anilist.AnimeListEntry, *anime.LocalFile, *anime.LocalFileWrapperEntry, error) {
+func (pm *PlaybackManager) getLocalFilePlaybackDetails(path string) (*media.AnimeListEntry, *anime.LocalFile, *anime.LocalFileWrapperEntry, error) {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
 	// Normalize path
@@ -38,7 +38,7 @@ func (pm *PlaybackManager) getLocalFilePlaybackDetails(path string) (*anilist.An
 	reqEvent := &PlaybackLocalFileDetailsRequestedEvent{
 		Path:                  path,
 		LocalFiles:            lfs,
-		AnimeListEntry:        &anilist.AnimeListEntry{},
+		AnimeListEntry:        &media.AnimeListEntry{},
 		LocalFile:             &anime.LocalFile{},
 		LocalFileWrapperEntry: &anime.LocalFileWrapperEntry{},
 	}
@@ -105,35 +105,35 @@ func (pm *PlaybackManager) getLocalFilePlaybackDetails(path string) (*anilist.An
 }
 
 // GetStreamPlaybackDetails is called once everytime a new video is played.
-func (pm *PlaybackManager) getStreamPlaybackDetails(mId int) mo.Option[*anilist.AnimeListEntry] {
+func (pm *PlaybackManager) getStreamPlaybackDetails(mId int) mo.Option[*media.AnimeListEntry] {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
 
 	if pm.animeCollection.IsAbsent() {
-		return mo.None[*anilist.AnimeListEntry]()
+		return mo.None[*media.AnimeListEntry]()
 	}
 
 	reqEvent := &PlaybackStreamDetailsRequestedEvent{
 		AnimeCollection: pm.animeCollection.MustGet(),
 		MediaId:         mId,
-		AnimeListEntry:  &anilist.AnimeListEntry{},
+		AnimeListEntry:  &media.AnimeListEntry{},
 	}
 	err := hook.GlobalHookManager.OnPlaybackStreamDetailsRequested().Trigger(reqEvent)
 	if err != nil {
-		return mo.None[*anilist.AnimeListEntry]()
+		return mo.None[*media.AnimeListEntry]()
 	}
 
 	if reqEvent.DefaultPrevented {
 		pm.Logger.Debug().Msg("playback manager: Stream details processing prevented by hook")
 		if reqEvent.AnimeListEntry == nil {
-			return mo.None[*anilist.AnimeListEntry]()
+			return mo.None[*media.AnimeListEntry]()
 		}
 		return mo.Some(reqEvent.AnimeListEntry)
 	}
 
 	ret, ok := pm.animeCollection.MustGet().GetListEntryFromAnimeId(mId)
 	if !ok {
-		return mo.None[*anilist.AnimeListEntry]()
+		return mo.None[*media.AnimeListEntry]()
 	}
 
 	return mo.Some(ret)

@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/db"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/events"
 	"seanime/internal/library/anime"
 	"seanime/internal/manga"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 
@@ -31,17 +31,17 @@ const (
 
 type Manager interface {
 	// SetAnimeCollection updates the online anime collection in the manager.
-	SetAnimeCollection(ac *anilist.AnimeCollection)
+	SetAnimeCollection(ac *media.AnimeCollection)
 	// SetMangaCollection updates the online manga collection in the manager.
-	SetMangaCollection(mc *anilist.MangaCollection)
+	SetMangaCollection(mc *media.MangaCollection)
 	// GetLocalAnimeCollection returns the local anime collection stored in the local database.
-	GetLocalAnimeCollection() mo.Option[*anilist.AnimeCollection]
+	GetLocalAnimeCollection() mo.Option[*media.AnimeCollection]
 	// GetLocalMangaCollection returns the local manga collection stored in the local database.
-	GetLocalMangaCollection() mo.Option[*anilist.MangaCollection]
+	GetLocalMangaCollection() mo.Option[*media.MangaCollection]
 	// UpdateLocalAnimeCollection updates the local anime collection using the online data.
-	UpdateLocalAnimeCollection(ac *anilist.AnimeCollection)
+	UpdateLocalAnimeCollection(ac *media.AnimeCollection)
 	// UpdateLocalMangaCollection updates the local manga collection using the online data.
-	UpdateLocalMangaCollection(mc *anilist.MangaCollection)
+	UpdateLocalMangaCollection(mc *media.MangaCollection)
 	// GetOfflineMetadataProvider returns the offline metadata provider.
 	GetOfflineMetadataProvider() metadata_provider.Provider
 	// GetSyncer returns the syncer (used to synchronize the anime and manga snapshots in the local database).
@@ -75,13 +75,13 @@ type Manager interface {
 	// GetLocalStorageSize returns the size of the local storage in bytes.
 	GetLocalStorageSize() int64
 	// GetSimulatedAnimeCollection returns the simulated anime collection for unauthenticated users.
-	GetSimulatedAnimeCollection() mo.Option[*anilist.AnimeCollection]
+	GetSimulatedAnimeCollection() mo.Option[*media.AnimeCollection]
 	// GetSimulatedMangaCollection returns the simulated manga collection for unauthenticated users.
-	GetSimulatedMangaCollection() mo.Option[*anilist.MangaCollection]
+	GetSimulatedMangaCollection() mo.Option[*media.MangaCollection]
 	// SaveSimulatedAnimeCollection sets the simulated anime collection for unauthenticated users.
-	SaveSimulatedAnimeCollection(ac *anilist.AnimeCollection)
+	SaveSimulatedAnimeCollection(ac *media.AnimeCollection)
 	// SaveSimulatedMangaCollection sets the simulated manga collection for unauthenticated users.
-	SaveSimulatedMangaCollection(mc *anilist.MangaCollection)
+	SaveSimulatedMangaCollection(mc *media.MangaCollection)
 	// SynchronizeSimulatedCollectionToAnilist synchronizes the simulated anime and manga collections to the user's AniList account.
 	SynchronizeSimulatedCollectionToAnilist() error
 	// SynchronizeAnilistToSimulatedCollection synchronizes the user's AniList account to the simulated anime and manga collections.
@@ -108,14 +108,14 @@ type (
 		syncer *Syncer
 
 		// Anime collection stored in the local database, without modifications
-		localAnimeCollection mo.Option[*anilist.AnimeCollection]
+		localAnimeCollection mo.Option[*media.AnimeCollection]
 		// Manga collection stored in the local database, without modifications
-		localMangaCollection mo.Option[*anilist.MangaCollection]
+		localMangaCollection mo.Option[*media.MangaCollection]
 
 		// Anime collection from the user's AniList account, changed by ManagerImpl.SetAnimeCollection
-		animeCollection mo.Option[*anilist.AnimeCollection]
+		animeCollection mo.Option[*media.AnimeCollection]
 		// Manga collection from the user's AniList account, changed by ManagerImpl.SetMangaCollection
-		mangaCollection mo.Option[*anilist.MangaCollection]
+		mangaCollection mo.Option[*media.MangaCollection]
 
 		// Downloaded chapter containers, set by ManagerImpl.Synchronize, accessed by the synchronization Syncer
 		downloadedChapterContainers []*manga.ChapterContainer
@@ -125,10 +125,10 @@ type (
 		RefreshAnilistCollectionsFunc func()
 	}
 	TrackedMediaItem struct {
-		MediaId    int                     `json:"mediaId"`
-		Type       string                  `json:"type"`
-		AnimeEntry *anilist.AnimeListEntry `json:"animeEntry,omitempty"`
-		MangaEntry *anilist.MangaListEntry `json:"mangaEntry,omitempty"`
+		MediaId    int                   `json:"mediaId"`
+		Type       string                `json:"type"`
+		AnimeEntry *media.AnimeListEntry `json:"animeEntry,omitempty"`
+		MangaEntry *media.MangaListEntry `json:"mangaEntry,omitempty"`
 	}
 
 	NewManagerOptions struct {
@@ -159,10 +159,10 @@ func NewManager(opts *NewManagerOptions) (Manager, error) {
 		localDir:                      opts.LocalDir,
 		localAssetsDir:                opts.AssetDir,
 		logger:                        opts.Logger,
-		animeCollection:               mo.None[*anilist.AnimeCollection](),
-		mangaCollection:               mo.None[*anilist.MangaCollection](),
-		localAnimeCollection:          mo.None[*anilist.AnimeCollection](),
-		localMangaCollection:          mo.None[*anilist.MangaCollection](),
+		animeCollection:               mo.None[*media.AnimeCollection](),
+		mangaCollection:               mo.None[*media.MangaCollection](),
+		localAnimeCollection:          mo.None[*media.AnimeCollection](),
+		localMangaCollection:          mo.None[*media.MangaCollection](),
 		metadataProviderRef:           opts.MetadataProviderRef,
 		mangaRepository:               opts.MangaRepository,
 		downloadedChapterContainers:   make([]*manga.ChapterContainer, 0),
@@ -220,7 +220,7 @@ func (m *ManagerImpl) SetHasLocalChanges(b bool) {
 func (m *ManagerImpl) loadLocalAnimeCollection() {
 	collection, ok := m.localDb.GetLocalAnimeCollection()
 	if !ok {
-		m.localAnimeCollection = mo.None[*anilist.AnimeCollection]()
+		m.localAnimeCollection = mo.None[*media.AnimeCollection]()
 		return
 	}
 	m.localAnimeCollection = mo.Some(collection)
@@ -229,42 +229,42 @@ func (m *ManagerImpl) loadLocalAnimeCollection() {
 func (m *ManagerImpl) loadLocalMangaCollection() {
 	collection, ok := m.localDb.GetLocalMangaCollection()
 	if !ok {
-		m.localMangaCollection = mo.None[*anilist.MangaCollection]()
+		m.localMangaCollection = mo.None[*media.MangaCollection]()
 		return
 	}
 	m.localMangaCollection = mo.Some(collection)
 }
 
-func (m *ManagerImpl) SetAnimeCollection(ac *anilist.AnimeCollection) {
+func (m *ManagerImpl) SetAnimeCollection(ac *media.AnimeCollection) {
 	if ac == nil {
-		m.animeCollection = mo.None[*anilist.AnimeCollection]()
+		m.animeCollection = mo.None[*media.AnimeCollection]()
 	} else {
-		m.animeCollection = mo.Some[*anilist.AnimeCollection](ac)
+		m.animeCollection = mo.Some[*media.AnimeCollection](ac)
 	}
 }
 
-func (m *ManagerImpl) SetMangaCollection(mc *anilist.MangaCollection) {
+func (m *ManagerImpl) SetMangaCollection(mc *media.MangaCollection) {
 	if mc == nil {
-		m.mangaCollection = mo.None[*anilist.MangaCollection]()
+		m.mangaCollection = mo.None[*media.MangaCollection]()
 	} else {
-		m.mangaCollection = mo.Some[*anilist.MangaCollection](mc)
+		m.mangaCollection = mo.Some[*media.MangaCollection](mc)
 	}
 }
 
-func (m *ManagerImpl) GetLocalAnimeCollection() mo.Option[*anilist.AnimeCollection] {
+func (m *ManagerImpl) GetLocalAnimeCollection() mo.Option[*media.AnimeCollection] {
 	return m.localAnimeCollection
 }
 
-func (m *ManagerImpl) GetLocalMangaCollection() mo.Option[*anilist.MangaCollection] {
+func (m *ManagerImpl) GetLocalMangaCollection() mo.Option[*media.MangaCollection] {
 	return m.localMangaCollection
 }
 
-func (m *ManagerImpl) UpdateLocalAnimeCollection(ac *anilist.AnimeCollection) {
+func (m *ManagerImpl) UpdateLocalAnimeCollection(ac *media.AnimeCollection) {
 	_ = m.localDb.SaveAnimeCollection(ac)
 	m.loadLocalAnimeCollection()
 }
 
-func (m *ManagerImpl) UpdateLocalMangaCollection(mc *anilist.MangaCollection) {
+func (m *ManagerImpl) UpdateLocalMangaCollection(mc *media.MangaCollection) {
 	_ = m.localDb.SaveMangaCollection(mc)
 	m.loadLocalMangaCollection()
 }
@@ -287,7 +287,7 @@ func (m *ManagerImpl) AutoTrackCurrentMedia() (added bool, err error) {
 	if ok {
 		for _, list := range animeCollection.MediaListCollection.Lists {
 			for _, entry := range list.GetEntries() {
-				if entry.Status == nil || *entry.GetStatus() != anilist.MediaListStatusCurrent {
+				if entry.Status == nil || *entry.GetStatus() != media.MediaListStatusCurrent {
 					continue
 				}
 				if _, found := trackedMediaMap[entry.Media.GetID()]; found {
@@ -317,7 +317,7 @@ func (m *ManagerImpl) AutoTrackCurrentMedia() (added bool, err error) {
 	if ok {
 		for _, list := range mangaCollection.MediaListCollection.Lists {
 			for _, entry := range list.GetEntries() {
-				if entry.Status == nil || *entry.GetStatus() != anilist.MediaListStatusCurrent {
+				if entry.Status == nil || *entry.GetStatus() != media.MediaListStatusCurrent {
 					continue
 				}
 				if _, found := trackedMediaMap[entry.Media.GetID()]; found {
@@ -647,7 +647,7 @@ func (m *ManagerImpl) SynchronizeAnilist() error {
 				}
 
 				// Get the entry from AniList
-				var originalEntry *anilist.AnimeListEntry
+				var originalEntry *media.AnimeListEntry
 				if e, found := m.animeCollection.MustGet().GetListEntryFromAnimeId(entry.GetMedia().GetID()); found {
 					originalEntry = e
 				}
@@ -663,18 +663,18 @@ func (m *ManagerImpl) SynchronizeAnilist() error {
 					continue
 				}
 
-				var startDate *anilist.FuzzyDateInput
+				var startDate *media.FuzzyDateInput
 				if entry.GetStartedAt() != nil {
-					startDate = &anilist.FuzzyDateInput{
+					startDate = &media.FuzzyDateInput{
 						Year:  entry.GetStartedAt().GetYear(),
 						Month: entry.GetStartedAt().GetMonth(),
 						Day:   entry.GetStartedAt().GetDay(),
 					}
 				}
 
-				var endDate *anilist.FuzzyDateInput
+				var endDate *media.FuzzyDateInput
 				if entry.GetCompletedAt() != nil {
-					endDate = &anilist.FuzzyDateInput{
+					endDate = &media.FuzzyDateInput{
 						Year:  entry.GetCompletedAt().GetYear(),
 						Month: entry.GetCompletedAt().GetMonth(),
 						Day:   entry.GetCompletedAt().GetDay(),
@@ -710,7 +710,7 @@ func (m *ManagerImpl) SynchronizeAnilist() error {
 				}
 
 				// Get the entry from AniList
-				var originalEntry *anilist.MangaListEntry
+				var originalEntry *media.MangaListEntry
 				if e, found := m.mangaCollection.MustGet().GetListEntryFromMangaId(entry.GetMedia().GetID()); found {
 					originalEntry = e
 				}
@@ -726,18 +726,18 @@ func (m *ManagerImpl) SynchronizeAnilist() error {
 					continue
 				}
 
-				var startDate *anilist.FuzzyDateInput
+				var startDate *media.FuzzyDateInput
 				if entry.GetStartedAt() != nil {
-					startDate = &anilist.FuzzyDateInput{
+					startDate = &media.FuzzyDateInput{
 						Year:  entry.GetStartedAt().GetYear(),
 						Month: entry.GetStartedAt().GetMonth(),
 						Day:   entry.GetStartedAt().GetDay(),
 					}
 				}
 
-				var endDate *anilist.FuzzyDateInput
+				var endDate *media.FuzzyDateInput
 				if entry.GetCompletedAt() != nil {
-					endDate = &anilist.FuzzyDateInput{
+					endDate = &media.FuzzyDateInput{
 						Year:  entry.GetCompletedAt().GetYear(),
 						Month: entry.GetCompletedAt().GetMonth(),
 						Day:   entry.GetCompletedAt().GetDay(),
@@ -860,23 +860,23 @@ func (m *ManagerImpl) GetLocalStorageSize() int64 {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (m *ManagerImpl) GetSimulatedAnimeCollection() mo.Option[*anilist.AnimeCollection] {
+func (m *ManagerImpl) GetSimulatedAnimeCollection() mo.Option[*media.AnimeCollection] {
 	ac, ok := m.localDb.GetSimulatedAnimeCollection()
 	if !ok {
-		return mo.None[*anilist.AnimeCollection]()
+		return mo.None[*media.AnimeCollection]()
 	}
 	return mo.Some(ac)
 }
 
-func (m *ManagerImpl) GetSimulatedMangaCollection() mo.Option[*anilist.MangaCollection] {
+func (m *ManagerImpl) GetSimulatedMangaCollection() mo.Option[*media.MangaCollection] {
 	mc, ok := m.localDb.GetSimulatedMangaCollection()
 	if !ok {
-		return mo.None[*anilist.MangaCollection]()
+		return mo.None[*media.MangaCollection]()
 	}
 	return mo.Some(mc)
 }
 
-func (m *ManagerImpl) SaveSimulatedAnimeCollection(ac *anilist.AnimeCollection) {
+func (m *ManagerImpl) SaveSimulatedAnimeCollection(ac *media.AnimeCollection) {
 	m.logger.Trace().Msg("local manager: Saving simulated anime collection to database")
 	//// Remove airing dates from each entry
 	//for _, list := range ac.MediaListCollection.Lists {
@@ -887,7 +887,7 @@ func (m *ManagerImpl) SaveSimulatedAnimeCollection(ac *anilist.AnimeCollection) 
 	_ = m.localDb.SaveSimulatedAnimeCollection(ac)
 }
 
-func (m *ManagerImpl) SaveSimulatedMangaCollection(mc *anilist.MangaCollection) {
+func (m *ManagerImpl) SaveSimulatedMangaCollection(mc *media.MangaCollection) {
 	m.logger.Trace().Msg("local manager: Saving simulated manga collection to database")
 	_ = m.localDb.SaveSimulatedMangaCollection(mc)
 }
@@ -926,7 +926,7 @@ func (m *ManagerImpl) SynchronizeSimulatedCollectionToAnilist() error {
 				}
 
 				// Get the entry from AniList
-				var originalEntry *anilist.AnimeListEntry
+				var originalEntry *media.AnimeListEntry
 				if e, found := m.animeCollection.MustGet().GetListEntryFromAnimeId(entry.GetMedia().GetID()); found {
 					originalEntry = e
 				}
@@ -940,18 +940,18 @@ func (m *ManagerImpl) SynchronizeSimulatedCollectionToAnilist() error {
 					}
 				}
 
-				var startDate *anilist.FuzzyDateInput
+				var startDate *media.FuzzyDateInput
 				if entry.GetStartedAt() != nil {
-					startDate = &anilist.FuzzyDateInput{
+					startDate = &media.FuzzyDateInput{
 						Year:  entry.GetStartedAt().GetYear(),
 						Month: entry.GetStartedAt().GetMonth(),
 						Day:   entry.GetStartedAt().GetDay(),
 					}
 				}
 
-				var endDate *anilist.FuzzyDateInput
+				var endDate *media.FuzzyDateInput
 				if entry.GetCompletedAt() != nil {
-					endDate = &anilist.FuzzyDateInput{
+					endDate = &media.FuzzyDateInput{
 						Year:  entry.GetCompletedAt().GetYear(),
 						Month: entry.GetCompletedAt().GetMonth(),
 						Day:   entry.GetCompletedAt().GetDay(),
@@ -989,7 +989,7 @@ func (m *ManagerImpl) SynchronizeSimulatedCollectionToAnilist() error {
 				}
 
 				// Get the entry from AniList
-				var originalEntry *anilist.MangaListEntry
+				var originalEntry *media.MangaListEntry
 				if e, found := m.mangaCollection.MustGet().GetListEntryFromMangaId(entry.GetMedia().GetID()); found {
 					originalEntry = e
 				}
@@ -1003,18 +1003,18 @@ func (m *ManagerImpl) SynchronizeSimulatedCollectionToAnilist() error {
 					}
 				}
 
-				var startDate *anilist.FuzzyDateInput
+				var startDate *media.FuzzyDateInput
 				if entry.GetStartedAt() != nil {
-					startDate = &anilist.FuzzyDateInput{
+					startDate = &media.FuzzyDateInput{
 						Year:  entry.GetStartedAt().GetYear(),
 						Month: entry.GetStartedAt().GetMonth(),
 						Day:   entry.GetStartedAt().GetDay(),
 					}
 				}
 
-				var endDate *anilist.FuzzyDateInput
+				var endDate *media.FuzzyDateInput
 				if entry.GetCompletedAt() != nil {
-					endDate = &anilist.FuzzyDateInput{
+					endDate = &media.FuzzyDateInput{
 						Year:  entry.GetCompletedAt().GetYear(),
 						Month: entry.GetCompletedAt().GetMonth(),
 						Day:   entry.GetCompletedAt().GetDay(),

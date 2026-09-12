@@ -3,7 +3,7 @@ package testmocks
 import (
 	"testing"
 
-	"seanime/internal/api/anilist"
+	"seanime/internal/media"
 
 	"github.com/stretchr/testify/require"
 )
@@ -14,8 +14,8 @@ func TestBaseAnimeBuilder(t *testing.T) {
 		WithIDMal(404).
 		WithSiteURL("https://example.com/anime/44").
 		WithTitles("English Title", "Romaji Title", "Native Title", "Preferred Title").
-		WithStatus(anilist.MediaStatusReleasing).
-		WithFormat(anilist.MediaFormatMovie).
+		WithStatus(media.MediaStatusReleasing).
+		WithFormat(media.MediaFormatMovie).
 		WithEpisodes(24).
 		WithIsAdult(true).
 		WithSynonyms("Alt 1", "Alt 2").
@@ -30,15 +30,15 @@ func TestBaseAnimeBuilder(t *testing.T) {
 	require.NotNil(t, anime.IDMal)
 	require.Equal(t, 404, *anime.IDMal)
 	require.NotNil(t, anime.Type)
-	require.Equal(t, anilist.MediaTypeAnime, *anime.Type)
+	require.Equal(t, media.MediaTypeAnime, *anime.Type)
 	require.NotNil(t, anime.SiteURL)
 	require.Equal(t, "https://example.com/anime/44", *anime.SiteURL)
 	require.Equal(t, "English Title", *anime.Title.English)
 	require.Equal(t, "Romaji Title", *anime.Title.Romaji)
 	require.Equal(t, "Native Title", *anime.Title.Native)
 	require.Equal(t, "Preferred Title", *anime.Title.UserPreferred)
-	require.Equal(t, anilist.MediaStatusReleasing, *anime.Status)
-	require.Equal(t, anilist.MediaFormatMovie, *anime.Format)
+	require.Equal(t, media.MediaStatusReleasing, *anime.Status)
+	require.Equal(t, media.MediaFormatMovie, *anime.Format)
 	require.Equal(t, 24, *anime.Episodes)
 	require.Equal(t, true, *anime.IsAdult)
 	require.Len(t, anime.Synonyms, 2)
@@ -62,8 +62,8 @@ func TestBaseMangaBuilder(t *testing.T) {
 		WithIDMal(808).
 		WithSiteURL("https://example.com/manga/88").
 		WithTitles("English Manga", "Romaji Manga", "Native Manga", "Preferred Manga").
-		WithStatus(anilist.MediaStatusHiatus).
-		WithFormat(anilist.MediaFormatOneShot).
+		WithStatus(media.MediaStatusHiatus).
+		WithFormat(media.MediaFormatOneShot).
 		WithChapters(10).
 		WithVolumes(2).
 		WithIsAdult(true).
@@ -78,15 +78,15 @@ func TestBaseMangaBuilder(t *testing.T) {
 	require.NotNil(t, manga.IDMal)
 	require.Equal(t, 808, *manga.IDMal)
 	require.NotNil(t, manga.Type)
-	require.Equal(t, anilist.MediaTypeManga, *manga.Type)
+	require.Equal(t, media.MediaTypeManga, *manga.Type)
 	require.NotNil(t, manga.SiteURL)
 	require.Equal(t, "https://example.com/manga/88", *manga.SiteURL)
 	require.Equal(t, "English Manga", *manga.Title.English)
 	require.Equal(t, "Romaji Manga", *manga.Title.Romaji)
 	require.Equal(t, "Native Manga", *manga.Title.Native)
 	require.Equal(t, "Preferred Manga", *manga.Title.UserPreferred)
-	require.Equal(t, anilist.MediaStatusHiatus, *manga.Status)
-	require.Equal(t, anilist.MediaFormatOneShot, *manga.Format)
+	require.Equal(t, media.MediaStatusHiatus, *manga.Status)
+	require.Equal(t, media.MediaFormatOneShot, *manga.Format)
 	require.Equal(t, 10, *manga.Chapters)
 	require.Equal(t, 2, *manga.Volumes)
 	require.Equal(t, true, *manga.IsAdult)

@@ -1,11 +1,11 @@
 package autodownloader
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/db"
 	"seanime/internal/database/models"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"testing"
 
@@ -24,15 +24,15 @@ func TestComparison(t *testing.T) {
 	}
 	name1 := "[Oshi no Ko] 2nd Season"
 	name2 := "Oshi no Ko Season 2"
-	aniListEntry := &anilist.AnimeListEntry{
-		Media: &anilist.BaseAnime{
+	aniListEntry := &media.AnimeListEntry{
+		Media: &media.Anime{
 			ID: 166531,
-			Title: &anilist.BaseAnime_Title{
+			Title: &media.Anime_Title{
 				Romaji:  &name1,
 				English: &name2,
 			},
 			Episodes: new(13),
-			Format:   new(anilist.MediaFormatTv),
+			Format:   new(media.MediaFormatTv),
 		},
 	}
 
@@ -149,15 +149,15 @@ func TestComparison2(t *testing.T) {
 	}
 	name1 := "DANDADAN"
 	name2 := "Dandadan"
-	aniListEntry := &anilist.AnimeListEntry{
-		Media: &anilist.BaseAnime{
-			Title: &anilist.BaseAnime_Title{
+	aniListEntry := &media.AnimeListEntry{
+		Media: &media.Anime{
+			Title: &media.Anime_Title{
 				Romaji:  &name1,
 				English: &name2,
 			},
 			Episodes: new(12),
-			Status:   new(anilist.MediaStatusFinished),
-			Format:   new(anilist.MediaFormatTv),
+			Status:   new(media.MediaStatusFinished),
+			Format:   new(media.MediaFormatTv),
 		},
 	}
 
@@ -246,15 +246,15 @@ func TestComparison3(t *testing.T) {
 	}
 	name1 := "Dandadan"
 	name2 := "DAN DA DAN"
-	aniListEntry := &anilist.AnimeListEntry{
-		Media: &anilist.BaseAnime{
-			Title: &anilist.BaseAnime_Title{
+	aniListEntry := &media.AnimeListEntry{
+		Media: &media.Anime{
+			Title: &media.Anime_Title{
 				Romaji:  &name1,
 				English: &name2,
 			},
-			Status:   new(anilist.MediaStatusFinished),
+			Status:   new(media.MediaStatusFinished),
 			Episodes: new(12),
-			Format:   new(anilist.MediaFormatTv),
+			Format:   new(media.MediaFormatTv),
 		},
 	}
 

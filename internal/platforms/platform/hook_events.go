@@ -1,89 +1,89 @@
 package platform
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/hook_resolver"
+	"seanime/internal/media"
 )
 
 /////////////////////////////
-// AniList Events
+// 平台事件（换锚后字段类型均为 media 镜像类型）
 /////////////////////////////
 
 type GetAnimeEvent struct {
 	hook_resolver.Event
-	Anime *anilist.BaseAnime `json:"anime"`
+	Anime *media.Anime `json:"anime"`
 }
 
 type GetAnimeDetailsEvent struct {
 	hook_resolver.Event
-	Anime *anilist.AnimeDetailsById_Media `json:"anime"`
+	Anime *media.AnimeDetails `json:"anime"`
 }
 
 type GetMangaEvent struct {
 	hook_resolver.Event
-	Manga *anilist.BaseManga `json:"manga"`
+	Manga *media.Manga `json:"manga"`
 }
 
 type GetMangaDetailsEvent struct {
 	hook_resolver.Event
-	Manga *anilist.MangaDetailsById_Media `json:"manga"`
+	Manga *media.MangaDetails `json:"manga"`
 }
 
 type GetCachedAnimeCollectionEvent struct {
 	hook_resolver.Event
-	AnimeCollection *anilist.AnimeCollection `json:"animeCollection"`
+	AnimeCollection *media.AnimeCollection `json:"animeCollection"`
 }
 
 type GetCachedMangaCollectionEvent struct {
 	hook_resolver.Event
-	MangaCollection *anilist.MangaCollection `json:"mangaCollection"`
+	MangaCollection *media.MangaCollection `json:"mangaCollection"`
 }
 
 type GetAnimeCollectionEvent struct {
 	hook_resolver.Event
-	AnimeCollection *anilist.AnimeCollection `json:"animeCollection"`
+	AnimeCollection *media.AnimeCollection `json:"animeCollection"`
 }
 
 type GetMangaCollectionEvent struct {
 	hook_resolver.Event
-	MangaCollection *anilist.MangaCollection `json:"mangaCollection"`
+	MangaCollection *media.MangaCollection `json:"mangaCollection"`
 }
 
 type GetCachedRawAnimeCollectionEvent struct {
 	hook_resolver.Event
-	AnimeCollection *anilist.AnimeCollection `json:"animeCollection"`
+	AnimeCollection *media.AnimeCollection `json:"animeCollection"`
 }
 
 type GetCachedRawMangaCollectionEvent struct {
 	hook_resolver.Event
-	MangaCollection *anilist.MangaCollection `json:"mangaCollection"`
+	MangaCollection *media.MangaCollection `json:"mangaCollection"`
 }
 
 type GetRawAnimeCollectionEvent struct {
 	hook_resolver.Event
-	AnimeCollection *anilist.AnimeCollection `json:"animeCollection"`
+	AnimeCollection *media.AnimeCollection `json:"animeCollection"`
 }
 
 type GetRawMangaCollectionEvent struct {
 	hook_resolver.Event
-	MangaCollection *anilist.MangaCollection `json:"mangaCollection"`
+	MangaCollection *media.MangaCollection `json:"mangaCollection"`
 }
 
 type GetStudioDetailsEvent struct {
 	hook_resolver.Event
-	Studio *anilist.StudioDetails `json:"studio"`
+	Studio *media.StudioDetails `json:"studio"`
 }
 
 // PreUpdateEntryEvent is triggered when an entry is about to be updated.
 // Prevent default to skip the default update and override the update.
 type PreUpdateEntryEvent struct {
 	hook_resolver.Event
-	MediaID     *int                     `json:"mediaId"`
-	Status      *anilist.MediaListStatus `json:"status"`
-	ScoreRaw    *int                     `json:"scoreRaw"`
-	Progress    *int                     `json:"progress"`
-	StartedAt   *anilist.FuzzyDateInput  `json:"startedAt"`
-	CompletedAt *anilist.FuzzyDateInput  `json:"completedAt"`
+	MediaID     *int                  `json:"mediaId"`
+	Status      *media.MediaListStatus `json:"status"`
+	ScoreRaw    *int                  `json:"scoreRaw"`
+	Progress    *int                  `json:"progress"`
+	StartedAt   *media.FuzzyDateInput `json:"startedAt"`
+	CompletedAt *media.FuzzyDateInput `json:"completedAt"`
 }
 
 type PostUpdateEntryEvent struct {
@@ -98,8 +98,8 @@ type PreUpdateEntryProgressEvent struct {
 	MediaID    *int `json:"mediaId"`
 	Progress   *int `json:"progress"`
 	TotalCount *int `json:"totalCount"`
-	// Defaults to anilist.MediaListStatusCurrent
-	Status *anilist.MediaListStatus `json:"status"`
+	// Defaults to media.MediaListStatusCurrent
+	Status *media.MediaListStatus `json:"status"`
 }
 
 type PostUpdateEntryProgressEvent struct {

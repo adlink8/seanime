@@ -4,10 +4,11 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-	"seanime/internal/api/anilist"
+	"seanime/internal/api/bangumi"
 	"seanime/internal/extension"
 	"seanime/internal/manga"
 	manga_providers "seanime/internal/manga/providers"
+	"seanime/internal/media"
 	"seanime/internal/util/result"
 	"strconv"
 	"strings"
@@ -19,8 +20,8 @@ import (
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var (
-	baseMangaCache    = result.NewCache[int, *anilist.BaseManga]()
-	mangaDetailsCache = result.NewCache[int, *anilist.MangaDetailsById_Media]()
+	baseMangaCache    = result.NewCache[int, *media.Manga]()
+	mangaDetailsCache = result.NewCache[int, *media.MangaDetails]()
 )
 
 // HandleGetMangaPreferences
@@ -152,7 +153,7 @@ func (h *Handler) HandleStopMangaSourceRefresh(c echo.Context) error {
 //
 //	@summary returns the user's AniList manga collection.
 //	@route /api/v1/manga/anilist/collection [GET]
-//	@returns anilist.MangaCollection
+//	@returns media.MangaCollection
 func (h *Handler) HandleGetAnilistMangaCollection(c echo.Context) error {
 
 	type body struct {
@@ -176,7 +177,7 @@ func (h *Handler) HandleGetAnilistMangaCollection(c echo.Context) error {
 //
 //	@summary returns the user's AniList manga collection.
 //	@route /api/v1/manga/anilist/collection/raw [GET,POST]
-//	@returns anilist.MangaCollection
+//	@returns media.MangaCollection
 func (h *Handler) HandleGetRawAnilistMangaCollection(c echo.Context) error {
 
 	bypassCache := c.Request().Method == "POST"
@@ -190,14 +191,14 @@ func (h *Handler) HandleGetRawAnilistMangaCollection(c echo.Context) error {
 	return h.RespondWithData(c, mangaCollection)
 }
 
-var mangaTagsCache *anilist.MediaTagMap
+var mangaTagsCache *media.MediaTagMap
 
 // HandleGetRawAnilistMangaCollectionTags
 //
 //	@summary returns the AniList tags for the user's raw manga collection.
 //	@desc This runs a dedicated AniList tags query used by the lists page filters.
 //	@route /api/v1/manga/anilist/collection/raw/tags [GET]
-//	@returns anilist.MediaTagMap
+//	@returns media.MediaTagMap
 func (h *Handler) HandleGetRawAnilistMangaCollectionTags(c echo.Context) error {
 	h.App.OnRefreshAnilistCollectionFuncs.Set("HandleGetRawAnilistMangaCollectionTags", func() {
 		mangaTagsCache = nil
@@ -209,15 +210,32 @@ func (h *Handler) HandleGetRawAnilistMangaCollectionTags(c echo.Context) error {
 
 	userName := h.App.GetUsername()
 	if userName == "" || h.App.GetUser().IsSimulated {
-		return h.RespondWithData(c, anilist.MediaTagMap{})
+		return h.RespondWithData(c, media.MediaTagMap{})
 	}
 
-	ret, err := h.App.AnilistPlatformRef.Get().GetAnilistClient().MangaCollectionTags(c.Request().Context(), &userName)
-	if err != nil {
-		return h.RespondWithError(c, err)
+	// Bangumi 锚点：无用户标签聚合查询，改为分页拉取收藏（subject_type=1 书籍）并聚合用户标签。
+	client := h.App.AnilistPlatformRef.Get().GetBangumiClient()
+	if client == nil {
+		return h.RespondWithData(c, media.MediaTagMap{})
 	}
 
-	tags := anilist.MediaTagMapFromMangaCollectionTags(ret)
+	tags := make(media.MediaTagMap)
+	limit := 50
+	subjectType := 1
+	for offset := 0; ; offset += limit {
+		res, err := client.GetUserCollectionsByUser(c.Request().Context(), userName, bangumi.UserCollectionsOpts{Limit: limit, Offset: offset, SubjectType: &subjectType})
+		if err != nil {
+			return h.RespondWithError(c, err)
+		}
+		for _, uc := range res.Data {
+			if len(uc.Tags) > 0 {
+				tags[uc.SubjectID] = uc.Tags
+			}
+		}
+		if len(res.Data) < limit || offset+limit >= res.Total {
+			break
+		}
+	}
 	mangaTagsCache = &tags
 
 	return h.RespondWithData(c, tags)
@@ -292,7 +310,7 @@ func (h *Handler) HandleGetMangaEntry(c echo.Context) error {
 //	@desc This fetches more fields omitted from the base queries.
 //	@route /api/v1/manga/entry/{id}/details [GET]
 //	@param id - int - true - "AniList manga media ID"
-//	@returns anilist.MangaDetailsById_Media
+//	@returns media.MangaDetails
 func (h *Handler) HandleGetMangaEntryDetails(c echo.Context) error {
 
 	id, err := strconv.Atoi(c.Param("id"))
@@ -490,7 +508,7 @@ func (h *Handler) HandleGetMangaEntryDownloadedChapters(c echo.Context) error {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var (
-	anilistListMangaCache = result.NewCache[string, *anilist.ListManga]()
+	anilistListMangaCache = result.NewCache[string, *media.ListManga]()
 )
 
 // HandleAnilistListManga
@@ -498,22 +516,22 @@ var (
 //	@summary returns a list of manga based on the search parameters.
 //	@desc This is used by "Advanced Search" and search function.
 //	@route /api/v1/manga/anilist/list [POST]
-//	@returns anilist.ListManga
+//	@returns media.ListManga
 func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 
 	type body struct {
-		Page                *int                   `json:"page,omitempty"`
-		Search              *string                `json:"search,omitempty"`
-		PerPage             *int                   `json:"perPage,omitempty"`
-		Sort                []*anilist.MediaSort   `json:"sort,omitempty"`
-		Status              []*anilist.MediaStatus `json:"status,omitempty"`
-		Genres              []*string              `json:"genres,omitempty"`
-		Tags                []*string              `json:"tags,omitempty"`
-		AverageScoreGreater *int                   `json:"averageScore_greater,omitempty"`
-		Year                *int                   `json:"year,omitempty"`
-		CountryOfOrigin     *string                `json:"countryOfOrigin,omitempty"`
-		IsAdult             *bool                  `json:"isAdult,omitempty"`
-		Format              *anilist.MediaFormat   `json:"format,omitempty"`
+		Page                *int                 `json:"page,omitempty"`
+		Search              *string              `json:"search,omitempty"`
+		PerPage             *int                 `json:"perPage,omitempty"`
+		Sort                []*media.MediaSort   `json:"sort,omitempty"`
+		Status              []*media.MediaStatus `json:"status,omitempty"`
+		Genres              []*string            `json:"genres,omitempty"`
+		Tags                []*string            `json:"tags,omitempty"`
+		AverageScoreGreater *int                 `json:"averageScore_greater,omitempty"`
+		Year                *int                 `json:"year,omitempty"`
+		CountryOfOrigin     *string              `json:"countryOfOrigin,omitempty"`
+		IsAdult             *bool                `json:"isAdult,omitempty"`
+		Format              *media.MediaFormat   `json:"format,omitempty"`
 	}
 
 	p := new(body)
@@ -531,7 +549,7 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 		isAdult = new(*p.IsAdult && h.App.Settings.GetAnilist().EnableAdultContent)
 	}
 
-	cacheKey := anilist.ListMangaCacheKey(
+	cacheKey := media.ListMangaCacheKey(
 		p.Page,
 		p.Search,
 		p.PerPage,
@@ -552,26 +570,60 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 		return h.RespondWithData(c, cached)
 	}
 
-	ret, err := anilist.ListMangaM(
-		h.App.AnilistPlatformRef.Get().GetAnilistClient(),
-		p.Page,
-		p.Search,
-		p.PerPage,
-		p.Sort,
-		p.Status,
-		p.Genres,
-		p.Tags,
-		p.AverageScoreGreater,
-		p.Year,
-		p.Format,
-		p.CountryOfOrigin,
-		isAdult,
-		h.App.Logger,
-		h.App.GetUserAnilistToken(),
-	)
+	// Bangumi 锚点：原 AniList 复杂过滤搜索改为 SearchSubjects（type=1 书籍）。
+	// sort/status/genres/averageScore/year/format/countryOfOrigin 无对应过滤条件，忽略（TODO(M4)）。
+	client := h.App.AnilistPlatformRef.Get().GetBangumiClient()
+	if client == nil {
+		return h.RespondWithError(c, errors.New("bangumi client not available"))
+	}
+
+	filter := bangumi.SearchFilter{Type: []int{1}} // 1=书籍
+	for _, t := range p.Tags {
+		if t != nil && *t != "" {
+			filter.Tag = append(filter.Tag, *t)
+		}
+	}
+	if isAdult != nil {
+		filter.Nsfw = isAdult
+	}
+
+	page := 1
+	if p.Page != nil {
+		page = *p.Page
+	}
+	perPage := 20
+	if p.PerPage != nil {
+		perPage = *p.PerPage
+	}
+	keyword := ""
+	if p.Search != nil {
+		keyword = *p.Search
+	}
+
+	res, err := client.SearchSubjects(c.Request().Context(), bangumi.SearchSubjectsOpts{
+		Keyword: keyword,
+		Sort:    "match",
+		Filter:  filter,
+		Limit:   perPage,
+		Offset:  (page - 1) * perPage,
+	})
 	if err != nil {
 		return h.RespondWithError(c, err)
 	}
+
+	mediaList := make([]*media.Manga, 0, len(res.Data))
+	for i := range res.Data {
+		if m := media.MangaFromSubject(bangumi.SubjectToMedia(&res.Data[i])); m != nil {
+			mediaList = append(mediaList, m)
+		}
+	}
+	hasNextPage := res.Offset+len(res.Data) < res.Total
+	total := res.Total
+	pi := perPage
+	ret := &media.ListManga{Page: &media.ListManga_Page{
+		Media:    mediaList,
+		PageInfo: &media.PageInfo{CurrentPage: &page, PerPage: &pi, Total: &total, HasNextPage: &hasNextPage},
+	}}
 
 	if ret != nil {
 		anilistListMangaCache.SetT(cacheKey, ret, time.Minute*10)

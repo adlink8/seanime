@@ -1,9 +1,9 @@
 package torrentstream
 
 import (
-	"seanime/internal/api/anilist"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/hook_resolver"
+	"seanime/internal/media"
 )
 
 // TorrentStreamAutoSelectTorrentsFetchedEvent is triggered when the torrents are fetched for auto select.
@@ -18,9 +18,9 @@ type TorrentStreamAutoSelectTorrentsFetchedEvent struct {
 // Prevent default to skip the default playback and override the playback.
 type TorrentStreamSendStreamToMediaPlayerEvent struct {
 	hook_resolver.Event
-	WindowTitle  string             `json:"windowTitle"`
-	StreamURL    string             `json:"streamURL"`
-	Media        *anilist.BaseAnime `json:"media"`
-	AniDbEpisode string             `json:"aniDbEpisode"`
-	PlaybackType string             `json:"playbackType"`
+	WindowTitle  string       `json:"windowTitle"`
+	StreamURL    string       `json:"streamURL"`
+	Media        *media.Anime `json:"media"`
+	AniDbEpisode string       `json:"aniDbEpisode"`
+	PlaybackType string       `json:"playbackType"`
 }

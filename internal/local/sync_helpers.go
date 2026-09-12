@@ -3,10 +3,10 @@ package local
 import (
 	"fmt"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/image_downloader"
 
@@ -15,13 +15,13 @@ import (
 )
 
 // BaseAnimeDeepCopy creates a deep copy of the given base anime struct.
-func BaseAnimeDeepCopy(animeCollection *anilist.BaseAnime) *anilist.BaseAnime {
+func BaseAnimeDeepCopy(animeCollection *media.Anime) *media.Anime {
 	bytes, err := json.Marshal(animeCollection)
 	if err != nil {
 		return nil
 	}
 
-	deepCopy := &anilist.BaseAnime{}
+	deepCopy := &media.Anime{}
 	err = json.Unmarshal(bytes, deepCopy)
 	if err != nil {
 		return nil
@@ -33,13 +33,13 @@ func BaseAnimeDeepCopy(animeCollection *anilist.BaseAnime) *anilist.BaseAnime {
 }
 
 // BaseMangaDeepCopy creates a deep copy of the given base manga struct.
-func BaseMangaDeepCopy(animeCollection *anilist.BaseManga) *anilist.BaseManga {
+func BaseMangaDeepCopy(animeCollection *media.Manga) *media.Manga {
 	bytes, err := json.Marshal(animeCollection)
 	if err != nil {
 		return nil
 	}
 
-	deepCopy := &anilist.BaseManga{}
+	deepCopy := &media.Manga{}
 	err = json.Unmarshal(bytes, deepCopy)
 	if err != nil {
 		return nil
@@ -70,9 +70,9 @@ func Float64PointerValue[A float64](a *A) A {
 	return *a
 }
 
-func MediaListStatusPointerValue(a *anilist.MediaListStatus) anilist.MediaListStatus {
+func MediaListStatusPointerValue(a *media.MediaListStatus) media.MediaListStatus {
 	if a == nil {
-		return anilist.MediaListStatusPlanning
+		return media.MediaListStatusPlanning
 	}
 	return *a
 }
@@ -134,7 +134,7 @@ func DownloadAnimeEpisodeImages(logger *zerolog.Logger, assetsDir string, mId in
 func DownloadAnimeImages(
 	logger *zerolog.Logger,
 	assetsDir string,
-	entry *anilist.AnimeListEntry,
+	entry *media.AnimeListEntry,
 	animeMetadata *metadata.AnimeMetadata, // This is updated
 	metadataWrapper metadata_provider.AnimeMetadataWrapper,
 	lfs []*anime.LocalFile,
@@ -211,7 +211,7 @@ func DownloadAnimeImages(
 //
 //	DownloadMangaImages(logger, "path/to/datadir/local/assets", entry)
 //	-> "banner.jpg", "cover.jpg"
-func DownloadMangaImages(logger *zerolog.Logger, assetsDir string, entry *anilist.MangaListEntry) (string, string, bool) {
+func DownloadMangaImages(logger *zerolog.Logger, assetsDir string, entry *media.MangaListEntry) (string, string, bool) {
 	logger.Trace().Msgf("local manager: Downloading images for manga %d", entry.Media.ID)
 
 	// e.g. /datadir/local/assets/123

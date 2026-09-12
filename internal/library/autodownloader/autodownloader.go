@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/db"
@@ -16,6 +15,7 @@ import (
 	"seanime/internal/extension"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/notifier"
 	"seanime/internal/torrent_clients/torrent_client"
 	"seanime/internal/torrents/torrent"
@@ -45,7 +45,7 @@ type (
 		torrentRepository       *torrent.Repository
 		debridClientRepository  *debrid_client.Repository
 		database                *db.Database
-		animeCollection         mo.Option[*anilist.AnimeCollection]
+		animeCollection         mo.Option[*media.AnimeCollection]
 		wsEventManager          events.WSEventManagerInterface
 		settings                *models.AutoDownloaderSettings
 		metadataProviderRef     *util.Ref[metadata_provider.Provider]
@@ -90,7 +90,7 @@ func New(opts *NewAutoDownloaderOptions) *AutoDownloader {
 		torrentRepository:       opts.TorrentRepository,
 		database:                opts.Database,
 		wsEventManager:          opts.WSEventManager,
-		animeCollection:         mo.None[*anilist.AnimeCollection](),
+		animeCollection:         mo.None[*media.AnimeCollection](),
 		metadataProviderRef:     opts.MetadataProviderRef,
 		debridClientRepository:  opts.DebridClientRepository,
 		settings: &models.AutoDownloaderSettings{
@@ -138,7 +138,7 @@ func (ad *AutoDownloader) SetSettings(settings *models.AutoDownloaderSettings) {
 	}()
 }
 
-func (ad *AutoDownloader) SetAnimeCollection(ac *anilist.AnimeCollection) {
+func (ad *AutoDownloader) SetAnimeCollection(ac *media.AnimeCollection) {
 	ad.animeCollection = mo.Some(ac)
 }
 
@@ -1156,7 +1156,7 @@ func (ad *AutoDownloader) notifyDownloadResults(downloaded int) {
 func (ad *AutoDownloader) torrentFollowsRule(
 	t *NormalizedTorrent,
 	rule *anime.AutoDownloaderRule,
-	listEntry *anilist.AnimeListEntry,
+	listEntry *media.AnimeListEntry,
 	profiles []*anime.AutoDownloaderProfile,
 ) (int, bool) {
 	defer util.HandlePanicInModuleThen("autodownloader/torrentFollowsRule", func() {})
@@ -1543,7 +1543,7 @@ func (ad *AutoDownloader) isReleaseGroupMatch(releaseGroup string, releaseGroups
 	return false
 }
 
-func (ad *AutoDownloader) isTitleMatch(torrentParsedData *habari.Metadata, torrentName string, rule *anime.AutoDownloaderRule, listEntry *anilist.AnimeListEntry) (ok bool) {
+func (ad *AutoDownloader) isTitleMatch(torrentParsedData *habari.Metadata, torrentName string, rule *anime.AutoDownloaderRule, listEntry *media.AnimeListEntry) (ok bool) {
 	defer util.HandlePanicInModuleThen("autodownloader/isTitleMatch", func() {
 		ok = false
 	})
@@ -1654,7 +1654,7 @@ func (ad *AutoDownloader) isTitleMatch(torrentParsedData *habari.Metadata, torre
 func (ad *AutoDownloader) isSeasonAndEpisodeMatch(
 	parsedData *habari.Metadata,
 	rule *anime.AutoDownloaderRule,
-	listEntry *anilist.AnimeListEntry,
+	listEntry *media.AnimeListEntry,
 ) (a int, b bool) {
 	defer util.HandlePanicInModuleThen("autodownloader/isSeasonAndEpisodeMatch", func() {
 		b = false
@@ -1689,7 +1689,7 @@ func (ad *AutoDownloader) isSeasonAndEpisodeMatch(
 	// We can't parse the episode number
 	if !ok {
 		// Return true if the media (has only one episode or is a movie)
-		if listEntry.GetMedia().GetCurrentEpisodeCount() == 1 || *listEntry.GetMedia().GetFormat() == anilist.MediaFormatMovie {
+		if listEntry.GetMedia().GetCurrentEpisodeCount() == 1 || *listEntry.GetMedia().GetFormat() == media.MediaFormatMovie {
 			// Note: We used to check if items/locals exist here.
 			// But now moved to the main loop to group first.
 			return 1, true // Good to go
@@ -1780,7 +1780,7 @@ func (ad *AutoDownloader) isSeasonAndEpisodeMatch(
 	return -1, false
 }
 
-func (ad *AutoDownloader) getRuleListEntry(rule *anime.AutoDownloaderRule) (*anilist.AnimeListEntry, bool) {
+func (ad *AutoDownloader) getRuleListEntry(rule *anime.AutoDownloaderRule) (*media.AnimeListEntry, bool) {
 	if rule == nil || rule.MediaId == 0 || ad.animeCollection.IsAbsent() {
 		return nil, false
 	}

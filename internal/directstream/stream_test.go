@@ -5,9 +5,9 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"seanime/internal/api/anilist"
 	"seanime/internal/events"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mediacore"
 	"seanime/internal/mkvparser"
 	"seanime/internal/mpvcore"
@@ -158,7 +158,7 @@ type blockingStream struct {
 func (s *blockingStream) Type() player.PlaybackType                   { return player.PlaybackTypeTorrent }
 func (s *blockingStream) LoadContentType() string                     { return "video/webm" }
 func (s *blockingStream) ClientId() string                            { return s.clientID }
-func (s *blockingStream) Media() *anilist.BaseAnime                   { return nil }
+func (s *blockingStream) Media() *media.Anime                         { return nil }
 func (s *blockingStream) Episode() *anime.Episode                     { return nil }
 func (s *blockingStream) ListEntryData() *anime.EntryListData         { return nil }
 func (s *blockingStream) EpisodeCollection() *anime.EpisodeCollection { return nil }
@@ -201,7 +201,7 @@ func (s *prevTerminateStream) Type() player.PlaybackType {
 }
 func (s *prevTerminateStream) LoadContentType() string                     { return "video/webm" }
 func (s *prevTerminateStream) ClientId() string                            { return s.clientID }
-func (s *prevTerminateStream) Media() *anilist.BaseAnime                   { return nil }
+func (s *prevTerminateStream) Media() *media.Anime                         { return nil }
 func (s *prevTerminateStream) Episode() *anime.Episode                     { return nil }
 func (s *prevTerminateStream) ListEntryData() *anime.EntryListData         { return nil }
 func (s *prevTerminateStream) EpisodeCollection() *anime.EpisodeCollection { return nil }
@@ -235,7 +235,7 @@ type eventStream struct {
 func (s *eventStream) Type() player.PlaybackType                   { return player.PlaybackTypeTorrent }
 func (s *eventStream) LoadContentType() string                     { return "video/webm" }
 func (s *eventStream) ClientId() string                            { return s.clientID }
-func (s *eventStream) Media() *anilist.BaseAnime                   { return nil }
+func (s *eventStream) Media() *media.Anime                         { return nil }
 func (s *eventStream) Episode() *anime.Episode                     { return nil }
 func (s *eventStream) ListEntryData() *anime.EntryListData         { return nil }
 func (s *eventStream) EpisodeCollection() *anime.EpisodeCollection { return nil }

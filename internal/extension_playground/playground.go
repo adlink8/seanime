@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"runtime"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/events"
@@ -16,6 +15,7 @@ import (
 	"seanime/internal/extension_repo"
 	goja_runtime "seanime/internal/goja/goja_runtime"
 	"seanime/internal/manga"
+	"seanime/internal/media"
 	"seanime/internal/onlinestream"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
@@ -33,8 +33,8 @@ type (
 	PlaygroundRepository struct {
 		logger              *zerolog.Logger
 		platformRef         *util.Ref[platform.Platform]
-		baseAnimeCache      *result.Cache[int, *anilist.BaseAnime]
-		baseMangaCache      *result.Cache[int, *anilist.BaseManga]
+		baseAnimeCache      *result.Cache[int, *media.Anime]
+		baseMangaCache      *result.Cache[int, *media.Manga]
 		metadataProviderRef *util.Ref[metadata_provider.Provider]
 		gojaRuntimeManager  *goja_runtime.Manager
 		wsEventManager      events.WSEventManagerInterface
@@ -59,8 +59,8 @@ func NewPlaygroundRepository(logger *zerolog.Logger, platformRef *util.Ref[platf
 		logger:              logger,
 		platformRef:         platformRef,
 		metadataProviderRef: metadataProviderRef,
-		baseAnimeCache:      result.NewCache[int, *anilist.BaseAnime](),
-		baseMangaCache:      result.NewCache[int, *anilist.BaseManga](),
+		baseAnimeCache:      result.NewCache[int, *media.Anime](),
+		baseMangaCache:      result.NewCache[int, *media.Manga](),
 		gojaRuntimeManager:  goja_runtime.NewManager(logger),
 		wsEventManager:      events.NewMockWSEventManager(logger),
 	}
@@ -157,7 +157,7 @@ func newPlaygroundResponse(playgroundLogger *PlaygroundDebugLogger, value interf
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (r *PlaygroundRepository) getAnime(mediaId int) (anime *anilist.BaseAnime, am *metadata.AnimeMetadata, err error) {
+func (r *PlaygroundRepository) getAnime(mediaId int) (anime *media.Anime, am *metadata.AnimeMetadata, err error) {
 	var ok bool
 	anime, ok = r.baseAnimeCache.Get(mediaId)
 	if !ok {
@@ -172,7 +172,7 @@ func (r *PlaygroundRepository) getAnime(mediaId int) (anime *anilist.BaseAnime, 
 	return anime, am, nil
 }
 
-func (r *PlaygroundRepository) getManga(mediaId int) (manga *anilist.BaseManga, err error) {
+func (r *PlaygroundRepository) getManga(mediaId int) (manga *media.Manga, err error) {
 	var ok bool
 	manga, ok = r.baseMangaCache.Get(mediaId)
 	if !ok {

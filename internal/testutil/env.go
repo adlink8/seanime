@@ -144,6 +144,12 @@ func (env *TestEnv) NewDatabase(name string) *db.Database {
 		env.t.Fatalf("testutil: could not create database: %v", err)
 	}
 
+	// Close the connection pool before t.TempDir cleanup, otherwise the
+	// on-disk sqlite file stays locked on Windows and RemoveAll fails.
+	env.t.Cleanup(func() {
+		_ = database.Close()
+	})
+
 	return database
 }
 

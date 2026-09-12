@@ -2,8 +2,8 @@ package scanner
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"testing"
@@ -13,8 +13,10 @@ import (
 
 func TestMatcher1(t *testing.T) {
 
-	anilistClient := anilist.NewTestAnilistClient()
-	animeCollection, err := anilistClient.AnimeCollectionWithRelations(context.Background(), nil)
+	// Bangumi 锚点：原 AniList fixture client 已随包裁剪，改用 FakePlatform；
+	// 依赖 test/data AniList fixture 的用例属 CI 跳过名单。
+	wrapper := newScannerFixtureWrapper(t)
+	animeCollection, err := wrapper.Platform.GetAnimeCollectionWithRelations(context.Background())
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -58,10 +60,10 @@ func TestMatcher1(t *testing.T) {
 				t.Fatal("expected result, got error:", err.Error())
 			}
 
-			currentStatus := anilist.MediaListStatusCurrent
-			anilist.EnsureAnimeCollectionWithRelationsEntry(animeCollection, tt.expectedMediaId, anilist.AnimeCollectionEntryPatch{Status: &currentStatus}, anilistClient)
+			currentStatus := media.MediaListStatusCurrent
+			ensureAnimeCollectionWithRelationsEntry(animeCollection, tt.expectedMediaId, media.AnimeCollectionEntryPatch{Status: &currentStatus})
 			for _, otherMediaId := range tt.otherMediaIds {
-				anilist.EnsureAnimeCollectionWithRelationsEntry(animeCollection, otherMediaId, anilist.AnimeCollectionEntryPatch{Status: &currentStatus}, anilistClient)
+				ensureAnimeCollectionWithRelationsEntry(animeCollection, otherMediaId, media.AnimeCollectionEntryPatch{Status: &currentStatus})
 			}
 			allMedia := animeCollection.GetAllAnime()
 
@@ -149,7 +151,6 @@ func TestSeasonSignalsIgnoreQualifiedRomanNumerals(t *testing.T) {
 
 func TestMatcher2(t *testing.T) {
 	wrapper := newScannerLiveWrapper(t)
-	anilistClient := wrapper.AnilistClient
 	animeCollection, err := wrapper.Platform.GetAnimeCollectionWithRelations(t.Context())
 	if err != nil {
 		t.Fatal(err.Error())
@@ -203,10 +204,10 @@ func TestMatcher2(t *testing.T) {
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
-			currentStatus := anilist.MediaListStatusCurrent
-			anilist.EnsureAnimeCollectionWithRelationsEntry(animeCollection, tt.expectedMediaId, anilist.AnimeCollectionEntryPatch{Status: &currentStatus}, anilistClient)
+			currentStatus := media.MediaListStatusCurrent
+			ensureAnimeCollectionWithRelationsEntry(animeCollection, tt.expectedMediaId, media.AnimeCollectionEntryPatch{Status: &currentStatus})
 			for _, otherMediaId := range tt.otherMediaIds {
-				anilist.EnsureAnimeCollectionWithRelationsEntry(animeCollection, otherMediaId, anilist.AnimeCollectionEntryPatch{Status: &currentStatus}, anilistClient)
+				ensureAnimeCollectionWithRelationsEntry(animeCollection, otherMediaId, media.AnimeCollectionEntryPatch{Status: &currentStatus})
 			}
 			allMedia := animeCollection.GetAllAnime()
 
@@ -264,7 +265,6 @@ func TestMatcher2(t *testing.T) {
 
 func TestMatcher3(t *testing.T) {
 	wrapper := newScannerLiveWrapper(t)
-	anilistClient := wrapper.AnilistClient
 	animeCollection, err := wrapper.Platform.GetAnimeCollectionWithRelations(t.Context())
 	if err != nil {
 		t.Fatal(err.Error())
@@ -883,10 +883,10 @@ func TestMatcher3(t *testing.T) {
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
-			currentStatus := anilist.MediaListStatusCurrent
-			anilist.EnsureAnimeCollectionWithRelationsEntry(animeCollection, tt.expectedMediaId, anilist.AnimeCollectionEntryPatch{Status: &currentStatus}, anilistClient)
+			currentStatus := media.MediaListStatusCurrent
+			ensureAnimeCollectionWithRelationsEntry(animeCollection, tt.expectedMediaId, media.AnimeCollectionEntryPatch{Status: &currentStatus})
 			for _, id := range tt.otherMediaIds {
-				anilist.EnsureAnimeCollectionWithRelationsEntry(animeCollection, id, anilist.AnimeCollectionEntryPatch{Status: &currentStatus}, anilistClient)
+				ensureAnimeCollectionWithRelationsEntry(animeCollection, id, media.AnimeCollectionEntryPatch{Status: &currentStatus})
 			}
 			allMedia := animeCollection.GetAllAnime()
 
@@ -1384,7 +1384,6 @@ func TestGetFileFormatType(t *testing.T) {
 
 func TestMatcher_applyMatchingRule(t *testing.T) {
 	wrapper := newScannerLiveWrapper(t)
-	anilistClient := wrapper.AnilistClient
 	animeCollection, err := wrapper.Platform.GetAnimeCollectionWithRelations(t.Context())
 	if err != nil {
 		t.Fatal(err.Error())
@@ -1520,13 +1519,12 @@ func TestMatcher_applyMatchingRule(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			currentStatus := anilist.MediaListStatusCurrent
+			currentStatus := media.MediaListStatusCurrent
 			for _, expectedID := range tt.expectedMediaIds {
-				anilist.EnsureAnimeCollectionWithRelationsEntry(
+				ensureAnimeCollectionWithRelationsEntry(
 					animeCollection,
 					expectedID,
-					anilist.AnimeCollectionEntryPatch{Status: &currentStatus},
-					anilistClient,
+					media.AnimeCollectionEntryPatch{Status: &currentStatus},
 				)
 			}
 

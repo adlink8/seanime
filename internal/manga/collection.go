@@ -3,8 +3,8 @@ package manga
 import (
 	"cmp"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"slices"
@@ -21,21 +21,21 @@ type (
 	}
 
 	CollectionList struct {
-		Type    anilist.MediaListStatus `json:"type"`
-		Status  anilist.MediaListStatus `json:"status"`
-		Entries []*CollectionEntry      `json:"entries"`
+		Type    media.MediaListStatus `json:"type"`
+		Status  media.MediaListStatus `json:"status"`
+		Entries []*CollectionEntry    `json:"entries"`
 	}
 
 	CollectionEntry struct {
-		Media         *anilist.BaseManga `json:"media"`
-		MediaId       int                `json:"mediaId"`
-		EntryListData *EntryListData     `json:"listData"` // AniList list data
+		Media         *media.Manga   `json:"media"`
+		MediaId       int            `json:"mediaId"`
+		EntryListData *EntryListData `json:"listData"` // AniList list data
 	}
 )
 
 type (
 	NewCollectionOptions struct {
-		MangaCollection *anilist.MangaCollection
+		MangaCollection *media.MangaCollection
 		PlatformRef     *util.Ref[platform.Platform]
 	}
 )
@@ -59,7 +59,7 @@ func NewCollection(opts *NewCollectionOptions) (collection *Collection, err erro
 
 	aniLists := opts.MangaCollection.GetMediaListCollection().GetLists()
 
-	aniLists = lo.Filter(aniLists, func(list *anilist.MangaList, _ int) bool {
+	aniLists = lo.Filter(aniLists, func(list *media.MangaList, _ int) bool {
 		return list.Status != nil
 	})
 
@@ -85,8 +85,8 @@ func NewCollection(opts *NewCollectionOptions) (collection *Collection, err erro
 							Score:       *entry.Score,
 							Status:      entry.Status,
 							Repeat:      entry.GetRepeatSafe(),
-							StartedAt:   anilist.FuzzyDateToString(entry.StartedAt),
-							CompletedAt: anilist.FuzzyDateToString(entry.CompletedAt),
+							StartedAt:   media.FuzzyDateToString(entry.StartedAt),
+							CompletedAt: media.FuzzyDateToString(entry.CompletedAt),
 						},
 					}
 				})
@@ -114,18 +114,18 @@ func NewCollection(opts *NewCollectionOptions) (collection *Collection, err erro
 
 	// Merge repeating to current (no need to show repeating as a separate list)
 	repeat, ok := lo.Find(lists, func(item *CollectionList) bool {
-		return item.Status == anilist.MediaListStatusRepeating
+		return item.Status == media.MediaListStatusRepeating
 	})
 	if ok {
 		current, ok := lo.Find(lists, func(item *CollectionList) bool {
-			return item.Status == anilist.MediaListStatusCurrent
+			return item.Status == media.MediaListStatusCurrent
 		})
 		if len(repeat.Entries) > 0 && ok {
 			current.Entries = append(current.Entries, repeat.Entries...)
 		}
 		// Remove repeating from lists
 		lists = lo.Filter(lists, func(item *CollectionList, index int) bool {
-			return item.Status != anilist.MediaListStatusRepeating
+			return item.Status != media.MediaListStatusRepeating
 		})
 	}
 
@@ -139,9 +139,9 @@ func NewCollection(opts *NewCollectionOptions) (collection *Collection, err erro
 	return coll, nil
 }
 
-func getCollectionEntryFromListStatus(st anilist.MediaListStatus) anilist.MediaListStatus {
-	if st == anilist.MediaListStatusRepeating {
-		return anilist.MediaListStatusCurrent
+func getCollectionEntryFromListStatus(st media.MediaListStatus) media.MediaListStatus {
+	if st == media.MediaListStatusRepeating {
+		return media.MediaListStatusCurrent
 	}
 
 	return st

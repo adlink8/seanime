@@ -3,7 +3,6 @@ package scanner
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/animeofflinedb"
 	"seanime/internal/api/mal"
 	"seanime/internal/api/metadata"
@@ -11,6 +10,7 @@ import (
 	"seanime/internal/customsource"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
+	medialib "seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"seanime/internal/util/limiter"
@@ -23,12 +23,12 @@ import (
 	lop "github.com/samber/lo/parallel"
 )
 
-// MediaFetcher holds all anilist.BaseAnime that will be used for the comparison process
+// MediaFetcher holds all medialib.Anime that will be used for the comparison process
 type MediaFetcher struct {
 	AllMedia                     []*anime.NormalizedMedia
 	CollectionMediaIds           []int
 	UnknownMediaIds              []int // Media IDs that are not in the user's collection
-	AnimeCollectionWithRelations *anilist.AnimeCollectionWithRelations
+	AnimeCollectionWithRelations *medialib.AnimeCollectionWithRelations
 	ScanLogger                   *ScanLogger
 }
 
@@ -38,19 +38,19 @@ type MediaFetcherOptions struct {
 	PlatformRef                *util.Ref[platform.Platform]
 	MetadataProviderRef        *util.Ref[metadata_provider.Provider]
 	LocalFiles                 []*anime.LocalFile
-	CompleteAnimeCache         *anilist.CompleteAnimeCache
+	CompleteAnimeCache         *medialib.CompleteAnimeCache
 	Logger                     *zerolog.Logger
 	AnilistRateLimiter         *limiter.Limiter
 	DisableAnimeCollection     bool
 	ScanLogger                 *ScanLogger
 	// used for adding custom sources
-	OptionalAnimeCollection *anilist.AnimeCollection
+	OptionalAnimeCollection *medialib.AnimeCollection
 }
 
 // NewMediaFetcher
 // Calling this method will kickstart the fetch process
-// When enhancing is false, MediaFetcher.AllMedia will be all anilist.BaseAnime from the user's AniList collection.
-// When enhancing is true, MediaFetcher.AllMedia will be anilist.BaseAnime for each unique, parsed anime title and their relations.
+// When enhancing is false, MediaFetcher.AllMedia will be all medialib.Anime from the user's AniList collection.
+// When enhancing is true, MediaFetcher.AllMedia will be medialib.Anime for each unique, parsed anime title and their relations.
 func NewMediaFetcher(ctx context.Context, opts *MediaFetcherOptions) (ret *MediaFetcher, retErr error) {
 	defer util.HandlePanicInModuleWithError("library/scanner/NewMediaFetcher", &retErr)
 
@@ -97,7 +97,7 @@ func NewMediaFetcher(ctx context.Context, opts *MediaFetcherOptions) (ret *Media
 	mf.AnimeCollectionWithRelations = animeCollectionWithRelations
 
 	// Temporary slice to hold CompleteAnime before conversion
-	allCompleteAnime := make([]*anilist.CompleteAnime, 0)
+	allCompleteAnime := make([]*medialib.CompleteAnime, 0)
 
 	if !opts.DisableAnimeCollection {
 		// For each collection entry, append the media to AllMedia
@@ -139,7 +139,7 @@ func NewMediaFetcher(ctx context.Context, opts *MediaFetcherOptions) (ret *Media
 	//--------------------------------------------
 
 	// Get the media IDs from the collection
-	mf.CollectionMediaIds = lop.Map(allCompleteAnime, func(m *anilist.CompleteAnime, index int) int {
+	mf.CollectionMediaIds = lop.Map(allCompleteAnime, func(m *medialib.CompleteAnime, index int) int {
 		return m.ID
 	})
 
@@ -165,8 +165,8 @@ func NewMediaFetcher(ctx context.Context, opts *MediaFetcherOptions) (ret *Media
 			// We assume the CompleteAnimeCache is populated.
 			// Safe to overwrite allCompleteAnime with the cache content
 			// because the cache will contain all media from the user's collection AND scanned ones
-			allCompleteAnime = make([]*anilist.CompleteAnime, 0)
-			opts.CompleteAnimeCache.Range(func(key int, value *anilist.CompleteAnime) bool {
+			allCompleteAnime = make([]*medialib.CompleteAnime, 0)
+			opts.CompleteAnimeCache.Range(func(key int, value *medialib.CompleteAnime) bool {
 				allCompleteAnime = append(allCompleteAnime, value)
 				return true
 			})
@@ -244,13 +244,13 @@ func NewMediaFetcher(ctx context.Context, opts *MediaFetcherOptions) (ret *Media
 	return mf, nil
 }
 
-func NormalizedMediaFromAnilistComplete(c []*anilist.CompleteAnime) []*anime.NormalizedMedia {
+func NormalizedMediaFromAnilistComplete(c []*medialib.CompleteAnime) []*anime.NormalizedMedia {
 	normalizedMediaMap := make(map[int]*anime.NormalizedMedia)
 
 	// Convert CompleteAnime to NormalizedMedia and flatten relations
 	for _, m := range c {
 		if _, found := normalizedMediaMap[m.ID]; !found {
-			normalizedMediaMap[m.ID] = anime.NewNormalizedMedia(m.ToBaseAnime())
+			normalizedMediaMap[m.ID] = anime.NewNormalizedMedia(m.ToAnime())
 		}
 
 		// Process relations
@@ -259,17 +259,17 @@ func NormalizedMediaFromAnilistComplete(c []*anilist.CompleteAnime) []*anime.Nor
 				if edgeM.Node == nil || edgeM.Node.Format == nil || edgeM.RelationType == nil {
 					continue
 				}
-				if *edgeM.Node.Format != anilist.MediaFormatMovie &&
-					*edgeM.Node.Format != anilist.MediaFormatOva &&
-					*edgeM.Node.Format != anilist.MediaFormatSpecial &&
-					*edgeM.Node.Format != anilist.MediaFormatTv {
+				if *edgeM.Node.Format != medialib.MediaFormatMovie &&
+					*edgeM.Node.Format != medialib.MediaFormatOva &&
+					*edgeM.Node.Format != medialib.MediaFormatSpecial &&
+					*edgeM.Node.Format != medialib.MediaFormatTv {
 					continue
 				}
-				if *edgeM.RelationType != anilist.MediaRelationPrequel &&
-					*edgeM.RelationType != anilist.MediaRelationSequel &&
-					*edgeM.RelationType != anilist.MediaRelationSpinOff &&
-					*edgeM.RelationType != anilist.MediaRelationAlternative &&
-					*edgeM.RelationType != anilist.MediaRelationParent {
+				if *edgeM.RelationType != medialib.MediaRelationPrequel &&
+					*edgeM.RelationType != medialib.MediaRelationSequel &&
+					*edgeM.RelationType != medialib.MediaRelationSpinOff &&
+					*edgeM.RelationType != medialib.MediaRelationAlternative &&
+					*edgeM.RelationType != medialib.MediaRelationParent {
 					continue
 				}
 				// Make sure we don't overwrite the original media in the map
@@ -295,18 +295,18 @@ func NormalizedMediaFromAnilistComplete(c []*anilist.CompleteAnime) []*anime.Nor
 // It retrieves unique titles from local files,
 // fetches mal.SearchResultAnime from MAL,
 // uses these search results to get AniList IDs using metadata.AnimeMetadata mappings,
-// queries AniList to retrieve all anilist.BaseAnime using anilist.GetBaseAnimeById and their relations using anilist.FetchMediaTree.
+// queries AniList to retrieve all medialib.Anime using media.GetBaseAnimeById and their relations using medialib.FetchMediaTree.
 // It does not return an error if one of the steps fails.
 // It returns the scanned media and a boolean indicating whether the process was successful.
 func FetchMediaFromLocalFiles(
 	ctx context.Context,
 	platform platform.Platform,
 	localFiles []*anime.LocalFile,
-	completeAnime *anilist.CompleteAnimeCache,
+	completeAnime *medialib.CompleteAnimeCache,
 	metadataProvider metadata_provider.Provider,
 	anilistRateLimiter *limiter.Limiter,
 	scanLogger *ScanLogger,
-) (ret []*anilist.CompleteAnime, ok bool) {
+) (ret []*medialib.CompleteAnime, ok bool) {
 	defer util.HandlePanicInModuleThen("library/scanner/FetchMediaFromLocalFiles", func() {
 		ok = false
 	})
@@ -388,10 +388,10 @@ func FetchMediaFromLocalFiles(
 	})
 
 	// Fetch all media from the AniList IDs
-	anilistMedia := make([]*anilist.CompleteAnime, 0)
+	anilistMedia := make([]*medialib.CompleteAnime, 0)
 	lop.ForEach(anilistIds, func(id int, index int) {
 		anilistRateLimiter.Wait()
-		var media *anilist.CompleteAnime
+		var media *medialib.CompleteAnime
 		var err error
 		media, err = platform.GetAnimeWithRelations(ctx, id)
 		if err != nil {
@@ -422,7 +422,7 @@ func FetchMediaFromLocalFiles(
 	if scanLogger != nil {
 		scanLogger.LogMediaFetcher(zerolog.DebugLevel).
 			Str("module", "Enhanced").
-			Str("context", spew.Sprint(lo.Map(anilistMedia, func(n *anilist.CompleteAnime, _ int) string {
+			Str("context", spew.Sprint(lo.Map(anilistMedia, func(n *medialib.CompleteAnime, _ int) string {
 				return n.GetTitleSafe()
 			}))).
 			Msg("Fetched Anilist media from MAL ids")
@@ -434,14 +434,35 @@ func FetchMediaFromLocalFiles(
 
 	// Create a new tree that will hold the fetched relations
 	// /!\ This is redundant because we already have a cache, but `FetchMediaTree` needs its
-	tree := anilist.NewCompleteAnimeRelationTree()
+	tree := medialib.NewCompleteAnimeRelationTree()
 
 	start := time.Now()
 	// For each media, fetch its relations
 	// The relations are fetched in parallel and added to `completeAnime`
-	lop.ForEach(anilistMedia, func(m *anilist.CompleteAnime, index int) {
+	lop.ForEach(anilistMedia, func(m *medialib.CompleteAnime, index int) {
 		// We ignore errors because we want to continue even if one of the media fails
-		_ = m.FetchMediaTree(anilist.FetchMediaTreeAll, platform.GetAnilistClient(), anilistRateLimiter, tree, completeAnime)
+		// Bangumi 锚点：CompleteAnime 不再自带递归遍历；GetAnimeWithRelations 返回的一层关系
+		// 直接入树，关系节点按需补全为完整条目。
+		if m == nil {
+			return
+		}
+		tree.Set(m.ID, m)
+		completeAnime.Set(m.ID, m)
+		if m.Relations == nil || m.Relations.Edges == nil {
+			return
+		}
+		for _, edge := range m.Relations.Edges {
+			if edge == nil || edge.Node == nil || edge.Node.ID == 0 || tree.Has(edge.Node.ID) {
+				continue
+			}
+			anilistRateLimiter.Wait()
+			complete, err := platform.GetAnimeWithRelations(context.Background(), edge.Node.ID)
+			if err != nil || complete == nil {
+				continue
+			}
+			tree.Set(complete.ID, complete)
+			completeAnime.Set(complete.ID, complete)
+		}
 	})
 
 	// +---------------------+
@@ -449,8 +470,8 @@ func FetchMediaFromLocalFiles(
 	// +---------------------+
 
 	// Retrieve all media from the cache
-	scanned := make([]*anilist.CompleteAnime, 0)
-	completeAnime.Range(func(key int, value *anilist.CompleteAnime) bool {
+	scanned := make([]*medialib.CompleteAnime, 0)
+	completeAnime.Range(func(key int, value *medialib.CompleteAnime) bool {
 		scanned = append(scanned, value)
 		return true
 	})
@@ -460,7 +481,7 @@ func FetchMediaFromLocalFiles(
 			Str("module", "Enhanced").
 			Int("ms", int(time.Since(start).Milliseconds())).
 			Int("count", len(scanned)).
-			Str("context", spew.Sprint(lo.Map(scanned, func(n *anilist.CompleteAnime, _ int) string {
+			Str("context", spew.Sprint(lo.Map(scanned, func(n *medialib.CompleteAnime, _ int) string {
 				return n.GetTitleSafe()
 			}))).
 			Msg("Finished fetching media from local files")

@@ -1,9 +1,9 @@
 package discordrpc_presence
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/models"
 	discordrpc_client "seanime/internal/discordrpc/client"
+	"seanime/internal/media"
 	"testing"
 	"time"
 
@@ -17,16 +17,16 @@ func TestNewAnimeActivityIncludesEpisodeDetails(t *testing.T) {
 	totalEpisodes := 12
 	nextEpisode := 9
 
-	activity := NewAnimeActivity(&anilist.BaseAnime{
+	activity := NewAnimeActivity(&media.Anime{
 		ID:       123,
 		Episodes: &totalEpisodes,
-		Title: &anilist.BaseAnime_Title{
+		Title: &media.Anime_Title{
 			UserPreferred: &title,
 		},
-		CoverImage: &anilist.BaseAnime_CoverImage{
+		CoverImage: &media.Anime_CoverImage{
 			ExtraLarge: &image,
 		},
-		NextAiringEpisode: &anilist.BaseAnime_NextAiringEpisode{
+		NextAiringEpisode: &media.Anime_NextAiringEpisode{
 			Episode: nextEpisode,
 		},
 	}, 8, "The Turning Point", 30, 1440)
@@ -43,7 +43,7 @@ func TestNewAnimeActivityIncludesEpisodeDetails(t *testing.T) {
 }
 
 func TestNewAnimeActivityOmitsEmptyEpisodeTitle(t *testing.T) {
-	activity := NewAnimeActivity(&anilist.BaseAnime{}, 1, "", 0, 0)
+	activity := NewAnimeActivity(&media.Anime{}, 1, "", 0, 0)
 
 	require.Nil(t, activity.EpisodeTitle)
 }

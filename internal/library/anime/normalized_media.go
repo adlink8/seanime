@@ -2,7 +2,8 @@ package anime
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
+	"seanime/internal/media"
+	"seanime/internal/platforms/platform"
 	"seanime/internal/util/comparison"
 	"seanime/internal/util/limiter"
 	"seanime/internal/util/result"
@@ -15,15 +16,15 @@ type NormalizedMedia struct {
 	IdMal       *int
 	Title       *NormalizedMediaTitle
 	Synonyms    []*string
-	Format      *anilist.MediaFormat
-	Status      *anilist.MediaStatus
-	Season      *anilist.MediaSeason
+	Format      *media.MediaFormat
+	Status      *media.MediaStatus
+	Season      *media.MediaSeason
 	Year        *int
 	StartDate   *NormalizedMediaDate
 	Episodes    *int
 	BannerImage *string
 	CoverImage  *NormalizedMediaCoverImage
-	//Relations         *anilist.CompleteAnimeById_Media_CompleteAnime_Relations
+	//Relations         *media.CompleteAnimeById_Media_CompleteAnime_Relations
 	NextAiringEpisode *NormalizedMediaNextAiringEpisode
 	// Whether it was fetched from AniList
 	fetched bool
@@ -59,7 +60,7 @@ type NormalizedMediaCache struct {
 	*result.Cache[int, *NormalizedMedia]
 }
 
-func NewNormalizedMedia(m *anilist.BaseAnime) *NormalizedMedia {
+func NewNormalizedMedia(m *media.Anime) *NormalizedMedia {
 	var startDate *NormalizedMediaDate
 	if m.GetStartDate() != nil {
 		startDate = &NormalizedMediaDate{
@@ -123,9 +124,9 @@ func NewNormalizedMediaFromOfflineDB(
 	idMal *int,
 	title *NormalizedMediaTitle,
 	synonyms []*string,
-	format *anilist.MediaFormat,
-	status *anilist.MediaStatus,
-	season *anilist.MediaSeason,
+	format *media.MediaFormat,
+	status *media.MediaStatus,
+	season *media.MediaSeason,
 	year *int,
 	startDate *NormalizedMediaDate,
 	episodes *int,
@@ -147,8 +148,10 @@ func NewNormalizedMediaFromOfflineDB(
 	}
 }
 
-func FetchNormalizedMedia(anilistClient anilist.AnilistClient, l *limiter.Limiter, cache *anilist.CompleteAnimeCache, m *NormalizedMedia) error {
-	if anilistClient == nil || m == nil {
+// FetchNormalizedMedia fetches the complete anime (with relations) via the platform layer
+// （Bangumi 锚点：原实现走 AnilistClient.CompleteAnimeByID，现统一走 Platform.GetAnimeWithRelations）.
+func FetchNormalizedMedia(platform platform.Platform, l *limiter.Limiter, cache *media.CompleteAnimeCache, m *NormalizedMedia) error {
+	if platform == nil || m == nil {
 		return nil
 	}
 
@@ -158,20 +161,20 @@ func FetchNormalizedMedia(anilistClient anilist.AnilistClient, l *limiter.Limite
 
 	if cache != nil {
 		if complete, found := cache.Get(m.ID); found {
-			*m = *NewNormalizedMedia(complete.ToBaseAnime())
+			*m = *NewNormalizedMedia(complete.ToAnime())
 		}
 	}
 
 	l.Wait()
-	complete, err := anilistClient.CompleteAnimeByID(context.Background(), &m.ID)
+	complete, err := platform.GetAnimeWithRelations(context.Background(), m.ID)
 	if err != nil {
 		return err
 	}
 
-	if cache != nil {
-		cache.Set(m.ID, complete.GetMedia())
+	if cache != nil && complete != nil {
+		cache.Set(m.ID, complete)
 	}
-	*m = *NewNormalizedMedia(complete.GetMedia().ToBaseAnime())
+	*m = *NewNormalizedMedia(complete.ToAnime())
 	m.fetched = true
 	return nil
 }
@@ -251,23 +254,76 @@ func (m *NormalizedMedia) GetPossibleSeasonNumber() int {
 	return lo.Max(seasons)
 }
 
+// FetchMediaTree populates the relation tree with the given media's sequels/prequels via the platform layer.
+// Bangumi 的 GetAnimeWithRelations 一次返回主题及其一层相关条目，因此用 BFS 逐层扩展；
+// 第二层起返回的 relations 与首层相同，依赖 tree.Has 去重自然收敛。
+// rel 为 all 时两个方向都收集（原 AniList 实现按边方向收敛，此处语义稍宽，保守可接受）。
 func (m *NormalizedMedia) FetchMediaTree(
-	rel anilist.FetchMediaTreeRelation,
-	anilistClient anilist.AnilistClient,
+	rel media.FetchMediaTreeRelation,
+	platform platform.Platform,
 	rl *limiter.Limiter,
-	tree *anilist.CompleteAnimeRelationTree,
-	cache *anilist.CompleteAnimeCache,
+	tree *media.CompleteAnimeRelationTree,
+	cache *media.CompleteAnimeCache,
 ) error {
-	if m == nil {
+	if m == nil || platform == nil {
 		return nil
 	}
 
 	rl.Wait()
-	res, err := anilistClient.CompleteAnimeByID(context.Background(), &m.ID)
+	root, err := platform.GetAnimeWithRelations(context.Background(), m.ID)
 	if err != nil {
 		return err
 	}
-	return res.GetMedia().FetchMediaTree(rel, anilistClient, rl, tree, cache)
+	if root == nil {
+		return nil
+	}
+
+	queue := []*media.CompleteAnime{root}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		if cur == nil {
+			continue
+		}
+		if tree.Has(cur.ID) {
+			cache.Set(cur.ID, cur)
+			continue
+		}
+		cache.Set(cur.ID, cur)
+		tree.Set(cur.ID, cur)
+
+		edges := cur.GetRelations().GetEdges()
+		for _, edge := range edges {
+			if edge == nil || edge.GetNode() == nil || edge.GetRelationType() == nil {
+				continue
+			}
+			node := edge.GetNode()
+			rt := *edge.GetRelationType()
+			// 方向过滤：sequels 只追续作，prequels 只追前传，all 收两者
+			if rel == media.FetchMediaTreeSequels && rt != media.MediaRelationSequel {
+				continue
+			}
+			if rel == media.FetchMediaTreePrequels && rt != media.MediaRelationPrequel {
+				continue
+			}
+			if rt != media.MediaRelationSequel && rt != media.MediaRelationPrequel {
+				continue
+			}
+			if status := node.GetStatus(); status == nil || *status == media.MediaStatusNotYetReleased {
+				continue
+			}
+			if !edge.IsBroadRelationFormat() || tree.Has(node.ID) {
+				continue
+			}
+			rl.Wait()
+			next, err := platform.GetAnimeWithRelations(context.Background(), node.ID)
+			if err != nil || next == nil {
+				continue
+			}
+			queue = append(queue, next)
+		}
+	}
+	return nil
 }
 
 // GetCurrentEpisodeCount returns the current episode number for that media and -1 if it doesn't have one.

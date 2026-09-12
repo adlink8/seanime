@@ -3,9 +3,9 @@ package debrid_client
 import (
 	"fmt"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/debrid/debrid"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/comparison"
 	"slices"
@@ -31,7 +31,7 @@ type (
 		Magnet         string
 		EpisodeNumber  int
 		AbsoluteOffset int
-		Media          *anilist.BaseAnime
+		Media          *media.Anime
 	}
 )
 

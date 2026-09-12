@@ -2,11 +2,11 @@ package plugin
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/extension"
 	"seanime/internal/goja/goja_bindings"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	gojautil "seanime/internal/util/goja"
 
 	"github.com/dop251/goja"
@@ -81,7 +81,7 @@ func (a *AppContextImpl) BindAutoSelectToContextObj(vm *goja.Runtime, obj *goja.
 	_ = obj.Set("autoSelect", autoSelectObj)
 }
 
-func (p *autoSelectBindings) search(media *anilist.BaseAnime, episodeNumber int) goja.Value {
+func (p *autoSelectBindings) search(media *media.Anime, episodeNumber int) goja.Value {
 	promise, resolve, reject := p.vm.NewPromise()
 
 	autoSelect, ok := p.ctx.autoSelect.Get()

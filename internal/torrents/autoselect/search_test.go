@@ -3,11 +3,11 @@ package autoselect
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/extension"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	itorrent "seanime/internal/torrents/torrent"
 	"seanime/internal/util"
 	"seanime/internal/util/filecache"
@@ -131,16 +131,16 @@ func setupTestAutoSelect(t *testing.T, provider hibiketorrent.AnimeProvider) *Au
 }
 
 // createTestMedia creates a mock anime for testing
-func createTestMedia(t *testing.T) *anilist.CompleteAnime {
-	return &anilist.CompleteAnime{
+func createTestMedia(t *testing.T) *media.CompleteAnime {
+	return &media.CompleteAnime{
 		ID: 21,
-		Title: &anilist.CompleteAnime_Title{
+		Title: &media.CompleteAnime_Title{
 			Romaji:  new("One Piece"),
 			English: new("One Piece"),
 		},
-		Status: new(anilist.MediaStatusReleasing),
-		Format: new(anilist.MediaFormatTv),
-		StartDate: &anilist.CompleteAnime_StartDate{
+		Status: new(media.MediaStatusReleasing),
+		Format: new(media.MediaFormatTv),
+		StartDate: &media.CompleteAnime_StartDate{
 			Year: new(1999),
 		},
 		IsAdult: new(false),
@@ -154,7 +154,7 @@ func TestSearchFreshBypassesSearchCache(t *testing.T) {
 		},
 	}
 	autoSelect := setupTestAutoSelect(t, provider)
-	media := createTestMedia(t).ToBaseAnime()
+	media := createTestMedia(t).ToAnime()
 
 	_, err := autoSelect.Search(context.Background(), media, 1000, nil)
 	require.NoError(t, err)
@@ -176,7 +176,7 @@ func TestSearchFreshReturnsProviderErrors(t *testing.T) {
 	}
 	autoSelect := setupTestAutoSelect(t, provider)
 
-	_, err := autoSelect.SearchFresh(context.Background(), createTestMedia(t).ToBaseAnime(), 1000, &anime.AutoSelectProfile{Providers: []string{"fake-provider"}})
+	_, err := autoSelect.SearchFresh(context.Background(), createTestMedia(t).ToAnime(), 1000, &anime.AutoSelectProfile{Providers: []string{"fake-provider"}})
 	require.ErrorContains(t, err, "provider unavailable")
 }
 
@@ -474,15 +474,15 @@ func TestShouldSearchBatch(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		media    *anilist.CompleteAnime
+		media    *media.CompleteAnime
 		expected bool
 	}{
 		{
 			name: "Finished anime, ended more than 2 weeks ago",
-			media: &anilist.CompleteAnime{
-				Status: new(anilist.MediaStatusFinished),
-				Format: new(anilist.MediaFormatTv),
-				EndDate: &anilist.CompleteAnime_EndDate{
+			media: &media.CompleteAnime{
+				Status: new(media.MediaStatusFinished),
+				Format: new(media.MediaFormatTv),
+				EndDate: &media.CompleteAnime_EndDate{
 					Year:  new(threeWeeksAgo.Year()),
 					Month: new(int(threeWeeksAgo.Month())),
 					Day:   new(threeWeeksAgo.Day()),
@@ -492,10 +492,10 @@ func TestShouldSearchBatch(t *testing.T) {
 		},
 		{
 			name: "Finished anime, ended exactly 2 weeks ago",
-			media: &anilist.CompleteAnime{
-				Status: new(anilist.MediaStatusFinished),
-				Format: new(anilist.MediaFormatTv),
-				EndDate: &anilist.CompleteAnime_EndDate{
+			media: &media.CompleteAnime{
+				Status: new(media.MediaStatusFinished),
+				Format: new(media.MediaFormatTv),
+				EndDate: &media.CompleteAnime_EndDate{
 					Year:  new(exactlyTwoWeeksAgo.Year()),
 					Month: new(int(exactlyTwoWeeksAgo.Month())),
 					Day:   new(exactlyTwoWeeksAgo.Day()),
@@ -505,10 +505,10 @@ func TestShouldSearchBatch(t *testing.T) {
 		},
 		{
 			name: "Finished anime, ended less than 2 weeks ago",
-			media: &anilist.CompleteAnime{
-				Status: new(anilist.MediaStatusFinished),
-				Format: new(anilist.MediaFormatTv),
-				EndDate: &anilist.CompleteAnime_EndDate{
+			media: &media.CompleteAnime{
+				Status: new(media.MediaStatusFinished),
+				Format: new(media.MediaFormatTv),
+				EndDate: &media.CompleteAnime_EndDate{
 					Year:  new(oneWeekAgo.Year()),
 					Month: new(int(oneWeekAgo.Month())),
 					Day:   new(oneWeekAgo.Day()),
@@ -518,10 +518,10 @@ func TestShouldSearchBatch(t *testing.T) {
 		},
 		{
 			name: "Finished anime, ended yesterday",
-			media: &anilist.CompleteAnime{
-				Status: new(anilist.MediaStatusFinished),
-				Format: new(anilist.MediaFormatTv),
-				EndDate: &anilist.CompleteAnime_EndDate{
+			media: &media.CompleteAnime{
+				Status: new(media.MediaStatusFinished),
+				Format: new(media.MediaFormatTv),
+				EndDate: &media.CompleteAnime_EndDate{
 					Year:  new(yesterday.Year()),
 					Month: new(int(yesterday.Month())),
 					Day:   new(yesterday.Day()),
@@ -531,18 +531,18 @@ func TestShouldSearchBatch(t *testing.T) {
 		},
 		{
 			name: "Finished anime, no end date",
-			media: &anilist.CompleteAnime{
-				Status: new(anilist.MediaStatusFinished),
-				Format: new(anilist.MediaFormatTv),
+			media: &media.CompleteAnime{
+				Status: new(media.MediaStatusFinished),
+				Format: new(media.MediaFormatTv),
 			},
 			expected: true,
 		},
 		{
 			name: "Finished anime, partial end date (no day)",
-			media: &anilist.CompleteAnime{
-				Status: new(anilist.MediaStatusFinished),
-				Format: new(anilist.MediaFormatTv),
-				EndDate: &anilist.CompleteAnime_EndDate{
+			media: &media.CompleteAnime{
+				Status: new(media.MediaStatusFinished),
+				Format: new(media.MediaFormatTv),
+				EndDate: &media.CompleteAnime_EndDate{
 					Year:  new(threeWeeksAgo.Year()),
 					Month: new(int(threeWeeksAgo.Month())),
 				},
@@ -551,10 +551,10 @@ func TestShouldSearchBatch(t *testing.T) {
 		},
 		{
 			name: "Currently airing anime",
-			media: &anilist.CompleteAnime{
-				Status: new(anilist.MediaStatusReleasing),
-				Format: new(anilist.MediaFormatTv),
-				EndDate: &anilist.CompleteAnime_EndDate{
+			media: &media.CompleteAnime{
+				Status: new(media.MediaStatusReleasing),
+				Format: new(media.MediaFormatTv),
+				EndDate: &media.CompleteAnime_EndDate{
 					Year:  new(oldDate.Year()),
 					Month: new(int(oldDate.Month())),
 					Day:   new(oldDate.Day()),
@@ -564,10 +564,10 @@ func TestShouldSearchBatch(t *testing.T) {
 		},
 		{
 			name: "Movie, finished",
-			media: &anilist.CompleteAnime{
-				Status: new(anilist.MediaStatusFinished),
-				Format: new(anilist.MediaFormatMovie),
-				EndDate: &anilist.CompleteAnime_EndDate{
+			media: &media.CompleteAnime{
+				Status: new(media.MediaStatusFinished),
+				Format: new(media.MediaFormatMovie),
+				EndDate: &media.CompleteAnime_EndDate{
 					Year:  new(oldDate.Year()),
 					Month: new(int(oldDate.Month())),
 					Day:   new(oldDate.Day()),
@@ -577,10 +577,10 @@ func TestShouldSearchBatch(t *testing.T) {
 		},
 		{
 			name: "Old finished anime",
-			media: &anilist.CompleteAnime{
-				Status: new(anilist.MediaStatusFinished),
-				Format: new(anilist.MediaFormatTv),
-				EndDate: &anilist.CompleteAnime_EndDate{
+			media: &media.CompleteAnime{
+				Status: new(media.MediaStatusFinished),
+				Format: new(media.MediaFormatTv),
+				EndDate: &media.CompleteAnime_EndDate{
 					Year:  new(oldDate.Year()),
 					Month: new(int(oldDate.Month())),
 					Day:   new(oldDate.Day()),

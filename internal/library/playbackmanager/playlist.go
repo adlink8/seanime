@@ -3,9 +3,9 @@ package playbackmanager
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/events"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"sync"
 	"sync/atomic"
 
@@ -24,9 +24,9 @@ type (
 		cancel          context.CancelFunc    // The cancel function for the current playlist
 		mu              sync.Mutex            // The mutex
 
-		playingLf             *anime.LocalFile        // The currently playing local file
-		playingMediaListEntry *anilist.AnimeListEntry // The currently playing media entry
-		completedCurrent      atomic.Bool             // Whether the current episode has been completed
+		playingLf             *anime.LocalFile      // The currently playing local file
+		playingMediaListEntry *media.AnimeListEntry // The currently playing media entry
+		completedCurrent      atomic.Bool           // Whether the current episode has been completed
 
 		currentState *PlaylistState // This is sent to the client to show the current playlist state
 
@@ -83,7 +83,7 @@ func (h *playlistHub) reset() {
 	return
 }
 
-func (h *playlistHub) check(currListEntry *anilist.AnimeListEntry, currLf *anime.LocalFile, ps PlaybackState) bool {
+func (h *playlistHub) check(currListEntry *media.AnimeListEntry, currLf *anime.LocalFile, ps PlaybackState) bool {
 	if h.currentPlaylist == nil || currLf == nil || currListEntry == nil {
 		h.currentPlaylist = nil
 		h.playingLf = nil
@@ -122,7 +122,7 @@ func (h *playlistHub) playNextFile() (*anime.LocalFile, bool) {
 	return nil, false
 }
 
-func (h *playlistHub) onVideoStart(currListEntry *anilist.AnimeListEntry, currLf *anime.LocalFile, ps PlaybackState) {
+func (h *playlistHub) onVideoStart(currListEntry *media.AnimeListEntry, currLf *anime.LocalFile, ps PlaybackState) {
 	if !h.check(currListEntry, currLf, ps) {
 		return
 	}
@@ -167,7 +167,7 @@ func (h *playlistHub) onVideoStart(currListEntry *anilist.AnimeListEntry, currLf
 	return
 }
 
-func (h *playlistHub) onVideoCompleted(currListEntry *anilist.AnimeListEntry, currLf *anime.LocalFile, ps PlaybackState) {
+func (h *playlistHub) onVideoCompleted(currListEntry *media.AnimeListEntry, currLf *anime.LocalFile, ps PlaybackState) {
 	if !h.check(currListEntry, currLf, ps) {
 		return
 	}
@@ -178,7 +178,7 @@ func (h *playlistHub) onVideoCompleted(currListEntry *anilist.AnimeListEntry, cu
 	return
 }
 
-func (h *playlistHub) onPlaybackStatus(currListEntry *anilist.AnimeListEntry, currLf *anime.LocalFile, ps PlaybackState) {
+func (h *playlistHub) onPlaybackStatus(currListEntry *media.AnimeListEntry, currLf *anime.LocalFile, ps PlaybackState) {
 	if !h.check(currListEntry, currLf, ps) {
 		return
 	}

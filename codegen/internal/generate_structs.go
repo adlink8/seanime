@@ -54,6 +54,7 @@ type GoStructField struct {
 
 var typePrefixesByPackage = map[string]string{
 	"anilist":                "AL_",
+	"media":                  "AL_",
 	"auto_downloader":        "AutoDownloader_",
 	"autodownloader":         "AutoDownloader_",
 	"entities":               "",

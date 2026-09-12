@@ -3,10 +3,10 @@ package torrentstream
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db_bridge"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	torrentanalyzer "seanime/internal/torrents/analyzer"
 	"seanime/internal/torrents/autoselect"
 	"seanime/internal/util"
@@ -34,7 +34,7 @@ func (r *Repository) setPriorityDownloadStrategy(t *torrent.Torrent, file *torre
 	torrentutil.PrioritizeDownloadPieces(t, file, r.logger)
 }
 
-func (r *Repository) findBestTorrent(ctx context.Context, media *anilist.CompleteAnime, aniDbEpisode string, episodeNumber int) (ret *playbackTorrent, err error) {
+func (r *Repository) findBestTorrent(ctx context.Context, media *media.CompleteAnime, aniDbEpisode string, episodeNumber int) (ret *playbackTorrent, err error) {
 	defer util.HandlePanicInModuleWithError("torrentstream/findBestTorrent", &err)
 
 	r.logger.Debug().Msgf("torrentstream: Finding best torrent for %s, Episode %d", media.GetTitleSafe(), episodeNumber)
@@ -94,7 +94,7 @@ func (r *Repository) findBestTorrent(ctx context.Context, media *anilist.Complet
 }
 
 // findBestTorrentFromManualSelection is like findBestTorrent but no need to search for the best torrent first
-func (r *Repository) findBestTorrentFromManualSelection(ctx context.Context, t *hibiketorrent.AnimeTorrent, media *anilist.CompleteAnime, aniDbEpisode string, chosenFileIndex *int) (*playbackTorrent, error) {
+func (r *Repository) findBestTorrentFromManualSelection(ctx context.Context, t *hibiketorrent.AnimeTorrent, media *media.CompleteAnime, aniDbEpisode string, chosenFileIndex *int) (*playbackTorrent, error) {
 
 	r.logger.Debug().Msgf("torrentstream: Analyzing torrent from %s for %s", t.Link, media.GetTitleSafe())
 

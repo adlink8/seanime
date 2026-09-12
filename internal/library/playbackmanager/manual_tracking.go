@@ -3,8 +3,8 @@ package playbackmanager
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/events"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"time"
 
@@ -62,7 +62,7 @@ func (pm *PlaybackManager) StartManualProgressTracking(opts *StartManualProgress
 		return err
 	}
 
-	var media *anilist.BaseAnime
+	var media *media.Anime
 	var currentProgress int
 	var totalEpisodes int
 

@@ -3,9 +3,9 @@ package anime
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"sort"
@@ -16,28 +16,28 @@ import (
 
 type (
 	SimpleEntry struct {
-		MediaId             int                `json:"mediaId"`
-		Media               *anilist.BaseAnime `json:"media"`
-		EntryListData       *EntryListData     `json:"listData"`
-		EntryLibraryData    *EntryLibraryData  `json:"libraryData"`
-		Episodes            []*Episode         `json:"episodes"`
-		NextEpisode         *Episode           `json:"nextEpisode"`
-		LocalFiles          []*LocalFile       `json:"localFiles"`
-		CurrentEpisodeCount int                `json:"currentEpisodeCount"`
+		MediaId             int               `json:"mediaId"`
+		Media               *media.Anime      `json:"media"`
+		EntryListData       *EntryListData    `json:"listData"`
+		EntryLibraryData    *EntryLibraryData `json:"libraryData"`
+		Episodes            []*Episode        `json:"episodes"`
+		NextEpisode         *Episode          `json:"nextEpisode"`
+		LocalFiles          []*LocalFile      `json:"localFiles"`
+		CurrentEpisodeCount int               `json:"currentEpisodeCount"`
 	}
 
 	SimpleEntryListData struct {
-		Progress    int                      `json:"progress,omitempty"`
-		Score       float64                  `json:"score,omitempty"`
-		Status      *anilist.MediaListStatus `json:"status,omitempty"`
-		StartedAt   string                   `json:"startedAt,omitempty"`
-		CompletedAt string                   `json:"completedAt,omitempty"`
+		Progress    int                    `json:"progress,omitempty"`
+		Score       float64                `json:"score,omitempty"`
+		Status      *media.MediaListStatus `json:"status,omitempty"`
+		StartedAt   string                 `json:"startedAt,omitempty"`
+		CompletedAt string                 `json:"completedAt,omitempty"`
 	}
 
 	NewSimpleAnimeEntryOptions struct {
 		MediaId             int
 		LocalFiles          []*LocalFile // All local files
-		AnimeCollection     *anilist.AnimeCollection
+		AnimeCollection     *media.AnimeCollection
 		PlatformRef         *util.Ref[platform.Platform]
 		MetadataProviderRef *util.Ref[metadata_provider.Provider]
 	}
@@ -64,7 +64,7 @@ func NewSimpleEntry(ctx context.Context, opts *NewSimpleAnimeEntryOptions) (*Sim
 	// If the Anilist List entry does not exist, fetch the media from AniList
 	if !found {
 		// If the Anilist entry does not exist, instantiate one with zero values
-		anilistEntry = &anilist.AnimeListEntry{}
+		anilistEntry = &media.AnimeListEntry{}
 
 		// Fetch the media
 		fetchedMedia, err := opts.PlatformRef.Get().GetAnime(ctx, opts.MediaId)
@@ -101,8 +101,8 @@ func NewSimpleEntry(ctx context.Context, opts *NewSimpleAnimeEntryOptions) (*Sim
 			Score:       anilistEntry.GetScoreSafe(),
 			Status:      anilistEntry.Status,
 			Repeat:      anilistEntry.GetRepeatSafe(),
-			StartedAt:   anilist.ToEntryStartDate(anilistEntry.StartedAt),
-			CompletedAt: anilist.ToEntryCompletionDate(anilistEntry.CompletedAt),
+			StartedAt:   media.ToEntryStartDate(anilistEntry.StartedAt),
+			CompletedAt: media.ToEntryCompletionDate(anilistEntry.CompletedAt),
 		}
 	}
 
@@ -157,7 +157,7 @@ func (e *SimpleEntry) hydrateEntryEpisodeData(amw metadata_provider.AnimeMetadat
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func NewAnimeMetadataFromEntry(media *anilist.BaseAnime, episodes []*Episode) *metadata.AnimeMetadata {
+func NewAnimeMetadataFromEntry(media *media.Anime, episodes []*Episode) *metadata.AnimeMetadata {
 	animeMetadata := &metadata.AnimeMetadata{
 		Titles:       make(map[string]string),
 		Episodes:     make(map[string]*metadata.EpisodeMetadata),
@@ -194,7 +194,7 @@ func NewAnimeMetadataFromEntry(media *anilist.BaseAnime, episodes []*Episode) *m
 	return animeMetadata
 }
 
-func NewAnimeMetadataFromEpisodeCount(media *anilist.BaseAnime, episodes []int) *metadata.AnimeMetadata {
+func NewAnimeMetadataFromEpisodeCount(media *media.Anime, episodes []int) *metadata.AnimeMetadata {
 	animeMetadata := &metadata.AnimeMetadata{
 		Titles:       make(map[string]string),
 		Episodes:     make(map[string]*metadata.EpisodeMetadata),

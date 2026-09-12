@@ -2,11 +2,11 @@ package torrentstream
 
 import (
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"strconv"
 	"sync"
@@ -19,12 +19,12 @@ type (
 	// to include torrent streams in the library view.
 	StreamCollection struct {
 		ContinueWatchingList []*anime.Episode             `json:"continueWatchingList"`
-		Anime                []*anilist.BaseAnime         `json:"anime"`
+		Anime                []*media.Anime               `json:"anime"`
 		ListData             map[int]*anime.EntryListData `json:"listData"`
 	}
 
 	HydrateStreamCollectionOptions struct {
-		AnimeCollection     *anilist.AnimeCollection
+		AnimeCollection     *media.AnimeCollection
 		LibraryCollection   *anime.LibraryCollection
 		MetadataProviderRef *util.Ref[metadata_provider.Provider]
 	}
@@ -44,20 +44,20 @@ func (r *Repository) HydrateStreamCollection(opts *HydrateStreamCollectionOption
 
 	lists := opts.AnimeCollection.MediaListCollection.GetLists()
 	// Get the anime that are currently being watched
-	var currentlyWatching *anilist.AnimeCollection_MediaListCollection_Lists
-	//var pausedList *anilist.AnimeCollection_MediaListCollection_Lists
-	//var planningList *anilist.AnimeCollection_MediaListCollection_Lists
+	var currentlyWatching *media.AnimeCollection_MediaListCollection_Lists
+	//var pausedList *media.AnimeCollection_MediaListCollection_Lists
+	//var planningList *media.AnimeCollection_MediaListCollection_Lists
 	for _, list := range lists {
 		if list.Status == nil {
 			continue
 		}
-		if *list.Status == anilist.MediaListStatusCurrent || *list.Status == anilist.MediaListStatusRepeating {
+		if *list.Status == media.MediaListStatusCurrent || *list.Status == media.MediaListStatusRepeating {
 			if currentlyWatching == nil {
-				currentlyWatching = &anilist.AnimeCollection_MediaListCollection_Lists{
-					Status:       new(anilist.MediaListStatusCurrent),
+				currentlyWatching = &media.AnimeCollection_MediaListCollection_Lists{
+					Status:       new(media.MediaListStatusCurrent),
 					Name:         new("CURRENT"),
 					IsCustomList: new(false),
-					Entries:      make([]*anilist.AnimeCollection_MediaListCollection_Lists_Entries, 0),
+					Entries:      make([]*media.AnimeCollection_MediaListCollection_Lists_Entries, 0),
 				}
 			}
 			//currentlyWatching.Entries = append(currentlyWatching.Entries, list.Entries...)
@@ -69,25 +69,25 @@ func (r *Repository) HydrateStreamCollection(opts *HydrateStreamCollectionOption
 			}
 			continue
 		}
-		//if *list.Status == anilist.MediaListStatusPaused {
+		//if *list.Status == media.MediaListStatusPaused {
 		//	if pausedList == nil {
-		//		pausedList = &anilist.AnimeCollection_MediaListCollection_Lists{
-		//			Status:       new(anilist.MediaListStatusPaused),
+		//		pausedList = &media.AnimeCollection_MediaListCollection_Lists{
+		//			Status:       new(media.MediaListStatusPaused),
 		//			Name:         new("PAUSED"),
 		//			IsCustomList: new(false),
-		//			Entries:      make([]*anilist.AnimeCollection_MediaListCollection_Lists_Entries, 0),
+		//			Entries:      make([]*media.AnimeCollection_MediaListCollection_Lists_Entries, 0),
 		//		}
 		//	}
 		//	pausedList.Entries = append(pausedList.Entries, list.Entries...)
 		//	continue
 		//}
-		//if *list.Status == anilist.MediaListStatusPlanning {
+		//if *list.Status == media.MediaListStatusPlanning {
 		//	if planningList == nil {
-		//		planningList = &anilist.AnimeCollection_MediaListCollection_Lists{
-		//			Status:       new(anilist.MediaListStatusPlanning),
+		//		planningList = &media.AnimeCollection_MediaListCollection_Lists{
+		//			Status:       new(media.MediaListStatusPlanning),
 		//			Name:         new("PLANNING"),
 		//			IsCustomList: new(false),
-		//			Entries:      make([]*anilist.AnimeCollection_MediaListCollection_Lists_Entries, 0),
+		//			Entries:      make([]*media.AnimeCollection_MediaListCollection_Lists_Entries, 0),
 		//		}
 		//	}
 		//	planningList.Entries = append(planningList.Entries, list.Entries...)
@@ -101,20 +101,20 @@ func (r *Repository) HydrateStreamCollection(opts *HydrateStreamCollectionOption
 
 	ret := &StreamCollection{
 		ContinueWatchingList: make([]*anime.Episode, 0),
-		Anime:                make([]*anilist.BaseAnime, 0),
+		Anime:                make([]*media.Anime, 0),
 		ListData:             make(map[int]*anime.EntryListData),
 	}
 
 	visitedMediaIds := make(map[int]struct{})
 
-	animeAdded := make(map[int]*anilist.AnimeListEntry)
+	animeAdded := make(map[int]*media.AnimeListEntry)
 
 	// Go through each entry in the currently watching list
 	wg := sync.WaitGroup{}
 	mu := sync.Mutex{}
 	wg.Add(len(currentlyWatching.Entries))
 	for _, entry := range currentlyWatching.Entries {
-		go func(entry *anilist.AnimeListEntry) {
+		go func(entry *media.AnimeListEntry) {
 			defer wg.Done()
 
 			if entry == nil || entry.GetMedia() == nil {
@@ -144,7 +144,7 @@ func (r *Repository) HydrateStreamCollection(opts *HydrateStreamCollectionOption
 				}
 			}
 
-			if entry.GetMedia().GetStatus() == nil || *entry.GetMedia().GetStatus() == anilist.MediaStatusNotYetReleased {
+			if entry.GetMedia().GetStatus() == nil || *entry.GetMedia().GetStatus() == media.MediaStatusNotYetReleased {
 				return
 			}
 
@@ -209,7 +209,7 @@ func (r *Repository) HydrateStreamCollection(opts *HydrateStreamCollectionOption
 
 	// Remove anime that are already in the library collection
 	for _, list := range opts.LibraryCollection.Lists {
-		if list.Status == anilist.MediaListStatusCurrent {
+		if list.Status == media.MediaListStatusCurrent {
 			for _, entry := range list.Entries {
 				libraryAnimeMap[entry.MediaId] = struct{}{}
 				if _, found := animeAdded[entry.MediaId]; found {
@@ -223,7 +223,7 @@ func (r *Repository) HydrateStreamCollection(opts *HydrateStreamCollectionOption
 		if _, found := libraryAnimeMap[entry.GetMedia().GetID()]; found {
 			continue
 		}
-		if *entry.GetMedia().GetStatus() == anilist.MediaStatusNotYetReleased {
+		if *entry.GetMedia().GetStatus() == media.MediaStatusNotYetReleased {
 			continue
 		}
 		animeAdded[entry.GetMedia().GetID()] = entry
@@ -236,8 +236,8 @@ func (r *Repository) HydrateStreamCollection(opts *HydrateStreamCollectionOption
 			Score:       a.GetScoreSafe(),
 			Status:      a.GetStatus(),
 			Repeat:      a.GetRepeatSafe(),
-			StartedAt:   anilist.FuzzyDateToString(a.StartedAt),
-			CompletedAt: anilist.FuzzyDateToString(a.CompletedAt),
+			StartedAt:   media.FuzzyDateToString(a.StartedAt),
+			CompletedAt: media.FuzzyDateToString(a.CompletedAt),
 		}
 	}
 

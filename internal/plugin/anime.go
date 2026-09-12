@@ -2,13 +2,13 @@ package plugin
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/extension"
 	"seanime/internal/goja/goja_bindings"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	gojautil "seanime/internal/util/goja"
 
 	"github.com/dop251/goja"
@@ -218,13 +218,13 @@ func (m *Anime) getEntryDownloadInfo(call goja.FunctionCall) goja.Value {
 			return
 		}
 
-		var media *anilist.BaseAnime
+		var an *media.Anime
 		var progress *int
-		var status *anilist.MediaListStatus
+		var status *media.MediaListStatus
 
 		if animeCollection != nil {
 			if listEntry, found := animeCollection.GetListEntryFromAnimeId(int(mediaId)); found {
-				media = listEntry.Media
+				an = listEntry.Media
 				progressValue := listEntry.GetProgressSafe()
 				progress = &progressValue
 				if listEntry.Status != nil {
@@ -234,8 +234,8 @@ func (m *Anime) getEntryDownloadInfo(call goja.FunctionCall) goja.Value {
 			}
 		}
 
-		if media == nil {
-			media, err = anilistPlatformRef.Get().GetAnime(context.Background(), int(mediaId))
+		if an == nil {
+			an, err = anilistPlatformRef.Get().GetAnime(context.Background(), int(mediaId))
 			if err != nil {
 				_ = reject(m.vm.ToValue(err.Error()))
 				return
@@ -251,7 +251,7 @@ func (m *Anime) getEntryDownloadInfo(call goja.FunctionCall) goja.Value {
 		info, err := anime.NewEntryDownloadInfo(&anime.NewEntryDownloadInfoOptions{
 			LocalFiles:          lfs,
 			AnimeMetadata:       animeMetadata,
-			Media:               media,
+			Media:               an,
 			Progress:            progress,
 			Status:              status,
 			MetadataProviderRef: metadataProviderRef,

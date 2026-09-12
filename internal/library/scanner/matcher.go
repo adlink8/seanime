@@ -6,10 +6,10 @@ import (
 	"math"
 	"regexp"
 	"runtime"
-	"seanime/internal/api/anilist"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
 	"seanime/internal/library/summary"
+	medialib "seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/comparison"
 	"strings"
@@ -108,7 +108,7 @@ const (
 	thresholdNormalTitleLength = 4
 )
 
-// MatchLocalFilesWithMedia will match each anime.LocalFile with a specific anilist.BaseAnime and modify the LocalFile's `mediaId`
+// MatchLocalFilesWithMedia will match each anime.LocalFile with a specific medialib.Anime and modify the LocalFile's `mediaId`
 func (m *Matcher) MatchLocalFilesWithMedia() error {
 
 	if m.Threshold == 0 {
@@ -677,26 +677,26 @@ func calculateFormatScore(fileFormat fileFormatType, media *anime.NormalizedMedi
 
 	switch fileFormat {
 	case fileFormatOVA:
-		if mediaFormat == anilist.MediaFormatOva || mediaFormat == anilist.MediaFormatSpecial {
+		if mediaFormat == medialib.MediaFormatOva || mediaFormat == medialib.MediaFormatSpecial {
 			return scoreFormatMatch
 		}
-		if mediaFormat == anilist.MediaFormatTv || mediaFormat == anilist.MediaFormatTvShort {
+		if mediaFormat == medialib.MediaFormatTv || mediaFormat == medialib.MediaFormatTvShort {
 			return scoreFormatMismatch
 		}
 
 	case fileFormatSpecial:
-		if mediaFormat == anilist.MediaFormatSpecial || mediaFormat == anilist.MediaFormatOva {
+		if mediaFormat == medialib.MediaFormatSpecial || mediaFormat == medialib.MediaFormatOva {
 			return scoreFormatMatch
 		}
-		if mediaFormat == anilist.MediaFormatTv || mediaFormat == anilist.MediaFormatTvShort {
+		if mediaFormat == medialib.MediaFormatTv || mediaFormat == medialib.MediaFormatTvShort {
 			return scoreFormatMismatch
 		}
 
 	case fileFormatMovie:
-		if mediaFormat == anilist.MediaFormatMovie {
+		if mediaFormat == medialib.MediaFormatMovie {
 			return scoreFormatMatch
 		}
-		if mediaFormat == anilist.MediaFormatTv || mediaFormat == anilist.MediaFormatTvShort {
+		if mediaFormat == medialib.MediaFormatTv || mediaFormat == medialib.MediaFormatTvShort {
 			return scoreFormatMismatch
 		}
 

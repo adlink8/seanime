@@ -1,10 +1,10 @@
 package anime
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/limiter"
 	"sort"
@@ -21,16 +21,16 @@ type (
 	}
 
 	UpcomingEpisode struct {
-		MediaId         int                `json:"mediaId"`
-		EpisodeNumber   int                `json:"episodeNumber"`
-		AiringAt        int64              `json:"airingAt"`
-		TimeUntilAiring int                `json:"timeUntilAiring"`
-		BaseAnime       *anilist.BaseAnime `json:"baseAnime"`
-		EpisodeMetadata *EpisodeMetadata   `json:"episodeMetadata,omitempty"`
+		MediaId         int              `json:"mediaId"`
+		EpisodeNumber   int              `json:"episodeNumber"`
+		AiringAt        int64            `json:"airingAt"`
+		TimeUntilAiring int              `json:"timeUntilAiring"`
+		BaseAnime       *media.Anime     `json:"baseAnime"`
+		EpisodeMetadata *EpisodeMetadata `json:"episodeMetadata,omitempty"`
 	}
 
 	NewUpcomingEpisodesOptions struct {
-		AnimeCollection     *anilist.AnimeCollection
+		AnimeCollection     *media.AnimeCollection
 		MetadataProviderRef *util.Ref[metadata_provider.Provider]
 	}
 )
@@ -61,7 +61,7 @@ func NewUpcomingEpisodes(opts *NewUpcomingEpisodesOptions) *UpcomingEpisodes {
 
 	// Get all media with next airing episodes
 	allMedia := opts.AnimeCollection.GetAllAnime()
-	mediaWithNextAiring := lo.Filter(allMedia, func(item *anilist.BaseAnime, _ int) bool {
+	mediaWithNextAiring := lo.Filter(allMedia, func(item *media.Anime, _ int) bool {
 		return item.NextAiringEpisode != nil && item.NextAiringEpisode.Episode > 0
 	})
 
@@ -75,39 +75,39 @@ func NewUpcomingEpisodes(opts *NewUpcomingEpisodesOptions) *UpcomingEpisodes {
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
-	for _, media := range mediaWithNextAiring {
+	for _, an := range mediaWithNextAiring {
 		wg.Add(1)
-		go func(media *anilist.BaseAnime) {
+		go func(an *media.Anime) {
 			defer wg.Done()
 
-			entry, found := opts.AnimeCollection.GetListEntryFromAnimeId(media.ID)
+			entry, found := opts.AnimeCollection.GetListEntryFromAnimeId(an.ID)
 			if !found {
 				return
 			}
 
-			if entry.Status == nil || *entry.Status == anilist.MediaListStatusDropped {
+			if entry.Status == nil || *entry.Status == media.MediaListStatusDropped {
 				return
 			}
 
-			if media.NextAiringEpisode.Episode <= 0 {
+			if an.NextAiringEpisode.Episode <= 0 {
 				return
 			}
 
 			upcomingEp := &UpcomingEpisode{
-				MediaId:         media.ID,
-				EpisodeNumber:   media.NextAiringEpisode.Episode,
-				AiringAt:        int64(media.NextAiringEpisode.AiringAt),
-				TimeUntilAiring: media.NextAiringEpisode.TimeUntilAiring,
-				BaseAnime:       media,
+				MediaId:         an.ID,
+				EpisodeNumber:   an.NextAiringEpisode.Episode,
+				AiringAt:        int64(an.NextAiringEpisode.AiringAt),
+				TimeUntilAiring: an.NextAiringEpisode.TimeUntilAiring,
+				BaseAnime:       an,
 			}
 
 			// Fetch episode metadata
 			rateLimiter.Wait()
-			animeMetadata, err := opts.MetadataProviderRef.Get().GetAnimeMetadata(metadata.AnilistPlatform, media.ID)
+			animeMetadata, err := opts.MetadataProviderRef.Get().GetAnimeMetadata(metadata.AnilistPlatform, an.ID)
 			if err == nil && animeMetadata != nil {
 				// Get episode metadata
-				metadataWrapper := opts.MetadataProviderRef.Get().GetAnimeMetadataWrapper(media, animeMetadata)
-				episodeStr := strconv.Itoa(media.NextAiringEpisode.Episode)
+				metadataWrapper := opts.MetadataProviderRef.Get().GetAnimeMetadataWrapper(an, animeMetadata)
+				episodeStr := strconv.Itoa(an.NextAiringEpisode.Episode)
 				epMetadata := metadataWrapper.GetEpisodeMetadata(episodeStr)
 
 				upcomingEp.EpisodeMetadata = &EpisodeMetadata{
@@ -124,7 +124,7 @@ func NewUpcomingEpisodes(opts *NewUpcomingEpisodesOptions) *UpcomingEpisodes {
 			mu.Lock()
 			upcomingEps = append(upcomingEps, upcomingEp)
 			mu.Unlock()
-		}(media)
+		}(an)
 	}
 	wg.Wait()
 

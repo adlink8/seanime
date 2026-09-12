@@ -1,9 +1,9 @@
 package anime
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/hook_resolver"
+	"seanime/internal/media"
 )
 
 /////////////////////////////
@@ -16,9 +16,9 @@ import (
 // If the modified entry is nil, an error will be returned.
 type AnimeEntryRequestedEvent struct {
 	hook_resolver.Event
-	MediaId         int                      `json:"mediaId"`
-	LocalFiles      []*LocalFile             `json:"localFiles"`
-	AnimeCollection *anilist.AnimeCollection `json:"animeCollection"`
+	MediaId         int                    `json:"mediaId"`
+	LocalFiles      []*LocalFile           `json:"localFiles"`
+	AnimeCollection *media.AnimeCollection `json:"animeCollection"`
 	// Empty entry object, will be used if the hook prevents the default behavior
 	Entry *Entry `json:"entry"`
 }
@@ -70,9 +70,9 @@ type AnimeEntryManualMatchBeforeSaveEvent struct {
 // Prevent default to skip the default process and return the modified missing episodes.
 type MissingEpisodesRequestedEvent struct {
 	hook_resolver.Event
-	AnimeCollection  *anilist.AnimeCollection `json:"animeCollection"`
-	LocalFiles       []*LocalFile             `json:"localFiles"`
-	SilencedMediaIds []int                    `json:"silencedMediaIds"`
+	AnimeCollection  *media.AnimeCollection `json:"animeCollection"`
+	LocalFiles       []*LocalFile           `json:"localFiles"`
+	SilencedMediaIds []int                  `json:"silencedMediaIds"`
 	// Empty missing episodes object, will be used if the hook prevents the default behavior
 	MissingEpisodes *MissingEpisodes `json:"missingEpisodes"`
 }
@@ -87,8 +87,8 @@ type MissingEpisodesEvent struct {
 // Prevent default to skip the default process and return the modified upcoming episodes.
 type UpcomingEpisodesRequestedEvent struct {
 	hook_resolver.Event
-	AnimeCollection *anilist.AnimeCollection `json:"animeCollection"`
-	LocalFiles      []*LocalFile             `json:"localFiles"`
+	AnimeCollection *media.AnimeCollection `json:"animeCollection"`
+	LocalFiles      []*LocalFile           `json:"localFiles"`
 	// Empty upcoming episodes object, will be used if the hook prevents the default behavior
 	UpcomingEpisodes *UpcomingEpisodes `json:"upcomingEpisodes"`
 }
@@ -108,8 +108,8 @@ type UpcomingEpisodesEvent struct {
 // If the modified library collection is nil, an error will be returned.
 type AnimeLibraryCollectionRequestedEvent struct {
 	hook_resolver.Event
-	AnimeCollection *anilist.AnimeCollection `json:"animeCollection"`
-	LocalFiles      []*LocalFile             `json:"localFiles"`
+	AnimeCollection *media.AnimeCollection `json:"animeCollection"`
+	LocalFiles      []*LocalFile           `json:"localFiles"`
 	// Empty library collection object, will be used if the hook prevents the default behavior
 	LibraryCollection *LibraryCollection `json:"libraryCollection"`
 }
@@ -124,8 +124,8 @@ type AnimeLibraryCollectionEvent struct {
 // This is called when the user enables "Include in library" for either debrid/online/torrent streamings.
 type AnimeLibraryStreamCollectionRequestedEvent struct {
 	hook_resolver.Event
-	AnimeCollection   *anilist.AnimeCollection `json:"animeCollection"`
-	LibraryCollection *LibraryCollection       `json:"libraryCollection"`
+	AnimeCollection   *media.AnimeCollection `json:"animeCollection"`
+	LibraryCollection *LibraryCollection     `json:"libraryCollection"`
 }
 
 // AnimeLibraryStreamCollectionEvent is triggered when the library stream collection is being returned.
@@ -140,11 +140,11 @@ type AnimeLibraryStreamCollectionEvent struct {
 // This is triggered before [AnimeEntryDownloadInfoEvent].
 type AnimeEntryDownloadInfoRequestedEvent struct {
 	hook_resolver.Event
-	LocalFiles    []*LocalFile             `json:"localFiles"`
-	AnimeMetadata *metadata.AnimeMetadata  `json:"animeMetadata"`
-	Media         *anilist.BaseAnime       `json:"media"`
-	Progress      *int                     `json:"progress"`
-	Status        *anilist.MediaListStatus `json:"status"`
+	LocalFiles    []*LocalFile            `json:"localFiles"`
+	AnimeMetadata *metadata.AnimeMetadata `json:"animeMetadata"`
+	Media         *media.Anime            `json:"media"`
+	Progress      *int                    `json:"progress"`
+	Status        *media.MediaListStatus  `json:"status"`
 	// Empty download info object, will be used if the hook prevents the default behavior
 	EntryDownloadInfo *EntryDownloadInfo `json:"entryDownloadInfo"`
 }
@@ -161,7 +161,7 @@ type AnimeEntryDownloadInfoEvent struct {
 // Prevent default to skip the default behavior and return your own data.
 type AnimeEpisodeCollectionRequestedEvent struct {
 	hook_resolver.Event
-	Media    *anilist.BaseAnime      `json:"media"`
+	Media    *media.Anime            `json:"media"`
 	Metadata *metadata.AnimeMetadata `json:"metadata"`
 	// Empty episode collection object, will be used if the hook prevents the default behavior
 	EpisodeCollection *EpisodeCollection `json:"episodeCollection"`
@@ -178,6 +178,6 @@ type AnimeEpisodeCollectionEvent struct {
 // AnimeScheduleItemsEvent is triggered when the schedule items are being returned.
 type AnimeScheduleItemsEvent struct {
 	hook_resolver.Event
-	AnimeCollection *anilist.AnimeCollection `json:"animeCollection"`
-	Items           []*ScheduleItem          `json:"items"`
+	AnimeCollection *media.AnimeCollection `json:"animeCollection"`
+	Items           []*ScheduleItem        `json:"items"`
 }

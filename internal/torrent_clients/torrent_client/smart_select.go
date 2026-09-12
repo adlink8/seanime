@@ -3,8 +3,8 @@ package torrent_client
 import (
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	torrent_analyzer "seanime/internal/torrents/analyzer"
 	"seanime/internal/util"
@@ -73,7 +73,7 @@ type (
 	SmartSelectParams struct {
 		Torrent          *hibiketorrent.AnimeTorrent
 		EpisodeNumbers   []int
-		Media            *anilist.CompleteAnime
+		Media            *media.CompleteAnime
 		Destination      string
 		ShouldAddTorrent bool
 		PlatformRef      *util.Ref[platform.Platform]

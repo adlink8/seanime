@@ -12,6 +12,11 @@ func TestGetConfig(t *testing.T) {
 }
 
 func TestLoadConfig_IsolatedInstances(t *testing.T) {
+	// test/config is not committed (contains provider credentials); skip when absent.
+	if _, err := readConfig(); err != nil {
+		t.Skipf("testutil: test config unavailable, skipping: %v", err)
+	}
+
 	first := LoadConfig(t)
 	second := LoadConfig(t)
 

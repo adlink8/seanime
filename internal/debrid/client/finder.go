@@ -3,11 +3,11 @@ package debrid_client
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/debrid/debrid"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	torrentanalyzer "seanime/internal/torrents/analyzer"
 	"seanime/internal/torrents/autoselect"
 	"seanime/internal/util"
@@ -24,7 +24,7 @@ type (
 	}
 )
 
-func (r *Repository) findBestTorrent(ctx context.Context, provider debrid.Provider, media *anilist.CompleteAnime, episodeNumber int) (ret *playbackTorrent, err error) {
+func (r *Repository) findBestTorrent(ctx context.Context, provider debrid.Provider, media *media.CompleteAnime, episodeNumber int) (ret *playbackTorrent, err error) {
 
 	defer util.HandlePanicInModuleWithError("debridstream/findBestTorrent", &err)
 
@@ -106,7 +106,7 @@ func (r *Repository) findBestTorrent(ctx context.Context, provider debrid.Provid
 }
 
 // findBestTorrentFromManualSelection is like findBestTorrent but for a pre-selected torrent
-func (r *Repository) findBestTorrentFromManualSelection(provider debrid.Provider, t *hibiketorrent.AnimeTorrent, media *anilist.CompleteAnime, episodeNumber int, chosenFileIndex *int) (ret *playbackTorrent, err error) {
+func (r *Repository) findBestTorrentFromManualSelection(provider debrid.Provider, t *hibiketorrent.AnimeTorrent, media *media.CompleteAnime, episodeNumber int, chosenFileIndex *int) (ret *playbackTorrent, err error) {
 
 	r.logger.Debug().Msgf("debridstream: Analyzing torrent from %s for %s", t.Link, media.GetTitleSafe())
 

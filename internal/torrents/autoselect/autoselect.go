@@ -3,11 +3,11 @@ package autoselect
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/debrid/debrid"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	torrent_analyzer "seanime/internal/torrents/analyzer"
 	itorrent "seanime/internal/torrents/torrent"
@@ -158,7 +158,7 @@ func (s *AutoSelect) completeStatus(ctx context.Context, selectedFile string) {
 
 func (s *AutoSelect) FindBestTorrent(
 	ctx context.Context,
-	media *anilist.CompleteAnime,
+	media *media.CompleteAnime,
 	episodeNumber int,
 	profile *anime.AutoSelectProfile,
 	mode SelectionMode,

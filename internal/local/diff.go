@@ -2,10 +2,10 @@ package local
 
 import (
 	"fmt"
-	"seanime/internal/api/anilist"
 	hibikemanga "seanime/internal/extension/hibike/manga"
 	"seanime/internal/library/anime"
 	"seanime/internal/manga"
+	"seanime/internal/media"
 	"slices"
 	"strings"
 
@@ -37,15 +37,15 @@ type (
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 type GetAnimeDiffOptions struct {
-	Collection      *anilist.AnimeCollection
-	LocalCollection mo.Option[*anilist.AnimeCollection]
+	Collection      *media.AnimeCollection
+	LocalCollection mo.Option[*media.AnimeCollection]
 	LocalFiles      []*anime.LocalFile
 	TrackedAnime    map[int]*TrackedMedia
 	Snapshots       map[int]*AnimeSnapshot
 }
 
 type AnimeDiffResult struct {
-	AnimeEntry    *anilist.AnimeListEntry
+	AnimeEntry    *media.AnimeListEntry
 	AnimeSnapshot *AnimeSnapshot
 	DiffType      DiffType
 }
@@ -150,15 +150,15 @@ func (d *Diff) GetAnimeDiffs(opts GetAnimeDiffOptions) map[int]*AnimeDiffResult 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 type GetMangaDiffOptions struct {
-	Collection                  *anilist.MangaCollection
-	LocalCollection             mo.Option[*anilist.MangaCollection]
+	Collection                  *media.MangaCollection
+	LocalCollection             mo.Option[*media.MangaCollection]
 	DownloadedChapterContainers []*manga.ChapterContainer
 	TrackedManga                map[int]*TrackedMedia
 	Snapshots                   map[int]*MangaSnapshot
 }
 
 type MangaDiffResult struct {
-	MangaEntry    *anilist.MangaListEntry
+	MangaEntry    *media.MangaListEntry
 	MangaSnapshot *MangaSnapshot
 	DiffType      DiffType
 }
@@ -255,7 +255,7 @@ func (d *Diff) GetMangaDiffs(opts GetMangaDiffOptions) map[int]*MangaDiffResult 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func GetAnimeReferenceKey(bAnime *anilist.BaseAnime, lfs []*anime.LocalFile) string {
+func GetAnimeReferenceKey(bAnime *media.Anime, lfs []*anime.LocalFile) string {
 	// Reference key is used to compare the snapshot with the current data.
 	// If the reference key is different, the snapshot is outdated.
 	animeLfs := lo.Filter(lfs, func(lf *anime.LocalFile, _ int) bool {
@@ -271,7 +271,7 @@ func GetAnimeReferenceKey(bAnime *anilist.BaseAnime, lfs []*anime.LocalFile) str
 	return fmt.Sprintf("%d-%s", bAnime.ID, strings.Join(paths, ","))
 }
 
-func GetMangaReferenceKey(bManga *anilist.BaseManga, dcc []*manga.ChapterContainer) string {
+func GetMangaReferenceKey(bManga *media.Manga, dcc []*manga.ChapterContainer) string {
 	// Reference key is used to compare the snapshot with the current data.
 	// If the reference key is different, the snapshot is outdated.
 	mangaDcc := lo.Filter(dcc, func(dc *manga.ChapterContainer, _ int) bool {
@@ -296,7 +296,7 @@ func GetMangaReferenceKey(bManga *anilist.BaseManga, dcc []*manga.ChapterContain
 	return fmt.Sprintf("%d-%s", bManga.ID, k)
 }
 
-func GetAnimeListDataKey(entry *anilist.AnimeListEntry) string {
+func GetAnimeListDataKey(entry *media.AnimeListEntry) string {
 	return fmt.Sprintf("%s-%d-%f-%d-%v-%v-%v-%v-%v-%v",
 		MediaListStatusPointerValue(entry.GetStatus()),
 		IntPointerValue(entry.GetProgress()),
@@ -311,7 +311,7 @@ func GetAnimeListDataKey(entry *anilist.AnimeListEntry) string {
 	)
 }
 
-func GetMangaListDataKey(entry *anilist.MangaListEntry) string {
+func GetMangaListDataKey(entry *media.MangaListEntry) string {
 	return fmt.Sprintf("%s-%d-%f-%d-%v-%v-%v-%v-%v-%v",
 		MediaListStatusPointerValue(entry.GetStatus()),
 		IntPointerValue(entry.GetProgress()),

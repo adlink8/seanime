@@ -25,6 +25,15 @@ func (db *Database) Gorm() *gorm.DB {
 	return db.gormdb
 }
 
+// Close closes the underlying SQL connection pool.
+func (db *Database) Close() error {
+	sqlDB, err := db.gormdb.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
+}
+
 func NewDatabase(appDataDir, dbName string, logger *zerolog.Logger) (*Database, error) {
 
 	// Set the SQLite database path

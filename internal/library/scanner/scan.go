@@ -7,13 +7,13 @@ import (
 	"os"
 	"runtime"
 	"runtime/debug"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/events"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
 	"seanime/internal/library/filesystem"
 	"seanime/internal/library/summary"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"seanime/internal/util/limiter"
@@ -51,7 +51,7 @@ type Scanner struct {
 	Config               *Config
 	ConfigAsString       string
 	// Optional, used to add custom sources
-	AnimeCollection *anilist.AnimeCollection
+	AnimeCollection *media.AnimeCollection
 }
 
 // Scan will scan the directory and return a list of anime.LocalFile.
@@ -63,7 +63,7 @@ func (scn *Scanner) Scan(ctx context.Context) (lfs []*anime.LocalFile, err error
 	scn.WSEventManager.SendEvent(events.EventScanProgress, 0)
 	scn.WSEventManager.SendEvent(events.EventScanStatus, "Retrieving local files...")
 
-	completeAnimeCache := anilist.NewCompleteAnimeCache()
+	completeAnimeCache := media.NewCompleteAnimeCache()
 
 	// Create a new Anilist rate limiter
 	anilistRateLimiter := limiter.NewAnilistLimiter()

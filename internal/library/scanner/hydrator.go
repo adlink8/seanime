@@ -3,12 +3,12 @@ package scanner
 import (
 	"errors"
 	"regexp"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
 	"seanime/internal/library/summary"
+	medialib "seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"seanime/internal/util/comparison"
@@ -29,7 +29,7 @@ type FileHydrator struct {
 	LocalFiles []*anime.LocalFile       // Local files to hydrate
 	AllMedia   []*anime.NormalizedMedia // All media used to hydrate local files
 	// Used by media tree analysis
-	CompleteAnimeCache  *anilist.CompleteAnimeCache
+	CompleteAnimeCache  *medialib.CompleteAnimeCache
 	PlatformRef         *util.Ref[platform.Platform]
 	MetadataProviderRef *util.Ref[metadata_provider.Provider]
 	AnilistRateLimiter  *limiter.Limiter
@@ -52,7 +52,7 @@ type compiledHydrationFileRule struct {
 	rule  *HydrationFileRule
 }
 
-// HydrateMetadata will hydrate the metadata of each LocalFile with the metadata of the matched anilist.BaseAnime.
+// HydrateMetadata will hydrate the metadata of each LocalFile with the metadata of the matched medialib.Anime.
 // It will divide the LocalFiles into groups based on their media ID and process each group in parallel.
 func (fh *FileHydrator) HydrateMetadata() {
 	start := time.Now()
@@ -134,10 +134,10 @@ func (fh *FileHydrator) hydrateGroupMetadata(
 	}
 
 	// Make sure the media is fetched
-	_ = anime.FetchNormalizedMedia(fh.PlatformRef.Get().GetAnilistClient(), fh.AnilistRateLimiter, fh.CompleteAnimeCache, media)
+	_ = anime.FetchNormalizedMedia(fh.PlatformRef.Get(), fh.AnilistRateLimiter, fh.CompleteAnimeCache, media)
 
 	// Tree contains media relations
-	tree := anilist.NewCompleteAnimeRelationTree()
+	tree := medialib.NewCompleteAnimeRelationTree()
 	// Tree analysis used for episode normalization
 	var mediaTreeAnalysis *MediaTreeAnalysis
 	treeFetched := false
@@ -235,7 +235,7 @@ func (fh *FileHydrator) hydrateGroupMetadata(
 			lf.Metadata.Type = anime.LocalFileTypeSpecial
 			// Sometimes a movie filename could be written as a special episode of the main series
 			// anidb rarely if ever adds relevant specials to movie entries
-			if *media.Format == anilist.MediaFormatMovie {
+			if *media.Format == medialib.MediaFormatMovie {
 				lf.Metadata.Episode = 1
 				lf.Metadata.AniDBEpisode = "1"
 				lf.Metadata.Type = anime.LocalFileTypeMain
@@ -262,7 +262,7 @@ func (fh *FileHydrator) hydrateGroupMetadata(
 			return
 		}
 		// Movie metadata
-		if *media.Format == anilist.MediaFormatMovie {
+		if *media.Format == medialib.MediaFormatMovie {
 			lf.Metadata.Episode = 1
 			lf.Metadata.AniDBEpisode = "1"
 
@@ -386,7 +386,7 @@ func (fh *FileHydrator) hydrateGroupMetadata(
 				mediaTreeFetchStart := time.Now()
 				// Fetch media tree
 				// The media tree will be used to normalize episode numbers
-				if err := media.FetchMediaTree(anilist.FetchMediaTreeAll, fh.PlatformRef.Get().GetAnilistClient(), fh.AnilistRateLimiter, tree, fh.CompleteAnimeCache); err == nil {
+				if err := media.FetchMediaTree(medialib.FetchMediaTreeAll, fh.PlatformRef.Get(), fh.AnilistRateLimiter, tree, fh.CompleteAnimeCache); err == nil {
 					// Create a new media tree analysis that will be used for episode normalization
 					mta, _ := NewMediaTreeAnalysis(&MediaTreeAnalysisOptions{
 						tree:                tree,

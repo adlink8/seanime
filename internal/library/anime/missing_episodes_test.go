@@ -1,8 +1,8 @@
 package anime_test
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -47,29 +47,29 @@ func TestNewMissingEpisodes(t *testing.T) {
 	)
 
 	// frieren should surface as a normal missing-episodes card.
-	patchAnimeCollectionEntry(t, h.animeCollection, 154587, anilist.AnimeCollectionEntryPatch{
-		Status:            new(anilist.MediaListStatusCurrent),
+	patchAnimeCollectionEntry(t, h.animeCollection, 154587, media.AnimeCollectionEntryPatch{
+		Status:            new(media.MediaListStatusCurrent),
 		Progress:          new(4),
 		AiredEpisodes:     new(10),
-		NextAiringEpisode: &anilist.BaseAnime_NextAiringEpisode{Episode: 11},
+		NextAiringEpisode: &media.Anime_NextAiringEpisode{Episode: 11},
 	})
 	h.setEpisodeMetadata(t, 154587, []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, nil)
 
 	// mushoku follows the episode-zero discrepancy path, but this one is silenced.
-	patchAnimeCollectionEntry(t, h.animeCollection, 146065, anilist.AnimeCollectionEntryPatch{
-		Status:            new(anilist.MediaListStatusCurrent),
+	patchAnimeCollectionEntry(t, h.animeCollection, 146065, media.AnimeCollectionEntryPatch{
+		Status:            new(media.MediaListStatusCurrent),
 		Progress:          new(1),
 		AiredEpisodes:     new(6),
-		NextAiringEpisode: &anilist.BaseAnime_NextAiringEpisode{Episode: 7},
+		NextAiringEpisode: &media.Anime_NextAiringEpisode{Episode: 7},
 	})
 	h.setEpisodeMetadata(t, 146065, []int{1, 2, 3, 4, 5}, map[string]int{"S1": 1})
 
 	// dropped entries should never show up here.
-	patchAnimeCollectionEntry(t, h.animeCollection, 21, anilist.AnimeCollectionEntryPatch{
-		Status:            new(anilist.MediaListStatusDropped),
+	patchAnimeCollectionEntry(t, h.animeCollection, 21, media.AnimeCollectionEntryPatch{
+		Status:            new(media.MediaListStatusDropped),
 		Progress:          new(1060),
 		AiredEpisodes:     new(1100),
-		NextAiringEpisode: &anilist.BaseAnime_NextAiringEpisode{Episode: 1101},
+		NextAiringEpisode: &media.Anime_NextAiringEpisode{Episode: 1101},
 	})
 
 	missing := h.newMissingEpisodes(t, localFiles, []int{146065})

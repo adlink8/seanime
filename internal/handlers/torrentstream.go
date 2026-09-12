@@ -3,11 +3,11 @@ package handlers
 import (
 	"errors"
 	"os"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/database/models"
 	"seanime/internal/events"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
+	"seanime/internal/media"
 	"seanime/internal/torrentstream"
 	"seanime/internal/util"
 
@@ -87,7 +87,7 @@ func (h *Handler) HandleGetTorrentstreamTorrentFilePreviews(c echo.Context) erro
 	type body struct {
 		Torrent       *hibiketorrent.AnimeTorrent `json:"torrent"`
 		EpisodeNumber int                         `json:"episodeNumber"`
-		Media         *anilist.BaseAnime          `json:"media"`
+		Media         *media.Anime                `json:"media"`
 	}
 	var b body
 	if err := c.Bind(&b); err != nil {

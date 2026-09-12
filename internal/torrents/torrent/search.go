@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/constants"
 	"seanime/internal/debrid/debrid"
@@ -12,6 +11,7 @@ import (
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/hook"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/comparison"
 	"seanime/internal/util/result"
@@ -42,9 +42,9 @@ type (
 
 	AnimeSearchOptions struct {
 		// Provider extension ID
-		Provider string             `json:"provider"`
-		Type     AnimeSearchType    `json:"type,omitempty"`
-		Media    *anilist.BaseAnime `json:"media,omitempty"`
+		Provider string          `json:"provider"`
+		Type     AnimeSearchType `json:"type,omitempty"`
+		Media    *media.Anime    `json:"media,omitempty"`
 		// Search options
 		Query string `json:"query,omitempty"`
 		// Filter options
@@ -120,11 +120,11 @@ func (r *Repository) searchAnime(ctx context.Context, opts AnimeSearchOptions, f
 		animeMetadata = mo.Some(animeMetadataF)
 	}
 
-	status := anilist.MediaStatusNotYetReleased
+	status := media.MediaStatusNotYetReleased
 	if opts.Media.GetStatus() != nil {
 		status = *opts.Media.GetStatus()
 	}
-	format := anilist.MediaFormatTv
+	format := media.MediaFormatTv
 	if opts.Media.GetFormat() != nil {
 		format = *opts.Media.GetFormat()
 	}
@@ -397,7 +397,7 @@ func (r *Repository) searchAnime(ctx context.Context, opts AnimeSearchOptions, f
 	return
 }
 
-func (r *Repository) generatePreviews(ctx context.Context, torrents []*hibiketorrent.AnimeTorrent, media *anilist.BaseAnime, animeMetadata mo.Option[*metadata.AnimeMetadata], searchOpts *AnimeSearchOptions) ([]*Preview, error) {
+func (r *Repository) generatePreviews(ctx context.Context, torrents []*hibiketorrent.AnimeTorrent, media *media.Anime, animeMetadata mo.Option[*metadata.AnimeMetadata], searchOpts *AnimeSearchOptions) ([]*Preview, error) {
 	var previews []*Preview
 	wg := sync.WaitGroup{}
 	wg.Add(len(torrents))
@@ -513,7 +513,7 @@ func searchCacheTTL(data *SearchData, opts AnimeSearchOptions) time.Duration {
 	if data == nil || len(data.Torrents) == 0 || (opts.Type == AnimeSearchTypeSmart && !opts.SkipPreviews && len(data.Previews) == 0) {
 		return searchMissTTL
 	}
-	if opts.Media != nil && opts.Media.GetStatus() != nil && *opts.Media.GetStatus() == anilist.MediaStatusReleasing {
+	if opts.Media != nil && opts.Media.GetStatus() != nil && *opts.Media.GetStatus() == media.MediaStatusReleasing {
 		return releasingSearchTTL
 	}
 	return constants.GcTime
@@ -551,7 +551,7 @@ func sortSearchData(data *SearchData) {
 
 type createAnimeTorrentPreviewOptions struct {
 	torrent       *hibiketorrent.AnimeTorrent
-	media         *anilist.BaseAnime
+	media         *media.Anime
 	animeMetadata mo.Option[*metadata.AnimeMetadata]
 	searchOpts    *AnimeSearchOptions
 }

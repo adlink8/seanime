@@ -1,8 +1,8 @@
 package manga
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/hook_resolver"
+	"seanime/internal/media"
 )
 
 // MangaEntryRequestedEvent is triggered when a manga entry is requested.
@@ -10,8 +10,8 @@ import (
 // If the modified entry is nil, an error will be returned.
 type MangaEntryRequestedEvent struct {
 	hook_resolver.Event
-	MediaId         int                      `json:"mediaId"`
-	MangaCollection *anilist.MangaCollection `json:"mangaCollection"`
+	MediaId         int                    `json:"mediaId"`
+	MangaCollection *media.MangaCollection `json:"mangaCollection"`
 	// Empty entry object, will be used if the hook prevents the default behavior
 	Entry *Entry `json:"entry"`
 }
@@ -25,7 +25,7 @@ type MangaEntryEvent struct {
 // MangaLibraryCollectionRequestedEvent is triggered when the manga library collection is being requested.
 type MangaLibraryCollectionRequestedEvent struct {
 	hook_resolver.Event
-	MangaCollection *anilist.MangaCollection `json:"mangaCollection"`
+	MangaCollection *media.MangaCollection `json:"mangaCollection"`
 }
 
 // MangaLibraryCollectionEvent is triggered when the manga library collection is being returned.
@@ -39,7 +39,7 @@ type MangaLibraryCollectionEvent struct {
 // If the modified chapter containers are nil, an error will be returned.
 type MangaDownloadedChapterContainersRequestedEvent struct {
 	hook_resolver.Event
-	MangaCollection *anilist.MangaCollection `json:"mangaCollection"`
+	MangaCollection *media.MangaCollection `json:"mangaCollection"`
 	// Empty chapter containers object, will be used if the hook prevents the default behavior
 	ChapterContainers []*ChapterContainer `json:"chapterContainers"`
 }

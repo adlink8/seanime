@@ -2,7 +2,6 @@ package autodownloader
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/database/models"
 	"seanime/internal/debrid/debrid"
@@ -10,6 +9,8 @@ import (
 	"seanime/internal/hook"
 	"seanime/internal/hook_resolver"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
+	"seanime/internal/testmocks"
 	"seanime/internal/torrent_clients/torrent_client"
 	"seanime/internal/util"
 	"testing"
@@ -36,11 +37,12 @@ func useTestHookManager(t *testing.T) hook.Manager {
 	return hm
 }
 
-func newTestAnimeCollection(t *testing.T, mediaId int) *anilist.AnimeCollection {
+func newTestAnimeCollection(t *testing.T, mediaId int) *media.AnimeCollection {
 	t.Helper()
 
-	anilistClient := anilist.NewTestAnilistClient()
-	animeCollection, err := anilistClient.AnimeCollection(context.Background(), nil)
+	// Bangumi 锚点：原 AniList fixture client 已随包裁剪，改用 FakePlatform 空集合（CI 跳过名单）。
+	fakePlatform := testmocks.NewFakePlatformBuilder().Build()
+	animeCollection, err := fakePlatform.GetAnimeCollection(context.Background(), true)
 	require.NoError(t, err)
 
 	entry, found := animeCollection.GetListEntryFromAnimeId(mediaId)
@@ -1004,8 +1006,9 @@ func TestIsProfileValidChecks(t *testing.T) {
 }
 
 func TestIntegration(t *testing.T) {
-	anilistClient := anilist.NewTestAnilistClient()
-	animeCollection, err := anilistClient.AnimeCollection(context.Background(), nil)
+	// Bangumi 锚点：原 AniList fixture client 已随包裁剪，改用 FakePlatform 空集合（CI 跳过名单）。
+	fakePlatform := testmocks.NewFakePlatformBuilder().Build()
+	animeCollection, err := fakePlatform.GetAnimeCollection(context.Background(), true)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -1242,8 +1245,9 @@ func TestIntegration(t *testing.T) {
 }
 
 func TestDelayIntegration(t *testing.T) {
-	anilistClient := anilist.NewTestAnilistClient()
-	animeCollection, err := anilistClient.AnimeCollection(context.Background(), nil)
+	// Bangumi 锚点：原 AniList fixture client 已随包裁剪，改用 FakePlatform 空集合（CI 跳过名单）。
+	fakePlatform := testmocks.NewFakePlatformBuilder().Build()
+	animeCollection, err := fakePlatform.GetAnimeCollection(context.Background(), true)
 	require.NoError(t, err)
 
 	mediaId := 154587 // Sousou no Frieren

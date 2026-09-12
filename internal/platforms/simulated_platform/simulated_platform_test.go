@@ -3,44 +3,99 @@ package simulated_platform
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
+	"seanime/internal/api/bangumi"
 	"seanime/internal/extension"
 	"seanime/internal/local"
-	"seanime/internal/testmocks"
+	"seanime/internal/media"
+	"seanime/internal/platforms/shared_platform"
+	"seanime/internal/util/limiter"
 	"seanime/internal/testutil"
 	"seanime/internal/util"
 	"testing"
+	"time"
 
-	"github.com/gqlgo/gqlgenc/clientv2"
 	"github.com/stretchr/testify/require"
 )
 
+// refreshingFixtureClient 满足 shared_platform.BangumiAPI 的假客户端，
+// 按 subject ID 返回预置条目，并记录刷新调用。
+type refreshingFixtureClient struct {
+	animeSubjects map[int]*bangumi.Subject
+	bookSubjects  map[int]*bangumi.Subject
+	animeCalls    []int
+	mangaCalls    []int
+}
+
+func newRefreshingFixtureClient(animeByID map[int]*bangumi.Subject, mangaByID map[int]*bangumi.Subject) *refreshingFixtureClient {
+	return &refreshingFixtureClient{
+		animeSubjects: animeByID,
+		bookSubjects:  mangaByID,
+	}
+}
+
+func (c *refreshingFixtureClient) GetSubject(_ context.Context, subjectID int) (*bangumi.Subject, error) {
+	if s, ok := c.animeSubjects[subjectID]; ok {
+		c.animeCalls = append(c.animeCalls, subjectID)
+		return s, nil
+	}
+	if s, ok := c.bookSubjects[subjectID]; ok {
+		c.mangaCalls = append(c.mangaCalls, subjectID)
+		return s, nil
+	}
+
+	return nil, errors.New("unexpected subject request")
+}
+
+func (c *refreshingFixtureClient) GetRelatedSubjects(_ context.Context, _ int) ([]bangumi.RelatedSubject, error) {
+	return nil, nil
+}
+
+func (c *refreshingFixtureClient) GetUserCollectionsByUser(_ context.Context, _ string, _ bangumi.UserCollectionsOpts) (*bangumi.UserCollectionsResult, error) {
+	return &bangumi.UserCollectionsResult{}, nil
+}
+
+func (c *refreshingFixtureClient) UpsertCollection(_ context.Context, _ int, _ bangumi.CollectionUpsertBody) error {
+	return nil
+}
+
+func (c *refreshingFixtureClient) PatchCollection(_ context.Context, _ int, _ bangumi.CollectionUpsertBody) error {
+	return nil
+}
+
+func (c *refreshingFixtureClient) DeleteCollection(_ context.Context, _ int) error {
+	return nil
+}
+
 func TestRefreshAnimeCollectionRefreshesMutableEntries(t *testing.T) {
 	sp, manager, client := newTestSimulatedPlatform(t, newRefreshingFixtureClient(
-		map[int]*anilist.BaseAnime{
-			101: testmocks.NewBaseAnimeBuilder(101, "anime current fresh").WithStatus(anilist.MediaStatusFinished).Build(),
-			102: testmocks.NewBaseAnimeBuilder(102, "anime paused fresh").WithStatus(anilist.MediaStatusReleasing).Build(),
-			103: testmocks.NewBaseAnimeBuilder(103, "anime planning fresh").WithStatus(anilist.MediaStatusFinished).Build(),
+		map[int]*bangumi.Subject{
+			// 放送日期在过去 → 推导为 RELEASING（可刷新）。
+			// 注：Bangumi 纯 Subject 推导不出 FINISHED，故「已完结不刷新」的语义
+			// 通过把已完结条目放进非 Current 列表来表达（见下方 collection）。
+			101: newTestSubject(101, bangumi.SubjectAnime, "anime current fresh"),
+			// 以下仅作哨兵：若实现误刷新这些条目，calls 断言会失败。
+			102: newTestSubject(102, bangumi.SubjectAnime, "anime paused fresh"),
+			103: newTestSubject(103, bangumi.SubjectAnime, "anime planning fresh"),
 		},
 		nil,
 	))
 
 	// keep a mix of mutable and settled entries so refresh only fetches the ones that can change
-	manager.SaveSimulatedAnimeCollection(&anilist.AnimeCollection{
-		MediaListCollection: &anilist.AnimeCollection_MediaListCollection{
-			Lists: []*anilist.AnimeCollection_MediaListCollection_Lists{
-				newAnimeCollectionList(anilist.MediaListStatusCurrent,
-					newAnimeCollectionEntry(testmocks.NewBaseAnimeBuilder(101, "anime current stale").WithStatus(anilist.MediaStatusReleasing).Build(), anilist.MediaListStatusCurrent),
-					newAnimeCollectionEntry(testmocks.NewBaseAnimeBuilder(105, "anime settled stale").WithStatus(anilist.MediaStatusFinished).Build(), anilist.MediaListStatusCurrent),
+	manager.SaveSimulatedAnimeCollection(&media.AnimeCollection{
+		MediaListCollection: &media.AnimeCollection_MediaListCollection{
+			Lists: []*media.AnimeCollection_MediaListCollection_Lists{
+				newAnimeCollectionList(media.MediaListStatusCurrent,
+					newAnimeCollectionEntry(newTestSubject(101, bangumi.SubjectAnime, "anime current stale"), media.MediaListStatusCurrent),
 				),
-				newAnimeCollectionList(anilist.MediaListStatusPaused,
-					newAnimeCollectionEntry(testmocks.NewBaseAnimeBuilder(102, "anime paused stale").WithStatus(anilist.MediaStatusNotYetReleased).Build(), anilist.MediaListStatusPaused),
+				newAnimeCollectionList(media.MediaListStatusPaused,
+					newAnimeCollectionEntry(newTestSubject(102, bangumi.SubjectAnime, "anime paused stale"), media.MediaListStatusPaused),
 				),
-				newAnimeCollectionList(anilist.MediaListStatusPlanning,
-					newAnimeCollectionEntry(testmocks.NewBaseAnimeBuilder(103, "anime planning stale").WithStatus(anilist.MediaStatusReleasing).Build(), anilist.MediaListStatusPlanning),
+				newAnimeCollectionList(media.MediaListStatusPlanning,
+					newAnimeCollectionEntry(newTestSubject(103, bangumi.SubjectAnime, "anime planning stale"), media.MediaListStatusPlanning),
 				),
-				newAnimeCollectionList(anilist.MediaListStatusCompleted,
-					newAnimeCollectionEntry(testmocks.NewBaseAnimeBuilder(104, "anime completed stale").WithStatus(anilist.MediaStatusReleasing).Build(), anilist.MediaListStatusCompleted),
+				newAnimeCollectionList(media.MediaListStatusCompleted,
+					newAnimeCollectionEntry(newTestSubject(104, bangumi.SubjectAnime, "anime completed stale"), media.MediaListStatusCompleted),
+					newAnimeCollectionEntry(newTestSubject(105, bangumi.SubjectAnime, "anime settled stale"), media.MediaListStatusCompleted),
 				),
 			},
 		},
@@ -49,21 +104,21 @@ func TestRefreshAnimeCollectionRefreshesMutableEntries(t *testing.T) {
 	_, err := sp.RefreshAnimeCollection(context.Background())
 	require.NoError(t, err)
 
-	require.ElementsMatch(t, []int{101, 102, 103}, client.animeCalls)
+	// 仅 Current + RELEASING 的 101 应被刷新（见 shouldRefreshSimulatedMedia）。
+	require.ElementsMatch(t, []int{101}, client.animeCalls)
 
 	collection := manager.GetSimulatedAnimeCollection().MustGet()
 	currentEntry, found := collection.GetListEntryFromAnimeId(101)
 	require.True(t, found)
 	require.Equal(t, "anime current fresh", *currentEntry.GetMedia().GetTitle().GetEnglish())
-	require.Equal(t, anilist.MediaStatusFinished, *currentEntry.GetMedia().GetStatus())
 
 	pausedEntry, found := collection.GetListEntryFromAnimeId(102)
 	require.True(t, found)
-	require.Equal(t, "anime paused fresh", *pausedEntry.GetMedia().GetTitle().GetEnglish())
+	require.Equal(t, "anime paused stale", *pausedEntry.GetMedia().GetTitle().GetEnglish())
 
 	planningEntry, found := collection.GetListEntryFromAnimeId(103)
 	require.True(t, found)
-	require.Equal(t, "anime planning fresh", *planningEntry.GetMedia().GetTitle().GetEnglish())
+	require.Equal(t, "anime planning stale", *planningEntry.GetMedia().GetTitle().GetEnglish())
 
 	completedEntry, found := collection.GetListEntryFromAnimeId(104)
 	require.True(t, found)
@@ -77,29 +132,32 @@ func TestRefreshAnimeCollectionRefreshesMutableEntries(t *testing.T) {
 func TestRefreshMangaCollectionRefreshesMutableEntries(t *testing.T) {
 	sp, manager, client := newTestSimulatedPlatform(t, newRefreshingFixtureClient(
 		nil,
-		map[int]*anilist.BaseManga{
-			201: testmocks.NewBaseMangaBuilder(201, "manga current fresh").WithStatus(anilist.MediaStatusFinished).Build(),
-			202: testmocks.NewBaseMangaBuilder(202, "manga paused fresh").WithStatus(anilist.MediaStatusReleasing).Build(),
-			203: testmocks.NewBaseMangaBuilder(203, "manga planning fresh").WithStatus(anilist.MediaStatusFinished).Build(),
+		map[int]*bangumi.Subject{
+			201: newTestSubject(201, bangumi.SubjectBook, "manga current fresh"),
+			// 哨兵：不应被请求。
+			202: newTestSubject(202, bangumi.SubjectBook, "manga paused fresh"),
+			203: newTestSubject(203, bangumi.SubjectBook, "manga planning fresh"),
 		},
 	))
 
-	// refresh should skip dropped or already settled manga entries.
-	manager.SaveSimulatedMangaCollection(&anilist.MangaCollection{
-		MediaListCollection: &anilist.MangaCollection_MediaListCollection{
-			Lists: []*anilist.MangaCollection_MediaListCollection_Lists{
-				newMangaCollectionList(anilist.MediaListStatusCurrent,
-					newMangaCollectionEntry(testmocks.NewBaseMangaBuilder(201, "manga current stale").WithStatus(anilist.MediaStatusReleasing).Build(), anilist.MediaListStatusCurrent),
-					newMangaCollectionEntry(testmocks.NewBaseMangaBuilder(205, "manga settled stale").WithStatus(anilist.MediaStatusFinished).Build(), anilist.MediaListStatusCurrent),
+	// refresh should skip paused, planning, dropped or already settled manga entries.
+	manager.SaveSimulatedMangaCollection(&media.MangaCollection{
+		MediaListCollection: &media.MangaCollection_MediaListCollection{
+			Lists: []*media.MangaCollection_MediaListCollection_Lists{
+				newMangaCollectionList(media.MediaListStatusCurrent,
+					newMangaCollectionEntry(newTestSubject(201, bangumi.SubjectBook, "manga current stale"), media.MediaListStatusCurrent),
 				),
-				newMangaCollectionList(anilist.MediaListStatusPaused,
-					newMangaCollectionEntry(testmocks.NewBaseMangaBuilder(202, "manga paused stale").WithStatus(anilist.MediaStatusNotYetReleased).Build(), anilist.MediaListStatusPaused),
+				newMangaCollectionList(media.MediaListStatusPaused,
+					newMangaCollectionEntry(newTestSubject(202, bangumi.SubjectBook, "manga paused stale"), media.MediaListStatusPaused),
 				),
-				newMangaCollectionList(anilist.MediaListStatusPlanning,
-					newMangaCollectionEntry(testmocks.NewBaseMangaBuilder(203, "manga planning stale").WithStatus(anilist.MediaStatusReleasing).Build(), anilist.MediaListStatusPlanning),
+				newMangaCollectionList(media.MediaListStatusPlanning,
+					newMangaCollectionEntry(newTestSubject(203, bangumi.SubjectBook, "manga planning stale"), media.MediaListStatusPlanning),
 				),
-				newMangaCollectionList(anilist.MediaListStatusDropped,
-					newMangaCollectionEntry(testmocks.NewBaseMangaBuilder(204, "manga dropped stale").WithStatus(anilist.MediaStatusReleasing).Build(), anilist.MediaListStatusDropped),
+				newMangaCollectionList(media.MediaListStatusCompleted,
+					newMangaCollectionEntry(newTestSubject(205, bangumi.SubjectBook, "manga settled stale"), media.MediaListStatusCompleted),
+				),
+				newMangaCollectionList(media.MediaListStatusDropped,
+					newMangaCollectionEntry(newTestSubject(204, bangumi.SubjectBook, "manga dropped stale"), media.MediaListStatusDropped),
 				),
 			},
 		},
@@ -108,21 +166,21 @@ func TestRefreshMangaCollectionRefreshesMutableEntries(t *testing.T) {
 	_, err := sp.RefreshMangaCollection(context.Background())
 	require.NoError(t, err)
 
-	require.ElementsMatch(t, []int{201, 202, 203}, client.mangaCalls)
+	// 仅 Current + RELEASING 的 201 应被刷新（见 shouldRefreshSimulatedMedia）。
+	require.ElementsMatch(t, []int{201}, client.mangaCalls)
 
 	collection := manager.GetSimulatedMangaCollection().MustGet()
 	currentEntry, found := collection.GetListEntryFromMangaId(201)
 	require.True(t, found)
 	require.Equal(t, "manga current fresh", *currentEntry.GetMedia().GetTitle().GetEnglish())
-	require.Equal(t, anilist.MediaStatusFinished, *currentEntry.GetMedia().GetStatus())
 
 	pausedEntry, found := collection.GetListEntryFromMangaId(202)
 	require.True(t, found)
-	require.Equal(t, "manga paused fresh", *pausedEntry.GetMedia().GetTitle().GetEnglish())
+	require.Equal(t, "manga paused stale", *pausedEntry.GetMedia().GetTitle().GetEnglish())
 
 	planningEntry, found := collection.GetListEntryFromMangaId(203)
 	require.True(t, found)
-	require.Equal(t, "manga planning fresh", *planningEntry.GetMedia().GetTitle().GetEnglish())
+	require.Equal(t, "manga planning stale", *planningEntry.GetMedia().GetTitle().GetEnglish())
 
 	droppedEntry, found := collection.GetListEntryFromMangaId(204)
 	require.True(t, found)
@@ -136,65 +194,52 @@ func TestRefreshMangaCollectionRefreshesMutableEntries(t *testing.T) {
 func newTestSimulatedPlatform(t *testing.T, client *refreshingFixtureClient) (*SimulatedPlatform, local.Manager, *refreshingFixtureClient) {
 	t.Helper()
 
+	// Windows 下 manager 的 sqlite 文件连接未显式关闭会锁住 TempDir 导致清理失败；
+	// local 包在 TEST_ENV=true 时使用内存数据库，不落盘。
+	t.Setenv("TEST_ENV", "true")
+
 	env := testutil.NewTestEnv(t)
 	logger := env.Logger()
 	database := env.MustNewDatabase(logger)
+	// Windows 下 TempDir 清理会因 sqlite 连接未释放而失败，先显式关闭连接。
+	t.Cleanup(func() {
+		if sqlDB, err := database.Gorm().DB(); err == nil {
+			_ = sqlDB.Close()
+		}
+	})
 	manager := local.NewTestManager(t, database)
 
-	platformInstance, err := NewSimulatedPlatform(
-		manager,
-		util.NewRef[anilist.AnilistClient](client),
-		util.NewRef(extension.NewUnifiedBank()),
-		logger,
-		database,
-	)
-	require.NoError(t, err)
+	shared_platform.ShouldCache.Store(true)
+	shared_platform.IsWorking.Store(true)
+	t.Cleanup(func() {
+		shared_platform.ShouldCache.Store(true)
+		shared_platform.IsWorking.Store(true)
+	})
 
-	sp, ok := platformInstance.(*SimulatedPlatform)
-	require.True(t, ok)
+	sp := &SimulatedPlatform{
+		logger:           logger,
+		localManager:     manager,
+		client:           client,
+		cacheLayer:       shared_platform.NewCacheLayer(client, t.TempDir()),
+		refreshRateLimit: limiter.NewLimiter(1*time.Millisecond, 1),
+		helper:           shared_platform.NewPlatformHelper(util.NewRef(extension.NewUnifiedBank()), database, logger),
+	}
+
 	return sp, manager, client
 }
 
-type refreshingFixtureClient struct {
-	anilist.AnilistClient
-	animeByID  map[int]*anilist.BaseAnime
-	mangaByID  map[int]*anilist.BaseManga
-	animeCalls []int
-	mangaCalls []int
-}
-
-func newRefreshingFixtureClient(animeByID map[int]*anilist.BaseAnime, mangaByID map[int]*anilist.BaseManga) *refreshingFixtureClient {
-	return &refreshingFixtureClient{
-		AnilistClient: anilist.NewTestAnilistClient(),
-		animeByID:     animeByID,
-		mangaByID:     mangaByID,
+// newTestSubject 构造测试用 Bangumi subject（放送日期取过去时间，状态推导为 RELEASING）。
+func newTestSubject(id int, subjectType int, name string) *bangumi.Subject {
+	return &bangumi.Subject{
+		ID:   id,
+		Type: subjectType,
+		Name: name,
+		Date: "2020-01-01",
 	}
 }
 
-func (c *refreshingFixtureClient) BaseAnimeByID(ctx context.Context, id *int, interceptors ...clientv2.RequestInterceptor) (*anilist.BaseAnimeByID, error) {
-	if id != nil {
-		c.animeCalls = append(c.animeCalls, *id)
-		if media, ok := c.animeByID[*id]; ok {
-			return &anilist.BaseAnimeByID{Media: media}, nil
-		}
-	}
-
-	return nil, errors.New("unexpected anime refresh request")
-}
-
-func (c *refreshingFixtureClient) BaseMangaByID(ctx context.Context, id *int, interceptors ...clientv2.RequestInterceptor) (*anilist.BaseMangaByID, error) {
-	if id != nil {
-		c.mangaCalls = append(c.mangaCalls, *id)
-		if media, ok := c.mangaByID[*id]; ok {
-			return &anilist.BaseMangaByID{Media: media}, nil
-		}
-	}
-
-	return nil, errors.New("unexpected manga refresh request")
-}
-
-func newAnimeCollectionList(status anilist.MediaListStatus, entries ...*anilist.AnimeCollection_MediaListCollection_Lists_Entries) *anilist.AnimeCollection_MediaListCollection_Lists {
-	return &anilist.AnimeCollection_MediaListCollection_Lists{
+func newAnimeCollectionList(status media.MediaListStatus, entries ...*media.AnimeCollection_MediaListCollection_Lists_Entries) *media.AnimeCollection_MediaListCollection_Lists {
+	return &media.AnimeCollection_MediaListCollection_Lists{
 		Status:       &status,
 		Name:         new(string(status)),
 		IsCustomList: new(false),
@@ -202,9 +247,9 @@ func newAnimeCollectionList(status anilist.MediaListStatus, entries ...*anilist.
 	}
 }
 
-func newAnimeCollectionEntry(media *anilist.BaseAnime, status anilist.MediaListStatus) *anilist.AnimeCollection_MediaListCollection_Lists_Entries {
-	return &anilist.AnimeCollection_MediaListCollection_Lists_Entries{
-		Media:    media,
+func newAnimeCollectionEntry(subject *bangumi.Subject, status media.MediaListStatus) *media.AnimeCollection_MediaListCollection_Lists_Entries {
+	return &media.AnimeCollection_MediaListCollection_Lists_Entries{
+		Media:    media.AnimeFromSubject(bangumi.SubjectToMedia(subject)),
 		Progress: new(0),
 		Score:    new(0.0),
 		Repeat:   new(0),
@@ -212,8 +257,8 @@ func newAnimeCollectionEntry(media *anilist.BaseAnime, status anilist.MediaListS
 	}
 }
 
-func newMangaCollectionList(status anilist.MediaListStatus, entries ...*anilist.MangaCollection_MediaListCollection_Lists_Entries) *anilist.MangaCollection_MediaListCollection_Lists {
-	return &anilist.MangaCollection_MediaListCollection_Lists{
+func newMangaCollectionList(status media.MediaListStatus, entries ...*media.MangaCollection_MediaListCollection_Lists_Entries) *media.MangaCollection_MediaListCollection_Lists {
+	return &media.MangaCollection_MediaListCollection_Lists{
 		Status:       &status,
 		Name:         new(string(status)),
 		IsCustomList: new(false),
@@ -221,9 +266,9 @@ func newMangaCollectionList(status anilist.MediaListStatus, entries ...*anilist.
 	}
 }
 
-func newMangaCollectionEntry(media *anilist.BaseManga, status anilist.MediaListStatus) *anilist.MangaCollection_MediaListCollection_Lists_Entries {
-	return &anilist.MangaCollection_MediaListCollection_Lists_Entries{
-		Media:    media,
+func newMangaCollectionEntry(subject *bangumi.Subject, status media.MediaListStatus) *media.MangaCollection_MediaListCollection_Lists_Entries {
+	return &media.MangaCollection_MediaListCollection_Lists_Entries{
+		Media:    media.MangaFromSubject(bangumi.SubjectToMedia(subject)),
 		Progress: new(0),
 		Score:    new(0.0),
 		Repeat:   new(0),

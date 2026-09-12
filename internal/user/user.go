@@ -2,8 +2,8 @@ package user
 
 import (
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/models"
+	"seanime/internal/media"
 
 	"github.com/goccy/go-json"
 )
@@ -11,8 +11,8 @@ import (
 const SimulatedUserToken = "SIMULATED"
 
 type User struct {
-	Viewer *anilist.GetViewer_Viewer `json:"viewer"`
-	Token  string                    `json:"token"`
+	Viewer *media.GetViewer_Viewer `json:"viewer"`
+	Token  string                  `json:"token"`
 	// IsSimulated indicates whether the user is not a real AniList account.
 	IsSimulated bool `json:"isSimulated"`
 }
@@ -23,7 +23,7 @@ func NewUser(model *models.Account) (*User, error) {
 	if model == nil {
 		return nil, errors.New("account is nil")
 	}
-	var acc anilist.GetViewer_Viewer
+	var acc media.GetViewer_Viewer
 	if err := json.Unmarshal(model.Viewer, &acc); err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func NewUser(model *models.Account) (*User, error) {
 }
 
 func NewSimulatedUser() *User {
-	acc := anilist.GetViewer_Viewer{
+	acc := media.GetViewer_Viewer{
 		Name:        "User",
 		Avatar:      nil,
 		BannerImage: nil,

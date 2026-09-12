@@ -1,10 +1,10 @@
 package debrid_client
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/debrid/debrid"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/hook_resolver"
+	"seanime/internal/media"
 )
 
 // DebridAutoSelectTorrentsFetchedEvent is triggered when the torrents are fetched for auto select.
@@ -28,11 +28,11 @@ type DebridSkipStreamCheckEvent struct {
 // Prevent default to skip the playback.
 type DebridSendStreamToMediaPlayerEvent struct {
 	hook_resolver.Event
-	WindowTitle  string             `json:"windowTitle"`
-	StreamURL    string             `json:"streamURL"`
-	Media        *anilist.BaseAnime `json:"media"`
-	AniDbEpisode string             `json:"aniDbEpisode"`
-	PlaybackType string             `json:"playbackType"`
+	WindowTitle  string       `json:"windowTitle"`
+	StreamURL    string       `json:"streamURL"`
+	Media        *media.Anime `json:"media"`
+	AniDbEpisode string       `json:"aniDbEpisode"`
+	PlaybackType string       `json:"playbackType"`
 }
 
 // DebridAddTorrentRequestedEvent is triggered when Seanime is about to add a torrent to the debrid provider.

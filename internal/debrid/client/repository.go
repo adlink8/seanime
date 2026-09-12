@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/db"
 	"seanime/internal/database/models"
@@ -18,6 +17,7 @@ import (
 	"seanime/internal/events"
 	"seanime/internal/hook"
 	"seanime/internal/library/playbackmanager"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/torrents/autoselect"
 	"seanime/internal/torrents/torrent"
@@ -47,7 +47,7 @@ type (
 
 		playbackManager     *playbackmanager.PlaybackManager
 		streamManager       *StreamManager
-		completeAnimeCache  *anilist.CompleteAnimeCache
+		completeAnimeCache  *media.CompleteAnimeCache
 		metadataProviderRef *util.Ref[metadata_provider.Provider]
 		platformRef         *util.Ref[platform.Platform]
 
@@ -84,7 +84,7 @@ func NewRepository(opts *NewRepositoryOptions) (ret *Repository) {
 		playbackManager:       opts.PlaybackManager,
 		dummyDebridEnabled:    opts.DummyDebridEnabled,
 		metadataProviderRef:   opts.MetadataProviderRef,
-		completeAnimeCache:    anilist.NewCompleteAnimeCache(),
+		completeAnimeCache:    media.NewCompleteAnimeCache(),
 		ctxMap:                result.NewMap[string, context.CancelFunc](),
 		previousStreamOptions: mo.None[*StartStreamOptions](),
 		directStreamManager:   opts.DirectStreamManager,

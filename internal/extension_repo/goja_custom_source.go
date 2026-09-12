@@ -3,12 +3,12 @@ package extension_repo
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/events"
 	"seanime/internal/extension"
 	hibikecustomsource "seanime/internal/extension/hibike/customsource"
 	"seanime/internal/goja/goja_runtime"
+	"seanime/internal/media"
 	"seanime/internal/util"
 
 	"github.com/rs/zerolog"
@@ -91,7 +91,7 @@ func (g *GojaCustomSource) GetSettings() (ret hibikecustomsource.Settings) {
 	return
 }
 
-func (g *GojaCustomSource) GetAnime(ctx context.Context, id []int) (ret []*anilist.BaseAnime, err error) {
+func (g *GojaCustomSource) GetAnime(ctx context.Context, id []int) (ret []*media.Anime, err error) {
 	defer util.HandlePanicInModuleWithError(g.ext.ID+".GetAnime", &err)
 
 	g.logger.Debug().Str("extension", g.extId).Ints("ids", id).Msg("custom source: Getting anime")
@@ -109,7 +109,7 @@ func (g *GojaCustomSource) GetAnime(ctx context.Context, id []int) (ret []*anili
 	return ret, nil
 }
 
-func (g *GojaCustomSource) GetAnimeWithRelations(ctx context.Context, id int) (ret *anilist.CompleteAnime, err error) {
+func (g *GojaCustomSource) GetAnimeWithRelations(ctx context.Context, id int) (ret *media.CompleteAnime, err error) {
 	defer util.HandlePanicInModuleWithError(g.ext.ID+".GetAnimeWithRelations", &err)
 
 	g.logger.Debug().Str("extension", g.extId).Int("id", id).Msg("custom source: Getting anime with relations")
@@ -149,7 +149,7 @@ func (g *GojaCustomSource) GetAnimeMetadata(ctx context.Context, id int) (ret *m
 	return ret, nil
 }
 
-func (g *GojaCustomSource) GetAnimeDetails(ctx context.Context, id int) (ret *anilist.AnimeDetailsById_Media, err error) {
+func (g *GojaCustomSource) GetAnimeDetails(ctx context.Context, id int) (ret *media.AnimeDetails, err error) {
 	defer util.HandlePanicInModuleWithError(g.ext.ID+".GetAnimeDetails", &err)
 
 	g.logger.Debug().Str("extension", g.extId).Int("id", id).Msg("custom source: Getting anime details")
@@ -161,13 +161,13 @@ func (g *GojaCustomSource) GetAnimeDetails(ctx context.Context, id int) (ret *an
 
 	err = g.unmarshalValue(res, &ret)
 	if err != nil {
-		return &anilist.AnimeDetailsById_Media{}, nil
+		return &media.AnimeDetails{}, nil
 	}
 
 	return ret, nil
 }
 
-func (g *GojaCustomSource) GetManga(ctx context.Context, id []int) (ret []*anilist.BaseManga, err error) {
+func (g *GojaCustomSource) GetManga(ctx context.Context, id []int) (ret []*media.Manga, err error) {
 	defer util.HandlePanicInModuleWithError(g.ext.ID+".GetManga", &err)
 
 	g.logger.Debug().Str("extension", g.extId).Ints("ids", id).Msg("custom source: Getting manga")
@@ -185,7 +185,7 @@ func (g *GojaCustomSource) GetManga(ctx context.Context, id []int) (ret []*anili
 	return ret, nil
 }
 
-func (g *GojaCustomSource) GetMangaDetails(ctx context.Context, id int) (ret *anilist.MangaDetailsById_Media, err error) {
+func (g *GojaCustomSource) GetMangaDetails(ctx context.Context, id int) (ret *media.MangaDetails, err error) {
 	defer util.HandlePanicInModuleWithError(g.ext.ID+".GetMangaDetails", &err)
 
 	g.logger.Debug().Str("extension", g.extId).Int("id", id).Msg("custom source: Getting manga details")
@@ -197,7 +197,7 @@ func (g *GojaCustomSource) GetMangaDetails(ctx context.Context, id int) (ret *an
 
 	err = g.unmarshalValue(res, &ret)
 	if err != nil {
-		return &anilist.MangaDetailsById_Media{}, nil
+		return &media.MangaDetails{}, nil
 	}
 
 	return ret, nil

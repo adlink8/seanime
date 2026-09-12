@@ -2,10 +2,10 @@ package metadata_provider
 
 import (
 	"regexp"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/database/db"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/filecache"
 	"strconv"
@@ -19,7 +19,7 @@ type (
 	AnimeWrapperImpl struct {
 		metadata   mo.Option[*metadata.AnimeMetadata]
 		db         *db.Database
-		baseAnime  *anilist.BaseAnime
+		baseAnime  *media.Anime
 		fileCacher *filecache.Cacher
 		logger     *zerolog.Logger
 
@@ -138,7 +138,7 @@ func (aw *AnimeWrapperImpl) GetEpisodeMetadata(ep string) (ret metadata.EpisodeM
 	return ret
 }
 
-func getDefaultOverview(baseAnime *anilist.BaseAnime, ep string, epNumber int) string {
+func getDefaultOverview(baseAnime *media.Anime, ep string, epNumber int) string {
 	if ep == "" {
 		return ""
 	}

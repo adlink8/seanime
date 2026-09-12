@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/directstream"
 	"seanime/internal/events"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/hook"
 	"seanime/internal/library/playbackmanager"
+	"seanime/internal/media"
 	"seanime/internal/player"
 	"seanime/internal/util"
 	"sync"
@@ -41,10 +41,10 @@ type StartStreamOptions struct {
 	ClientId          string                           `json:"clientId"`
 	PlaybackType      PlaybackType                     `json:"playbackType"`
 	BatchEpisodeFiles *hibiketorrent.BatchEpisodeFiles `json:"batchEpisodeFiles"`
-	media             *anilist.BaseAnime               `json:"-"`
+	media             *media.Anime                     `json:"-"`
 }
 
-func (opts *StartStreamOptions) SetMedia(media *anilist.BaseAnime) {
+func (opts *StartStreamOptions) SetMedia(media *media.Anime) {
 	opts.media = media
 }
 
@@ -336,7 +336,7 @@ func (r *Repository) StartStream(ctx context.Context, opts *StartStreamOptions) 
 				ClientId:      opts.ClientId,
 				EpisodeNumber: opts.EpisodeNumber,
 				AnidbEpisode:  opts.AniDBEpisode,
-				Media:         media.ToBaseAnime(),
+				Media:         media.ToAnime(),
 				Torrent:       r.client.currentTorrent.MustGet(),
 				File:          r.client.currentFile.MustGet(),
 				DownloadDir:   r.GetDownloadDir(),
@@ -391,14 +391,14 @@ func (r *Repository) StartStream(ctx context.Context, opts *StartStreamOptions) 
 func (r *Repository) sendStreamToExternalPlayer(
 	ctx context.Context,
 	opts *StartStreamOptions,
-	completeAnime *anilist.CompleteAnime,
+	completeAnime *media.CompleteAnime,
 	aniDbEpisode string,
 	startLaunchTime time.Time,
 	torrentSelectionDuration time.Duration,
 	metadataRetrievalDuration time.Duration,
 ) {
 
-	baseAnime := completeAnime.ToBaseAnime()
+	baseAnime := completeAnime.ToAnime()
 
 	r.wsEventManager.SendEvent(events.ShowIndefiniteLoader, "torrentstream")
 	defer func() {
@@ -603,18 +603,18 @@ func (r *Repository) DropTorrent() error {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (r *Repository) GetMediaInfoFromOptions(ctx context.Context, opts *StartStreamOptions) (media *anilist.CompleteAnime, animeMetadata *metadata.AnimeMetadata, err error) {
+func (r *Repository) GetMediaInfoFromOptions(ctx context.Context, opts *StartStreamOptions) (media *media.CompleteAnime, animeMetadata *metadata.AnimeMetadata, err error) {
 	if opts != nil && opts.media != nil {
 		return r.getMediaInfo(ctx, opts.media.GetID(), opts.media.ToCompleteAnime())
 	}
 	return r.GetMediaInfo(ctx, opts.MediaId)
 }
 
-func (r *Repository) GetMediaInfo(ctx context.Context, mediaId int) (media *anilist.CompleteAnime, animeMetadata *metadata.AnimeMetadata, err error) {
+func (r *Repository) GetMediaInfo(ctx context.Context, mediaId int) (media *media.CompleteAnime, animeMetadata *metadata.AnimeMetadata, err error) {
 	return r.getMediaInfo(ctx, mediaId, nil)
 }
 
-func (r *Repository) getMediaInfo(ctx context.Context, mediaId int, media *anilist.CompleteAnime) (ret *anilist.CompleteAnime, animeMetadata *metadata.AnimeMetadata, err error) {
+func (r *Repository) getMediaInfo(ctx context.Context, mediaId int, media *media.CompleteAnime) (ret *media.CompleteAnime, animeMetadata *metadata.AnimeMetadata, err error) {
 	// Get the media
 	if media != nil {
 		ret = media

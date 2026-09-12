@@ -2,9 +2,9 @@ package plugin
 
 import (
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/extension"
 	"seanime/internal/library/playbackmanager"
+	"seanime/internal/media"
 	"seanime/internal/mediaplayers/mediaplayer"
 	"seanime/internal/mediaplayers/mpv"
 	"seanime/internal/mediaplayers/mpvipc"
@@ -121,7 +121,7 @@ func (p *Playback) playUsingMediaPlayer(payload string) goja.Value {
 }
 
 // streamUsingMediaPlayer starts streaming a video using the media player specified in the settings.
-func (p *Playback) streamUsingMediaPlayer(windowTitle string, payload string, media *anilist.BaseAnime, aniDbEpisode string) goja.Value {
+func (p *Playback) streamUsingMediaPlayer(windowTitle string, payload string, media *media.Anime, aniDbEpisode string) goja.Value {
 	promise, resolve, reject := p.vm.NewPromise()
 
 	playbackManager, ok := p.ctx.PlaybackManager().Get()

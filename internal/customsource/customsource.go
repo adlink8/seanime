@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"reflect"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db"
 	"seanime/internal/database/models"
 	"seanime/internal/extension"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/result"
 	"strings"
@@ -117,7 +117,7 @@ func (m *Manager) GetProviderFromExtensionId(extId string) (extension.CustomSour
 	return m.customSourcesById.Get(extId)
 }
 
-func (m *Manager) GetProviderFromBaseAnime(baseAnime *anilist.BaseAnime) (ext extension.CustomSourceExtension, localId int, isCustom bool, extensionExists bool) {
+func (m *Manager) GetProviderFromBaseAnime(baseAnime *media.Anime) (ext extension.CustomSourceExtension, localId int, isCustom bool, extensionExists bool) {
 	if baseAnime == nil {
 		return nil, 0, false, false
 	}
@@ -129,7 +129,7 @@ func (m *Manager) GetProviderFromBaseAnime(baseAnime *anilist.BaseAnime) (ext ex
 	return m.getProviderFromId(id)
 }
 
-func (m *Manager) GetProviderFromBaseManga(baseManga *anilist.BaseManga) (ext extension.CustomSourceExtension, localId int, isCustom bool, extensionExists bool) {
+func (m *Manager) GetProviderFromBaseManga(baseManga *media.Manga) (ext extension.CustomSourceExtension, localId int, isCustom bool, extensionExists bool) {
 	if baseManga == nil {
 		return nil, 0, false, false
 	}
@@ -185,7 +185,7 @@ func formatSiteUrl(extId string, siteUrl *string) *string {
 	if siteUrl == nil {
 		return new("ext_custom_source_" + extId)
 	}
-	if strings.HasPrefix(*siteUrl, "https://anilist.co") {
+	if strings.HasPrefix(*siteUrl, "https://media.co") {
 		return siteUrl
 	}
 	return new("ext_custom_source_" + extId + "|END|" + *siteUrl)
@@ -206,28 +206,28 @@ func GetCustomSourceExtensionIdFromSiteUrl(siteUrl *string) (string, bool) {
 
 func NormalizeMedia(extensionIdentifier int, extId string, obj interface{}) {
 	switch v := obj.(type) {
-	case *anilist.BaseAnime:
+	case *media.Anime:
 		v.ID = GenerateMediaId(extensionIdentifier, v.ID)
 		v.SiteURL = formatSiteUrl(extId, v.SiteURL)
 		if v.Title != nil && v.Title.UserPreferred == nil && v.Title.English != nil {
 			v.Title.UserPreferred = v.Title.English
 		}
 		if v.Title == nil {
-			v.Title = &anilist.BaseAnime_Title{
+			v.Title = &media.Anime_Title{
 				UserPreferred: new("???"),
 				English:       new("???"),
 				Romaji:        nil,
 				Native:        nil,
 			}
 		}
-	case *anilist.CompleteAnime:
+	case *media.CompleteAnime:
 		v.ID = GenerateMediaId(extensionIdentifier, v.ID)
 		v.SiteURL = formatSiteUrl(extId, v.SiteURL)
 		if v.Title != nil && v.Title.UserPreferred == nil && v.Title.English != nil {
 			v.Title.UserPreferred = v.Title.English
 		}
 		if v.Title == nil {
-			v.Title = &anilist.CompleteAnime_Title{
+			v.Title = &media.CompleteAnime_Title{
 				UserPreferred: new("???"),
 				English:       new("???"),
 				Romaji:        nil,
@@ -238,35 +238,35 @@ func NormalizeMedia(extensionIdentifier int, extId string, obj interface{}) {
 			for _, edge := range v.Relations.Edges {
 				if edge.Node != nil {
 					// don't normalize if media comes from anilist
-					if edge.Node.SiteURL != nil && strings.HasPrefix(*edge.Node.SiteURL, "https://anilist.co") {
+					if edge.Node.SiteURL != nil && strings.HasPrefix(*edge.Node.SiteURL, "https://media.co") {
 						continue
 					}
 					NormalizeMedia(extensionIdentifier, extId, edge.Node)
 				}
 			}
 		}
-	case *anilist.BaseManga:
+	case *media.Manga:
 		v.ID = GenerateMediaId(extensionIdentifier, v.ID)
 		v.SiteURL = formatSiteUrl(extId, v.SiteURL)
 		if v.Title != nil && v.Title.UserPreferred == nil {
 			v.Title.UserPreferred = v.Title.English
 		}
 		if v.Title == nil {
-			v.Title = &anilist.BaseManga_Title{
+			v.Title = &media.Manga_Title{
 				UserPreferred: new("???"),
 				English:       new("???"),
 				Romaji:        nil,
 				Native:        nil,
 			}
 		}
-	case *anilist.AnimeDetailsById_Media:
+	case *media.AnimeDetails:
 		v.ID = GenerateMediaId(extensionIdentifier, v.ID)
 		v.SiteURL = formatSiteUrl(extId, v.SiteURL)
 		if v.Relations != nil {
 			for _, edge := range v.Relations.Edges {
 				if edge.Node != nil {
 					// don't normalize if media comes from anilist
-					if edge.Node.SiteURL != nil && strings.HasPrefix(*edge.Node.SiteURL, "https://anilist.co") {
+					if edge.Node.SiteURL != nil && strings.HasPrefix(*edge.Node.SiteURL, "https://media.co") {
 						continue
 					}
 					NormalizeMedia(extensionIdentifier, extId, edge.Node)
@@ -277,21 +277,21 @@ func NormalizeMedia(extensionIdentifier int, extId string, obj interface{}) {
 			for _, edge := range v.Recommendations.Edges {
 				if edge.Node != nil && edge.Node.MediaRecommendation != nil {
 					// don't normalize if media comes from anilist
-					if edge.Node.MediaRecommendation.SiteURL != nil && strings.HasPrefix(*edge.Node.MediaRecommendation.SiteURL, "https://anilist.co") {
+					if edge.Node.MediaRecommendation.SiteURL != nil && strings.HasPrefix(*edge.Node.MediaRecommendation.SiteURL, "https://media.co") {
 						continue
 					}
 					NormalizeMedia(extensionIdentifier, extId, edge.Node.MediaRecommendation)
 				}
 			}
 		}
-	case *anilist.MangaDetailsById_Media:
+	case *media.MangaDetails:
 		v.ID = GenerateMediaId(extensionIdentifier, v.ID)
 		v.SiteURL = formatSiteUrl(extId, v.SiteURL)
 		if v.Relations != nil {
 			for _, edge := range v.Relations.Edges {
 				if edge.Node != nil {
 					// don't normalize if media comes from anilist
-					if edge.Node.SiteURL != nil && strings.HasPrefix(*edge.Node.SiteURL, "https://anilist.co") {
+					if edge.Node.SiteURL != nil && strings.HasPrefix(*edge.Node.SiteURL, "https://media.co") {
 						continue
 					}
 					NormalizeMedia(extensionIdentifier, extId, edge.Node)
@@ -302,7 +302,7 @@ func NormalizeMedia(extensionIdentifier int, extId string, obj interface{}) {
 			for _, edge := range v.Recommendations.Edges {
 				if edge.Node != nil && edge.Node.MediaRecommendation != nil {
 					// don't normalize if media comes from anilist
-					if edge.Node.MediaRecommendation.SiteURL != nil && strings.HasPrefix(*edge.Node.MediaRecommendation.SiteURL, "https://anilist.co") {
+					if edge.Node.MediaRecommendation.SiteURL != nil && strings.HasPrefix(*edge.Node.MediaRecommendation.SiteURL, "https://media.co") {
 						continue
 					}
 					NormalizeMedia(extensionIdentifier, extId, edge.Node.MediaRecommendation)
@@ -374,24 +374,24 @@ func (m *Manager) _saveCustomSourceEntries(extId string, collectionType string, 
 	return m.db.Gorm().Save(&lcN).Error
 }
 
-func (m *Manager) SaveCustomSourceAnimeEntries(extId string, input map[int]*anilist.AnimeListEntry) error {
+func (m *Manager) SaveCustomSourceAnimeEntries(extId string, input map[int]*media.AnimeListEntry) error {
 	return m._saveCustomSourceEntries(extId, AnimeType, input)
 }
 
-func (m *Manager) SaveCustomSourceMangaEntries(extId string, input map[int]*anilist.MangaListEntry) error {
+func (m *Manager) SaveCustomSourceMangaEntries(extId string, input map[int]*media.MangaListEntry) error {
 	return m._saveCustomSourceEntries(extId, MangaType, input)
 }
 
-func (m *Manager) GetCustomSourceAnimeEntries() (map[string]map[int]*anilist.AnimeListEntry, bool) {
+func (m *Manager) GetCustomSourceAnimeEntries() (map[string]map[int]*media.AnimeListEntry, bool) {
 	lc, ok := m._getAllCustomSourceEntries(AnimeType)
 	if !ok {
 		return nil, false
 	}
 
-	extEntries := make(map[string]map[int]*anilist.AnimeListEntry)
+	extEntries := make(map[string]map[int]*media.AnimeListEntry)
 
 	for _, source := range lc {
-		var entries map[int]*anilist.AnimeListEntry
+		var entries map[int]*media.AnimeListEntry
 		err := json.Unmarshal(source.Value, &entries)
 		if err != nil {
 			continue
@@ -405,7 +405,7 @@ func (m *Manager) GetCustomSourceAnimeEntries() (map[string]map[int]*anilist.Ani
 		}
 
 		// Refresh media data from the extension
-		refreshedEntries := make(map[int]*anilist.AnimeListEntry)
+		refreshedEntries := make(map[int]*media.AnimeListEntry)
 		localIds := make([]int, 0, len(entries))
 		for localId := range entries {
 			localIds = append(localIds, localId)
@@ -413,10 +413,10 @@ func (m *Manager) GetCustomSourceAnimeEntries() (map[string]map[int]*anilist.Ani
 
 		if len(localIds) > 0 {
 			// Fetch fresh media data from the extension
-			media, err := customSource.GetProvider().GetAnime(context.Background(), localIds)
+			fetchedAnime, err := customSource.GetProvider().GetAnime(context.Background(), localIds)
 			if err == nil {
-				mediaMap := make(map[int]*anilist.BaseAnime)
-				for _, m := range media {
+				mediaMap := make(map[int]*media.Anime)
+				for _, m := range fetchedAnime {
 					mediaMap[m.ID] = m
 				}
 
@@ -440,16 +440,16 @@ func (m *Manager) GetCustomSourceAnimeEntries() (map[string]map[int]*anilist.Ani
 	return extEntries, true
 }
 
-func (m *Manager) GetCustomSourceMangaCollection() (map[string]map[int]*anilist.MangaListEntry, bool) {
+func (m *Manager) GetCustomSourceMangaCollection() (map[string]map[int]*media.MangaListEntry, bool) {
 	lc, ok := m._getAllCustomSourceEntries(MangaType)
 	if !ok {
 		return nil, false
 	}
 
-	extEntries := make(map[string]map[int]*anilist.MangaListEntry)
+	extEntries := make(map[string]map[int]*media.MangaListEntry)
 
 	for _, source := range lc {
-		var entries map[int]*anilist.MangaListEntry
+		var entries map[int]*media.MangaListEntry
 		err := json.Unmarshal(source.Value, &entries)
 		if err != nil {
 			continue
@@ -463,7 +463,7 @@ func (m *Manager) GetCustomSourceMangaCollection() (map[string]map[int]*anilist.
 		}
 
 		// Refresh media data from the extension
-		refreshedEntries := make(map[int]*anilist.MangaListEntry)
+		refreshedEntries := make(map[int]*media.MangaListEntry)
 		localIds := make([]int, 0, len(entries))
 		for localId := range entries {
 			localIds = append(localIds, localId)
@@ -471,10 +471,10 @@ func (m *Manager) GetCustomSourceMangaCollection() (map[string]map[int]*anilist.
 
 		if len(localIds) > 0 {
 			// Fetch fresh media data from the extension
-			media, err := customSource.GetProvider().GetManga(context.Background(), localIds)
+			fetchedManga, err := customSource.GetProvider().GetManga(context.Background(), localIds)
 			if err == nil {
-				mediaMap := make(map[int]*anilist.BaseManga)
-				for _, m := range media {
+				mediaMap := make(map[int]*media.Manga)
+				for _, m := range fetchedManga {
 					mediaMap[m.ID] = m
 				}
 
@@ -503,7 +503,7 @@ func (m *Manager) GetCustomSourceMangaCollection() (map[string]map[int]*anilist.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // UpdateEntry handles updating a custom source entry
-func (m *Manager) UpdateEntry(ctx context.Context, mediaID int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput) error {
+func (m *Manager) UpdateEntry(ctx context.Context, mediaID int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
 	customSource, localId, isCustom, extensionExists := m.GetProviderFromId(mediaID)
 	if !extensionExists || !isCustom {
 		return errors.New("custom source extension not found for media ID")
@@ -528,14 +528,14 @@ func (m *Manager) UpdateEntry(ctx context.Context, mediaID int, status *anilist.
 					entry.Progress = progress
 				}
 				if startedAt != nil {
-					entry.StartedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
+					entry.StartedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
 						Year:  startedAt.Year,
 						Month: startedAt.Month,
 						Day:   startedAt.Day,
 					}
 				}
 				if completedAt != nil {
-					entry.CompletedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
+					entry.CompletedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
 						Year:  completedAt.Year,
 						Month: completedAt.Month,
 						Day:   completedAt.Day,
@@ -564,14 +564,14 @@ func (m *Manager) UpdateEntry(ctx context.Context, mediaID int, status *anilist.
 					entry.Progress = progress
 				}
 				if startedAt != nil {
-					entry.StartedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
+					entry.StartedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
 						Year:  startedAt.Year,
 						Month: startedAt.Month,
 						Day:   startedAt.Day,
 					}
 				}
 				if completedAt != nil {
-					entry.CompletedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
+					entry.CompletedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
 						Year:  completedAt.Year,
 						Month: completedAt.Month,
 						Day:   completedAt.Day,
@@ -586,34 +586,34 @@ func (m *Manager) UpdateEntry(ctx context.Context, mediaID int, status *anilist.
 
 	// Entry doesn't exist, create it
 	// Determine if it's anime or manga by trying to get the media
-	media, err := customSource.GetProvider().GetAnime(ctx, []int{localId})
-	if err == nil && len(media) > 0 {
+	fetchedAnime, err := customSource.GetProvider().GetAnime(ctx, []int{localId})
+	if err == nil && len(fetchedAnime) > 0 {
 		// It's an anime, create entry
-		entries := make(map[int]*anilist.AnimeListEntry)
+		entries := make(map[int]*media.AnimeListEntry)
 		if hasAnime {
 			if existingEntries, exists := animeEntries[extId]; exists {
 				entries = existingEntries
 			}
 		}
 
-		newEntry := &anilist.AnimeListEntry{
+		newEntry := &media.AnimeListEntry{
 			ID:       localId,
 			Status:   status,
 			Progress: progress,
-			Media:    media[0],
+			Media:    fetchedAnime[0],
 		}
 		if scoreRaw != nil {
 			newEntry.Score = new(float64(*scoreRaw))
 		}
 		if startedAt != nil {
-			newEntry.StartedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
+			newEntry.StartedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
 				Year:  startedAt.Year,
 				Month: startedAt.Month,
 				Day:   startedAt.Day,
 			}
 		}
 		if completedAt != nil {
-			newEntry.CompletedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
+			newEntry.CompletedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
 				Year:  completedAt.Year,
 				Month: completedAt.Month,
 				Day:   completedAt.Day,
@@ -628,14 +628,14 @@ func (m *Manager) UpdateEntry(ctx context.Context, mediaID int, status *anilist.
 	mangaMedia, err := customSource.GetProvider().GetManga(ctx, []int{localId})
 	if err == nil && len(mangaMedia) > 0 {
 		// It's a manga, create entry
-		entries := make(map[int]*anilist.MangaListEntry)
+		entries := make(map[int]*media.MangaListEntry)
 		if hasManga {
 			if existingEntries, exists := mangaEntries[extId]; exists {
 				entries = existingEntries
 			}
 		}
 
-		newEntry := &anilist.MangaListEntry{
+		newEntry := &media.MangaListEntry{
 			Status:   status,
 			Progress: progress,
 			Media:    mangaMedia[0],
@@ -644,14 +644,14 @@ func (m *Manager) UpdateEntry(ctx context.Context, mediaID int, status *anilist.
 			newEntry.Score = new(float64(*scoreRaw))
 		}
 		if startedAt != nil {
-			newEntry.StartedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
+			newEntry.StartedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
 				Year:  startedAt.Year,
 				Month: startedAt.Month,
 				Day:   startedAt.Day,
 			}
 		}
 		if completedAt != nil {
-			newEntry.CompletedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
+			newEntry.CompletedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
 				Year:  completedAt.Year,
 				Month: completedAt.Month,
 				Day:   completedAt.Day,
@@ -667,9 +667,9 @@ func (m *Manager) UpdateEntry(ctx context.Context, mediaID int, status *anilist.
 
 // UpdateEntryProgress handles updating progress for a custom source entry
 func (m *Manager) UpdateEntryProgress(ctx context.Context, mediaID int, progress int, totalCount *int) error {
-	status := anilist.MediaListStatusCurrent
+	status := media.MediaListStatusCurrent
 	if totalCount != nil && *totalCount > 0 && progress >= *totalCount {
-		status = anilist.MediaListStatusCompleted
+		status = media.MediaListStatusCompleted
 	}
 
 	return m.UpdateEntry(ctx, mediaID, &status, nil, &progress, nil, nil)
@@ -748,7 +748,7 @@ func (m *Manager) DeleteEntry(_ context.Context, mediaID int, _ int) error {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // MergeAnimeEntries merges custom source anime entries into the anime collection
-func (m *Manager) MergeAnimeEntries(collection *anilist.AnimeCollection) {
+func (m *Manager) MergeAnimeEntries(collection *media.AnimeCollection) {
 	customEntries, ok := m.GetCustomSourceAnimeEntries()
 	if !ok {
 		return
@@ -773,7 +773,7 @@ func (m *Manager) MergeAnimeEntries(collection *anilist.AnimeCollection) {
 		}
 
 		// Group entries by status for collection lists
-		entriesByStatus := make(map[anilist.MediaListStatus][]*anilist.AnimeCollection_MediaListCollection_Lists_Entries)
+		entriesByStatus := make(map[media.MediaListStatus][]*media.AnimeCollection_MediaListCollection_Lists_Entries)
 
 		for localId, entry := range entries {
 			if entry == nil || entry.Media == nil {
@@ -787,7 +787,7 @@ func (m *Manager) MergeAnimeEntries(collection *anilist.AnimeCollection) {
 			NormalizeMedia(extIdentifier, extId, &mediaCopy)
 
 			// Create collection entry
-			collectionEntry := &anilist.AnimeCollection_MediaListCollection_Lists_Entries{
+			collectionEntry := &media.AnimeCollection_MediaListCollection_Lists_Entries{
 				ID:          mediaId,
 				Status:      entry.Status,
 				Score:       entry.Score,
@@ -799,7 +799,7 @@ func (m *Manager) MergeAnimeEntries(collection *anilist.AnimeCollection) {
 			}
 
 			// Default to planning if no status
-			status := anilist.MediaListStatusPlanning
+			status := media.MediaListStatusPlanning
 			if entry.Status != nil {
 				status = *entry.Status
 			}
@@ -810,7 +810,7 @@ func (m *Manager) MergeAnimeEntries(collection *anilist.AnimeCollection) {
 		// Add entries to appropriate lists in the collection
 		for status, statusEntries := range entriesByStatus {
 			// Find or create the list for this status
-			var targetList *anilist.AnimeCollection_MediaListCollection_Lists
+			var targetList *media.AnimeCollection_MediaListCollection_Lists
 			for _, list := range collection.MediaListCollection.Lists {
 				if list.Status != nil && *list.Status == status {
 					targetList = list
@@ -820,9 +820,9 @@ func (m *Manager) MergeAnimeEntries(collection *anilist.AnimeCollection) {
 
 			if targetList == nil {
 				// Create new list for this status
-				targetList = &anilist.AnimeCollection_MediaListCollection_Lists{
+				targetList = &media.AnimeCollection_MediaListCollection_Lists{
 					Status:  &status,
-					Entries: []*anilist.AnimeCollection_MediaListCollection_Lists_Entries{},
+					Entries: []*media.AnimeCollection_MediaListCollection_Lists_Entries{},
 				}
 				collection.MediaListCollection.Lists = append(collection.MediaListCollection.Lists, targetList)
 			}
@@ -834,7 +834,7 @@ func (m *Manager) MergeAnimeEntries(collection *anilist.AnimeCollection) {
 }
 
 // MergeMangaEntries merges custom source manga entries into the manga collection
-func (m *Manager) MergeMangaEntries(collection *anilist.MangaCollection) {
+func (m *Manager) MergeMangaEntries(collection *media.MangaCollection) {
 	customEntries, ok := m.GetCustomSourceMangaCollection()
 	if !ok {
 		return
@@ -859,7 +859,7 @@ func (m *Manager) MergeMangaEntries(collection *anilist.MangaCollection) {
 		}
 
 		// Group entries by status for collection lists
-		entriesByStatus := make(map[anilist.MediaListStatus][]*anilist.MangaCollection_MediaListCollection_Lists_Entries)
+		entriesByStatus := make(map[media.MediaListStatus][]*media.MangaCollection_MediaListCollection_Lists_Entries)
 
 		for localId, entry := range entries {
 			if entry == nil || entry.Media == nil {
@@ -873,7 +873,7 @@ func (m *Manager) MergeMangaEntries(collection *anilist.MangaCollection) {
 			NormalizeMedia(extIdentifier, extId, &mediaCopy)
 
 			// Create collection entry
-			collectionEntry := &anilist.MangaCollection_MediaListCollection_Lists_Entries{
+			collectionEntry := &media.MangaCollection_MediaListCollection_Lists_Entries{
 				ID:          mediaId,
 				Status:      entry.Status,
 				Score:       entry.Score,
@@ -885,7 +885,7 @@ func (m *Manager) MergeMangaEntries(collection *anilist.MangaCollection) {
 			}
 
 			// Default to planning if no status
-			status := anilist.MediaListStatusPlanning
+			status := media.MediaListStatusPlanning
 			if entry.Status != nil {
 				status = *entry.Status
 			}
@@ -896,7 +896,7 @@ func (m *Manager) MergeMangaEntries(collection *anilist.MangaCollection) {
 		// Add entries to appropriate lists in the collection
 		for status, statusEntries := range entriesByStatus {
 			// Find or create the list for this status
-			var targetList *anilist.MangaCollection_MediaListCollection_Lists
+			var targetList *media.MangaCollection_MediaListCollection_Lists
 			for _, list := range collection.MediaListCollection.Lists {
 				if list.Status != nil && *list.Status == status {
 					targetList = list
@@ -906,9 +906,9 @@ func (m *Manager) MergeMangaEntries(collection *anilist.MangaCollection) {
 
 			if targetList == nil {
 				// Create new list for this status
-				targetList = &anilist.MangaCollection_MediaListCollection_Lists{
+				targetList = &media.MangaCollection_MediaListCollection_Lists{
 					Status:  &status,
-					Entries: []*anilist.MangaCollection_MediaListCollection_Lists_Entries{},
+					Entries: []*media.MangaCollection_MediaListCollection_Lists_Entries{},
 				}
 				collection.MediaListCollection.Lists = append(collection.MediaListCollection.Lists, targetList)
 			}

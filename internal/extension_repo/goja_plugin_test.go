@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/continuity"
 	"seanime/internal/events"
@@ -14,9 +13,10 @@ import (
 	"seanime/internal/hook"
 	"seanime/internal/library/fillermanager"
 	"seanime/internal/library/playbackmanager"
+	"seanime/internal/media"
 	"seanime/internal/mediaplayers/mediaplayer"
 	"seanime/internal/mediaplayers/mpv"
-	"seanime/internal/platforms/anilist_platform"
+	"seanime/internal/testmocks"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/plugin"
 	plugin_ui "seanime/internal/plugin/ui"
@@ -75,7 +75,7 @@ func DefaultTestPluginOptions() TestPluginOptions {
 }
 
 // InitTestPlugin initializes a test plugin with the given options
-func InitTestPlugin(t testing.TB, opts TestPluginOptions) (*GojaPlugin, *zerolog.Logger, *goja_runtime.Manager, *anilist_platform.AnilistPlatform, events.WSEventManagerInterface, error) {
+func InitTestPlugin(t testing.TB, opts TestPluginOptions) (*GojaPlugin, *zerolog.Logger, *goja_runtime.Manager, platform.Platform, events.WSEventManagerInterface, error) {
 	env := testutil.NewTestEnv(t)
 	if opts.SetupHooks {
 		env = testutil.NewTestEnv(t, testutil.Anilist())
@@ -100,10 +100,9 @@ func InitTestPlugin(t testing.TB, opts TestPluginOptions) (*GojaPlugin, *zerolog
 	logger := util.NewLogger()
 	database := env.MustNewDatabase(logger)
 	wsEventManager := events.NewMockWSEventManager(logger)
-	anilistClientRef := util.NewRef[anilist.AnilistClient](anilist.NewFixtureAnilistClient())
-	extensionBankRef := util.NewRef(extension.NewUnifiedBank())
-	anilistPlatform := anilist_platform.NewAnilistPlatform(anilistClientRef, extensionBankRef, logger, database).(*anilist_platform.AnilistPlatform)
-	anilistPlatformRef := util.NewRef[platform.Platform](anilistPlatform)
+	// Bangumi 锚点：测试基建改用 FakePlatform（原 AniList fixture client 已随包裁剪）。
+	fakePlatform := testmocks.NewFakePlatformBuilder().Build()
+	anilistPlatformRef := util.NewRef[platform.Platform](fakePlatform)
 
 	// Initialize hook manager if needed
 	if opts.SetupHooks {
@@ -122,7 +121,7 @@ func InitTestPlugin(t testing.TB, opts TestPluginOptions) (*GojaPlugin, *zerolog
 	})
 
 	p, _, err := NewGojaPlugin(ext, opts.Language, logger, manager, wsEventManager, func(_ string) {})
-	return p, logger, manager, anilistPlatform, wsEventManager, err
+	return p, logger, manager, fakePlatform, wsEventManager, err
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -868,9 +867,9 @@ func TestGojaPluginAnilistCustomQuery(t *testing.T) {
 	payload := `
 	function init() {
 		$ui.register((ctx) => {
-		const token = $database.anilist.getToken()
+		const token = $database.media.getToken()
 			try {
-				const res = $anilist.customQuery({ query:` + "`" + `
+				const res = $media.customQuery({ query:` + "`" + `
 					query GetOnePiece {
 						Media(id: 21) {
 							title {
@@ -926,7 +925,7 @@ func TestGojaPluginAnilistListAnime(t *testing.T) {
 		$ui.register((ctx) => {
 		
 		try {
-			const res = $anilist.listRecentAnime(1, 15, undefined, undefined, undefined)
+			const res = $media.listRecentAnime(1, 15, undefined, undefined, undefined)
 			console.log("res", res)
 		} catch (e) {
 			console.error("Error fetching anime list", e)
@@ -1158,7 +1157,7 @@ func TestGojaPluginStorage2(t *testing.T) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////s
 
-func getPlaybackManager(t *testing.T) (*playbackmanager.PlaybackManager, *anilist.AnimeCollection, error) {
+func getPlaybackManager(t *testing.T) (*playbackmanager.PlaybackManager, *media.AnimeCollection, error) {
 	env := testutil.NewTestEnv(t)
 
 	logger := util.NewLogger()
@@ -1169,10 +1168,8 @@ func getPlaybackManager(t *testing.T) (*playbackmanager.PlaybackManager, *anilis
 
 	filecacher, err := filecache.NewCacher(t.TempDir())
 	require.NoError(t, err)
-	anilistClient := anilist.NewTestAnilistClient()
-	anilistClientRef := util.NewRef(anilistClient)
-	anilistPlatform := anilist_platform.NewAnilistPlatform(anilistClientRef, util.NewRef(extension.NewUnifiedBank()), logger, database)
-	animeCollection, err := anilistPlatform.GetAnimeCollection(t.Context(), true)
+	fakePlatform := testmocks.NewFakePlatformBuilder().Build()
+	animeCollection, err := fakePlatform.GetAnimeCollection(t.Context(), true)
 	metadataProvider := metadata_provider.NewTestProvider(t, database)
 	require.NoError(t, err)
 	continuityManager := continuity.NewManager(&continuity.NewManagerOptions{
@@ -1180,7 +1177,7 @@ func getPlaybackManager(t *testing.T) (*playbackmanager.PlaybackManager, *anilis
 		Logger:     logger,
 		Database:   database,
 	})
-	anilistPlatformRef := util.NewRef[platform.Platform](anilistPlatform)
+	anilistPlatformRef := util.NewRef[platform.Platform](fakePlatform)
 	metadataProviderRef := util.NewRef(metadataProvider)
 
 	playbackManager := playbackmanager.New(&playbackmanager.NewPlaybackManagerOptions{

@@ -2,9 +2,9 @@ package anime
 
 import (
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/customsource"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/util/result"
 	"time"
 
@@ -39,12 +39,12 @@ func ClearScheduleCache() {
 	scheduleCache.Delete(0)
 }
 
-func GetScheduleItems(animeSchedule *anilist.AnimeAiringSchedule, animeCollection *anilist.AnimeCollection) []*ScheduleItem {
+func GetScheduleItems(animeSchedule *media.AnimeAiringSchedule, animeCollection *media.AnimeCollection) []*ScheduleItem {
 	if animeSchedule == nil || animeCollection == nil || animeCollection.MediaListCollection == nil {
 		return []*ScheduleItem{}
 	}
 
-	animeEntryMap := make(map[int]*anilist.AnimeListEntry)
+	animeEntryMap := make(map[int]*media.AnimeListEntry)
 	for _, list := range animeCollection.MediaListCollection.GetLists() {
 		for _, entry := range list.GetEntries() {
 			if customsource.IsExtensionId(entry.Media.GetID()) {
@@ -60,11 +60,12 @@ func GetScheduleItems(animeSchedule *anilist.AnimeAiringSchedule, animeCollectio
 		GetEpisode() int
 	}
 
+	// Bangumi 锚点：media 包将放送表分页包装合并为单对象（schedulePage.GetMedia() 返回单个 *AnimeSchedule）。
 	type animeScheduleMedia interface {
-		GetMedia() []*anilist.AnimeSchedule
+		GetMedia() *media.AnimeSchedule
 	}
 
-	formatNodeItem := func(node animeScheduleNode, entry *anilist.AnimeListEntry) *ScheduleItem {
+	formatNodeItem := func(node animeScheduleNode, entry *media.AnimeListEntry) *ScheduleItem {
 		t := time.Unix(int64(node.GetAiringAt()), 0)
 		item := &ScheduleItem{
 			MediaId:        entry.GetMedia().GetID(),
@@ -87,10 +88,10 @@ func GetScheduleItems(animeSchedule *anilist.AnimeAiringSchedule, animeCollectio
 			return nil, false
 		}
 		ret := make([]*ScheduleItem, 0)
-		for _, m := range m.GetMedia() {
+		if m := m.GetMedia(); m != nil {
 			entry, ok := animeEntryMap[m.GetID()]
-			if !ok || entry.Status == nil || *entry.Status == anilist.MediaListStatusDropped {
-				continue
+			if !ok || entry.Status == nil || *entry.Status == media.MediaListStatusDropped {
+				return ret, false
 			}
 			for _, n := range m.GetPrevious().GetNodes() {
 				ret = append(ret, formatNodeItem(n, entry))

@@ -3,11 +3,11 @@ package manga
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/models"
 	"seanime/internal/events"
 	"seanime/internal/extension"
 	hibikemanga "seanime/internal/extension/hibike/manga"
+	"seanime/internal/media"
 	"seanime/internal/testmocks"
 	"seanime/internal/testutil"
 	"testing"
@@ -46,9 +46,9 @@ func TestChooseMangaSourceRefreshCandidate(t *testing.T) {
 
 func TestBuildMangaSourceRefreshPhases(t *testing.T) {
 	collection := newMangaSourceRefreshCollection(
-		newMangaSourceRefreshEntry(1, anilist.MediaListStatusCurrent),
-		newMangaSourceRefreshEntry(2, anilist.MediaListStatusRepeating),
-		newMangaSourceRefreshEntry(3, anilist.MediaListStatusCompleted),
+		newMangaSourceRefreshEntry(1, media.MediaListStatusCurrent),
+		newMangaSourceRefreshEntry(2, media.MediaListStatusRepeating),
+		newMangaSourceRefreshEntry(3, media.MediaListStatusCompleted),
 	)
 	preferences := &MangaPreferences{Entries: map[int]MangaEntryPreference{
 		1: {Provider: "provider-a"},
@@ -104,7 +104,7 @@ func TestMangaSourceRefreshFindsAndPersistsProvider(t *testing.T) {
 	require.NoError(t, repository.fileCacher.Set(otherPageBucket, "page", "keep"))
 
 	job, err := repository.StartMangaSourceRefresh("client-1", MangaSourceRefreshMissing,
-		newMangaSourceRefreshCollection(newMangaSourceRefreshEntry(1, anilist.MediaListStatusCurrent)))
+		newMangaSourceRefreshCollection(newMangaSourceRefreshEntry(1, media.MediaListStatusCurrent)))
 	require.NoError(t, err)
 	require.Equal(t, 1, job.Total)
 
@@ -182,7 +182,7 @@ func TestMangaSourceRefreshOnlyReplacesDuringReevaluation(t *testing.T) {
 		},
 	}, false)
 	require.NoError(t, err)
-	collection := newMangaSourceRefreshCollection(newMangaSourceRefreshEntry(77, anilist.MediaListStatusCurrent))
+	collection := newMangaSourceRefreshCollection(newMangaSourceRefreshEntry(77, media.MediaListStatusCurrent))
 
 	_, err = repository.StartMangaSourceRefresh("client-1", MangaSourceRefreshSelected, collection)
 	require.NoError(t, err)
@@ -321,16 +321,16 @@ func TestMangaSourceRefreshErrorCategories(t *testing.T) {
 	require.True(t, isSourceRefreshProviderError(errors.Join(ErrNoChapters, errors.New("provider failed"))))
 }
 
-func newMangaSourceRefreshEntry(mediaId int, status anilist.MediaListStatus) *anilist.MangaListEntry {
-	return &anilist.MangaListEntry{
+func newMangaSourceRefreshEntry(mediaId int, status media.MediaListStatus) *media.MangaListEntry {
+	return &media.MangaListEntry{
 		Media:  testmocks.NewBaseManga(mediaId, "Manga"),
 		Status: new(status),
 	}
 }
 
-func newMangaSourceRefreshCollection(entries ...*anilist.MangaListEntry) *anilist.MangaCollection {
-	return &anilist.MangaCollection{MediaListCollection: &anilist.MangaCollection_MediaListCollection{
-		Lists: []*anilist.MangaList{{Entries: entries}},
+func newMangaSourceRefreshCollection(entries ...*media.MangaListEntry) *media.MangaCollection {
+	return &media.MangaCollection{MediaListCollection: &media.MangaCollection_MediaListCollection{
+		Lists: []*media.MangaList{{Entries: entries}},
 	}}
 }
 

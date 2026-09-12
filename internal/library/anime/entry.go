@@ -3,10 +3,10 @@ package anime
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"sort"
@@ -20,7 +20,7 @@ type (
 	// It is the primary data structure used by the frontend.
 	Entry struct {
 		MediaId             int                `json:"mediaId"`
-		Media               *anilist.BaseAnime `json:"media"`
+		Media               *media.Anime       `json:"media"`
 		EntryListData       *EntryListData     `json:"listData"`
 		EntryLibraryData    *EntryLibraryData  `json:"libraryData"`
 		EntryDownloadInfo   *EntryDownloadInfo `json:"downloadInfo,omitempty"`
@@ -36,12 +36,12 @@ type (
 
 	// EntryListData holds the details of the AniList entry.
 	EntryListData struct {
-		Progress    int                      `json:"progress,omitempty"`
-		Score       float64                  `json:"score,omitempty"`
-		Status      *anilist.MediaListStatus `json:"status,omitempty"`
-		Repeat      int                      `json:"repeat,omitempty"`
-		StartedAt   string                   `json:"startedAt,omitempty"`
-		CompletedAt string                   `json:"completedAt,omitempty"`
+		Progress    int                    `json:"progress,omitempty"`
+		Score       float64                `json:"score,omitempty"`
+		Status      *media.MediaListStatus `json:"status,omitempty"`
+		Repeat      int                    `json:"repeat,omitempty"`
+		StartedAt   string                 `json:"startedAt,omitempty"`
+		CompletedAt string                 `json:"completedAt,omitempty"`
 	}
 )
 
@@ -50,7 +50,7 @@ type (
 	NewEntryOptions struct {
 		MediaId             int
 		LocalFiles          []*LocalFile // All local files
-		AnimeCollection     *anilist.AnimeCollection
+		AnimeCollection     *media.AnimeCollection
 		PlatformRef         *util.Ref[platform.Platform]
 		MetadataProviderRef *util.Ref[metadata_provider.Provider]
 		IsSimulated         bool // If the account is simulated
@@ -121,7 +121,7 @@ func NewEntry(ctx context.Context, opts *NewEntryOptions) (*Entry, error) {
 	// If the Anilist List entry does not exist, fetch the media from AniList
 	if !found {
 		// If the Anilist entry does not exist, instantiate one with zero values
-		anilistEntry = &anilist.AnimeListEntry{}
+		anilistEntry = &media.AnimeListEntry{}
 
 		// Fetch the media
 		fetchedMedia, err := opts.PlatformRef.Get().GetAnime(ctx, opts.MediaId) // DEVNOTE: Maybe cache it?
@@ -247,7 +247,7 @@ func NewEntry(ctx context.Context, opts *NewEntryOptions) (*Entry, error) {
 // hydrateEntryEpisodeData
 // Metadata, Media and LocalFiles should be defined
 func (e *Entry) hydrateEntryEpisodeData(
-	anilistEntry *anilist.AnimeListEntry,
+	anilistEntry *media.AnimeListEntry,
 	animeMetadata *metadata.AnimeMetadata,
 	metadataProviderRef *util.Ref[metadata_provider.Provider],
 ) {
@@ -325,14 +325,14 @@ func (e *Entry) hydrateEntryEpisodeData(
 
 }
 
-func NewEntryListData(anilistEntry *anilist.AnimeListEntry) *EntryListData {
+func NewEntryListData(anilistEntry *media.AnimeListEntry) *EntryListData {
 	return &EntryListData{
 		Progress:    anilistEntry.GetProgressSafe(),
 		Score:       anilistEntry.GetScoreSafe(),
 		Status:      anilistEntry.Status,
 		Repeat:      anilistEntry.GetRepeatSafe(),
-		StartedAt:   anilist.FuzzyDateToString(anilistEntry.StartedAt),
-		CompletedAt: anilist.FuzzyDateToString(anilistEntry.CompletedAt),
+		StartedAt:   media.FuzzyDateToString(anilistEntry.StartedAt),
+		CompletedAt: media.FuzzyDateToString(anilistEntry.CompletedAt),
 	}
 }
 
@@ -352,7 +352,7 @@ const (
 // It returns DiscrepancyAniListCountsSpecials if there is a discrepancy between the AniList and AniDB episode counts and specials are included in the AniList count.
 // It returns DiscrepancyAniDBHasMore if the AniDB episode count is greater than the AniList episode count.
 // It returns DiscrepancyNone if there is no discrepancy.
-func FindDiscrepancy(media *anilist.BaseAnime, animeMetadata *metadata.AnimeMetadata) Discrepancy {
+func FindDiscrepancy(media *media.Anime, animeMetadata *metadata.AnimeMetadata) Discrepancy {
 	if media == nil || animeMetadata == nil || animeMetadata.Episodes == nil {
 		return DiscrepancyNone
 	}

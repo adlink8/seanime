@@ -1,8 +1,8 @@
 package local
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/customsource"
+	"seanime/internal/media"
 
 	"github.com/goccy/go-json"
 )
@@ -116,33 +116,33 @@ func (ldb *Database) GetMangaSnapshots() ([]*MangaSnapshot, bool) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-func (ldb *Database) SaveAnimeCollection(ac *anilist.AnimeCollection) error {
+func (ldb *Database) SaveAnimeCollection(ac *media.AnimeCollection) error {
 	return ldb._saveLocalCollection(AnimeType, ac)
 }
 
-func (ldb *Database) SaveMangaCollection(mc *anilist.MangaCollection) error {
+func (ldb *Database) SaveMangaCollection(mc *media.MangaCollection) error {
 	return ldb._saveLocalCollection(MangaType, mc)
 }
 
-func (ldb *Database) GetLocalAnimeCollection() (*anilist.AnimeCollection, bool) {
+func (ldb *Database) GetLocalAnimeCollection() (*media.AnimeCollection, bool) {
 	lc, ok := ldb._getLocalCollection(AnimeType)
 	if !ok {
 		return nil, false
 	}
 
-	var ac anilist.AnimeCollection
+	var ac media.AnimeCollection
 	err := json.Unmarshal(lc.Value, &ac)
 
 	return &ac, err == nil
 }
 
-func (ldb *Database) GetLocalMangaCollection() (*anilist.MangaCollection, bool) {
+func (ldb *Database) GetLocalMangaCollection() (*media.MangaCollection, bool) {
 	lc, ok := ldb._getLocalCollection(MangaType)
 	if !ok {
 		return nil, false
 	}
 
-	var mc anilist.MangaCollection
+	var mc media.MangaCollection
 	err := json.Unmarshal(lc.Value, &mc)
 
 	return &mc, err == nil
@@ -183,15 +183,15 @@ func (ldb *Database) _saveLocalCollection(collectionType string, value interface
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // filterOutCustomSourceAnime creates a copy of the collection without custom source entries
-func (ldb *Database) filterOutCustomSourceAnime(ac *anilist.AnimeCollection) *anilist.AnimeCollection {
+func (ldb *Database) filterOutCustomSourceAnime(ac *media.AnimeCollection) *media.AnimeCollection {
 	if ac == nil || ac.MediaListCollection == nil {
 		return ac
 	}
 
 	// Create a deep copy
-	filtered := &anilist.AnimeCollection{
-		MediaListCollection: &anilist.AnimeCollection_MediaListCollection{
-			Lists: make([]*anilist.AnimeCollection_MediaListCollection_Lists, 0),
+	filtered := &media.AnimeCollection{
+		MediaListCollection: &media.AnimeCollection_MediaListCollection{
+			Lists: make([]*media.AnimeCollection_MediaListCollection_Lists, 0),
 		},
 	}
 
@@ -201,9 +201,9 @@ func (ldb *Database) filterOutCustomSourceAnime(ac *anilist.AnimeCollection) *an
 			continue
 		}
 
-		filteredList := &anilist.AnimeCollection_MediaListCollection_Lists{
+		filteredList := &media.AnimeCollection_MediaListCollection_Lists{
 			Status:  list.Status,
-			Entries: make([]*anilist.AnimeCollection_MediaListCollection_Lists_Entries, 0),
+			Entries: make([]*media.AnimeCollection_MediaListCollection_Lists_Entries, 0),
 		}
 
 		for _, entry := range list.Entries {
@@ -229,15 +229,15 @@ func (ldb *Database) filterOutCustomSourceAnime(ac *anilist.AnimeCollection) *an
 }
 
 // filterOutCustomSourceManga creates a copy of the collection without custom source entries
-func (ldb *Database) filterOutCustomSourceManga(mc *anilist.MangaCollection) *anilist.MangaCollection {
+func (ldb *Database) filterOutCustomSourceManga(mc *media.MangaCollection) *media.MangaCollection {
 	if mc == nil || mc.MediaListCollection == nil {
 		return mc
 	}
 
 	// Create a deep copy
-	filtered := &anilist.MangaCollection{
-		MediaListCollection: &anilist.MangaCollection_MediaListCollection{
-			Lists: make([]*anilist.MangaCollection_MediaListCollection_Lists, 0),
+	filtered := &media.MangaCollection{
+		MediaListCollection: &media.MangaCollection_MediaListCollection{
+			Lists: make([]*media.MangaCollection_MediaListCollection_Lists, 0),
 		},
 	}
 
@@ -247,9 +247,9 @@ func (ldb *Database) filterOutCustomSourceManga(mc *anilist.MangaCollection) *an
 			continue
 		}
 
-		filteredList := &anilist.MangaCollection_MediaListCollection_Lists{
+		filteredList := &media.MangaCollection_MediaListCollection_Lists{
 			Status:  list.Status,
-			Entries: make([]*anilist.MangaCollection_MediaListCollection_Lists_Entries, 0),
+			Entries: make([]*media.MangaCollection_MediaListCollection_Lists_Entries, 0),
 		}
 
 		for _, entry := range list.Entries {
@@ -302,37 +302,37 @@ func (ldb *Database) _saveSimulatedCollection(collectionType string, value inter
 	return ldb.gormdb.Save(&lcN).Error
 }
 
-func (ldb *Database) SaveSimulatedAnimeCollection(ac *anilist.AnimeCollection) error {
+func (ldb *Database) SaveSimulatedAnimeCollection(ac *media.AnimeCollection) error {
 	// Filter out custom sources
 	filtered := ldb.filterOutCustomSourceAnime(ac)
 	return ldb._saveSimulatedCollection(AnimeType, filtered)
 }
 
-func (ldb *Database) SaveSimulatedMangaCollection(mc *anilist.MangaCollection) error {
+func (ldb *Database) SaveSimulatedMangaCollection(mc *media.MangaCollection) error {
 	// Filter out custom sources
 	filtered := ldb.filterOutCustomSourceManga(mc)
 	return ldb._saveSimulatedCollection(MangaType, filtered)
 }
 
-func (ldb *Database) GetSimulatedAnimeCollection() (*anilist.AnimeCollection, bool) {
+func (ldb *Database) GetSimulatedAnimeCollection() (*media.AnimeCollection, bool) {
 	lc, ok := ldb._getSimulatedCollection(AnimeType)
 	if !ok {
 		return nil, false
 	}
 
-	var ac anilist.AnimeCollection
+	var ac media.AnimeCollection
 	err := json.Unmarshal(lc.Value, &ac)
 
 	return &ac, err == nil
 }
 
-func (ldb *Database) GetSimulatedMangaCollection() (*anilist.MangaCollection, bool) {
+func (ldb *Database) GetSimulatedMangaCollection() (*media.MangaCollection, bool) {
 	lc, ok := ldb._getSimulatedCollection(MangaType)
 	if !ok {
 		return nil, false
 	}
 
-	var mc anilist.MangaCollection
+	var mc media.MangaCollection
 	err := json.Unmarshal(lc.Value, &mc)
 
 	return &mc, err == nil

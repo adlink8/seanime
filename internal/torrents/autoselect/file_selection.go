@@ -3,10 +3,10 @@ package autoselect
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/debrid/debrid"
 	"seanime/internal/extension"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
+	"seanime/internal/media"
 	torrentanalyzer "seanime/internal/torrents/analyzer"
 	"seanime/internal/util"
 	"strconv"
@@ -22,7 +22,7 @@ const (
 
 func (s *AutoSelect) selectFile(
 	ctx context.Context,
-	media *anilist.CompleteAnime,
+	media *media.CompleteAnime,
 	episodeNumber int,
 	torrents []*hibiketorrent.AnimeTorrent,
 	mode SelectionMode,
@@ -100,7 +100,7 @@ func (s *AutoSelect) selectFile(
 
 func (s *AutoSelect) selectFileFromTorrentClient(
 	ctx context.Context,
-	media *anilist.CompleteAnime,
+	media *media.CompleteAnime,
 	episodeNumber int,
 	t *hibiketorrent.AnimeTorrent,
 	providerExt extension.AnimeTorrentProviderExtension,
@@ -198,7 +198,7 @@ func (s *AutoSelect) selectFileFromTorrentClient(
 
 func (s *AutoSelect) selectFileFromDebrid(
 	ctx context.Context,
-	media *anilist.CompleteAnime,
+	media *media.CompleteAnime,
 	episodeNumber int,
 	t *hibiketorrent.AnimeTorrent,
 	providerExt extension.AnimeTorrentProviderExtension,

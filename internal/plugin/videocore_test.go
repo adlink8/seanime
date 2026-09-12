@@ -1,9 +1,9 @@
 package plugin
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/extension"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mediacore"
 	"seanime/internal/player"
 	gojautil "seanime/internal/util/goja"
@@ -370,9 +370,9 @@ func TestVideoCoreAllMethodsRegression(t *testing.T) {
 					Format: new("vtt"),
 				},
 			},
-			Media: &anilist.BaseAnime{
+			Media: &media.Anime{
 				ID: 42,
-				Title: &anilist.BaseAnime_Title{
+				Title: &media.Anime_Title{
 					Romaji: new("My Anime Title"),
 				},
 			},

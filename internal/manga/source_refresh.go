@@ -3,10 +3,10 @@ package manga
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/events"
 	"seanime/internal/extension"
 	manga_providers "seanime/internal/manga/providers"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"sort"
 	"sync"
@@ -91,7 +91,7 @@ type mangaSourceRefreshCompleted struct {
 }
 
 type mangaSourceRefreshPlan struct {
-	entry           *anilist.MangaListEntry
+	entry           *media.MangaListEntry
 	mediaId         int
 	title           string
 	currentProvider string
@@ -127,7 +127,7 @@ func IsMangaSourceRefreshModeValid(mode MangaSourceRefreshMode) bool {
 func (r *Repository) StartMangaSourceRefresh(
 	clientId string,
 	mode MangaSourceRefreshMode,
-	collection *anilist.MangaCollection,
+	collection *media.MangaCollection,
 	mediaIds ...int,
 ) (*MangaSourceRefreshJob, error) {
 	if !IsMangaSourceRefreshModeValid(mode) {
@@ -259,7 +259,7 @@ type mangaSourceRefreshPhase struct {
 }
 
 func buildMangaSourceRefreshPhases(
-	collection *anilist.MangaCollection,
+	collection *media.MangaCollection,
 	preferences *MangaPreferences,
 	providerIds []string,
 	mode MangaSourceRefreshMode,
@@ -311,7 +311,7 @@ func buildMangaSourceRefreshPhases(
 	}
 }
 
-func getRefreshableMangaEntries(collection *anilist.MangaCollection, mediaIds ...int) []*anilist.MangaListEntry {
+func getRefreshableMangaEntries(collection *media.MangaCollection, mediaIds ...int) []*media.MangaListEntry {
 	if collection == nil || collection.MediaListCollection == nil {
 		return nil
 	}
@@ -319,14 +319,14 @@ func getRefreshableMangaEntries(collection *anilist.MangaCollection, mediaIds ..
 	for _, mediaId := range mediaIds {
 		targets[mediaId] = struct{}{}
 	}
-	entries := make(map[int]*anilist.MangaListEntry)
+	entries := make(map[int]*media.MangaListEntry)
 	for _, list := range collection.MediaListCollection.Lists {
 		for _, entry := range list.GetEntries() {
 			if entry == nil || entry.GetMedia() == nil || entry.GetStatus() == nil {
 				continue
 			}
 			status := *entry.GetStatus()
-			if status != anilist.MediaListStatusCurrent && status != anilist.MediaListStatusRepeating {
+			if status != media.MediaListStatusCurrent && status != media.MediaListStatusRepeating {
 				continue
 			}
 			if len(targets) > 0 {
@@ -342,7 +342,7 @@ func getRefreshableMangaEntries(collection *anilist.MangaCollection, mediaIds ..
 		sortedMediaIds = append(sortedMediaIds, mediaId)
 	}
 	sort.Ints(sortedMediaIds)
-	ret := make([]*anilist.MangaListEntry, 0, len(sortedMediaIds))
+	ret := make([]*media.MangaListEntry, 0, len(sortedMediaIds))
 	for _, mediaId := range sortedMediaIds {
 		ret = append(ret, entries[mediaId])
 	}

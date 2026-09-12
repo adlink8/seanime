@@ -4,10 +4,10 @@ import (
 	"cmp"
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"seanime/internal/util/result"
@@ -39,7 +39,7 @@ type (
 type NewEpisodeCollectionOptions struct {
 	// AnimeMetadata can be nil, if not provided, it will be fetched from the metadata provider.
 	AnimeMetadata       *metadata.AnimeMetadata
-	Media               *anilist.BaseAnime
+	Media               *media.Anime
 	MetadataProviderRef *util.Ref[metadata_provider.Provider]
 	Logger              *zerolog.Logger
 }
@@ -117,7 +117,7 @@ func NewEpisodeCollection(opts NewEpisodeCollectionOptions) (ec *EpisodeCollecti
 		LocalFiles:          nil,
 		AnimeMetadata:       opts.AnimeMetadata,
 		Progress:            new(0), // Progress is 0 because we want the entire list
-		Status:              new(anilist.MediaListStatusCurrent),
+		Status:              new(media.MediaListStatusCurrent),
 		Media:               opts.Media,
 		MetadataProviderRef: opts.MetadataProviderRef,
 	})
@@ -197,8 +197,8 @@ func NewEpisodeCollection(opts NewEpisodeCollectionOptions) (ec *EpisodeCollecti
 
 type NewEpisodeCollectionFromLocalFilesOptions struct {
 	LocalFiles          []*LocalFile
-	Media               *anilist.BaseAnime
-	AnimeCollection     *anilist.AnimeCollection
+	Media               *media.Anime
+	AnimeCollection     *media.AnimeCollection
 	PlatformRef         *util.Ref[platform.Platform]
 	MetadataProviderRef *util.Ref[metadata_provider.Provider]
 	Logger              *zerolog.Logger

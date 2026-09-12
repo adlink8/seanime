@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/extension"
 	hibikemanga "seanime/internal/extension/hibike/manga"
 	"seanime/internal/hook"
 	chapter_downloader "seanime/internal/manga/downloader"
 	manga_providers "seanime/internal/manga/providers"
+	"seanime/internal/media"
 	"slices"
 
 	"github.com/goccy/go-json"
@@ -18,7 +18,7 @@ import (
 
 // GetDownloadedMangaChapterContainers retrieves downloaded chapter containers for a specific manga ID.
 // It filters the complete set of downloaded chapters to return only those matching the provided manga ID.
-func (r *Repository) GetDownloadedMangaChapterContainers(mId int, mangaCollection *anilist.MangaCollection) (ret []*ChapterContainer, err error) {
+func (r *Repository) GetDownloadedMangaChapterContainers(mId int, mangaCollection *media.MangaCollection) (ret []*ChapterContainer, err error) {
 
 	containers, err := r.GetDownloadedChapterContainers(mangaCollection)
 	if err != nil {
@@ -39,7 +39,7 @@ func (r *Repository) GetDownloadedMangaChapterContainers(mId int, mangaCollectio
 // and collects chapter details from file cache or provider API when necessary.
 //
 // Ideally, the provider API should never be called assuming the chapter details are cached.
-func (r *Repository) GetDownloadedChapterContainers(mangaCollection *anilist.MangaCollection) (ret []*ChapterContainer, err error) {
+func (r *Repository) GetDownloadedChapterContainers(mangaCollection *media.MangaCollection) (ret []*ChapterContainer, err error) {
 	ret = make([]*ChapterContainer, 0)
 
 	// Trigger hook event

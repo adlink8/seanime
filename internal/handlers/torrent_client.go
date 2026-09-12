@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/database/models"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/library/autodownloader"
+	"seanime/internal/media"
 	"seanime/internal/torrent_clients/torrent_client"
 	torrentrepo "seanime/internal/torrents/torrent"
 	"seanime/internal/util"
@@ -280,7 +280,7 @@ func (h *Handler) HandleTorrentClientDownload(c echo.Context) error {
 			Enabled bool  `json:"enabled"`
 			Indices []int `json:"indices"`
 		} `json:"deselect,omitempty"`
-		Media *anilist.BaseAnime `json:"media"`
+		Media *media.Anime `json:"media"`
 	}
 
 	var b body
@@ -327,7 +327,7 @@ func (h *Handler) HandleTorrentClientDownload(c echo.Context) error {
 		return h.RespondWithError(c, errors.New("could not contact torrent client, verify your settings or make sure it's running"))
 	}
 
-	var completeAnime *anilist.CompleteAnime
+	var completeAnime *media.CompleteAnime
 	var err error
 	completeAnime, err = h.App.AnilistPlatformRef.Get().GetAnimeWithRelations(c.Request().Context(), b.Media.ID)
 	if err != nil {

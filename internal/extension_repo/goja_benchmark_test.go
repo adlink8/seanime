@@ -39,10 +39,10 @@ package extension_repo
 //	opts := DefaultTestPluginOptions()
 //	opts.Payload = payload
 //
-//	_, _, manager, anilistPlatform, _, err := InitTestPlugin(t, opts)
+//	_, _, manager, platformImpl, _, err := InitTestPlugin(t, opts)
 //	require.NoError(t, err)
 //
-//	m, err := anilistPlatform.GetAnime(t.Context(), 178022)
+//	m, err := platformImpl.GetAnime(t.Context(), 178022)
 //	if err != nil {
 //		t.Fatalf("GetAnime returned error: %v", err)
 //	}
@@ -50,7 +50,7 @@ package extension_repo
 //	util.Spew(m.Title)
 //	util.Spew(m.Synonyms)
 //
-//	// m, err = anilistPlatform.GetAnime(177709)
+//	// m, err = platformImpl.GetAnime(177709)
 //	// if err != nil {
 //	// 	t.Fatalf("GetAnime returned error: %v", err)
 //	// }
@@ -93,10 +93,10 @@ package extension_repo
 //
 //	// Create a dummy anime event that we'll reuse
 //	title := "Test Anime"
-//	dummyEvent := &anilist_platform.GetAnimeEvent{
-//		Anime: &anilist.BaseAnime{
+//	dummyEvent := &platform.GetAnimeEvent{
+//		Anime: &media.Anime{
 //			ID: 1234,
-//			Title: &anilist.BaseAnime_Title{
+//			Title: &media.Anime_Title{
 //				English: &title,
 //			},
 //		},
@@ -134,10 +134,10 @@ package extension_repo
 //
 //	// Create a dummy anime event that we'll reuse
 //	title := "Test Anime"
-//	dummyEvent := &anilist_platform.GetAnimeEvent{
-//		Anime: &anilist.BaseAnime{
+//	dummyEvent := &platform.GetAnimeEvent{
+//		Anime: &media.Anime{
 //			ID: 1234,
-//			Title: &anilist.BaseAnime_Title{
+//			Title: &media.Anime_Title{
 //				English: &title,
 //			},
 //		},
@@ -174,10 +174,10 @@ package extension_repo
 //	require.NoError(b, err)
 //
 //	title := "Test Anime"
-//	event := &anilist_platform.GetAnimeEvent{
-//		Anime: &anilist.BaseAnime{
+//	event := &platform.GetAnimeEvent{
+//		Anime: &media.Anime{
 //			ID: 1234,
-//			Title: &anilist.BaseAnime_Title{
+//			Title: &media.Anime_Title{
 //				English: &title,
 //			},
 //		},
@@ -215,10 +215,10 @@ package extension_repo
 //	require.NoError(b, err)
 //
 //	title := "Test Anime"
-//	event := &anilist_platform.GetAnimeEvent{
-//		Anime: &anilist.BaseAnime{
+//	event := &platform.GetAnimeEvent{
+//		Anime: &media.Anime{
 //			ID: 1234,
-//			Title: &anilist.BaseAnime_Title{
+//			Title: &media.Anime_Title{
 //				English: &title,
 //			},
 //		},
@@ -240,10 +240,10 @@ package extension_repo
 //func BenchmarkBaselineNoHook(b *testing.B) {
 //	b.ReportAllocs()
 //	title := "Test Anime"
-//	dummyEvent := &anilist_platform.GetAnimeEvent{
-//		Anime: &anilist.BaseAnime{
+//	dummyEvent := &platform.GetAnimeEvent{
+//		Anime: &media.Anime{
 //			ID: 1234,
-//			Title: &anilist.BaseAnime_Title{
+//			Title: &media.Anime_Title{
 //				English: &title,
 //			},
 //		},
@@ -282,10 +282,10 @@ package extension_repo
 //	require.NoError(b, err)
 //
 //	title := "Test Anime"
-//	dummyEvent := &anilist_platform.GetAnimeEvent{
-//		Anime: &anilist.BaseAnime{
+//	dummyEvent := &platform.GetAnimeEvent{
+//		Anime: &media.Anime{
 //			ID: 1234,
-//			Title: &anilist.BaseAnime_Title{
+//			Title: &media.Anime_Title{
 //				English: &title,
 //			},
 //		},
@@ -328,10 +328,10 @@ package extension_repo
 //	require.NoError(b, err)
 //
 //	title := "Test Anime"
-//	dummyEvent := &anilist_platform.GetAnimeEvent{
-//		Anime: &anilist.BaseAnime{
+//	dummyEvent := &platform.GetAnimeEvent{
+//		Anime: &media.Anime{
 //			ID: 1234,
-//			Title: &anilist.BaseAnime_Title{
+//			Title: &media.Anime_Title{
 //				English: &title,
 //			},
 //		},
@@ -375,10 +375,10 @@ package extension_repo
 //	require.NoError(b, err)
 //
 //	title := "Test Anime"
-//	dummyEvent := &anilist_platform.GetAnimeEvent{
-//		Anime: &anilist.BaseAnime{
+//	dummyEvent := &platform.GetAnimeEvent{
+//		Anime: &media.Anime{
 //			ID: 1234,
-//			Title: &anilist.BaseAnime_Title{
+//			Title: &media.Anime_Title{
 //				English: &title,
 //			},
 //		},

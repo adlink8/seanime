@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/directstream"
 	"seanime/internal/extension"
+	"seanime/internal/media"
 	"seanime/internal/mediacore"
 	"seanime/internal/mkvparser"
 	"seanime/internal/player"
@@ -123,7 +123,7 @@ func (p *VideoCore) getDenshiClientId() string {
 	return ""
 }
 
-func (p *VideoCore) playStream(streamUrl string, anidbEpisode string, media *anilist.BaseAnime) goja.Value {
+func (p *VideoCore) playStream(streamUrl string, anidbEpisode string, media *media.Anime) goja.Value {
 	promise, resolve, reject := p.vm.NewPromise()
 
 	dsManager, ok := p.ctx.DirectStreamManager().Get()

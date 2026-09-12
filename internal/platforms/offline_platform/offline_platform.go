@@ -3,10 +3,10 @@ package offline_platform
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
+	"seanime/internal/api/bangumi"
 	"seanime/internal/local"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
-	"seanime/internal/util"
 
 	"github.com/rs/zerolog"
 )
@@ -21,18 +21,16 @@ var (
 )
 
 // OfflinePlatform used when offline.
-// It provides the same API as the anilist_platform.AnilistPlatform but some methods are no-op.
+// It provides the same API as the bangumi_platform.BangumiPlatform but some methods are no-op.
 type OfflinePlatform struct {
 	logger       *zerolog.Logger
 	localManager local.Manager
-	clientRef    *util.Ref[anilist.AnilistClient]
 }
 
-func NewOfflinePlatform(localManager local.Manager, clientRef *util.Ref[anilist.AnilistClient], logger *zerolog.Logger) (platform.Platform, error) {
+func NewOfflinePlatform(localManager local.Manager, logger *zerolog.Logger) (platform.Platform, error) {
 	ap := &OfflinePlatform{
 		logger:       logger,
 		localManager: localManager,
-		clientRef:    clientRef,
 	}
 
 	return ap, nil
@@ -44,10 +42,6 @@ func (lp *OfflinePlatform) SetUsername(username string) {
 	// no-op
 }
 
-func (lp *OfflinePlatform) SetAnilistClient(client anilist.AnilistClient) {
-	// no-op
-}
-
 func (lp *OfflinePlatform) Close() {
 	// no-op
 }
@@ -56,8 +50,8 @@ func (lp *OfflinePlatform) ClearCache() {
 	// no-op
 }
 
-func rearrangeAnimeCollectionLists(animeCollection *anilist.AnimeCollection) {
-	removedEntries := make([]*anilist.AnimeCollection_MediaListCollection_Lists_Entries, 0)
+func rearrangeAnimeCollectionLists(animeCollection *media.AnimeCollection) {
+	removedEntries := make([]*media.AnimeCollection_MediaListCollection_Lists_Entries, 0)
 	for _, list := range animeCollection.MediaListCollection.Lists {
 		if list.GetStatus() == nil || list.GetEntries() == nil {
 			continue
@@ -93,8 +87,8 @@ func rearrangeAnimeCollectionLists(animeCollection *anilist.AnimeCollection) {
 	}
 }
 
-func rearrangeMangaCollectionLists(mangaCollection *anilist.MangaCollection) {
-	removedEntries := make([]*anilist.MangaCollection_MediaListCollection_Lists_Entries, 0)
+func rearrangeMangaCollectionLists(mangaCollection *media.MangaCollection) {
+	removedEntries := make([]*media.MangaCollection_MediaListCollection_Lists_Entries, 0)
 	for _, list := range mangaCollection.MediaListCollection.Lists {
 		if list.GetStatus() == nil || list.GetEntries() == nil {
 			continue
@@ -132,7 +126,7 @@ func rearrangeMangaCollectionLists(mangaCollection *anilist.MangaCollection) {
 
 // UpdateEntry updates the entry for the given media ID.
 // It doesn't add the entry if it doesn't exist.
-func (lp *OfflinePlatform) UpdateEntry(ctx context.Context, mediaID int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput) error {
+func (lp *OfflinePlatform) UpdateEntry(ctx context.Context, mediaID int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
 	if lp.localManager.GetLocalAnimeCollection().IsPresent() {
 		animeCollection := lp.localManager.GetLocalAnimeCollection().MustGet()
 
@@ -151,14 +145,14 @@ func (lp *OfflinePlatform) UpdateEntry(ctx context.Context, mediaID int, status 
 						entry.Progress = progress
 					}
 					if startedAt != nil {
-						entry.StartedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
+						entry.StartedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_StartedAt{
 							Year:  startedAt.Year,
 							Month: startedAt.Month,
 							Day:   startedAt.Day,
 						}
 					}
 					if completedAt != nil {
-						entry.CompletedAt = &anilist.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
+						entry.CompletedAt = &media.AnimeCollection_MediaListCollection_Lists_Entries_CompletedAt{
 							Year:  completedAt.Year,
 							Month: completedAt.Month,
 							Day:   completedAt.Day,
@@ -193,14 +187,14 @@ func (lp *OfflinePlatform) UpdateEntry(ctx context.Context, mediaID int, status 
 						entry.Progress = progress
 					}
 					if startedAt != nil {
-						entry.StartedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
+						entry.StartedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_StartedAt{
 							Year:  startedAt.Year,
 							Month: startedAt.Month,
 							Day:   startedAt.Day,
 						}
 					}
 					if completedAt != nil {
-						entry.CompletedAt = &anilist.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
+						entry.CompletedAt = &media.MangaCollection_MediaListCollection_Lists_Entries_CompletedAt{
 							Year:  completedAt.Year,
 							Month: completedAt.Month,
 							Day:   completedAt.Day,
@@ -319,7 +313,7 @@ func (lp *OfflinePlatform) DeleteEntry(ctx context.Context, mediaID, entryId int
 	return ErrActionNotSupported
 }
 
-func (lp *OfflinePlatform) GetAnime(ctx context.Context, mediaID int) (*anilist.BaseAnime, error) {
+func (lp *OfflinePlatform) GetAnime(ctx context.Context, mediaID int) (*media.Anime, error) {
 	if lp.localManager.GetLocalAnimeCollection().IsPresent() {
 		animeCollection := lp.localManager.GetLocalAnimeCollection().MustGet()
 
@@ -336,7 +330,7 @@ func (lp *OfflinePlatform) GetAnime(ctx context.Context, mediaID int) (*anilist.
 	return nil, ErrMediaNotFound
 }
 
-func (lp *OfflinePlatform) GetAnimeByMalID(ctx context.Context, malID int) (*anilist.BaseAnime, error) {
+func (lp *OfflinePlatform) GetAnimeByMalID(ctx context.Context, malID int) (*media.Anime, error) {
 	if lp.localManager.GetLocalAnimeCollection().IsPresent() {
 		animeCollection := lp.localManager.GetLocalAnimeCollection().MustGet()
 
@@ -354,16 +348,16 @@ func (lp *OfflinePlatform) GetAnimeByMalID(ctx context.Context, malID int) (*ani
 }
 
 // GetAnimeDetails isn't supported for the local platform, always returns an empty struct.
-func (lp *OfflinePlatform) GetAnimeDetails(ctx context.Context, mediaID int) (*anilist.AnimeDetailsById_Media, error) {
-	return &anilist.AnimeDetailsById_Media{}, nil
+func (lp *OfflinePlatform) GetAnimeDetails(ctx context.Context, mediaID int) (*media.AnimeDetails, error) {
+	return &media.AnimeDetails{}, nil
 }
 
 // GetAnimeWithRelations isn't supported for the local platform, always returns an error.
-func (lp *OfflinePlatform) GetAnimeWithRelations(ctx context.Context, mediaID int) (*anilist.CompleteAnime, error) {
+func (lp *OfflinePlatform) GetAnimeWithRelations(ctx context.Context, mediaID int) (*media.CompleteAnime, error) {
 	return nil, ErrActionNotSupported
 }
 
-func (lp *OfflinePlatform) GetManga(ctx context.Context, mediaID int) (*anilist.BaseManga, error) {
+func (lp *OfflinePlatform) GetManga(ctx context.Context, mediaID int) (*media.Manga, error) {
 	if lp.localManager.GetLocalMangaCollection().IsPresent() {
 		mangaCollection := lp.localManager.GetLocalMangaCollection().MustGet()
 
@@ -381,11 +375,11 @@ func (lp *OfflinePlatform) GetManga(ctx context.Context, mediaID int) (*anilist.
 }
 
 // GetMangaDetails isn't supported for the local platform, always returns an empty struct.
-func (lp *OfflinePlatform) GetMangaDetails(ctx context.Context, mediaID int) (*anilist.MangaDetailsById_Media, error) {
-	return &anilist.MangaDetailsById_Media{}, nil
+func (lp *OfflinePlatform) GetMangaDetails(ctx context.Context, mediaID int) (*media.MangaDetails, error) {
+	return &media.MangaDetails{}, nil
 }
 
-func (lp *OfflinePlatform) GetAnimeCollection(ctx context.Context, bypassCache bool) (*anilist.AnimeCollection, error) {
+func (lp *OfflinePlatform) GetAnimeCollection(ctx context.Context, bypassCache bool) (*media.AnimeCollection, error) {
 	if lp.localManager.GetLocalAnimeCollection().IsPresent() {
 		return lp.localManager.GetLocalAnimeCollection().MustGet(), nil
 	} else {
@@ -393,7 +387,7 @@ func (lp *OfflinePlatform) GetAnimeCollection(ctx context.Context, bypassCache b
 	}
 }
 
-func (lp *OfflinePlatform) GetRawAnimeCollection(ctx context.Context, bypassCache bool) (*anilist.AnimeCollection, error) {
+func (lp *OfflinePlatform) GetRawAnimeCollection(ctx context.Context, bypassCache bool) (*media.AnimeCollection, error) {
 	if lp.localManager.GetLocalAnimeCollection().IsPresent() {
 		return lp.localManager.GetLocalAnimeCollection().MustGet(), nil
 	} else {
@@ -402,7 +396,7 @@ func (lp *OfflinePlatform) GetRawAnimeCollection(ctx context.Context, bypassCach
 }
 
 // RefreshAnimeCollection is a no-op, always returns the local anime collection.
-func (lp *OfflinePlatform) RefreshAnimeCollection(ctx context.Context) (*anilist.AnimeCollection, error) {
+func (lp *OfflinePlatform) RefreshAnimeCollection(ctx context.Context) (*media.AnimeCollection, error) {
 	animeCollection, ok := lp.localManager.GetLocalAnimeCollection().Get()
 	if !ok {
 		return nil, ErrNoLocalAnimeCollection
@@ -411,11 +405,11 @@ func (lp *OfflinePlatform) RefreshAnimeCollection(ctx context.Context) (*anilist
 	return animeCollection, nil
 }
 
-func (lp *OfflinePlatform) GetAnimeCollectionWithRelations(ctx context.Context) (*anilist.AnimeCollectionWithRelations, error) {
+func (lp *OfflinePlatform) GetAnimeCollectionWithRelations(ctx context.Context) (*media.AnimeCollectionWithRelations, error) {
 	return nil, ErrActionNotSupported
 }
 
-func (lp *OfflinePlatform) GetMangaCollection(ctx context.Context, bypassCache bool) (*anilist.MangaCollection, error) {
+func (lp *OfflinePlatform) GetMangaCollection(ctx context.Context, bypassCache bool) (*media.MangaCollection, error) {
 	if lp.localManager.GetLocalMangaCollection().IsPresent() {
 		return lp.localManager.GetLocalMangaCollection().MustGet(), nil
 	} else {
@@ -423,7 +417,7 @@ func (lp *OfflinePlatform) GetMangaCollection(ctx context.Context, bypassCache b
 	}
 }
 
-func (lp *OfflinePlatform) GetRawMangaCollection(ctx context.Context, bypassCache bool) (*anilist.MangaCollection, error) {
+func (lp *OfflinePlatform) GetRawMangaCollection(ctx context.Context, bypassCache bool) (*media.MangaCollection, error) {
 	if lp.localManager.GetLocalMangaCollection().IsPresent() {
 		return lp.localManager.GetLocalMangaCollection().MustGet(), nil
 	} else {
@@ -431,7 +425,7 @@ func (lp *OfflinePlatform) GetRawMangaCollection(ctx context.Context, bypassCach
 	}
 }
 
-func (lp *OfflinePlatform) RefreshMangaCollection(ctx context.Context) (*anilist.MangaCollection, error) {
+func (lp *OfflinePlatform) RefreshMangaCollection(ctx context.Context) (*media.MangaCollection, error) {
 	mangaCollection, ok := lp.localManager.GetLocalMangaCollection().Get()
 	if !ok {
 		return nil, ErrorNoLocalMangaCollection
@@ -446,18 +440,19 @@ func (lp *OfflinePlatform) AddMediaToCollection(ctx context.Context, mIds []int)
 }
 
 // GetStudioDetails isn't supported for the local platform, always returns an empty struct
-func (lp *OfflinePlatform) GetStudioDetails(ctx context.Context, studioID int) (*anilist.StudioDetails, error) {
-	return &anilist.StudioDetails{}, nil
+func (lp *OfflinePlatform) GetStudioDetails(ctx context.Context, studioID int) (*media.StudioDetails, error) {
+	return &media.StudioDetails{}, nil
 }
 
-func (lp *OfflinePlatform) GetAnilistClient() anilist.AnilistClient {
-	return lp.clientRef.Get()
+// GetBangumiClient 离线模式无 Bangumi 客户端，返回 nil。
+func (lp *OfflinePlatform) GetBangumiClient() *bangumi.Client {
+	return nil
 }
 
-func (lp *OfflinePlatform) GetViewerStats(ctx context.Context) (*anilist.ViewerStats, error) {
+func (lp *OfflinePlatform) GetViewerStats(ctx context.Context) (*media.ViewerStats, error) {
 	return nil, ErrActionNotSupported
 }
 
-func (lp *OfflinePlatform) GetAnimeAiringSchedule(ctx context.Context) (*anilist.AnimeAiringSchedule, error) {
+func (lp *OfflinePlatform) GetAnimeAiringSchedule(ctx context.Context) (*media.AnimeAiringSchedule, error) {
 	return nil, ErrActionNotSupported
 }

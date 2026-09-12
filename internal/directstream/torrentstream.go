@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mkvparser"
 	"seanime/internal/player"
 	"seanime/internal/util/result"
@@ -268,7 +268,7 @@ type PlayTorrentStreamOptions struct {
 	ClientId      string
 	EpisodeNumber int
 	AnidbEpisode  string
-	Media         *anilist.BaseAnime
+	Media         *media.Anime
 	Torrent       *torrent.Torrent
 	File          *torrent.File
 	DownloadDir   string

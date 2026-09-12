@@ -2,8 +2,8 @@ package hibikecustomsource
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
+	"seanime/internal/media"
 )
 
 // Custom sources allow users to add custom media, often things not available on AniList, to the app.
@@ -20,29 +20,29 @@ type (
 	}
 
 	ListAnimeResponse struct {
-		Media      []*anilist.BaseAnime `json:"media"`
-		Page       int                  `json:"page"`
-		TotalPages int                  `json:"totalPages"`
-		Total      int                  `json:"total"`
+		Media      []*media.Anime `json:"media"`
+		Page       int            `json:"page"`
+		TotalPages int            `json:"totalPages"`
+		Total      int            `json:"total"`
 	}
 
 	ListMangaResponse struct {
-		Media      []*anilist.BaseManga `json:"media"`
-		Page       int                  `json:"page"`
-		TotalPages int                  `json:"totalPages"`
-		Total      int                  `json:"total"`
+		Media      []*media.Manga `json:"media"`
+		Page       int            `json:"page"`
+		TotalPages int            `json:"totalPages"`
+		Total      int            `json:"total"`
 	}
 
 	Provider interface {
 		GetExtensionIdentifier() int
 		GetSettings() Settings
-		GetAnime(ctx context.Context, id []int) ([]*anilist.BaseAnime, error)
+		GetAnime(ctx context.Context, id []int) ([]*media.Anime, error)
 		ListAnime(ctx context.Context, search string, page int, perPage int) (*ListAnimeResponse, error)
-		GetAnimeWithRelations(ctx context.Context, id int) (*anilist.CompleteAnime, error)
+		GetAnimeWithRelations(ctx context.Context, id int) (*media.CompleteAnime, error)
 		GetAnimeMetadata(ctx context.Context, id int) (*metadata.AnimeMetadata, error)
-		GetAnimeDetails(ctx context.Context, id int) (*anilist.AnimeDetailsById_Media, error)
-		GetManga(ctx context.Context, id []int) ([]*anilist.BaseManga, error)
+		GetAnimeDetails(ctx context.Context, id int) (*media.AnimeDetails, error)
+		GetManga(ctx context.Context, id []int) ([]*media.Manga, error)
 		ListManga(ctx context.Context, search string, page int, perPage int) (*ListMangaResponse, error)
-		GetMangaDetails(ctx context.Context, id int) (*anilist.MangaDetailsById_Media, error)
+		GetMangaDetails(ctx context.Context, id int) (*media.MangaDetails, error)
 	}
 )

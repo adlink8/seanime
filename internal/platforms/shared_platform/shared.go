@@ -3,11 +3,11 @@ package shared_platform
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/customsource"
 	"seanime/internal/database/db"
 	"seanime/internal/extension"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"seanime/internal/util/result"
@@ -17,21 +17,26 @@ import (
 	"github.com/samber/lo"
 )
 
+// 换锚说明（Phase 2 Wave B）：PlatformHelper 的缓存与事件结构全部切换为
+// internal/media 镜像类型；customsource 已同步迁移至 media 类型。
+// 原 BuildAnimeAiringSchedule（依赖 AniList 逐集播出时间戳）被移除——
+// Bangumi 无对应数据，放送表由各平台层降级返回空结构。
+
 type PlatformHelper struct {
 	logger              *zerolog.Logger
 	customSourceManager *customsource.Manager
-	baseAnimeCache      *result.BoundedCache[int, *anilist.BaseAnime]
-	baseMangaCache      *result.BoundedCache[int, *anilist.BaseManga]
-	completeAnimeCache  *result.BoundedCache[int, *anilist.CompleteAnime]
+	baseAnimeCache      *result.BoundedCache[int, *media.Anime]
+	baseMangaCache      *result.BoundedCache[int, *media.Manga]
+	completeAnimeCache  *result.BoundedCache[int, *media.CompleteAnime]
 	extensionBankRef    *util.Ref[*extension.UnifiedBank]
 }
 
 func NewPlatformHelper(extensionBankRef *util.Ref[*extension.UnifiedBank], db *db.Database, logger *zerolog.Logger) *PlatformHelper {
 	helper := &PlatformHelper{
 		logger:              logger,
-		baseAnimeCache:      result.NewBoundedCache[int, *anilist.BaseAnime](50),
-		baseMangaCache:      result.NewBoundedCache[int, *anilist.BaseManga](50),
-		completeAnimeCache:  result.NewBoundedCache[int, *anilist.CompleteAnime](10),
+		baseAnimeCache:      result.NewBoundedCache[int, *media.Anime](50),
+		baseMangaCache:      result.NewBoundedCache[int, *media.Manga](50),
+		completeAnimeCache:  result.NewBoundedCache[int, *media.CompleteAnime](10),
 		extensionBankRef:    extensionBankRef,
 		customSourceManager: customsource.NewManager(extensionBankRef, db, logger),
 	}
@@ -59,7 +64,7 @@ func (h *PlatformHelper) GetCustomSourceManager() *customsource.Manager {
 // Custom Source
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (h *PlatformHelper) HandleCustomSourceAnime(ctx context.Context, mediaID int) (*anilist.BaseAnime, bool, error) {
+func (h *PlatformHelper) HandleCustomSourceAnime(ctx context.Context, mediaID int) (*media.Anime, bool, error) {
 	if h.customSourceManager == nil {
 		return nil, false, nil
 	}
@@ -83,7 +88,7 @@ func (h *PlatformHelper) HandleCustomSourceAnime(ctx context.Context, mediaID in
 	return nil, false, nil
 }
 
-func (h *PlatformHelper) HandleCustomSourceAnimeDetails(ctx context.Context, mediaID int) (*anilist.AnimeDetailsById_Media, bool, error) {
+func (h *PlatformHelper) HandleCustomSourceAnimeDetails(ctx context.Context, mediaID int) (*media.AnimeDetails, bool, error) {
 	if h.customSourceManager == nil {
 		return nil, false, nil
 	}
@@ -103,7 +108,7 @@ func (h *PlatformHelper) HandleCustomSourceAnimeDetails(ctx context.Context, med
 	return nil, false, nil
 }
 
-func (h *PlatformHelper) HandleCustomSourceAnimeWithRelations(ctx context.Context, mediaID int) (*anilist.CompleteAnime, bool, error) {
+func (h *PlatformHelper) HandleCustomSourceAnimeWithRelations(ctx context.Context, mediaID int) (*media.CompleteAnime, bool, error) {
 	if h.customSourceManager == nil {
 		return nil, false, nil
 	}
@@ -123,7 +128,7 @@ func (h *PlatformHelper) HandleCustomSourceAnimeWithRelations(ctx context.Contex
 	return nil, false, nil
 }
 
-func (h *PlatformHelper) HandleCustomSourceManga(ctx context.Context, mediaID int) (*anilist.BaseManga, bool, error) {
+func (h *PlatformHelper) HandleCustomSourceManga(ctx context.Context, mediaID int) (*media.Manga, bool, error) {
 	if h.customSourceManager == nil {
 		return nil, false, nil
 	}
@@ -147,7 +152,7 @@ func (h *PlatformHelper) HandleCustomSourceManga(ctx context.Context, mediaID in
 	return nil, false, nil
 }
 
-func (h *PlatformHelper) HandleCustomSourceMangaDetails(ctx context.Context, mediaID int) (*anilist.MangaDetailsById_Media, bool, error) {
+func (h *PlatformHelper) HandleCustomSourceMangaDetails(ctx context.Context, mediaID int) (*media.MangaDetails, bool, error) {
 	if h.customSourceManager == nil {
 		return nil, false, nil
 	}
@@ -171,27 +176,27 @@ func (h *PlatformHelper) HandleCustomSourceMangaDetails(ctx context.Context, med
 // Cache
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (h *PlatformHelper) GetCachedBaseAnime(mediaID int) (*anilist.BaseAnime, bool) {
+func (h *PlatformHelper) GetCachedBaseAnime(mediaID int) (*media.Anime, bool) {
 	return h.baseAnimeCache.Get(mediaID)
 }
 
-func (h *PlatformHelper) SetCachedBaseAnime(mediaID int, anime *anilist.BaseAnime) {
+func (h *PlatformHelper) SetCachedBaseAnime(mediaID int, anime *media.Anime) {
 	h.baseAnimeCache.SetT(mediaID, anime, time.Minute*30)
 }
 
-func (h *PlatformHelper) GetCachedBaseManga(mediaID int) (*anilist.BaseManga, bool) {
+func (h *PlatformHelper) GetCachedBaseManga(mediaID int) (*media.Manga, bool) {
 	return h.baseMangaCache.Get(mediaID)
 }
 
-func (h *PlatformHelper) SetCachedBaseManga(mediaID int, manga *anilist.BaseManga) {
+func (h *PlatformHelper) SetCachedBaseManga(mediaID int, manga *media.Manga) {
 	h.baseMangaCache.SetT(mediaID, manga, time.Minute*30)
 }
 
-func (h *PlatformHelper) GetCachedCompleteAnime(mediaID int) (*anilist.CompleteAnime, bool) {
+func (h *PlatformHelper) GetCachedCompleteAnime(mediaID int) (*media.CompleteAnime, bool) {
 	return h.completeAnimeCache.Get(mediaID)
 }
 
-func (h *PlatformHelper) SetCachedCompleteAnime(mediaID int, anime *anilist.CompleteAnime) {
+func (h *PlatformHelper) SetCachedCompleteAnime(mediaID int, anime *media.CompleteAnime) {
 	h.completeAnimeCache.SetT(mediaID, anime, 4*time.Hour)
 }
 
@@ -199,7 +204,7 @@ func (h *PlatformHelper) SetCachedCompleteAnime(mediaID int, anime *anilist.Comp
 // Hook Events
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (h *PlatformHelper) TriggerGetAnimeEvent(anime *anilist.BaseAnime) (*anilist.BaseAnime, error) {
+func (h *PlatformHelper) TriggerGetAnimeEvent(anime *media.Anime) (*media.Anime, error) {
 	event := new(platform.GetAnimeEvent)
 	event.Anime = anime
 	err := hook.GlobalHookManager.OnGetAnime().Trigger(event)
@@ -209,7 +214,7 @@ func (h *PlatformHelper) TriggerGetAnimeEvent(anime *anilist.BaseAnime) (*anilis
 	return event.Anime, nil
 }
 
-func (h *PlatformHelper) TriggerGetAnimeDetailsEvent(anime *anilist.AnimeDetailsById_Media) (*anilist.AnimeDetailsById_Media, error) {
+func (h *PlatformHelper) TriggerGetAnimeDetailsEvent(anime *media.AnimeDetails) (*media.AnimeDetails, error) {
 	event := new(platform.GetAnimeDetailsEvent)
 	event.Anime = anime
 	err := hook.GlobalHookManager.OnGetAnimeDetails().Trigger(event)
@@ -219,7 +224,7 @@ func (h *PlatformHelper) TriggerGetAnimeDetailsEvent(anime *anilist.AnimeDetails
 	return event.Anime, nil
 }
 
-func (h *PlatformHelper) TriggerGetMangaEvent(manga *anilist.BaseManga) (*anilist.BaseManga, error) {
+func (h *PlatformHelper) TriggerGetMangaEvent(manga *media.Manga) (*media.Manga, error) {
 	event := new(platform.GetMangaEvent)
 	event.Manga = manga
 	err := hook.GlobalHookManager.OnGetManga().Trigger(event)
@@ -229,7 +234,7 @@ func (h *PlatformHelper) TriggerGetMangaEvent(manga *anilist.BaseManga) (*anilis
 	return event.Manga, nil
 }
 
-func (h *PlatformHelper) TriggerGetStudioDetailsEvent(studio *anilist.StudioDetails) (*anilist.StudioDetails, error) {
+func (h *PlatformHelper) TriggerGetStudioDetailsEvent(studio *media.StudioDetails) (*media.StudioDetails, error) {
 	event := new(platform.GetStudioDetailsEvent)
 	event.Studio = studio
 	err := hook.GlobalHookManager.OnGetStudioDetails().Trigger(event)
@@ -243,118 +248,23 @@ func (h *PlatformHelper) TriggerGetStudioDetailsEvent(studio *anilist.StudioDeta
 // Custom Source
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (h *PlatformHelper) MergeCustomSourceAnimeEntries(collection *anilist.AnimeCollection) {
+func (h *PlatformHelper) MergeCustomSourceAnimeEntries(collection *media.AnimeCollection) {
 	if h.customSourceManager != nil {
 		h.customSourceManager.MergeAnimeEntries(collection)
 	}
 }
 
-func (h *PlatformHelper) MergeCustomSourceMangaEntries(collection *anilist.MangaCollection) {
+func (h *PlatformHelper) MergeCustomSourceMangaEntries(collection *media.MangaCollection) {
 	if h.customSourceManager != nil {
 		h.customSourceManager.MergeMangaEntries(collection)
 	}
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Anime Airing Schedule
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func (h *PlatformHelper) BuildAnimeAiringSchedule(ctx context.Context, collection *anilist.AnimeCollection, client anilist.AnilistClient) (*anilist.AnimeAiringSchedule, error) {
-	mediaIds := make([]*int, 0)
-	for _, list := range collection.MediaListCollection.Lists {
-		for _, entry := range list.Entries {
-			if customsource.IsExtensionId(entry.GetMedia().GetID()) {
-				continue
-			}
-			mediaIds = append(mediaIds, &[]int{entry.GetMedia().GetID()}[0])
-		}
-	}
-
-	var ret *anilist.AnimeAiringSchedule
-
-	now := time.Now()
-	currentSeason, currentSeasonYear := anilist.GetSeasonInfo(now, anilist.GetSeasonKindCurrent)
-	previousSeason, previousSeasonYear := anilist.GetSeasonInfo(now, anilist.GetSeasonKindPrevious)
-	nextSeason, nextSeasonYear := anilist.GetSeasonInfo(now, anilist.GetSeasonKindNext)
-
-	var err error
-	ret, err = client.AnimeAiringSchedule(ctx, mediaIds, &currentSeason, &currentSeasonYear, &previousSeason, &previousSeasonYear, &nextSeason, &nextSeasonYear)
-	if err != nil {
-		return nil, err
-	}
-
-	type animeScheduleMedia interface {
-		GetMedia() []*anilist.AnimeSchedule
-	}
-
-	foundIds := make(map[int]struct{})
-	addIds := func(n animeScheduleMedia) {
-		for _, m := range n.GetMedia() {
-			if m == nil {
-				continue
-			}
-			foundIds[m.GetID()] = struct{}{}
-		}
-	}
-	addIds(ret.GetOngoing())
-	addIds(ret.GetOngoingNext())
-	addIds(ret.GetPreceding())
-	addIds(ret.GetUpcoming())
-	addIds(ret.GetUpcomingNext())
-
-	missingIds := make([]*int, 0)
-	for _, list := range collection.MediaListCollection.Lists {
-		for _, entry := range list.Entries {
-			if customsource.IsExtensionId(entry.Media.GetID()) {
-				continue
-			}
-			if _, found := foundIds[entry.GetMedia().GetID()]; found {
-				continue
-			}
-			endDate := entry.GetMedia().GetEndDate()
-			// Ignore if ended more than 2 months ago
-			if endDate == nil || endDate.GetYear() == nil || endDate.GetMonth() == nil {
-				missingIds = append(missingIds, &[]int{entry.GetMedia().GetID()}[0])
-				continue
-			}
-			endTime := time.Date(*endDate.GetYear(), time.Month(*endDate.GetMonth()), 1, 0, 0, 0, 0, time.UTC)
-			if endTime.Before(now.AddDate(0, -2, 0)) {
-				continue
-			}
-			missingIds = append(missingIds, &[]int{entry.GetMedia().GetID()}[0])
-		}
-	}
-
-	if len(missingIds) > 0 {
-		retB, err := client.AnimeAiringScheduleRaw(ctx, missingIds)
-		if err != nil {
-			return nil, err
-		}
-		if len(retB.GetPage().GetMedia()) > 0 {
-			// Add to ongoing next
-			for _, m := range retB.Page.GetMedia() {
-				if ret.OngoingNext == nil {
-					ret.OngoingNext = &anilist.AnimeAiringSchedule_OngoingNext{
-						Media: make([]*anilist.AnimeSchedule, 0),
-					}
-				}
-				if m == nil {
-					continue
-				}
-
-				ret.OngoingNext.Media = append(ret.OngoingNext.Media, m)
-			}
-		}
-	}
-
-	return ret, nil
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Update
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (h *PlatformHelper) HandleCustomSourceUpdateEntry(ctx context.Context, mediaID int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput) (bool, error) {
+func (h *PlatformHelper) HandleCustomSourceUpdateEntry(ctx context.Context, mediaID int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) (bool, error) {
 	if h.customSourceManager != nil && customsource.IsExtensionId(mediaID) {
 		err := h.customSourceManager.UpdateEntry(ctx, mediaID, status, scoreRaw, progress, startedAt, completedAt)
 		return true, err
@@ -386,7 +296,7 @@ func (h *PlatformHelper) HandleCustomSourceDeleteEntry(ctx context.Context, medi
 	return false, nil
 }
 
-func (h *PlatformHelper) TriggerUpdateEntryHooks(ctx context.Context, mediaID int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput, updateFunc func(event *platform.PreUpdateEntryEvent) error) error {
+func (h *PlatformHelper) TriggerUpdateEntryHooks(ctx context.Context, mediaID int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput, updateFunc func(event *platform.PreUpdateEntryEvent) error) error {
 	// Trigger pre-update hook
 	event := new(platform.PreUpdateEntryEvent)
 	event.MediaID = &mediaID
@@ -425,7 +335,7 @@ func (h *PlatformHelper) TriggerUpdateEntryProgressHooks(ctx context.Context, me
 	event.MediaID = &mediaID
 	event.Progress = &progress
 	event.TotalCount = totalCount
-	currentStatus := anilist.MediaListStatusCurrent
+	currentStatus := media.MediaListStatusCurrent
 	event.Status = &currentStatus
 
 	_ = hook.GlobalHookManager.OnPreUpdateEntryProgress().Trigger(event)
@@ -504,26 +414,14 @@ func (h *PlatformHelper) TriggerDeleteEntryHooks(ctx context.Context, mediaID in
 	return err
 }
 
-func (h *PlatformHelper) FilterOutCustomAnimeLists(lists []*anilist.AnimeCollection_MediaListCollection_Lists) []*anilist.AnimeCollection_MediaListCollection_Lists {
-	return lo.Filter(lists, func(list *anilist.AnimeCollection_MediaListCollection_Lists, _ int) bool {
+func (h *PlatformHelper) FilterOutCustomAnimeLists(lists []*media.AnimeCollection_MediaListCollection_Lists) []*media.AnimeCollection_MediaListCollection_Lists {
+	return lo.Filter(lists, func(list *media.AnimeCollection_MediaListCollection_Lists, _ int) bool {
 		return list.Status != nil
 	})
 }
 
-func (h *PlatformHelper) FilterOutCustomMangaLists(lists []*anilist.MangaCollection_MediaListCollection_Lists) []*anilist.MangaCollection_MediaListCollection_Lists {
-	return lo.Filter(lists, func(list *anilist.MangaCollection_MediaListCollection_Lists, _ int) bool {
+func (h *PlatformHelper) FilterOutCustomMangaLists(lists []*media.MangaCollection_MediaListCollection_Lists) []*media.MangaCollection_MediaListCollection_Lists {
+	return lo.Filter(lists, func(list *media.MangaCollection_MediaListCollection_Lists, _ int) bool {
 		return list.Status != nil
 	})
-}
-
-func (h *PlatformHelper) RemoveNovelsFromMangaCollection(collection *anilist.MangaCollection) {
-	for _, list := range collection.MediaListCollection.Lists {
-		// Filter out novel entries
-		list.Entries = lo.Filter(list.Entries, func(e *anilist.MangaCollection_MediaListCollection_Lists_Entries, _ int) bool {
-			if e.GetMedia().GetFormat() == nil {
-				return true
-			}
-			return *e.GetMedia().GetFormat() != anilist.MediaFormatNovel
-		})
-	}
 }

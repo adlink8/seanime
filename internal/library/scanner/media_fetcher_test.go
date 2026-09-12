@@ -1,7 +1,7 @@
 package scanner
 
 import (
-	"seanime/internal/api/anilist"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"seanime/internal/util/limiter"
@@ -13,7 +13,7 @@ import (
 
 func TestNewMediaFetcher(t *testing.T) {
 	wrapper := newScannerFixtureWrapper(t)
-	completeAnimeCache := anilist.NewCompleteAnimeCache()
+	completeAnimeCache := media.NewCompleteAnimeCache()
 	anilistRateLimiter := limiter.NewAnilistLimiter()
 
 	tests := []struct {
@@ -97,7 +97,7 @@ func TestNewMediaFetcher(t *testing.T) {
 
 func TestNewEnhancedMediaFetcher(t *testing.T) {
 	wrapper := newScannerFixtureWrapper(t)
-	completeAnimeCache := anilist.NewCompleteAnimeCache()
+	completeAnimeCache := media.NewCompleteAnimeCache()
 	anilistRateLimiter := limiter.NewAnilistLimiter()
 
 	tests := []struct {
@@ -167,7 +167,7 @@ func TestNewEnhancedMediaFetcher(t *testing.T) {
 
 func TestFetchMediaFromLocalFiles(t *testing.T) {
 	wrapper := newScannerFixtureWrapper(t)
-	completeAnimeCache := anilist.NewCompleteAnimeCache()
+	completeAnimeCache := media.NewCompleteAnimeCache()
 	anilistRateLimiter := limiter.NewAnilistLimiter()
 
 	tests := []struct {
@@ -206,7 +206,7 @@ func TestFetchMediaFromLocalFiles(t *testing.T) {
 			// | FetchMediaFromLocalFiles |
 			// +--------------------------+
 
-			media, ok := FetchMediaFromLocalFiles(
+			fetchedMedia, ok := FetchMediaFromLocalFiles(
 				t.Context(),
 				wrapper.Platform,
 				lfs,
@@ -219,7 +219,7 @@ func TestFetchMediaFromLocalFiles(t *testing.T) {
 				t.Fatal("could not fetch media from local files")
 			}
 
-			ids := lo.Map(media, func(k *anilist.CompleteAnime, _ int) int {
+			ids := lo.Map(fetchedMedia, func(k *media.CompleteAnime, _ int) int {
 				return k.ID
 			})
 
@@ -229,7 +229,7 @@ func TestFetchMediaFromLocalFiles(t *testing.T) {
 			}
 
 			t.Log("Media IDs:")
-			for _, m := range media {
+			for _, m := range fetchedMedia {
 				t.Log(m.GetTitleSafe())
 			}
 

@@ -69,6 +69,7 @@ func TestCreateDownloadTempDirUsesAppTempOnMobile(t *testing.T) {
 
 	tempRoot := t.TempDir()
 	t.Setenv("TMPDIR", tempRoot)
+	t.Setenv("TMP", tempRoot) // Windows: os.MkdirTemp("", ...) reads TMP, not TMPDIR
 	destination := t.TempDir()
 
 	tmpDir, err := createDownloadTempDir(destination)
@@ -153,7 +154,7 @@ func TestTorrentDownloadCancellationOnFailure(t *testing.T) {
 	require.NoError(t, repo.downloadTorrentItem("torrent-1", "bad zip", destination))
 	require.Eventually(t, func() bool {
 		return hasDebridDownloadStatus(ws, "cancelled")
-	}, time.Second, 10*time.Millisecond)
+	}, 3*time.Second, 10*time.Millisecond) // Windows: extraction path includes a 1s sleep
 	require.Never(t, func() bool {
 		return hasDebridDownloadStatus(ws, "completed")
 	}, 100*time.Millisecond, 10*time.Millisecond)
@@ -193,14 +194,14 @@ func TestRDDownload(t *testing.T) {
 	require.NoError(t, repo.downloadTorrentItem("torrent-1", "rd", destination))
 	require.Eventually(t, func() bool {
 		return hasDebridDownloadStatus(ws, "completed")
-	}, time.Second, 10*time.Millisecond)
+	}, 3*time.Second, 10*time.Millisecond) // Windows: extraction path includes a 1s sleep
 
 	var data []byte
 	require.Eventually(t, func() bool {
 		var err error
 		data, err = os.ReadFile(filepath.Join(destination, "Episode 01.mkv"))
 		return err == nil
-	}, time.Second, 10*time.Millisecond)
+	}, 3*time.Second, 10*time.Millisecond) // Windows: extraction path includes a 1s sleep
 	require.Equal(t, string(body), string(data))
 }
 
@@ -236,13 +237,13 @@ func TestTorBoxZip(t *testing.T) {
 	require.NoError(t, repo.downloadTorrentItem("torrent-1", "torbox", destination))
 	require.Eventually(t, func() bool {
 		return hasDebridDownloadStatus(ws, "completed")
-	}, time.Second, 10*time.Millisecond)
+	}, 3*time.Second, 10*time.Millisecond) // Windows: extraction path includes a 1s sleep
 
 	var data []byte
 	require.Eventually(t, func() bool {
 		var err error
 		data, err = os.ReadFile(filepath.Join(destination, "Episode 01.mkv"))
 		return err == nil
-	}, time.Second, 10*time.Millisecond)
+	}, 3*time.Second, 10*time.Millisecond) // Windows: extraction path includes a 1s sleep
 	require.Equal(t, "torbox data", string(data))
 }

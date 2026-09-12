@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/customsource"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/torrentstream"
 	"seanime/internal/util"
 	"strings"
@@ -91,7 +91,7 @@ func (h *Handler) HandleGetLibraryCollection(c echo.Context) error {
 			}
 		}
 
-		nakamaCustomSourceMedia := make(map[int]*anilist.AnimeListEntry)
+		nakamaCustomSourceMedia := make(map[int]*media.AnimeListEntry)
 
 		// Add missing AniList entries to the user's collection as "Planning"
 		for _, list := range nakamaLibrary.AnimeCollection.MediaListCollection.GetLists() {
@@ -99,12 +99,12 @@ func (h *Handler) HandleGetLibraryCollection(c echo.Context) error {
 				mId := entry.GetMedia().GetID()
 				if _, ok := userMissingAnilistMediaIds[mId]; ok {
 					// create a new entry with blank list data
-					newEntry := &anilist.AnimeListEntry{
+					newEntry := &media.AnimeListEntry{
 						ID:     entry.GetID(),
 						Media:  entry.GetMedia(),
-						Status: &[]anilist.MediaListStatus{anilist.MediaListStatusPlanning}[0],
+						Status: &[]media.MediaListStatus{media.MediaListStatusPlanning}[0],
 					}
-					animeCollection.MediaListCollection.AddEntryToList(newEntry, anilist.MediaListStatusPlanning)
+					animeCollection.MediaListCollection.AddEntryToList(newEntry, media.MediaListStatusPlanning)
 				}
 				// Check if the media from a custom source
 				if _, ok := nakamaCustomSourceMediaIds[mId]; ok {
@@ -140,12 +140,12 @@ func (h *Handler) HandleGetLibraryCollection(c echo.Context) error {
 
 				// Add the entry if the user doesn't already have it
 				if _, ok := userCustomSourceMedia[extensionId][localId]; !ok {
-					newEntry := &anilist.AnimeListEntry{
+					newEntry := &media.AnimeListEntry{
 						ID:     entry.GetID(),
 						Media:  entry.GetMedia(),
-						Status: &[]anilist.MediaListStatus{anilist.MediaListStatusPlanning}[0],
+						Status: &[]media.MediaListStatus{media.MediaListStatusPlanning}[0],
 					}
-					animeCollection.MediaListCollection.AddEntryToList(newEntry, anilist.MediaListStatusPlanning)
+					animeCollection.MediaListCollection.AddEntryToList(newEntry, media.MediaListStatusPlanning)
 				}
 
 				// Update the local files
@@ -271,7 +271,7 @@ func (h *Handler) HandleGetAnimeCollectionSchedule(c echo.Context) error {
 //	@desc Since media not found in the user's AniList collection are not displayed in the library, this route is used to add them.
 //	@desc The response is ignored in the frontend, the client should just refetch the entire library collection.
 //	@route /api/v1/library/unknown-media [POST]
-//	@returns anilist.AnimeCollection
+//	@returns media.AnimeCollection
 func (h *Handler) HandleAddUnknownMedia(c echo.Context) error {
 
 	type body struct {

@@ -1,9 +1,9 @@
 package onlinestream
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/extension"
 	hibikeonlinestream "seanime/internal/extension/hibike/onlinestream"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/filecache"
 	"testing"
@@ -59,7 +59,7 @@ func TestEpisodeSourceRefreshReplacesOnlySourceCache(t *testing.T) {
 		fileCacher:       cacher,
 		extensionBankRef: util.NewRef(bank),
 	}
-	media := &anilist.BaseAnime{ID: 1}
+	media := &media.Anime{ID: 1}
 	episodeDetails := []*hibikeonlinestream.EpisodeDetails{{ID: "episode-1", Number: 1}}
 	listKey := "1$test$false"
 	sourceKey := "1$test$1$false"

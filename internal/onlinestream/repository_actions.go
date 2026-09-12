@@ -3,9 +3,9 @@ package onlinestream
 import (
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/extension"
 	hibikeonlinestream "seanime/internal/extension/hibike/onlinestream"
+	"seanime/internal/media"
 	onlinestream_providers "seanime/internal/onlinestream/providers"
 	"seanime/internal/util/comparison"
 	"strings"
@@ -43,7 +43,7 @@ type (
 //   - This function can be used to only get the episode details by setting 'from' and 'to' to 0.
 //
 // Since the episode details are cached, we can request episode servers multiple times without fetching the episode details again.
-func (r *Repository) getEpisodeContainer(provider string, media *anilist.BaseAnime, from int, to int, dubbed bool, year int, refresh bool) (*episodeContainer, error) {
+func (r *Repository) getEpisodeContainer(provider string, media *media.Anime, from int, to int, dubbed bool, year int, refresh bool) (*episodeContainer, error) {
 
 	r.logger.Debug().
 		Str("provider", provider).
@@ -200,7 +200,7 @@ func (r *Repository) getProviderEpisodeServers(provider string, episodeDetails *
 
 // getProviderEpisodeList gets all the hibikeonlinestream.EpisodeDetails from the provider based on the anime's titles.
 // It returns ErrNoAnimeFound if the anime is not found or ErrNoEpisodes if no episodes are found.
-func (r *Repository) getProviderEpisodeList(provider string, media *anilist.BaseAnime, dubbed bool, year int) ([]*hibikeonlinestream.EpisodeDetails, error) {
+func (r *Repository) getProviderEpisodeList(provider string, media *media.Anime, dubbed bool, year int) ([]*hibikeonlinestream.EpisodeDetails, error) {
 	var ret []*hibikeonlinestream.EpisodeDetails
 	// romajiTitle := strings.ReplaceAll(media.GetEnglishTitleSafe(), ":", "")
 	// englishTitle := strings.ReplaceAll(media.GetRomajiTitleSafe(), ":", "")

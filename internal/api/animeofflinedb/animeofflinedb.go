@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"net/http"
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"strconv"
 	"strings"
 	"sync"
@@ -35,7 +35,7 @@ type animeSeason struct {
 }
 
 const (
-	anilistPrefix = "https://anilist.co/anime/"
+	anilistPrefix = "https://media.co/anime/"
 	malPrefix     = "https://myanimelist.net/anime/"
 )
 
@@ -160,54 +160,54 @@ func convertEntryToNormalizedMedia(e *animeEntry) *anime.NormalizedMedia {
 		malIDPtr = &malID
 	}
 
-	// convert type to anilist.MediaFormat
-	var format *anilist.MediaFormat
+	// convert type to media.MediaFormat
+	var format *media.MediaFormat
 	switch e.Type {
 	case "TV":
-		f := anilist.MediaFormatTv
+		f := media.MediaFormatTv
 		format = &f
 	case "MOVIE":
-		f := anilist.MediaFormatMovie
+		f := media.MediaFormatMovie
 		format = &f
 	case "OVA":
-		f := anilist.MediaFormatOva
+		f := media.MediaFormatOva
 		format = &f
 	case "ONA":
-		f := anilist.MediaFormatOna
+		f := media.MediaFormatOna
 		format = &f
 	case "SPECIAL":
-		f := anilist.MediaFormatSpecial
+		f := media.MediaFormatSpecial
 		format = &f
 	}
 
-	// convert status to anilist.MediaStatus
-	var status *anilist.MediaStatus
+	// convert status to media.MediaStatus
+	var status *media.MediaStatus
 	switch e.Status {
 	case "FINISHED":
-		s := anilist.MediaStatusFinished
+		s := media.MediaStatusFinished
 		status = &s
 	case "ONGOING":
-		s := anilist.MediaStatusReleasing
+		s := media.MediaStatusReleasing
 		status = &s
 	case "UPCOMING":
-		s := anilist.MediaStatusNotYetReleased
+		s := media.MediaStatusNotYetReleased
 		status = &s
 	}
 
-	// convert season to anilist.MediaSeason
-	var season *anilist.MediaSeason
+	// convert season to media.MediaSeason
+	var season *media.MediaSeason
 	switch e.AnimeSeason.Season {
 	case "SPRING":
-		s := anilist.MediaSeasonSpring
+		s := media.MediaSeasonSpring
 		season = &s
 	case "SUMMER":
-		s := anilist.MediaSeasonSummer
+		s := media.MediaSeasonSummer
 		season = &s
 	case "FALL":
-		s := anilist.MediaSeasonFall
+		s := media.MediaSeasonFall
 		season = &s
 	case "WINTER":
-		s := anilist.MediaSeasonWinter
+		s := media.MediaSeasonWinter
 		season = &s
 	}
 

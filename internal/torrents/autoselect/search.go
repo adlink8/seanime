@@ -3,9 +3,9 @@ package autoselect
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	itorrent "seanime/internal/torrents/torrent"
 	"seanime/internal/util"
 	"slices"
@@ -15,7 +15,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (s *AutoSelect) Search(ctx context.Context, media *anilist.BaseAnime, episodeNumber int, profile *anime.AutoSelectProfile) ([]*hibiketorrent.AnimeTorrent, error) {
+func (s *AutoSelect) Search(ctx context.Context, media *media.Anime, episodeNumber int, profile *anime.AutoSelectProfile) ([]*hibiketorrent.AnimeTorrent, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -25,7 +25,7 @@ func (s *AutoSelect) Search(ctx context.Context, media *anilist.BaseAnime, episo
 	return s.search(ctx, media.ToCompleteAnime(), episodeNumber, profile)
 }
 
-func (s *AutoSelect) SearchFresh(ctx context.Context, media *anilist.BaseAnime, episodeNumber int, profile *anime.AutoSelectProfile) ([]*hibiketorrent.AnimeTorrent, error) {
+func (s *AutoSelect) SearchFresh(ctx context.Context, media *media.Anime, episodeNumber int, profile *anime.AutoSelectProfile) ([]*hibiketorrent.AnimeTorrent, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -33,7 +33,7 @@ func (s *AutoSelect) SearchFresh(ctx context.Context, media *anilist.BaseAnime, 
 	return s.Search(ctx, media, episodeNumber, profile)
 }
 
-func (s *AutoSelect) search(ctx context.Context, media *anilist.CompleteAnime, episodeNumber int, profile *anime.AutoSelectProfile) ([]*hibiketorrent.AnimeTorrent, error) {
+func (s *AutoSelect) search(ctx context.Context, media *media.CompleteAnime, episodeNumber int, profile *anime.AutoSelectProfile) ([]*hibiketorrent.AnimeTorrent, error) {
 	s.log("Starting auto-select search")
 	s.logger.Debug().Msgf("autoselect: Searching for episode %d of %s", episodeNumber, media.GetTitleSafe())
 
@@ -92,7 +92,7 @@ func (s *AutoSelect) getProvidersToSearch(profile *anime.AutoSelectProfile) []st
 func (s *AutoSelect) searchFromProviders(
 	ctx context.Context,
 	providers []string,
-	media *anilist.CompleteAnime,
+	media *media.CompleteAnime,
 	episodeNumber int,
 	shouldSearchBatch bool,
 	profile *anime.AutoSelectProfile,
@@ -157,7 +157,7 @@ func (s *AutoSelect) searchFromProviders(
 func (s *AutoSelect) searchFromProvider(
 	ctx context.Context,
 	provider string,
-	media *anilist.CompleteAnime,
+	media *media.CompleteAnime,
 	episodeNumber int,
 	shouldSearchBatch bool,
 	profile *anime.AutoSelectProfile,
@@ -279,7 +279,7 @@ func (s *AutoSelect) searchAnime(ctx context.Context, opts itorrent.AnimeSearchO
 }
 
 // shouldSearchBatch determines if we should initially attempt to search for batches.
-func (s *AutoSelect) shouldSearchBatch(media *anilist.CompleteAnime) bool {
+func (s *AutoSelect) shouldSearchBatch(media *media.CompleteAnime) bool {
 	if media.IsMovie() || !media.IsFinished() {
 		return false
 	}
@@ -302,7 +302,7 @@ func (s *AutoSelect) shouldSearchBatch(media *anilist.CompleteAnime) bool {
 // buildSearchOptions constructs the search options based on the provider capabilities and resolution.
 func (s *AutoSelect) buildSearchOptions(
 	provider string,
-	media *anilist.CompleteAnime,
+	media *media.CompleteAnime,
 	episodeNumber int,
 	batch bool,
 	resolution string,
@@ -321,13 +321,13 @@ func (s *AutoSelect) buildSearchOptions(
 	if !settings.CanSmartSearch {
 		searchType = itorrent.AnimeSearchTypeSimple
 		// Use sanitized romaji title for simple search
-		query = util.CleanMediaTitle(media.ToBaseAnime().GetRomajiTitleSafe())
+		query = util.CleanMediaTitle(media.ToAnime().GetRomajiTitleSafe())
 	}
 
 	return itorrent.AnimeSearchOptions{
 		Provider:      provider,
 		Type:          searchType,
-		Media:         media.ToBaseAnime(),
+		Media:         media.ToAnime(),
 		Query:         query,
 		Batch:         batch,
 		EpisodeNumber: episodeNumber,

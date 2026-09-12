@@ -3,8 +3,8 @@ package availability
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +20,7 @@ type (
 	monitor struct {
 		ctx           context.Context
 		cancel        context.CancelFunc
-		search        func(context.Context, string, *anilist.BaseAnime, int) (bool, error)
+		search        func(context.Context, string, *media.Anime, int) (bool, error)
 		getProviderID func() (string, bool)
 		onUpdated     func()
 		mu            sync.Mutex
@@ -32,7 +32,7 @@ type (
 	}
 
 	item struct {
-		media         *anilist.BaseAnime
+		media         *media.Anime
 		episodeNumber int
 		providerID    string
 		expiresAt     time.Time
@@ -53,7 +53,7 @@ type (
 )
 
 func NewMonitor(
-	search func(context.Context, string, *anilist.BaseAnime, int) (bool, error),
+	search func(context.Context, string, *media.Anime, int) (bool, error),
 	getProviderID func() (string, bool),
 	onUpdated func(),
 ) *monitor {
@@ -124,7 +124,7 @@ func (m *monitor) withEpisodes(episodes []*anime.Episode, now time.Time) []*anim
 	return ret
 }
 
-func (m *monitor) track(providerID string, media *anilist.BaseAnime, episodeNumber int, expiresAt, now time.Time) anime.EpisodeTorrentAvailability {
+func (m *monitor) track(providerID string, media *media.Anime, episodeNumber int, expiresAt, now time.Time) anime.EpisodeTorrentAvailability {
 	key := resultKey(providerID, media.GetID(), episodeNumber)
 	startWorker := false
 	wakeWorker := false

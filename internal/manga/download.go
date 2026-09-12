@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db"
 	"seanime/internal/database/models"
 	"seanime/internal/events"
 	"seanime/internal/hook"
 	chapter_downloader "seanime/internal/manga/downloader"
 	manga_providers "seanime/internal/manga/providers"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/filecache"
 	"sync"
@@ -284,14 +284,14 @@ func (d *Downloader) StopChapterDownloadQueue() {
 
 type (
 	NewDownloadListOptions struct {
-		MangaCollection *anilist.MangaCollection
+		MangaCollection *media.MangaCollection
 	}
 
 	DownloadListItem struct {
 		MediaId int `json:"mediaId"`
 		// Media will be nil if the manga is no longer in the user's collection.
 		// The client should handle this case by displaying the download data without the media data.
-		Media        *anilist.BaseManga  `json:"media"`
+		Media        *media.Manga        `json:"media"`
 		DownloadData ProviderDownloadMap `json:"downloadData"`
 	}
 )

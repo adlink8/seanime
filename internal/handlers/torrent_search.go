@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/debrid/debrid"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/torrents/torrent"
 	"seanime/internal/util/result"
 	"strings"
@@ -25,16 +25,16 @@ func (h *Handler) HandleSearchTorrent(c echo.Context) error {
 
 	type body struct {
 		// "smart" or "simple"
-		Type                    string            `json:"type,omitempty"`
-		Provider                string            `json:"provider,omitempty"`
-		Query                   string            `json:"query,omitempty"`
-		EpisodeNumber           int               `json:"episodeNumber,omitempty"`
-		Batch                   bool              `json:"batch,omitempty"`
-		Media                   anilist.BaseAnime `json:"media,omitempty"`
-		AbsoluteOffset          int               `json:"absoluteOffset,omitempty"`
-		Resolution              string            `json:"resolution,omitempty"`
-		BestRelease             bool              `json:"bestRelease,omitempty"`
-		IncludeSpecialProviders bool              `json:"includeSpecialProviders,omitempty"`
+		Type                    string      `json:"type,omitempty"`
+		Provider                string      `json:"provider,omitempty"`
+		Query                   string      `json:"query,omitempty"`
+		EpisodeNumber           int         `json:"episodeNumber,omitempty"`
+		Batch                   bool        `json:"batch,omitempty"`
+		Media                   media.Anime `json:"media,omitempty"`
+		AbsoluteOffset          int         `json:"absoluteOffset,omitempty"`
+		Resolution              string      `json:"resolution,omitempty"`
+		BestRelease             bool        `json:"bestRelease,omitempty"`
+		IncludeSpecialProviders bool        `json:"includeSpecialProviders,omitempty"`
 	}
 
 	var b body

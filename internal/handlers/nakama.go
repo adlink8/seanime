@@ -6,10 +6,10 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"seanime/internal/api/anilist"
 	"seanime/internal/customsource"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/nakama"
 	"seanime/internal/util"
 	"strconv"
@@ -241,7 +241,7 @@ func (h *Handler) buildNakamaLocalFiles(lfs []*anime.LocalFile) (*nakama.NakamaL
 		CustomSourceMap: make(nakama.NakamaCustomSourceMap),
 	}
 
-	customSourceMediaMap := make(map[int]*anilist.BaseAnime)
+	customSourceMediaMap := make(map[int]*media.Anime)
 
 	for _, lf := range lfs {
 		if customsource.IsExtensionId(lf.MediaId) {

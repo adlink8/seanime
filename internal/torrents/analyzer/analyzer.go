@@ -1,12 +1,13 @@
 package torrent_analyzer
 
 import (
+	"context"
 	"errors"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/library/anime"
 	"seanime/internal/library/scanner"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"seanime/internal/util/limiter"
@@ -20,7 +21,7 @@ type (
 	// i.e. torrent files instead of local files.
 	Analyzer struct {
 		files               []*File
-		media               *anilist.CompleteAnime
+		media               *media.CompleteAnime
 		platformRef         *util.Ref[platform.Platform]
 		logger              *zerolog.Logger
 		metadataProviderRef *util.Ref[metadata_provider.Provider]
@@ -31,7 +32,7 @@ type (
 	Analysis struct {
 		files         []*File // Hydrated after scanFiles is called
 		selectedFiles []*File // Hydrated after findCorrespondingFiles is called
-		media         *anilist.CompleteAnime
+		media         *media.CompleteAnime
 	}
 
 	// File represents a torrent file and contains its metadata.
@@ -45,8 +46,8 @@ type (
 type (
 	NewAnalyzerOptions struct {
 		Logger              *zerolog.Logger
-		Filepaths           []string               // Filepath of the torrent files
-		Media               *anilist.CompleteAnime // The media to compare the files with
+		Filepaths           []string             // Filepath of the torrent files
+		Media               *media.CompleteAnime // The media to compare the files with
 		PlatformRef         *util.Ref[platform.Platform]
 		MetadataProviderRef *util.Ref[metadata_provider.Provider]
 		// This basically skips the matching process and forces the media ID to be set.
@@ -200,7 +201,7 @@ func (f *File) GetPath() string {
 // scanFiles scans the files and matches them with the media.
 func (a *Analyzer) scanFiles() error {
 
-	completeAnimeCache := anilist.NewCompleteAnimeCache()
+	completeAnimeCache := media.NewCompleteAnimeCache()
 	anilistRateLimiter := limiter.NewAnilistLimiter()
 
 	lfs := a.getLocalFiles() // Extract local files from the Files
@@ -209,9 +210,26 @@ func (a *Analyzer) scanFiles() error {
 	// |   MediaContainer    |
 	// +---------------------+
 
-	tree := anilist.NewCompleteAnimeRelationTree()
-	if err := a.media.FetchMediaTree(anilist.FetchMediaTreeAll, a.platformRef.Get().GetAnilistClient(), anilistRateLimiter, tree, completeAnimeCache); err != nil {
-		return err
+	tree := media.NewCompleteAnimeRelationTree()
+	// Bangumi 锚点：CompleteAnime 不再自带递归遍历；GetAnimeWithRelations 返回的一层关系
+	// 直接入树，关系节点按需补全为完整条目。
+	if a.media != nil {
+		completeAnimeCache.Set(a.media.ID, a.media)
+		tree.Set(a.media.ID, a.media)
+		if a.media.Relations != nil && a.media.Relations.Edges != nil {
+			for _, edge := range a.media.Relations.Edges {
+				if edge == nil || edge.Node == nil || edge.Node.ID == 0 || tree.Has(edge.Node.ID) {
+					continue
+				}
+				anilistRateLimiter.Wait()
+				complete, err := a.platformRef.Get().GetAnimeWithRelations(context.Background(), edge.Node.ID)
+				if err != nil || complete == nil {
+					continue
+				}
+				completeAnimeCache.Set(complete.ID, complete)
+				tree.Set(complete.ID, complete)
+			}
+		}
 	}
 
 	allMedia := tree.Values()

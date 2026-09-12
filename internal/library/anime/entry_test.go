@@ -1,12 +1,12 @@
 package anime_test
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/db"
-	"seanime/internal/extension"
 	"seanime/internal/library/anime"
-	"seanime/internal/platforms/anilist_platform"
+	"seanime/internal/media"
+	"seanime/internal/platforms/platform"
+	"seanime/internal/testmocks"
 	"seanime/internal/util"
 	"testing"
 
@@ -83,9 +83,9 @@ func TestNewAnimeEntry(t *testing.T) {
 		},
 	}
 
-	anilistClient := anilist.NewTestAnilistClient()
-	anilistPlatform := anilist_platform.NewAnilistPlatform(util.NewRef(anilistClient), util.NewRef(extension.NewUnifiedBank()), logger, database)
-	animeCollection, err := anilistPlatform.GetAnimeCollection(t.Context(), false)
+	// Bangumi 锚点：测试基建改用 FakePlatform（原 AniList fixture client 已随包裁剪）。
+	fakePlatform := testmocks.NewFakePlatformBuilder().Build()
+	animeCollection, err := fakePlatform.GetAnimeCollection(t.Context(), false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +94,7 @@ func TestNewAnimeEntry(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			anilist.PatchAnimeCollectionEntry(animeCollection, tt.mediaId, anilist.AnimeCollectionEntryPatch{
+			media.PatchAnimeCollectionEntry(animeCollection, tt.mediaId, media.AnimeCollectionEntryPatch{
 				Progress: new(tt.currentProgress), // Mock progress
 			})
 
@@ -102,7 +102,7 @@ func TestNewAnimeEntry(t *testing.T) {
 				MediaId:             tt.mediaId,
 				LocalFiles:          tt.localFiles,
 				AnimeCollection:     animeCollection,
-				PlatformRef:         util.NewRef(anilistPlatform),
+				PlatformRef:         util.NewRef[platform.Platform](fakePlatform),
 				MetadataProviderRef: util.NewRef(metadataProvider),
 			})
 

@@ -1,8 +1,8 @@
 package anime_test
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -42,15 +42,15 @@ func TestNewLibraryCollectionContinueWatchingList(t *testing.T) {
 		},
 	)...)
 
-	patchAnimeCollectionEntry(t, h.animeCollection, 154587, anilist.AnimeCollectionEntryPatch{
-		Status:   new(anilist.MediaListStatusCurrent),
+	patchAnimeCollectionEntry(t, h.animeCollection, 154587, media.AnimeCollectionEntryPatch{
+		Status:   new(media.MediaListStatusCurrent),
 		Progress: new(4),
 	})
 	patchCollectionEntryEpisodeCount(t, h.animeCollection, 154587, 7)
 	h.setEpisodeMetadata(t, 154587, []int{1, 2, 3, 4, 5, 6, 7}, nil)
 
-	patchAnimeCollectionEntry(t, h.animeCollection, 146065, anilist.AnimeCollectionEntryPatch{
-		Status:   new(anilist.MediaListStatusCurrent),
+	patchAnimeCollectionEntry(t, h.animeCollection, 146065, media.AnimeCollectionEntryPatch{
+		Status:   new(media.MediaListStatusCurrent),
 		Progress: new(1),
 	})
 	patchCollectionEntryEpisodeCount(t, h.animeCollection, 146065, 6)
@@ -91,32 +91,32 @@ func TestNewLibraryCollectionMergesRepeatingAndHydratesStats(t *testing.T) {
 		},
 	)
 
-	patchAnimeCollectionEntry(t, h.animeCollection, 154587, anilist.AnimeCollectionEntryPatch{
-		Status:   new(anilist.MediaListStatusCurrent),
+	patchAnimeCollectionEntry(t, h.animeCollection, 154587, media.AnimeCollectionEntryPatch{
+		Status:   new(media.MediaListStatusCurrent),
 		Progress: new(0),
 	})
-	onePieceEntry := patchAnimeCollectionEntry(t, h.animeCollection, 21, anilist.AnimeCollectionEntryPatch{
-		Status:   new(anilist.MediaListStatusRepeating),
+	onePieceEntry := patchAnimeCollectionEntry(t, h.animeCollection, 21, media.AnimeCollectionEntryPatch{
+		Status:   new(media.MediaListStatusRepeating),
 		Progress: new(1060),
 	})
-	mushokuEntry := patchAnimeCollectionEntry(t, h.animeCollection, 146065, anilist.AnimeCollectionEntryPatch{
-		Status:   new(anilist.MediaListStatusCompleted),
+	mushokuEntry := patchAnimeCollectionEntry(t, h.animeCollection, 146065, media.AnimeCollectionEntryPatch{
+		Status:   new(media.MediaListStatusCompleted),
 		Progress: new(12),
 	})
 
-	movieFormat := anilist.MediaFormatMovie
-	showFormat := anilist.MediaFormatTv
-	ovaFormat := anilist.MediaFormatOva
+	movieFormat := media.MediaFormatMovie
+	showFormat := media.MediaFormatTv
+	ovaFormat := media.MediaFormatOva
 	patchCollectionEntryFormat(t, h.animeCollection, 154587, showFormat)
 	onePieceEntry.Media.Format = &movieFormat
 	mushokuEntry.Media.Format = &ovaFormat
 
 	libraryCollection := h.newLibraryCollection(t, localFiles)
 
-	currentList := findCollectionListByStatus(t, libraryCollection, anilist.MediaListStatusCurrent)
+	currentList := findCollectionListByStatus(t, libraryCollection, media.MediaListStatusCurrent)
 	require.Len(t, currentList.Entries, 2)
 	require.ElementsMatch(t, []int{154587, 21}, []int{currentList.Entries[0].MediaId, currentList.Entries[1].MediaId})
-	require.Nil(t, findOptionalCollectionListByStatus(libraryCollection, anilist.MediaListStatusRepeating))
+	require.Nil(t, findOptionalCollectionListByStatus(libraryCollection, media.MediaListStatusRepeating))
 
 	var repeatingEntry *anime.LibraryCollectionEntry
 	for _, entry := range currentList.Entries {
@@ -127,7 +127,7 @@ func TestNewLibraryCollectionMergesRepeatingAndHydratesStats(t *testing.T) {
 	}
 	require.NotNil(t, repeatingEntry)
 	require.NotNil(t, repeatingEntry.EntryListData.Status)
-	require.Equal(t, anilist.MediaListStatusRepeating, *repeatingEntry.EntryListData.Status)
+	require.Equal(t, media.MediaListStatusRepeating, *repeatingEntry.EntryListData.Status)
 
 	require.NotNil(t, libraryCollection.Stats)
 	require.Equal(t, 3, libraryCollection.Stats.TotalEntries)
@@ -201,14 +201,14 @@ func TestNewLibraryCollectionGroupsUnknownIgnoredAndUnmatchedFiles(t *testing.T)
 	require.Equal(t, "/Anime/Ignored/Z/1.mkv", libraryCollection.IgnoredLocalFiles[1].GetPath())
 }
 
-func findCollectionListByStatus(t *testing.T, libraryCollection *anime.LibraryCollection, status anilist.MediaListStatus) *anime.LibraryCollectionList {
+func findCollectionListByStatus(t *testing.T, libraryCollection *anime.LibraryCollection, status media.MediaListStatus) *anime.LibraryCollectionList {
 	t.Helper()
 	list := findOptionalCollectionListByStatus(libraryCollection, status)
 	require.NotNil(t, list)
 	return list
 }
 
-func findOptionalCollectionListByStatus(libraryCollection *anime.LibraryCollection, status anilist.MediaListStatus) *anime.LibraryCollectionList {
+func findOptionalCollectionListByStatus(libraryCollection *anime.LibraryCollection, status media.MediaListStatus) *anime.LibraryCollectionList {
 	for _, list := range libraryCollection.Lists {
 		if list.Status == status {
 			return list

@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/continuity"
 	"seanime/internal/database/db"
 	"seanime/internal/database/db_bridge"
@@ -19,6 +18,7 @@ import (
 	"seanime/internal/library/playbackmanager"
 	"seanime/internal/library_explorer"
 	"seanime/internal/manga"
+	"seanime/internal/media"
 	"seanime/internal/mediacore"
 	"seanime/internal/mediaplayers/iina"
 	"seanime/internal/mediaplayers/mediaplayer"
@@ -149,7 +149,7 @@ func (a *App) initModulesOnce() {
 		Platform:          a.AnilistPlatformRef,
 	})
 	episodeAvailability := torrent_availability.NewMonitor(
-		func(ctx context.Context, providerID string, media *anilist.BaseAnime, episodeNumber int) (bool, error) {
+		func(ctx context.Context, providerID string, media *media.Anime, episodeNumber int) (bool, error) {
 			torrents, err := availabilitySearch.SearchFresh(ctx, media, episodeNumber, &anime.AutoSelectProfile{
 				Providers: []string{providerID},
 			})
@@ -311,8 +311,8 @@ func (a *App) initModulesOnce() {
 
 	a.TorrentstreamRepository = torrentstream.NewRepository(&torrentstream.NewRepositoryOptions{
 		Logger:               a.Logger,
-		BaseAnimeCache:       anilist.NewBaseAnimeCache(),
-		CompleteAnimeCache:   anilist.NewCompleteAnimeCache(),
+		BaseAnimeCache:       media.NewBaseAnimeCache(),
+		CompleteAnimeCache:   media.NewCompleteAnimeCache(),
 		MetadataProviderRef:  a.MetadataProviderRef,
 		TorrentRepository:    a.TorrentRepository,
 		PlatformRef:          a.AnilistPlatformRef,

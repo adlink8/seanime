@@ -6,13 +6,13 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"strings"
 )
 
-func (s *StreamManager) getMediaInfo(ctx context.Context, mediaId int) (media *anilist.CompleteAnime, animeMetadata *metadata.AnimeMetadata, err error) {
+func (s *StreamManager) getMediaInfo(ctx context.Context, mediaId int) (media *media.CompleteAnime, animeMetadata *metadata.AnimeMetadata, err error) {
 	// Get the media
 	var found bool
 	media, found = s.repository.completeAnimeCache.Get(mediaId)

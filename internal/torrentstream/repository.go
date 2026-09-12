@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/db"
 	"seanime/internal/database/models"
@@ -15,6 +14,7 @@ import (
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/library/anime"
 	"seanime/internal/library/playbackmanager"
+	"seanime/internal/media"
 	"seanime/internal/mediacore"
 	"seanime/internal/mediaplayers/mediaplayer"
 	"seanime/internal/platforms/platform"
@@ -43,8 +43,8 @@ type (
 
 		// Injected dependencies
 		torrentRepository               *torrent.Repository
-		baseAnimeCache                  *anilist.BaseAnimeCache
-		completeAnimeCache              *anilist.CompleteAnimeCache
+		baseAnimeCache                  *media.BaseAnimeCache
+		completeAnimeCache              *media.CompleteAnimeCache
 		platformRef                     *util.Ref[platform.Platform]
 		wsEventManager                  events.WSEventManagerInterface
 		metadataProviderRef             *util.Ref[metadata_provider.Provider]
@@ -86,8 +86,8 @@ type (
 	NewRepositoryOptions struct {
 		Logger               *zerolog.Logger
 		TorrentRepository    *torrent.Repository
-		BaseAnimeCache       *anilist.BaseAnimeCache
-		CompleteAnimeCache   *anilist.CompleteAnimeCache
+		BaseAnimeCache       *media.BaseAnimeCache
+		CompleteAnimeCache   *media.CompleteAnimeCache
 		PlatformRef          *util.Ref[platform.Platform]
 		MetadataProviderRef  *util.Ref[metadata_provider.Provider]
 		PlaybackManager      *playbackmanager.PlaybackManager

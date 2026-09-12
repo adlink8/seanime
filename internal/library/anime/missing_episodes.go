@@ -2,10 +2,10 @@ package anime
 
 import (
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/limiter"
 	"sort"
@@ -46,7 +46,7 @@ type (
 	}
 
 	NewMissingEpisodesOptions struct {
-		AnimeCollection     *anilist.AnimeCollection
+		AnimeCollection     *media.AnimeCollection
 		LocalFiles          []*LocalFile
 		SilencedMediaIds    []int
 		MetadataProviderRef *util.Ref[metadata_provider.Provider]
@@ -99,7 +99,7 @@ func NewMissingEpisodes(opts *NewMissingEpisodesOptions) *MissingEpisodes {
 			}
 
 			// Skip if the status is nil, dropped or completed
-			if entry.Status == nil || *entry.Status == anilist.MediaListStatusDropped || *entry.Status == anilist.MediaListStatusCompleted {
+			if entry.Status == nil || *entry.Status == media.MediaListStatusDropped || *entry.Status == media.MediaListStatusCompleted {
 				return
 			}
 

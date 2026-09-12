@@ -2,7 +2,8 @@ package scanner
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
+	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/limiter"
 	"testing"
@@ -14,7 +15,6 @@ import (
 
 func TestMediaTreeAnalysis(t *testing.T) {
 	wrapper := newScannerLiveWrapper(t)
-	anilistClient := wrapper.AnilistClient
 	anilistRateLimiter := wrapper.AnilistRateLimiter
 
 	tests := []struct {
@@ -47,23 +47,23 @@ func TestMediaTreeAnalysis(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			mediaF, err := anilistClient.BaseAnimeByID(context.Background(), &tt.mediaId)
+			mediaF, err := wrapper.Platform.GetAnime(context.Background(), tt.mediaId)
 			if err != nil {
 				t.Fatal("expected media, got not found")
 			}
-			media := mediaF.GetMedia()
-			tree := anilist.NewCompleteAnimeRelationTree()
+			an := anime.NewNormalizedMedia(mediaF)
+			tree := media.NewCompleteAnimeRelationTree()
 
 			// +---------------------+
 			// |     MediaTree       |
 			// +---------------------+
 
-			err = media.FetchMediaTree(
-				anilist.FetchMediaTreeAll,
-				anilistClient,
+			err = an.FetchMediaTree(
+				media.FetchMediaTreeAll,
+				wrapper.Platform,
 				anilistRateLimiter,
 				tree,
-				anilist.NewCompleteAnimeCache(),
+				media.NewCompleteAnimeCache(),
 			)
 
 			if err != nil {
@@ -103,7 +103,6 @@ func TestMediaTreeAnalysis(t *testing.T) {
 
 func TestMediaTreeAnalysis2(t *testing.T) {
 	wrapper := newScannerLiveWrapper(t)
-	anilistClient := wrapper.AnilistClient
 	anilistRateLimiter := wrapper.AnilistRateLimiter
 
 	tests := []struct {
@@ -120,22 +119,22 @@ func TestMediaTreeAnalysis2(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			media, err := anilistClient.BaseAnimeByID(context.Background(), &tt.mediaId)
+			mediaF2, err := wrapper.Platform.GetAnime(context.Background(), tt.mediaId)
 			if err != nil {
 				t.Fatal("expected media, got error:", err.Error())
 			}
-			tree := anilist.NewCompleteAnimeRelationTree()
+			tree := media.NewCompleteAnimeRelationTree()
 
 			// +---------------------+
 			// |     MediaTree       |
 			// +---------------------+
 
-			err = media.GetMedia().FetchMediaTree(
-				anilist.FetchMediaTreeAll,
-				anilistClient,
+			err = anime.NewNormalizedMedia(mediaF2).FetchMediaTree(
+				media.FetchMediaTreeAll,
+				wrapper.Platform,
 				anilistRateLimiter,
 				tree,
-				anilist.NewCompleteAnimeCache(),
+				media.NewCompleteAnimeCache(),
 			)
 
 			if err != nil {

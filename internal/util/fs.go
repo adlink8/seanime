@@ -112,17 +112,18 @@ func isStrictDescendantPath(parent, child string) bool {
 }
 
 func normalizeComparablePath(input string) (string, error) {
-	if looksLikeWindowsPath(input) {
+	// Drive-letter paths (e.g. "C:\foo", also seen in cross-platform unit tests
+	// on Unix) are normalized lexically so they don't depend on the current OS.
+	if len(input) >= 2 && input[1] == ':' {
 		normalized := strings.ReplaceAll(input, `\`, "/")
-		if len(normalized) >= 2 && normalized[1] == ':' {
-			volume := strings.ToLower(normalized[:2])
-			tail := path.Clean("/" + strings.TrimPrefix(normalized[2:], "/"))
-			return volume + strings.ToLower(tail), nil
-		}
-
-		return strings.ToLower(path.Clean(normalized)), nil
+		volume := strings.ToLower(normalized[:2])
+		tail := path.Clean("/" + strings.TrimPrefix(normalized[2:], "/"))
+		return volume + strings.ToLower(tail), nil
 	}
 
+	// Everything else (including drive-rooted paths like "/tmp/x" or "\tmp\x"
+	// on Windows) is resolved the same way so that both sides of a comparison
+	// always land in the same canonical form.
 	absPath, err := filepath.Abs(input)
 	if err != nil {
 		return "", err
@@ -134,14 +135,6 @@ func normalizeComparablePath(input string) (string, error) {
 	}
 
 	return normalized, nil
-}
-
-func looksLikeWindowsPath(input string) bool {
-	if len(input) >= 2 && input[1] == ':' {
-		return true
-	}
-
-	return strings.Contains(input, `\`)
 }
 
 func ResolveArchiveEntryPath(destRoot, entryName string) (string, error) {

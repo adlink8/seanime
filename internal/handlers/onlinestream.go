@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"errors"
-	"seanime/internal/api/anilist"
+	"seanime/internal/media"
 	"seanime/internal/onlinestream"
 
 	"github.com/labstack/echo/v4"
@@ -36,25 +36,25 @@ func (h *Handler) HandleGetOnlineStreamEpisodeList(c echo.Context) error {
 
 	// Get media
 	// This is cached
-	media, err := h.App.OnlinestreamRepository.GetMedia(c.Request().Context(), b.MediaId)
+	an, err := h.App.OnlinestreamRepository.GetMedia(c.Request().Context(), b.MediaId)
 	if err != nil {
 		return h.RespondWithError(c, err)
 	}
 
-	if media.Status == nil || *media.Status == anilist.MediaStatusNotYetReleased {
+	if an.Status == nil || *an.Status == media.MediaStatusNotYetReleased {
 		return h.RespondWithError(c, errors.New("unavailable"))
 	}
 
 	// Get episode list
 	// This is cached using file cache
-	episodes, err := h.App.OnlinestreamRepository.GetMediaEpisodes(b.Provider, media, b.Dubbed)
+	episodes, err := h.App.OnlinestreamRepository.GetMediaEpisodes(b.Provider, an, b.Dubbed)
 	//if err != nil {
 	//	return h.RespondWithError(c, err)
 	//}
 
 	ret := onlinestream.EpisodeListResponse{
 		Episodes: episodes,
-		Media:    media,
+		Media:    an,
 	}
 
 	h.App.FillerManager.HydrateOnlinestreamFillerData(b.MediaId, ret.Episodes)
@@ -84,12 +84,12 @@ func (h *Handler) HandleGetOnlineStreamEpisodeSource(c echo.Context) error {
 
 	// Get media
 	// This is cached
-	media, err := h.App.OnlinestreamRepository.GetMedia(c.Request().Context(), b.MediaId)
+	an, err := h.App.OnlinestreamRepository.GetMedia(c.Request().Context(), b.MediaId)
 	if err != nil {
 		return h.RespondWithError(c, err)
 	}
 
-	sources, err := h.App.OnlinestreamRepository.GetEpisodeSources(c.Request().Context(), b.Provider, b.MediaId, b.EpisodeNumber, b.Dubbed, media.GetStartYearSafe(), b.Refresh)
+	sources, err := h.App.OnlinestreamRepository.GetEpisodeSources(c.Request().Context(), b.Provider, b.MediaId, b.EpisodeNumber, b.Dubbed, an.GetStartYearSafe(), b.Refresh)
 	if err != nil {
 		return h.RespondWithError(c, err)
 	}

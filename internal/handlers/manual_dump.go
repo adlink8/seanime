@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/scanner"
+	"seanime/internal/media"
 	"seanime/internal/util/limiter"
 
 	"github.com/labstack/echo/v4"
@@ -35,7 +35,7 @@ func (h *Handler) HandleTestDump(c echo.Context) error {
 		return h.RespondWithError(c, err)
 	}
 
-	completeAnimeCache := anilist.NewCompleteAnimeCache()
+	completeAnimeCache := media.NewCompleteAnimeCache()
 
 	mc, err := scanner.NewMediaFetcher(c.Request().Context(), &scanner.MediaFetcherOptions{
 		Enhanced:               false,

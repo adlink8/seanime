@@ -404,7 +404,7 @@ func (s *StreamManager) startStream(ctx context.Context, opts *StartStreamOption
 		event := &DebridSendStreamToMediaPlayerEvent{
 			WindowTitle:  windowTitle,
 			StreamURL:    streamUrl,
-			Media:        media.ToBaseAnime(),
+			Media:        media.ToAnime(),
 			AniDbEpisode: aniDbEpisode,
 			PlaybackType: string(opts.PlaybackType),
 		}

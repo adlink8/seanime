@@ -3,9 +3,9 @@ package scanner
 import (
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
+	medialib "seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/limiter"
 	"sort"
@@ -17,7 +17,7 @@ import (
 
 type (
 	MediaTreeAnalysisOptions struct {
-		tree                *anilist.CompleteAnimeRelationTree
+		tree                *medialib.CompleteAnimeRelationTree
 		metadataProviderRef *util.Ref[metadata_provider.Provider]
 		rateLimiter         *limiter.Limiter
 	}
@@ -27,7 +27,7 @@ type (
 	}
 
 	MediaTreeAnalysisBranch struct {
-		media         *anilist.CompleteAnime
+		media         *medialib.CompleteAnime
 		animeMetadata *metadata.AnimeMetadata
 		// The second absolute episode number of the first episode
 		// Sometimes, the metadata provider may have a 'true' absolute episode number and a 'part' absolute episode number
@@ -46,8 +46,8 @@ type (
 // The min and max absolute episode numbers are used to get the relative episode number from an absolute episode number.
 func NewMediaTreeAnalysis(opts *MediaTreeAnalysisOptions) (*MediaTreeAnalysis, error) {
 
-	relations := make([]*anilist.CompleteAnime, 0)
-	opts.tree.Range(func(key int, value *anilist.CompleteAnime) bool {
+	relations := make([]*medialib.CompleteAnime, 0)
+	opts.tree.Range(func(key int, value *medialib.CompleteAnime) bool {
 		relations = append(relations, value)
 		return true
 	})

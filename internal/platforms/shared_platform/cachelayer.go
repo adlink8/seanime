@@ -4,28 +4,35 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
+	"seanime/internal/api/bangumi"
 	"seanime/internal/events"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"seanime/internal/util/filecache"
 	"seanime/internal/util/result"
-	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/gqlgo/gqlgenc/clientv2"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 )
 
 // devnote: I got lazy and used global variables
 
+// 换锚说明（Phase 2 Wave B）：
+//   - CacheLayer 由「AniList GraphQL 客户端包装」改为「*bangumi.Client 包装」；
+//   - 职责不变：网络优先 + filecache 持久桶 + API 不可用时回退缓存 +
+//     收藏/进度写操作离线队列；
+//   - bangumi.Client 自身已有 GET 24h 缓存与节流，本层与其互补不冲突；
+//   - 客户端依赖收敛为 BangumiAPI 最小接口（*bangumi.Client 天然满足，
+//     测试可注入假实现）。
+
 var ShouldCache = atomic.Bool{}
 var IsWorking = atomic.Bool{}
-var AnilistClient = atomic.Value{}
+var BangumiClient = atomic.Value{}
 
 type failureRecord struct {
 	timestamp time.Time
@@ -44,12 +51,44 @@ const (
 	maxFailureRecords = 50               // maximum number of failure records to keep
 )
 
+const (
+	AnimeCollectionBucket         = "anime-collection"
+	MangaCollectionBucket         = "manga-collection"
+	BaseAnimeBucket               = "base-anime"
+	BaseMangaBucket               = "base-manga"
+	CompleteAnimeBucket           = "complete-anime"
+	AnimeDetailsBucket            = "anime-details"
+	MangaDetailsBucket            = "manga-details"
+	ViewerStatsBucket             = "viewer-stats"
+	StudioDetailsBucket           = "studio-details"
+	PendingMediaListUpdatesBucket = "pending-media-list-updates"
+
+	maxNonCollectionCacheEntries      = 10
+	maxNonCollectionMediaCacheEntries = 50
+	// Collection update interval (refresh collection tracking every 30 minutes)
+	collectionUpdateInterval = 30 * time.Minute
+
+	// collectionPageLimit 收藏分页单页大小（Bangumi 上限 50）
+	collectionPageLimit = 50
+)
+
+// BangumiAPI CacheLayer 依赖的 Bangumi 客户端最小接口。
+// *bangumi.Client 天然满足；测试注入假实现。
+type BangumiAPI interface {
+	GetSubject(ctx context.Context, subjectID int) (*bangumi.Subject, error)
+	GetRelatedSubjects(ctx context.Context, subjectID int) ([]bangumi.RelatedSubject, error)
+	GetUserCollectionsByUser(ctx context.Context, username string, opts bangumi.UserCollectionsOpts) (*bangumi.UserCollectionsResult, error)
+	UpsertCollection(ctx context.Context, subjectID int, body bangumi.CollectionUpsertBody) error
+	PatchCollection(ctx context.Context, subjectID int, body bangumi.CollectionUpsertBody) error
+	DeleteCollection(ctx context.Context, subjectID int) error
+}
+
 func init() {
 	ShouldCache.Store(true)
 	IsWorking.Store(true)
 
 	go func() {
-		// Every 10 seconds, check if the AniList client is working
+		// Every 10 seconds, check if the Bangumi client is working
 		for {
 			time.Sleep(time.Second * 10)
 			if !ShouldCache.Load() {
@@ -59,21 +98,21 @@ func init() {
 			if IsWorking.Load() {
 				continue
 			}
-			if AnilistClient.Load() == nil {
+			ref, ok := BangumiClient.Load().(*util.Ref[BangumiAPI])
+			if !ok || ref == nil {
 				IsWorking.Store(true)
 				continue
 			}
-			anilistClient, ok := AnilistClient.Load().(anilist.AnilistClient)
-			if !ok {
-				IsWorking.Store(true)
-				continue
-			}
-			_, err := anilistClient.BaseAnimeByID(context.Background(), new(1))
+			client := ref.Get()
+			// 探活：拉一个固定 subject。
+			// 注意：bangumi.Client 自带 24h GET 缓存，探活可能命中缓存而「假阳」；
+			// 但此时上层 GET 也能从缓存回包，功能等价可用，故可接受。
+			_, err := client.GetSubject(context.Background(), 1)
 			if err != nil {
 				IsWorking.Store(false)
 			} else {
 				clearFailureTracking()
-				events.GlobalWSEventManager.SendEvent(events.InfoToast, "The AniList API is back online")
+				events.GlobalWSEventManager.SendEvent(events.InfoToast, "The Bangumi API is back online")
 				IsWorking.Store(true)
 			}
 		}
@@ -90,15 +129,12 @@ func init() {
 }
 
 type (
-	// CacheLayer is a "network-first" wrapper around an AniList client that caches fetched data in cache files.
+	// CacheLayer is a "network-first" wrapper around a Bangumi client that caches fetched data in cache files.
 	// It detects when the API client is not working and falls back to the cached data instead.
 	// When the API client not working, it will still send the requests in the background and transition back to working state when the API client is working again.
 	// Entry/progress updates are queued when the API client is not working; other mutations return an error.
-	// Caching strategy:
-	// - All queries to a specific media that IS in the anime collection or manga collection will be always cached/updated without limit
-	// - Media that are NOT in the anime or manga collection will be bounded to a maximum of 10 entries
 	CacheLayer struct {
-		anilistClientRef       *util.Ref[anilist.AnilistClient]
+		bangumiClientRef       *util.Ref[BangumiAPI]
 		fileCacher             *filecache.Cacher
 		buckets                map[string]filecache.PermanentBucket
 		logger                 *zerolog.Logger
@@ -107,37 +143,6 @@ type (
 		logoutFunc             func()                     // called when an invalid token is detected
 		pendingUpdateSyncMutex sync.Mutex
 	}
-)
-
-const (
-	AnimeCollectionBucket          = "anime-collection"
-	AnimeCollectionTagsBucket      = "anime-collection-tags"
-	AnimeCollectionRelationsBucket = "anime-collection-relations"
-	MangaCollectionBucket          = "manga-collection"
-	MangaCollectionTagsBucket      = "manga-collection-tags"
-	BaseAnimeBucket                = "base-anime"
-	BaseAnimeMalBucket             = "base-anime-mal"
-	CompleteAnimeBucket            = "complete-anime"
-	AnimeDetailsBucket             = "anime-details"
-	BaseMangaBucket                = "base-manga"
-	MangaDetailsBucket             = "manga-details"
-	ViewerBucket                   = "viewer"
-	ViewerStatsBucket              = "viewer-stats"
-	StudioDetailsBucket            = "studio-details"
-	AnimeAiringScheduleBucket      = "anime-airing-schedule"
-	AnimeAiringScheduleRawBucket   = "anime-airing-schedule-raw"
-	ListAnimeBucket                = "list-anime"
-	ListRecentAnimeBucket          = "list-recent-anime"
-	SearchBaseMangaBucket          = "search-base-manga"
-	ListMangaBucket                = "list-manga"
-	SearchBaseAnimeByIdsBucket     = "search-base-anime-by-ids"
-	CustomQueryBucket              = "custom-query"
-	PendingMediaListUpdatesBucket  = "pending-media-list-updates"
-
-	maxNonCollectionCacheEntries      = 10
-	maxNonCollectionMediaCacheEntries = 50
-	// Collection update interval (refresh collection tracking every 30 minutes)
-	collectionUpdateInterval = 30 * time.Minute
 )
 
 // addFailureRecord adds a new failure record to the tracking
@@ -202,35 +207,31 @@ func clearFailureTracking() {
 
 // NewCacheLayer returns a new instance of the global cache layer.
 // An optional logoutFunc can be passed to perform server-side cleanup when an invalid token is detected.
-func NewCacheLayer(anilistClientRef *util.Ref[anilist.AnilistClient], logoutFunc ...func()) anilist.AnilistClient {
-	fileCacher, err := filecache.NewCacher(anilistClientRef.Get().GetCacheDir())
+func NewCacheLayer(client BangumiAPI, cacheDir string, logoutFunc ...func()) *CacheLayer {
+	var clientRef *util.Ref[BangumiAPI]
+	if client != nil {
+		clientRef = util.NewRef[BangumiAPI](client)
+		// 统一存储具体类型 *util.Ref[BangumiAPI]：atomic.Value 对后续 Store 的动态类型一致性有要求，
+		// 直接存接口值会因不同实现类型（如测试注入的假客户端）触发 panic。
+		BangumiClient.Store(clientRef)
+	}
+
+	fileCacher, err := filecache.NewCacher(cacheDir)
 	if err != nil {
-		return anilistClientRef.Get()
+		// 缓存目录不可用时降级为直连模式（不落缓存）
+		fileCacher = nil
 	}
 
 	buckets := make(map[string]filecache.PermanentBucket)
 	buckets[AnimeCollectionBucket] = filecache.NewPermanentBucket(AnimeCollectionBucket)
-	buckets[AnimeCollectionTagsBucket] = filecache.NewPermanentBucket(AnimeCollectionTagsBucket)
-	buckets[AnimeCollectionRelationsBucket] = filecache.NewPermanentBucket(AnimeCollectionRelationsBucket)
 	buckets[MangaCollectionBucket] = filecache.NewPermanentBucket(MangaCollectionBucket)
-	buckets[MangaCollectionTagsBucket] = filecache.NewPermanentBucket(MangaCollectionTagsBucket)
 	buckets[BaseAnimeBucket] = filecache.NewPermanentBucket(BaseAnimeBucket)
-	buckets[BaseAnimeMalBucket] = filecache.NewPermanentBucket(BaseAnimeMalBucket)
+	buckets[BaseMangaBucket] = filecache.NewPermanentBucket(BaseMangaBucket)
 	buckets[CompleteAnimeBucket] = filecache.NewPermanentBucket(CompleteAnimeBucket)
 	buckets[AnimeDetailsBucket] = filecache.NewPermanentBucket(AnimeDetailsBucket)
-	buckets[BaseMangaBucket] = filecache.NewPermanentBucket(BaseMangaBucket)
 	buckets[MangaDetailsBucket] = filecache.NewPermanentBucket(MangaDetailsBucket)
-	buckets[ViewerBucket] = filecache.NewPermanentBucket(ViewerBucket)
 	buckets[ViewerStatsBucket] = filecache.NewPermanentBucket(ViewerStatsBucket)
 	buckets[StudioDetailsBucket] = filecache.NewPermanentBucket(StudioDetailsBucket)
-	buckets[AnimeAiringScheduleBucket] = filecache.NewPermanentBucket(AnimeAiringScheduleBucket)
-	buckets[AnimeAiringScheduleRawBucket] = filecache.NewPermanentBucket(AnimeAiringScheduleRawBucket)
-	buckets[ListAnimeBucket] = filecache.NewPermanentBucket(ListAnimeBucket)
-	buckets[ListRecentAnimeBucket] = filecache.NewPermanentBucket(ListRecentAnimeBucket)
-	buckets[SearchBaseMangaBucket] = filecache.NewPermanentBucket(SearchBaseMangaBucket)
-	buckets[ListMangaBucket] = filecache.NewPermanentBucket(ListMangaBucket)
-	buckets[SearchBaseAnimeByIdsBucket] = filecache.NewPermanentBucket(SearchBaseAnimeByIdsBucket)
-	buckets[CustomQueryBucket] = filecache.NewPermanentBucket(CustomQueryBucket)
 	buckets[PendingMediaListUpdatesBucket] = filecache.NewPermanentBucket(PendingMediaListUpdatesBucket)
 
 	logger := util.NewLogger()
@@ -241,7 +242,7 @@ func NewCacheLayer(anilistClientRef *util.Ref[anilist.AnilistClient], logoutFunc
 	}
 
 	cl := &CacheLayer{
-		anilistClientRef:   anilistClientRef,
+		bangumiClientRef:   clientRef,
 		fileCacher:         fileCacher,
 		buckets:            buckets,
 		logger:             logger,
@@ -249,79 +250,42 @@ func NewCacheLayer(anilistClientRef *util.Ref[anilist.AnilistClient], logoutFunc
 		logoutFunc:         logout,
 	}
 
-	AnilistClient.Store(anilistClientRef.Get())
 	cl.startQueuedUpdateSync()
 
 	return cl
 }
 
-var _ anilist.AnilistClient = (*CacheLayer)(nil)
-
-func (c *CacheLayer) IsAuthenticated() bool {
-	return c.anilistClientRef.Get().IsAuthenticated()
+// client 返回底层 Bangumi 客户端（可能为 nil：测试直构 CacheLayer 时）。
+func (c *CacheLayer) client() BangumiAPI {
+	if c.bangumiClientRef == nil {
+		return nil
+	}
+	return c.bangumiClientRef.Get()
 }
 
-func (c *CacheLayer) GetCacheDir() string {
-	return c.anilistClientRef.Get().GetCacheDir()
-}
-
-func (c *CacheLayer) CustomQuery(body []byte, logger *zerolog.Logger, token ...string) (interface{}, error) {
-	// Use the stringified body as cache key
-	cacheKey := string(body)
-	bucket := c.buckets[CustomQueryBucket]
-
-	// Try network first if API is working
-	if IsWorking.Load() {
-		res, err := c.anilistClientRef.Get().CustomQuery(body, logger, token...)
-		c.checkAndUpdateWorkingState(err)
-
-		if err == nil {
-			go func() {
-				if !ShouldCache.Load() {
-					return
-				}
-				allData, err := filecache.GetAll[interface{}](c.fileCacher, filecache.NewBucket(bucket.Name(), 0))
-				if err == nil && len(allData) >= maxNonCollectionCacheEntries {
-					_ = c.fileCacher.DeletePermOldest(bucket)
-				}
-
-				if err := c.fileCacher.SetPerm(bucket, cacheKey, res); err != nil {
-					c.logger.Warn().Err(err).Msg("anilist cache: Failed to cache custom query result")
-				}
-			}()
-			return res, nil
+// fetchAllUserCollections 全分页拉取指定用户的某类收藏
+// （循环 offset 直到取满 total 或不足一页）。
+func (c *CacheLayer) fetchAllUserCollections(ctx context.Context, username string, subjectType int) (*bangumi.UserCollectionsResult, error) {
+	all := make([]bangumi.UserCollection, 0)
+	offset := 0
+	total := 0
+	for {
+		res, err := c.client().GetUserCollectionsByUser(ctx, username, bangumi.UserCollectionsOpts{
+			SubjectType: &subjectType,
+			Limit:       collectionPageLimit,
+			Offset:      offset,
+		})
+		if err != nil {
+			return nil, err
 		}
-	} else {
-		// If API is not working, try it in the background to check if it's back
-		go func() {
-			res, err := c.anilistClientRef.Get().CustomQuery(body, logger, token...)
-			c.checkAndUpdateWorkingState(err)
-			if err == nil {
-				// Cache the result for future use with bounded size
-				allData, err := filecache.GetAll[interface{}](c.fileCacher, filecache.NewBucket(bucket.Name(), 0))
-				if err == nil && len(allData) >= maxNonCollectionCacheEntries {
-					_ = c.fileCacher.DeletePermOldest(bucket)
-				}
-
-				if err := c.fileCacher.SetPerm(bucket, cacheKey, res); err != nil {
-					c.logger.Warn().Err(err).Msg("anilist cache: Failed to cache background custom query result")
-				}
-			}
-		}()
+		all = append(all, res.Data...)
+		total = res.Total
+		if len(res.Data) < collectionPageLimit || (total > 0 && len(all) >= total) {
+			break
+		}
+		offset += len(res.Data)
 	}
-
-	// Fall back to cache
-	var cached interface{}
-	found, err := c.fileCacher.GetPerm(bucket, cacheKey, &cached)
-	if err != nil {
-		return nil, fmt.Errorf("cache lookup failed: %w", err)
-	}
-	if !found {
-		return nil, fmt.Errorf("no cached data available")
-	}
-
-	c.logger.Debug().Str("bucket", CustomQueryBucket).Str("key", cacheKey).Msg("anilist cache: Serving custom query from cache")
-	return cached, nil
+	return &bangumi.UserCollectionsResult{Data: all, Total: total}, nil
 }
 
 // checkAndUpdateWorkingState checks if the API client is working and updates the state
@@ -332,18 +296,18 @@ func (c *CacheLayer) checkAndUpdateWorkingState(err error) {
 			return
 		}
 
-		// skip 404 errors
+		// skip 404 errors（subject 不存在是正常业务态）
 		if strings.Contains(err.Error(), "404") {
 			return
 		}
-		// skip 429 errors
+		// skip 429 errors（client 已做退避重试，重试耗尽后不视为宕机信号）
 		if strings.Contains(err.Error(), "429") {
 			return
 		}
 
 		// handle invalid token
-		if isAnilistAuthError(err) {
-			events.GlobalWSEventManager.SendEvent(events.ServerLoggedOutAnilist, "Your AniList session has expired. Please log in again.")
+		if isBangumiAuthError(err) {
+			events.GlobalWSEventManager.SendEvent(events.ServerLoggedOutAnilist, "Your Bangumi session has expired. Please log in again.")
 			if c.logoutFunc != nil {
 				go c.logoutFunc()
 			}
@@ -361,9 +325,9 @@ func (c *CacheLayer) checkAndUpdateWorkingState(err error) {
 					Err(err).
 					Int("recent_failures", recentFailures).
 					Dur("within_window", failureWindow).
-					Msg("anilist cache: Multiple API failures detected, switching to cache-only mode.")
+					Msg("bangumi cache: Multiple API failures detected, switching to cache-only mode.")
 				events.GlobalWSEventManager.SendEvent(events.WarningToast,
-					fmt.Sprintf("The AniList API is experiencing issues (%d failures in %v), switching to cache-only mode.",
+					fmt.Sprintf("The Bangumi API is experiencing issues (%d failures in %v), switching to cache-only mode.",
 						recentFailures, failureWindow))
 				IsWorking.Store(false)
 			} else {
@@ -371,27 +335,29 @@ func (c *CacheLayer) checkAndUpdateWorkingState(err error) {
 					Err(err).
 					Int("recent_failures", recentFailures).
 					Int("threshold", failureThreshold).
-					Msg("anilist cache: API failure recorded, monitoring for more failures")
+					Msg("bangumi cache: API failure recorded, monitoring for more failures")
 			}
 		}
 	} else {
 		// clear failure tracking and mark as working if not already
 		if !IsWorking.Load() {
-			c.logger.Info().Msg("anilist cache: API client is working again, switching back to network-first mode.")
-			events.GlobalWSEventManager.SendEvent(events.InfoToast, "The AniList API is back online")
+			c.logger.Info().Msg("bangumi cache: API client is working again, switching back to network-first mode.")
+			events.GlobalWSEventManager.SendEvent(events.InfoToast, "The Bangumi API is back online")
 			IsWorking.Store(true)
 		}
 		clearFailureTracking()
 	}
 }
 
-func isAnilistAuthError(err error) bool {
+func isBangumiAuthError(err error) bool {
 	if err == nil {
 		return false
 	}
-
+	if errors.Is(err, bangumi.ErrUnauthorized) {
+		return true
+	}
 	errStr := strings.ToLower(err.Error())
-	return strings.Contains(errStr, "invalid token") || strings.Contains(errStr, "user not found")
+	return strings.Contains(errStr, "invalid token") || strings.Contains(errStr, "unauthorized") || strings.Contains(errStr, "user not found")
 }
 
 // generateCacheKey generates a cache key from the given parameters
@@ -415,32 +381,10 @@ func (c *CacheLayer) generateCacheKey(params ...interface{}) string {
 			} else {
 				keyParts = append(keyParts, "nil")
 			}
-		case *bool:
-			if v != nil {
-				keyParts = append(keyParts, strconv.FormatBool(*v))
-			} else {
-				keyParts = append(keyParts, "nil")
-			}
-		case []*int:
-			tmp := make([]int, 0, len(v))
-			for _, id := range v {
-				if id != nil {
-					tmp = append(tmp, *id)
-				}
-			}
-			slices.Sort(tmp)
-			for _, id := range tmp {
-				keyParts = append(keyParts, strconv.Itoa(id))
-			}
-		case []*string:
-			tmp := make([]string, 0, len(v))
-			for _, s := range v {
-				if s != nil {
-					tmp = append(tmp, *s)
-				}
-			}
-			slices.Sort(tmp)
-			keyParts = append(keyParts, tmp...)
+		case string:
+			keyParts = append(keyParts, v)
+		case int:
+			keyParts = append(keyParts, strconv.Itoa(v))
 		default:
 			keyParts = append(keyParts, fmt.Sprintf("%v", param))
 		}
@@ -472,29 +416,18 @@ func (c *CacheLayer) updateCollectionTracking() {
 			c.lastCollectionUpdate = time.Now()
 		}()
 
-		// Try to fetch anime collection
-		if animeCollection, err := c.anilistClientRef.Get().AnimeCollection(context.Background(), nil); err == nil && animeCollection != nil {
-			for _, list := range animeCollection.MediaListCollection.Lists {
-				if list != nil {
-					for _, entry := range list.Entries {
-						if entry != nil && entry.Media != nil {
-							c.collectionMediaIDs.Set(entry.Media.ID, struct{}{})
-						}
-					}
-				}
-			}
+		if c.client() == nil {
+			return
 		}
 
-		// Try to fetch manga collection
-		if mangaCollection, err := c.anilistClientRef.Get().MangaCollection(context.Background(), nil); err == nil && mangaCollection != nil {
-			for _, list := range mangaCollection.MediaListCollection.Lists {
-				if list != nil {
-					for _, entry := range list.Entries {
-						if entry != nil && entry.Media != nil {
-							c.collectionMediaIDs.Set(entry.Media.ID, struct{}{})
-						}
-					}
-				}
+		// 动画（subject_type=2）与书籍（subject_type=1）两个分区都跟踪
+		for _, subjectType := range []int{bangumi.SubjectAnime, bangumi.SubjectBook} {
+			res, err := c.fetchAllUserCollections(context.Background(), "-", subjectType)
+			if err != nil {
+				continue
+			}
+			for _, uc := range res.Data {
+				c.collectionMediaIDs.Set(uc.SubjectID, struct{}{})
 			}
 		}
 	}()
@@ -502,7 +435,7 @@ func (c *CacheLayer) updateCollectionTracking() {
 
 // networkFirstGet performs a network-first get operation with caching
 func networkFirstGet[T any](c *CacheLayer, bucketName string, cacheKey string, networkFn func() (*T, error)) (*T, error) {
-	if !ShouldCache.Load() {
+	if !ShouldCache.Load() || c.fileCacher == nil {
 		return networkFn()
 	}
 
@@ -516,7 +449,7 @@ func networkFirstGet[T any](c *CacheLayer, bucketName string, cacheKey string, n
 		if err == nil && res != nil {
 			// Cache the successful result
 			if err := c.fileCacher.SetPerm(bucket, cacheKey, res); err != nil {
-				c.logger.Warn().Err(err).Msg("anilist cache: Failed to cache result")
+				c.logger.Warn().Err(err).Msg("bangumi cache: Failed to cache result")
 			}
 			return res, nil
 		}
@@ -528,7 +461,7 @@ func networkFirstGet[T any](c *CacheLayer, bucketName string, cacheKey string, n
 			if err == nil && res != nil {
 				// Cache the result for future use
 				if err := c.fileCacher.SetPerm(bucket, cacheKey, res); err != nil {
-					c.logger.Warn().Err(err).Msg("anilist cache: Failed to cache background result")
+					c.logger.Warn().Err(err).Msg("bangumi cache: Failed to cache background result")
 				}
 			}
 		}()
@@ -544,13 +477,13 @@ func networkFirstGet[T any](c *CacheLayer, bucketName string, cacheKey string, n
 		return nil, fmt.Errorf("no cached data available")
 	}
 
-	c.logger.Debug().Str("bucket", bucketName).Str("key", cacheKey).Msg("anilist cache: Serving from cache")
+	c.logger.Debug().Str("bucket", bucketName).Str("key", cacheKey).Msg("bangumi cache: Serving from cache")
 	return &cached, nil
 }
 
 // boundedCacheSet caches data with a limit on non-collection entries
 func (c *CacheLayer) boundedCacheSet(bucketName string, cacheKey string, data interface{}, mediaID int) error {
-	if !ShouldCache.Load() {
+	if !ShouldCache.Load() || c.fileCacher == nil {
 		return nil
 	}
 
@@ -581,11 +514,7 @@ func (c *CacheLayer) boundedCacheSet(bucketName string, cacheKey string, data in
 }
 
 // updateCollectionTrackingFromAnimeCollection updates collection tracking from anime collection
-func (c *CacheLayer) updateCollectionTrackingFromAnimeCollection(collection *anilist.AnimeCollection) {
-	if !ShouldCache.Load() {
-		return
-	}
-
+func (c *CacheLayer) updateCollectionTrackingFromAnimeCollection(collection *media.AnimeCollection) {
 	if !ShouldCache.Load() || collection == nil || collection.MediaListCollection == nil {
 		return
 	}
@@ -602,11 +531,7 @@ func (c *CacheLayer) updateCollectionTrackingFromAnimeCollection(collection *ani
 	c.lastCollectionUpdate = time.Now()
 }
 
-func (c *CacheLayer) updateCollectionTrackingFromAnimeCollectionWithRelations(collection *anilist.AnimeCollectionWithRelations) {
-	if !ShouldCache.Load() {
-		return
-	}
-
+func (c *CacheLayer) updateCollectionTrackingFromAnimeCollectionWithRelations(collection *media.AnimeCollectionWithRelations) {
 	if !ShouldCache.Load() || collection == nil || collection.MediaListCollection == nil {
 		return
 	}
@@ -623,11 +548,7 @@ func (c *CacheLayer) updateCollectionTrackingFromAnimeCollectionWithRelations(co
 	c.lastCollectionUpdate = time.Now()
 }
 
-func (c *CacheLayer) updateCollectionTrackingFromMangaCollection(collection *anilist.MangaCollection) {
-	if !ShouldCache.Load() {
-		return
-	}
-
+func (c *CacheLayer) updateCollectionTrackingFromMangaCollection(collection *media.MangaCollection) {
 	if !ShouldCache.Load() || collection == nil || collection.MediaListCollection == nil {
 		return
 	}
@@ -646,7 +567,7 @@ func (c *CacheLayer) updateCollectionTrackingFromMangaCollection(collection *ani
 
 // invalidateMediaCaches invalidates caches for a specific media ID
 func (c *CacheLayer) invalidateMediaCaches(mediaID int) {
-	if !ShouldCache.Load() {
+	if !ShouldCache.Load() || c.fileCacher == nil {
 		return
 	}
 
@@ -664,30 +585,26 @@ func (c *CacheLayer) invalidateMediaCaches(mediaID int) {
 	for _, bucketName := range buckets {
 		bucket := c.buckets[bucketName]
 		if err := c.fileCacher.DeletePerm(bucket, mediaIDStr); err != nil {
-			c.logger.Debug().Err(err).Str("bucket", bucketName).Int("mediaID", mediaID).Msg("anilist cache: Failed to invalidate cache entry")
+			c.logger.Debug().Err(err).Str("bucket", bucketName).Int("mediaID", mediaID).Msg("bangumi cache: Failed to invalidate cache entry")
 		}
 	}
 }
 
-// invalidateCollectionCaches invalidates all collection caches and custom queries
+// invalidateCollectionCaches invalidates all collection caches
 func (c *CacheLayer) invalidateCollectionCaches() {
-	if !ShouldCache.Load() {
+	if !ShouldCache.Load() || c.fileCacher == nil {
 		return
 	}
 
 	collectionBuckets := []string{
 		AnimeCollectionBucket,
-		AnimeCollectionTagsBucket,
-		AnimeCollectionRelationsBucket,
 		MangaCollectionBucket,
-		MangaCollectionTagsBucket,
-		CustomQueryBucket,
 	}
 
 	for _, bucketName := range collectionBuckets {
 		bucket := c.buckets[bucketName]
 		if err := c.fileCacher.EmptyPerm(bucket); err != nil {
-			c.logger.Warn().Err(err).Str("bucket", bucketName).Msg("anilist cache: Failed to invalidate collection cache")
+			c.logger.Warn().Err(err).Str("bucket", bucketName).Msg("bangumi cache: Failed to invalidate collection cache")
 		}
 	}
 
@@ -696,39 +613,22 @@ func (c *CacheLayer) invalidateCollectionCaches() {
 	c.lastCollectionUpdate = time.Time{}
 }
 
-// extractBaseAnimeFromCollection attempts to extract BaseAnime data from cached anime collection
-func (c *CacheLayer) extractBaseAnimeFromCollection(mediaID int) *anilist.BaseAnimeByID {
-	// Try anime collection
+// extractBaseAnimeFromCollection attempts to extract Anime data from cached anime collection
+func (c *CacheLayer) extractBaseAnimeFromCollection(mediaID int) *media.Anime {
+	if c.fileCacher == nil {
+		return nil
+	}
+
 	bucket := c.buckets[AnimeCollectionBucket]
 	cacheKey := c.generateCacheKey("collection", nil)
-	var animeCollection anilist.AnimeCollection
+	var animeCollection media.AnimeCollection
 	found, err := c.fileCacher.GetPerm(bucket, cacheKey, &animeCollection)
 	if err == nil && found && animeCollection.MediaListCollection != nil {
 		for _, list := range animeCollection.MediaListCollection.Lists {
 			if list != nil {
 				for _, entry := range list.Entries {
 					if entry != nil && entry.Media != nil && entry.Media.ID == mediaID {
-						return &anilist.BaseAnimeByID{
-							Media: entry.Media,
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// Try anime collection with relations
-	relBucket := c.buckets[AnimeCollectionRelationsBucket]
-	var animeCollectionRel anilist.AnimeCollectionWithRelations
-	found, err = c.fileCacher.GetPerm(relBucket, cacheKey, &animeCollectionRel)
-	if err == nil && found && animeCollectionRel.MediaListCollection != nil {
-		for _, list := range animeCollectionRel.MediaListCollection.Lists {
-			if list != nil {
-				for _, entry := range list.Entries {
-					if entry != nil && entry.Media != nil && entry.Media.ID == mediaID {
-						return &anilist.BaseAnimeByID{
-							Media: entry.Media.ToBaseAnime(),
-						}
+						return entry.Media
 					}
 				}
 			}
@@ -738,24 +638,22 @@ func (c *CacheLayer) extractBaseAnimeFromCollection(mediaID int) *anilist.BaseAn
 	return nil
 }
 
-// extractBaseMangaFromCollection attempts to extract BaseManga data from cached manga collection
-func (c *CacheLayer) extractBaseMangaFromCollection(mediaID int) *anilist.BaseMangaByID {
-	if !ShouldCache.Load() {
+// extractBaseMangaFromCollection attempts to extract Manga data from cached manga collection
+func (c *CacheLayer) extractBaseMangaFromCollection(mediaID int) *media.Manga {
+	if c.fileCacher == nil {
 		return nil
 	}
 
 	bucket := c.buckets[MangaCollectionBucket]
 	cacheKey := c.generateCacheKey("collection", nil)
-	var mangaCollection anilist.MangaCollection
+	var mangaCollection media.MangaCollection
 	found, err := c.fileCacher.GetPerm(bucket, cacheKey, &mangaCollection)
 	if err == nil && found && mangaCollection.MediaListCollection != nil {
 		for _, list := range mangaCollection.MediaListCollection.Lists {
 			if list != nil {
 				for _, entry := range list.Entries {
 					if entry != nil && entry.Media != nil && entry.Media.ID == mediaID {
-						return &anilist.BaseMangaByID{
-							Media: entry.Media,
-						}
+						return entry.Media
 					}
 				}
 			}
@@ -765,72 +663,25 @@ func (c *CacheLayer) extractBaseMangaFromCollection(mediaID int) *anilist.BaseMa
 	return nil
 }
 
-// networkFirstGetWithBoundedCache performs a network-first get operation with bounded caching for list/search results
-func networkFirstGetWithBoundedCache[T any](c *CacheLayer, bucketName string, cacheKey string, networkFn func() (*T, error)) (*T, error) {
-	bucket := c.buckets[bucketName]
+//----------------------------------------------------------------------------------------------------------------------
+// 查询方法
 
-	// Try network first if API is working
-	if IsWorking.Load() {
-		res, err := networkFn()
-		c.checkAndUpdateWorkingState(err)
-
-		if err == nil && res != nil {
-			// Cache the successful result with bounded size
-			go func() {
-				// For list/search results, always apply bounded caching
-				allData, err := filecache.GetAll[interface{}](c.fileCacher, filecache.NewBucket(bucket.Name(), 0))
-				if err == nil && len(allData) >= maxNonCollectionCacheEntries {
-					_ = c.fileCacher.DeletePermOldest(bucket)
-				}
-
-				if err := c.fileCacher.SetPerm(bucket, cacheKey, res); err != nil {
-					c.logger.Warn().Err(err).Msg("anilist cache: Failed to cache bounded result")
-				}
-			}()
-			return res, nil
+// AnimeCollection 获取动画收藏（subject_type=2 全分页 → media.AnimeCollection）。
+func (c *CacheLayer) AnimeCollection(ctx context.Context, username string) (*media.AnimeCollection, error) {
+	cacheKey := c.generateCacheKey("collection", username)
+	res, err := networkFirstGet(c, AnimeCollectionBucket, cacheKey, func() (*media.AnimeCollection, error) {
+		data, err := c.fetchAllUserCollections(ctx, username, bangumi.SubjectAnime)
+		if err != nil {
+			return nil, err
 		}
-	} else {
-		// If API is not working, try it in the background to check if it's back
-		go func() {
-			res, err := networkFn()
-			c.checkAndUpdateWorkingState(err)
-			if err == nil && res != nil {
-				// Cache the result for future use with bounded size
-				allData, err := filecache.GetAll[interface{}](c.fileCacher, filecache.NewBucket(bucket.Name(), 0))
-				if err == nil && len(allData) >= maxNonCollectionCacheEntries {
-					_ = c.fileCacher.DeletePermOldest(bucket)
-				}
-
-				if err := c.fileCacher.SetPerm(bucket, cacheKey, res); err != nil {
-					c.logger.Warn().Err(err).Msg("anilist cache: Failed to cache background bounded result")
-				}
-			}
-		}()
-	}
-
-	// Fall back to cache
-	var cached T
-	found, err := c.fileCacher.GetPerm(bucket, cacheKey, &cached)
-	if err != nil {
-		return nil, fmt.Errorf("cache lookup failed: %w", err)
-	}
-	if !found {
-		return nil, fmt.Errorf("no cached data available")
-	}
-
-	c.logger.Debug().Str("bucket", bucketName).Str("key", cacheKey).Msg("anilist cache: Serving bounded result from cache")
-	return &cached, nil
-}
-
-func (c *CacheLayer) AnimeCollection(ctx context.Context, userName *string, interceptors ...clientv2.RequestInterceptor) (*anilist.AnimeCollection, error) {
-	cacheKey := c.generateCacheKey("collection", nil)
-	res, err := networkFirstGet(c, AnimeCollectionBucket, cacheKey, func() (*anilist.AnimeCollection, error) {
-		return c.anilistClientRef.Get().AnimeCollection(ctx, userName, interceptors...)
+		return bangumi.AnimeCollectionFromUserCollections(data), nil
 	})
 
 	if err == nil && res != nil && c.applyQueuedUpdatesToAnimeCollection(res) {
-		if err := c.fileCacher.SetPerm(c.buckets[AnimeCollectionBucket], cacheKey, res); err != nil {
-			c.logger.Warn().Err(err).Msg("anilist cache: Failed to apply queued updates to anime collection cache")
+		if c.fileCacher != nil {
+			if err := c.fileCacher.SetPerm(c.buckets[AnimeCollectionBucket], cacheKey, res); err != nil {
+				c.logger.Warn().Err(err).Msg("bangumi cache: Failed to apply queued updates to anime collection cache")
+			}
 		}
 	}
 
@@ -842,236 +693,22 @@ func (c *CacheLayer) AnimeCollection(ctx context.Context, userName *string, inte
 	return res, err
 }
 
-func (c *CacheLayer) AnimeCollectionTags(ctx context.Context, userName *string, interceptors ...clientv2.RequestInterceptor) (*anilist.AnimeCollectionTags, error) {
-	cacheKey := c.generateCacheKey("collection-tags", userName)
-	return networkFirstGet(c, AnimeCollectionTagsBucket, cacheKey, func() (*anilist.AnimeCollectionTags, error) {
-		return c.anilistClientRef.Get().AnimeCollectionTags(ctx, userName, interceptors...)
-	})
-}
-
-func (c *CacheLayer) AnimeCollectionWithRelations(ctx context.Context, userName *string, interceptors ...clientv2.RequestInterceptor) (*anilist.AnimeCollectionWithRelations, error) {
-	cacheKey := c.generateCacheKey("collection-relations", nil)
-	res, err := networkFirstGet(c, AnimeCollectionRelationsBucket, cacheKey, func() (*anilist.AnimeCollectionWithRelations, error) {
-		return c.anilistClientRef.Get().AnimeCollectionWithRelations(ctx, userName, interceptors...)
-	})
-
-	// Update collection tracking with the fetched data
-	if err == nil && res != nil {
-		go c.updateCollectionTrackingFromAnimeCollectionWithRelations(res)
-	}
-
-	return res, err
-}
-
-func (c *CacheLayer) BaseAnimeByMalID(ctx context.Context, id *int, interceptors ...clientv2.RequestInterceptor) (*anilist.BaseAnimeByMalID, error) {
-	if id == nil {
-		return c.anilistClientRef.Get().BaseAnimeByMalID(ctx, id, interceptors...)
-	}
-
-	cacheKey := c.generateCacheKey("mal", id)
-	return networkFirstGet(c, BaseAnimeMalBucket, cacheKey, func() (*anilist.BaseAnimeByMalID, error) {
-		return c.anilistClientRef.Get().BaseAnimeByMalID(ctx, id, interceptors...)
-	})
-}
-
-func (c *CacheLayer) BaseAnimeByID(ctx context.Context, id *int, interceptors ...clientv2.RequestInterceptor) (*anilist.BaseAnimeByID, error) {
-	if id == nil {
-		return c.anilistClientRef.Get().BaseAnimeByID(ctx, id, interceptors...)
-	}
-
-	cacheKey := c.generateCacheKey(id)
-	res, err := networkFirstGet(c, BaseAnimeBucket, cacheKey, func() (*anilist.BaseAnimeByID, error) {
-		return c.anilistClientRef.Get().BaseAnimeByID(ctx, id, interceptors...)
-	})
-
-	// If network and direct cache failed, try to extract from collection cache
-	if err != nil {
-		if collectionResult := c.extractBaseAnimeFromCollection(*id); collectionResult != nil {
-			c.logger.Debug().Int("mediaID", *id).Msg("anilist cache: Extracted BaseAnime from collection cache")
-			return collectionResult, nil
-		}
-	}
-
-	// If successful, update bounded cache for non-collection media
-	if err == nil && res != nil {
-		go func() {
-			if err := c.boundedCacheSet(BaseAnimeBucket, cacheKey, res, *id); err != nil {
-				c.logger.Warn().Err(err).Msg("anilist cache: Failed to update bounded cache")
-			}
-		}()
-	}
-
-	return res, err
-}
-
-func (c *CacheLayer) SearchBaseAnimeByIds(ctx context.Context, ids []*int, page *int, perPage *int, status []*anilist.MediaStatus, inCollection *bool, sort []*anilist.MediaSort, season *anilist.MediaSeason, year *int, genre *string, format *anilist.MediaFormat, interceptors ...clientv2.RequestInterceptor) (*anilist.SearchBaseAnimeByIds, error) {
-	cacheKey := c.generateCacheKey(ids, page, perPage, status, inCollection, sort, season, year, genre, format)
-	return networkFirstGetWithBoundedCache(c, SearchBaseAnimeByIdsBucket, cacheKey, func() (*anilist.SearchBaseAnimeByIds, error) {
-		return c.anilistClientRef.Get().SearchBaseAnimeByIds(ctx, ids, page, perPage, status, inCollection, sort, season, year, genre, format, interceptors...)
-	})
-}
-
-func (c *CacheLayer) CompleteAnimeByID(ctx context.Context, id *int, interceptors ...clientv2.RequestInterceptor) (*anilist.CompleteAnimeByID, error) {
-	if id == nil {
-		return c.anilistClientRef.Get().CompleteAnimeByID(ctx, id, interceptors...)
-	}
-
-	cacheKey := c.generateCacheKey(id)
-	res, err := networkFirstGet(c, CompleteAnimeBucket, cacheKey, func() (*anilist.CompleteAnimeByID, error) {
-		return c.anilistClientRef.Get().CompleteAnimeByID(ctx, id, interceptors...)
-	})
-
-	// If successful, update bounded cache for non-collection media
-	if err == nil && res != nil {
-		go func() {
-			if err := c.boundedCacheSet(CompleteAnimeBucket, cacheKey, res, *id); err != nil {
-				c.logger.Warn().Err(err).Msg("anilist cache: failed to update bounded cache")
-			}
-		}()
-	}
-
-	return res, err
-}
-
-func (c *CacheLayer) AnimeDetailsByID(ctx context.Context, id *int, interceptors ...clientv2.RequestInterceptor) (*anilist.AnimeDetailsByID, error) {
-	if id == nil {
-		return c.anilistClientRef.Get().AnimeDetailsByID(ctx, id, interceptors...)
-	}
-
-	cacheKey := c.generateCacheKey(id)
-	res, err := networkFirstGet(c, AnimeDetailsBucket, cacheKey, func() (*anilist.AnimeDetailsByID, error) {
-		return c.anilistClientRef.Get().AnimeDetailsByID(ctx, id, interceptors...)
-	})
-
-	// If successful, update bounded cache for non-collection media
-	if err == nil && res != nil {
-		go func() {
-			if err := c.boundedCacheSet(AnimeDetailsBucket, cacheKey, res, *id); err != nil {
-				c.logger.Warn().Err(err).Msg("anilist cache: failed to update bounded cache")
-			}
-		}()
-	}
-
-	return res, err
-}
-
-func (c *CacheLayer) ListAnime(ctx context.Context, page *int, search *string, perPage *int, sort []*anilist.MediaSort, status []*anilist.MediaStatus, genres []*string, tags []*string, averageScoreGreater *int, season *anilist.MediaSeason, seasonYear *int, format *anilist.MediaFormat, isAdult *bool, interceptors ...clientv2.RequestInterceptor) (*anilist.ListAnime, error) {
-	cacheKey := c.generateCacheKey(page, search, perPage, sort, status, genres, averageScoreGreater, season, seasonYear, format, isAdult)
-	return networkFirstGetWithBoundedCache(c, ListAnimeBucket, cacheKey, func() (*anilist.ListAnime, error) {
-		return c.anilistClientRef.Get().ListAnime(ctx, page, search, perPage, sort, status, genres, tags, averageScoreGreater, season, seasonYear, format, isAdult, interceptors...)
-	})
-}
-
-func (c *CacheLayer) ListRecentAnime(ctx context.Context, page *int, perPage *int, airingAtGreater *int, airingAtLesser *int, notYetAired *bool, interceptors ...clientv2.RequestInterceptor) (*anilist.ListRecentAnime, error) {
-	// devnote: don't include airingAt params since they're unique for each requests, just return from the other params
-	cacheKey := c.generateCacheKey(page, perPage, notYetAired)
-	return networkFirstGetWithBoundedCache(c, ListRecentAnimeBucket, cacheKey, func() (*anilist.ListRecentAnime, error) {
-		return c.anilistClientRef.Get().ListRecentAnime(ctx, page, perPage, airingAtGreater, airingAtLesser, notYetAired, interceptors...)
-	})
-}
-
-func (c *CacheLayer) UpdateMediaListEntry(ctx context.Context, mediaID *int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput, interceptors ...clientv2.RequestInterceptor) (*anilist.UpdateMediaListEntry, error) {
-	// Mutations require the API to be working
-	if !IsWorking.Load() {
-		entryID, err := c.queueMediaListEntryUpdate(mediaID, status, scoreRaw, progress, startedAt, completedAt)
+// MangaCollection 获取漫画/书籍收藏（subject_type=1 全分页 → media.MangaCollection）。
+func (c *CacheLayer) MangaCollection(ctx context.Context, username string) (*media.MangaCollection, error) {
+	cacheKey := c.generateCacheKey("collection", username)
+	res, err := networkFirstGet(c, MangaCollectionBucket, cacheKey, func() (*media.MangaCollection, error) {
+		data, err := c.fetchAllUserCollections(ctx, username, bangumi.SubjectBook)
 		if err != nil {
 			return nil, err
 		}
-		return &anilist.UpdateMediaListEntry{SaveMediaListEntry: &anilist.UpdateMediaListEntry_SaveMediaListEntry{ID: entryID}}, nil
-	}
-
-	res, err := c.sendMediaListEntryUpdate(ctx, mediaID, status, scoreRaw, progress, startedAt, completedAt, interceptors...)
-	c.checkAndUpdateWorkingState(err)
-	if err != nil && shouldQueueMediaListUpdate(err) {
-		entryID, queueErr := c.queueMediaListEntryUpdate(mediaID, status, scoreRaw, progress, startedAt, completedAt)
-		if queueErr != nil {
-			return nil, queueErr
-		}
-		return &anilist.UpdateMediaListEntry{SaveMediaListEntry: &anilist.UpdateMediaListEntry_SaveMediaListEntry{ID: entryID}}, nil
-	}
-
-	// Invalidate relevant caches on successful mutation
-	if err == nil && mediaID != nil {
-		c.invalidateMediaCaches(*mediaID)
-		c.invalidateCollectionCaches()
-	}
-
-	return res, err
-}
-
-func (c *CacheLayer) UpdateMediaListEntryProgress(ctx context.Context, mediaID *int, progress *int, status *anilist.MediaListStatus, interceptors ...clientv2.RequestInterceptor) (*anilist.UpdateMediaListEntryProgress, error) {
-	// Mutations require the API to be working
-	if !IsWorking.Load() {
-		entryID, err := c.queueMediaListEntryProgressUpdate(mediaID, progress, status)
-		if err != nil {
-			return nil, err
-		}
-		return &anilist.UpdateMediaListEntryProgress{SaveMediaListEntry: &anilist.UpdateMediaListEntryProgress_SaveMediaListEntry{ID: entryID}}, nil
-	}
-
-	res, err := c.sendMediaListEntryProgressUpdate(ctx, mediaID, progress, status, interceptors...)
-	c.checkAndUpdateWorkingState(err)
-	if err != nil && shouldQueueMediaListUpdate(err) {
-		entryID, queueErr := c.queueMediaListEntryProgressUpdate(mediaID, progress, status)
-		if queueErr != nil {
-			return nil, queueErr
-		}
-		return &anilist.UpdateMediaListEntryProgress{SaveMediaListEntry: &anilist.UpdateMediaListEntryProgress_SaveMediaListEntry{ID: entryID}}, nil
-	}
-
-	// Invalidate relevant caches on successful mutation
-	if err == nil && mediaID != nil {
-		c.invalidateMediaCaches(*mediaID)
-		c.invalidateCollectionCaches()
-	}
-
-	return res, err
-}
-
-func (c *CacheLayer) UpdateMediaListEntryRepeat(ctx context.Context, mediaID *int, repeat *int, interceptors ...clientv2.RequestInterceptor) (*anilist.UpdateMediaListEntryRepeat, error) {
-	// Mutations require the API to be working
-	if !IsWorking.Load() {
-		return nil, fmt.Errorf("anilist cache: API client is not working, mutation operations are not available")
-	}
-
-	res, err := c.anilistClientRef.Get().UpdateMediaListEntryRepeat(ctx, mediaID, repeat, interceptors...)
-	c.checkAndUpdateWorkingState(err)
-
-	// Invalidate relevant caches on successful mutation
-	if err == nil && mediaID != nil {
-		c.invalidateMediaCaches(*mediaID)
-		c.invalidateCollectionCaches()
-	}
-
-	return res, err
-}
-
-func (c *CacheLayer) DeleteEntry(ctx context.Context, mediaListEntryID *int, interceptors ...clientv2.RequestInterceptor) (*anilist.DeleteEntry, error) {
-	// Mutations require the API to be working
-	if !IsWorking.Load() {
-		return nil, fmt.Errorf("anilist cache: API client is not working, mutation operations are not available")
-	}
-
-	res, err := c.anilistClientRef.Get().DeleteEntry(ctx, mediaListEntryID, interceptors...)
-	c.checkAndUpdateWorkingState(err)
-
-	// Invalidate collection caches on successful deletion
-	if err == nil {
-		c.invalidateCollectionCaches()
-	}
-
-	return res, err
-}
-
-func (c *CacheLayer) MangaCollection(ctx context.Context, userName *string, interceptors ...clientv2.RequestInterceptor) (*anilist.MangaCollection, error) {
-	cacheKey := c.generateCacheKey("collection", nil)
-	res, err := networkFirstGet(c, MangaCollectionBucket, cacheKey, func() (*anilist.MangaCollection, error) {
-		return c.anilistClientRef.Get().MangaCollection(ctx, userName, interceptors...)
+		return bangumi.MangaCollectionFromUserCollections(data), nil
 	})
 
 	if err == nil && res != nil && c.applyQueuedUpdatesToMangaCollection(res) {
-		if err := c.fileCacher.SetPerm(c.buckets[MangaCollectionBucket], cacheKey, res); err != nil {
-			c.logger.Warn().Err(err).Msg("anilist cache: Failed to apply queued updates to manga collection cache")
+		if c.fileCacher != nil {
+			if err := c.fileCacher.SetPerm(c.buckets[MangaCollectionBucket], cacheKey, res); err != nil {
+				c.logger.Warn().Err(err).Msg("bangumi cache: Failed to apply queued updates to manga collection cache")
+			}
 		}
 	}
 
@@ -1083,34 +720,21 @@ func (c *CacheLayer) MangaCollection(ctx context.Context, userName *string, inte
 	return res, err
 }
 
-func (c *CacheLayer) MangaCollectionTags(ctx context.Context, userName *string, interceptors ...clientv2.RequestInterceptor) (*anilist.MangaCollectionTags, error) {
-	cacheKey := c.generateCacheKey("collection-tags", userName)
-	return networkFirstGet(c, MangaCollectionTagsBucket, cacheKey, func() (*anilist.MangaCollectionTags, error) {
-		return c.anilistClientRef.Get().MangaCollectionTags(ctx, userName, interceptors...)
-	})
-}
-
-func (c *CacheLayer) SearchBaseManga(ctx context.Context, page *int, perPage *int, sort []*anilist.MediaSort, search *string, status []*anilist.MediaStatus, interceptors ...clientv2.RequestInterceptor) (*anilist.SearchBaseManga, error) {
-	cacheKey := c.generateCacheKey(page, perPage, sort, search, status)
-	return networkFirstGetWithBoundedCache(c, SearchBaseMangaBucket, cacheKey, func() (*anilist.SearchBaseManga, error) {
-		return c.anilistClientRef.Get().SearchBaseManga(ctx, page, perPage, sort, search, status, interceptors...)
-	})
-}
-
-func (c *CacheLayer) BaseMangaByID(ctx context.Context, id *int, interceptors ...clientv2.RequestInterceptor) (*anilist.BaseMangaByID, error) {
-	if id == nil {
-		return c.anilistClientRef.Get().BaseMangaByID(ctx, id, interceptors...)
-	}
-
+// BaseAnimeByID 获取单个条目（subject → media.Anime）。
+func (c *CacheLayer) BaseAnimeByID(ctx context.Context, id int) (*media.Anime, error) {
 	cacheKey := c.generateCacheKey(id)
-	res, err := networkFirstGet(c, BaseMangaBucket, cacheKey, func() (*anilist.BaseMangaByID, error) {
-		return c.anilistClientRef.Get().BaseMangaByID(ctx, id, interceptors...)
+	res, err := networkFirstGet(c, BaseAnimeBucket, cacheKey, func() (*media.Anime, error) {
+		subject, err := c.client().GetSubject(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		return media.AnimeFromSubject(bangumi.SubjectToMedia(subject)), nil
 	})
 
 	// If network and direct cache failed, try to extract from collection cache
 	if err != nil {
-		if collectionResult := c.extractBaseMangaFromCollection(*id); collectionResult != nil {
-			c.logger.Debug().Int("mediaID", *id).Msg("anilist cache: Extracted BaseManga from collection cache")
+		if collectionResult := c.extractBaseAnimeFromCollection(id); collectionResult != nil {
+			c.logger.Debug().Int("mediaID", id).Msg("bangumi cache: Extracted Anime from collection cache")
 			return collectionResult, nil
 		}
 	}
@@ -1118,8 +742,8 @@ func (c *CacheLayer) BaseMangaByID(ctx context.Context, id *int, interceptors ..
 	// If successful, update bounded cache for non-collection media
 	if err == nil && res != nil {
 		go func() {
-			if err := c.boundedCacheSet(BaseMangaBucket, cacheKey, res, *id); err != nil {
-				c.logger.Warn().Err(err).Msg("anilist cache: Failed to update bounded cache")
+			if err := c.boundedCacheSet(BaseAnimeBucket, cacheKey, res, id); err != nil {
+				c.logger.Warn().Err(err).Msg("bangumi cache: Failed to update bounded cache")
 			}
 		}()
 	}
@@ -1127,21 +751,58 @@ func (c *CacheLayer) BaseMangaByID(ctx context.Context, id *int, interceptors ..
 	return res, err
 }
 
-func (c *CacheLayer) MangaDetailsByID(ctx context.Context, id *int, interceptors ...clientv2.RequestInterceptor) (*anilist.MangaDetailsByID, error) {
-	if id == nil {
-		return c.anilistClientRef.Get().MangaDetailsByID(ctx, id, interceptors...)
+// BaseMangaByID 获取单个条目（subject → media.Manga）。
+func (c *CacheLayer) BaseMangaByID(ctx context.Context, id int) (*media.Manga, error) {
+	cacheKey := c.generateCacheKey(id)
+	res, err := networkFirstGet(c, BaseMangaBucket, cacheKey, func() (*media.Manga, error) {
+		subject, err := c.client().GetSubject(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		return media.MangaFromSubject(bangumi.SubjectToMedia(subject)), nil
+	})
+
+	// If network and direct cache failed, try to extract from collection cache
+	if err != nil {
+		if collectionResult := c.extractBaseMangaFromCollection(id); collectionResult != nil {
+			c.logger.Debug().Int("mediaID", id).Msg("bangumi cache: Extracted Manga from collection cache")
+			return collectionResult, nil
+		}
 	}
 
+	// If successful, update bounded cache for non-collection media
+	if err == nil && res != nil {
+		go func() {
+			if err := c.boundedCacheSet(BaseMangaBucket, cacheKey, res, id); err != nil {
+				c.logger.Warn().Err(err).Msg("bangumi cache: Failed to update bounded cache")
+			}
+		}()
+	}
+
+	return res, err
+}
+
+// CompleteAnimeByID 获取带关系树的完整条目（subject + related subjects）。
+func (c *CacheLayer) CompleteAnimeByID(ctx context.Context, id int) (*media.CompleteAnime, error) {
 	cacheKey := c.generateCacheKey(id)
-	res, err := networkFirstGet(c, MangaDetailsBucket, cacheKey, func() (*anilist.MangaDetailsByID, error) {
-		return c.anilistClientRef.Get().MangaDetailsByID(ctx, id, interceptors...)
+	res, err := networkFirstGet(c, CompleteAnimeBucket, cacheKey, func() (*media.CompleteAnime, error) {
+		subject, err := c.client().GetSubject(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		related, err := c.client().GetRelatedSubjects(ctx, id)
+		if err != nil {
+			// 关系列表失败不阻塞主条目返回（降级为无关系）
+			related = nil
+		}
+		return bangumi.CompleteAnimeFromSubject(subject, related), nil
 	})
 
 	// If successful, update bounded cache for non-collection media
 	if err == nil && res != nil {
 		go func() {
-			if err := c.boundedCacheSet(MangaDetailsBucket, cacheKey, res, *id); err != nil {
-				c.logger.Warn().Err(err).Msg("anilist cache: failed to update bounded cache")
+			if err := c.boundedCacheSet(CompleteAnimeBucket, cacheKey, res, id); err != nil {
+				c.logger.Warn().Err(err).Msg("bangumi cache: failed to update bounded cache")
 			}
 		}()
 	}
@@ -1149,48 +810,147 @@ func (c *CacheLayer) MangaDetailsByID(ctx context.Context, id *int, interceptors
 	return res, err
 }
 
-func (c *CacheLayer) ListManga(ctx context.Context, page *int, search *string, perPage *int, sort []*anilist.MediaSort, status []*anilist.MediaStatus, genres []*string, tags []*string, averageScoreGreater *int, startDateGreater *string, startDateLesser *string, format *anilist.MediaFormat, countryOfOrigin *string, isAdult *bool, interceptors ...clientv2.RequestInterceptor) (*anilist.ListManga, error) {
-	cacheKey := c.generateCacheKey(page, search, perPage, sort, status, genres, tags, averageScoreGreater, startDateGreater, startDateLesser, format, countryOfOrigin, isAdult)
-	return networkFirstGetWithBoundedCache(c, ListMangaBucket, cacheKey, func() (*anilist.ListManga, error) {
-		return c.anilistClientRef.Get().ListManga(ctx, page, search, perPage, sort, status, genres, tags, averageScoreGreater, startDateGreater, startDateLesser, format, countryOfOrigin, isAdult, interceptors...)
+// AnimeDetailsByID 获取 anime 详情（infobox 尽力映射）。
+func (c *CacheLayer) AnimeDetailsByID(ctx context.Context, id int) (*media.AnimeDetails, error) {
+	cacheKey := c.generateCacheKey(id)
+	res, err := networkFirstGet(c, AnimeDetailsBucket, cacheKey, func() (*media.AnimeDetails, error) {
+		subject, err := c.client().GetSubject(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		return bangumi.AnimeDetailsFromSubject(subject), nil
 	})
-}
 
-func (c *CacheLayer) ViewerStats(ctx context.Context, interceptors ...clientv2.RequestInterceptor) (*anilist.ViewerStats, error) {
-	cacheKey := "stats"
-	return networkFirstGet(c, ViewerStatsBucket, cacheKey, func() (*anilist.ViewerStats, error) {
-		return c.anilistClientRef.Get().ViewerStats(ctx, interceptors...)
-	})
-}
-
-func (c *CacheLayer) StudioDetails(ctx context.Context, id *int, interceptors ...clientv2.RequestInterceptor) (*anilist.StudioDetails, error) {
-	if id == nil {
-		return c.anilistClientRef.Get().StudioDetails(ctx, id, interceptors...)
+	// If successful, update bounded cache for non-collection media
+	if err == nil && res != nil {
+		go func() {
+			if err := c.boundedCacheSet(AnimeDetailsBucket, cacheKey, res, id); err != nil {
+				c.logger.Warn().Err(err).Msg("bangumi cache: failed to update bounded cache")
+			}
+		}()
 	}
 
+	return res, err
+}
+
+// MangaDetailsByID 获取 manga 详情（infobox 尽力映射）。
+func (c *CacheLayer) MangaDetailsByID(ctx context.Context, id int) (*media.MangaDetails, error) {
 	cacheKey := c.generateCacheKey(id)
-	return networkFirstGet(c, StudioDetailsBucket, cacheKey, func() (*anilist.StudioDetails, error) {
-		return c.anilistClientRef.Get().StudioDetails(ctx, id, interceptors...)
+	res, err := networkFirstGet(c, MangaDetailsBucket, cacheKey, func() (*media.MangaDetails, error) {
+		subject, err := c.client().GetSubject(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		return bangumi.MangaDetailsFromSubject(subject), nil
 	})
+
+	// If successful, update bounded cache for non-collection media
+	if err == nil && res != nil {
+		go func() {
+			if err := c.boundedCacheSet(MangaDetailsBucket, cacheKey, res, id); err != nil {
+				c.logger.Warn().Err(err).Msg("bangumi cache: failed to update bounded cache")
+			}
+		}()
+	}
+
+	return res, err
 }
 
-func (c *CacheLayer) GetViewer(ctx context.Context, interceptors ...clientv2.RequestInterceptor) (*anilist.GetViewer, error) {
-	cacheKey := "viewer"
-	return networkFirstGet(c, ViewerBucket, cacheKey, func() (*anilist.GetViewer, error) {
-		return c.anilistClientRef.Get().GetViewer(ctx, interceptors...)
-	})
+//----------------------------------------------------------------------------------------------------------------------
+// 变更方法
+
+// UpdateMediaListEntry 更新收藏条目（状态/评分/进度）。
+// Bangumi 无条目级起止日期字段，startedAt/completedAt 被忽略（TODO: 确认服务端后续支持）。
+func (c *CacheLayer) UpdateMediaListEntry(ctx context.Context, mediaID int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
+	// Mutations require the API to be working
+	if !IsWorking.Load() {
+		return c.queueMediaListEntryUpdate(mediaID, status, scoreRaw, progress, startedAt, completedAt)
+	}
+
+	err := c.sendMediaListEntryUpdate(ctx, mediaID, status, scoreRaw, progress, startedAt, completedAt)
+	c.checkAndUpdateWorkingState(err)
+	if err != nil && shouldQueueMediaListUpdate(err) {
+		return c.queueMediaListEntryUpdate(mediaID, status, scoreRaw, progress, startedAt, completedAt)
+	}
+
+	// Invalidate relevant caches on successful mutation
+	if err == nil {
+		c.invalidateMediaCaches(mediaID)
+		c.invalidateCollectionCaches()
+	}
+
+	return err
 }
 
-func (c *CacheLayer) AnimeAiringSchedule(ctx context.Context, ids []*int, season *anilist.MediaSeason, seasonYear *int, previousSeason *anilist.MediaSeason, previousSeasonYear *int, nextSeason *anilist.MediaSeason, nextSeasonYear *int, interceptors ...clientv2.RequestInterceptor) (*anilist.AnimeAiringSchedule, error) {
-	cacheKey := c.generateCacheKey(ids, season, seasonYear, previousSeason, previousSeasonYear, nextSeason, nextSeasonYear)
-	return networkFirstGet(c, AnimeAiringScheduleBucket, cacheKey, func() (*anilist.AnimeAiringSchedule, error) {
-		return c.anilistClientRef.Get().AnimeAiringSchedule(ctx, ids, season, seasonYear, previousSeason, previousSeasonYear, nextSeason, nextSeasonYear, interceptors...)
-	})
+// UpdateMediaListEntryProgress 更新章节进度。
+func (c *CacheLayer) UpdateMediaListEntryProgress(ctx context.Context, mediaID int, progress int, status *media.MediaListStatus) error {
+	// Mutations require the API to be working
+	if !IsWorking.Load() {
+		return c.queueMediaListEntryProgressUpdate(mediaID, progress, status)
+	}
+
+	err := c.sendMediaListEntryProgressUpdate(ctx, mediaID, progress, status)
+	c.checkAndUpdateWorkingState(err)
+	if err != nil && shouldQueueMediaListUpdate(err) {
+		return c.queueMediaListEntryProgressUpdate(mediaID, progress, status)
+	}
+
+	// Invalidate relevant caches on successful mutation
+	if err == nil {
+		c.invalidateMediaCaches(mediaID)
+		c.invalidateCollectionCaches()
+	}
+
+	return err
 }
 
-func (c *CacheLayer) AnimeAiringScheduleRaw(ctx context.Context, ids []*int, interceptors ...clientv2.RequestInterceptor) (*anilist.AnimeAiringScheduleRaw, error) {
-	cacheKey := c.generateCacheKey(ids)
-	return networkFirstGet(c, AnimeAiringScheduleRawBucket, cacheKey, func() (*anilist.AnimeAiringScheduleRaw, error) {
-		return c.anilistClientRef.Get().AnimeAiringScheduleRaw(ctx, ids, interceptors...)
-	})
+// UpdateMediaListEntryRepeat 更新重看次数。
+// Bangumi 收藏无重看次数字段，此操作为 no-op（保留接口兼容）。
+// TODO: 如 Bangumi 后续支持重看标记，在此接入。
+func (c *CacheLayer) UpdateMediaListEntryRepeat(ctx context.Context, mediaID int, repeat int) error {
+	c.logger.Debug().Int("mediaID", mediaID).Int("repeat", repeat).Msg("bangumi cache: Repeat count is not supported by Bangumi, skipping")
+	return nil
+}
+
+// DeleteEntry 删除收藏条目。
+func (c *CacheLayer) DeleteEntry(ctx context.Context, mediaID int) error {
+	// Mutations require the API to be working
+	if !IsWorking.Load() {
+		return fmt.Errorf("bangumi cache: API client is not working, mutation operations are not available")
+	}
+
+	err := c.client().DeleteCollection(ctx, mediaID)
+	c.checkAndUpdateWorkingState(err)
+
+	// Invalidate collection caches on successful deletion
+	if err == nil {
+		c.invalidateMediaCaches(mediaID)
+		c.invalidateCollectionCaches()
+	}
+
+	return err
+}
+
+func (c *CacheLayer) sendMediaListEntryUpdate(ctx context.Context, mediaID int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
+	err := c.client().UpsertCollection(ctx, mediaID, collectionUpsertBodyFromValues(status, scoreRaw, progress))
+	if err == nil {
+		c.deleteQueuedUpdate(mediaID)
+	}
+	return err
+}
+
+func (c *CacheLayer) sendMediaListEntryProgressUpdate(ctx context.Context, mediaID int, progress int, status *media.MediaListStatus) error {
+	// 进度更新走 PATCH（局部更新，避免覆盖用户已有的评分/评论）
+	body := bangumi.CollectionUpsertBody{}
+	if status != nil {
+		if t, ok := bangumi.MediaListStatusToBangumiType(*status); ok {
+			body.Type = &t
+		}
+	}
+	body.EpStatus = &progress
+	err := c.client().PatchCollection(ctx, mediaID, body)
+	if err == nil {
+		c.deleteQueuedUpdate(mediaID)
+	}
+	return err
 }

@@ -1,9 +1,9 @@
 package anime_test
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/customsource"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"testing"
 	"time"
 
@@ -15,18 +15,18 @@ func TestGetScheduleItemsFormatsDeduplicates(t *testing.T) {
 	// deduped by media/episode/time
 	h := newAnimeTestWrapper(t)
 
-	patchAnimeCollectionEntry(t, h.animeCollection, 154587, anilist.AnimeCollectionEntryPatch{
-		Status:        new(anilist.MediaListStatusCurrent),
+	patchAnimeCollectionEntry(t, h.animeCollection, 154587, media.AnimeCollectionEntryPatch{
+		Status:        new(media.MediaListStatusCurrent),
 		AiredEpisodes: new(12),
 	})
 	patchCollectionEntryEpisodeCount(t, h.animeCollection, 154587, 12)
 
-	patchAnimeCollectionEntry(t, h.animeCollection, 146065, anilist.AnimeCollectionEntryPatch{
-		Status:        new(anilist.MediaListStatusCurrent),
+	patchAnimeCollectionEntry(t, h.animeCollection, 146065, media.AnimeCollectionEntryPatch{
+		Status:        new(media.MediaListStatusCurrent),
 		AiredEpisodes: new(1),
 	})
 	patchCollectionEntryEpisodeCount(t, h.animeCollection, 146065, 1)
-	movieFormat := anilist.MediaFormatMovie
+	movieFormat := media.MediaFormatMovie
 	patchCollectionEntryFormat(t, h.animeCollection, 146065, movieFormat)
 	movieEntry := findCollectionEntryByMediaID(t, h.animeCollection, 146065)
 	fallbackTitle := "movie fallback"
@@ -37,22 +37,26 @@ func TestGetScheduleItemsFormatsDeduplicates(t *testing.T) {
 	extensionEntry := findCollectionEntryByMediaID(t, h.animeCollection, 21)
 	extensionID := customsource.GenerateMediaId(1, 99)
 	extensionEntry.Media.ID = extensionID
-	extensionEntry.Status = new(anilist.MediaListStatusCurrent)
+	extensionEntry.Status = new(media.MediaListStatusCurrent)
 
-	animeSchedule := &anilist.AnimeAiringSchedule{
-		Ongoing: &anilist.AnimeAiringSchedule_Ongoing{Media: []*anilist.AnimeSchedule{
-			newAnimeSchedule(154587,
-				[]*anilist.AnimeSchedule_Previous_Nodes{newPreviousScheduleNode(1_700_000_100, 11, -100)},
-				[]*anilist.AnimeSchedule_Upcoming_Nodes{newUpcomingScheduleNode(1_700_000_200, 12, 200)},
+	// Bangumi 锚点：media 包将分页包装合并为单对象（Media 由切片变为单个 *AnimeSchedule），
+	// 原 Ongoing 中的 extension 条目挪至 Preceding，泄漏验证语义不变。
+	animeSchedule := &media.AnimeAiringSchedule{
+		Ongoing: &media.AnimeAiringSchedule_Ongoing{
+			Media: newAnimeSchedule(154587,
+				[]*media.AnimeSchedule_Previous_Nodes{newPreviousScheduleNode(1_700_000_100, 11, -100)},
+				[]*media.AnimeSchedule_Upcoming_Nodes{newUpcomingScheduleNode(1_700_000_200, 12, 200)},
 			),
-			newAnimeSchedule(extensionID, nil, []*anilist.AnimeSchedule_Upcoming_Nodes{newUpcomingScheduleNode(1_700_000_050, 1, 50)}),
-		}},
-		OngoingNext: &anilist.AnimeAiringSchedule_OngoingNext{Media: []*anilist.AnimeSchedule{
-			newAnimeSchedule(154587, nil, []*anilist.AnimeSchedule_Upcoming_Nodes{newUpcomingScheduleNode(1_700_000_200, 12, 200)}),
-		}},
-		Upcoming: &anilist.AnimeAiringSchedule_Upcoming{Media: []*anilist.AnimeSchedule{
-			newAnimeSchedule(146065, nil, []*anilist.AnimeSchedule_Upcoming_Nodes{newUpcomingScheduleNode(1_700_000_300, 1, 300)}),
-		}},
+		},
+		OngoingNext: &media.AnimeAiringSchedule_OngoingNext{
+			Media: newAnimeSchedule(154587, nil, []*media.AnimeSchedule_Upcoming_Nodes{newUpcomingScheduleNode(1_700_000_200, 12, 200)}),
+		},
+		Upcoming: &media.AnimeAiringSchedule_Upcoming{
+			Media: newAnimeSchedule(146065, nil, []*media.AnimeSchedule_Upcoming_Nodes{newUpcomingScheduleNode(1_700_000_300, 1, 300)}),
+		},
+		Preceding: &media.AnimeAiringSchedule_Preceding{
+			Media: newAnimeSchedule(extensionID, nil, []*media.AnimeSchedule_Upcoming_Nodes{newUpcomingScheduleNode(1_700_000_050, 1, 50)}),
+		},
 	}
 
 	items := anime.GetScheduleItems(animeSchedule, h.animeCollection)
@@ -81,27 +85,27 @@ func TestGetScheduleItemsHandlesNilInputs(t *testing.T) {
 	require.Empty(t, anime.GetScheduleItems(nil, nil))
 }
 
-func newAnimeSchedule(mediaID int, previous []*anilist.AnimeSchedule_Previous_Nodes, upcoming []*anilist.AnimeSchedule_Upcoming_Nodes) *anilist.AnimeSchedule {
-	ret := &anilist.AnimeSchedule{ID: mediaID}
+func newAnimeSchedule(mediaID int, previous []*media.AnimeSchedule_Previous_Nodes, upcoming []*media.AnimeSchedule_Upcoming_Nodes) *media.AnimeSchedule {
+	ret := &media.AnimeSchedule{ID: mediaID}
 	if previous != nil {
-		ret.Previous = &anilist.AnimeSchedule_Previous{Nodes: previous}
+		ret.Previous = &media.AnimeSchedule_Previous{Nodes: previous}
 	}
 	if upcoming != nil {
-		ret.Upcoming = &anilist.AnimeSchedule_Upcoming{Nodes: upcoming}
+		ret.Upcoming = &media.AnimeSchedule_Upcoming{Nodes: upcoming}
 	}
 	return ret
 }
 
-func newPreviousScheduleNode(airingAt int, episode int, timeUntilAiring int) *anilist.AnimeSchedule_Previous_Nodes {
-	return &anilist.AnimeSchedule_Previous_Nodes{
+func newPreviousScheduleNode(airingAt int, episode int, timeUntilAiring int) *media.AnimeSchedule_Previous_Nodes {
+	return &media.AnimeSchedule_Previous_Nodes{
 		AiringAt:        airingAt,
 		Episode:         episode,
 		TimeUntilAiring: timeUntilAiring,
 	}
 }
 
-func newUpcomingScheduleNode(airingAt int, episode int, timeUntilAiring int) *anilist.AnimeSchedule_Upcoming_Nodes {
-	return &anilist.AnimeSchedule_Upcoming_Nodes{
+func newUpcomingScheduleNode(airingAt int, episode int, timeUntilAiring int) *media.AnimeSchedule_Upcoming_Nodes {
+	return &media.AnimeSchedule_Upcoming_Nodes{
 		AiringAt:        airingAt,
 		Episode:         episode,
 		TimeUntilAiring: timeUntilAiring,

@@ -6,13 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/customsource"
 	"seanime/internal/directstream"
 	"seanime/internal/events"
 	"seanime/internal/library/anime"
 	"seanime/internal/library/playbackmanager"
+	"seanime/internal/media"
 	"seanime/internal/player"
 	"seanime/internal/util"
 	"strconv"
@@ -24,14 +24,14 @@ import (
 
 type (
 	HydrateHostAnimeLibraryOptions struct {
-		AnimeCollection     *anilist.AnimeCollection
+		AnimeCollection     *media.AnimeCollection
 		LibraryCollection   *anime.LibraryCollection
 		MetadataProviderRef *util.Ref[metadata_provider.Provider]
 	}
 
 	NakamaAnimeLibrary struct {
-		LocalFiles      []*anime.LocalFile       `json:"localFiles"`
-		AnimeCollection *anilist.AnimeCollection `json:"animeCollection"`
+		LocalFiles      []*anime.LocalFile     `json:"localFiles"`
+		AnimeCollection *media.AnimeCollection `json:"animeCollection"`
 	}
 
 	NakamaCustomSourceMap map[int]string
@@ -143,7 +143,7 @@ func (m *Manager) GetHostAnimeLibrary(ctx context.Context) (ac *NakamaAnimeLibra
 	return entryResponse.Data, true
 }
 
-func (m *Manager) PlayHostAnimeLibraryFile(path string, userAgent string, clientId string, media *anilist.BaseAnime, aniDBEpisode string, forcePlaybackMethod string) error {
+func (m *Manager) PlayHostAnimeLibraryFile(path string, userAgent string, clientId string, media *media.Anime, aniDBEpisode string, forcePlaybackMethod string) error {
 	if !m.settings.Enabled || !m.IsConnectedToHost() || m.IsRoomConnection() {
 		return errors.New("not connected to host")
 	}
@@ -238,7 +238,7 @@ func (m *Manager) PlayHostAnimeLibraryFile(path string, userAgent string, client
 	return nil
 }
 
-func (m *Manager) PlayHostAnimeStream(streamType WatchPartyStreamType, userAgent string, clientId string, media *anilist.BaseAnime, aniDBEpisode string) error {
+func (m *Manager) PlayHostAnimeStream(streamType WatchPartyStreamType, userAgent string, clientId string, media *media.Anime, aniDBEpisode string) error {
 	if !m.settings.Enabled || !m.IsConnectedToHost() {
 		return errors.New("not connected to host")
 	}

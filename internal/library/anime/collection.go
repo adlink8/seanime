@@ -4,9 +4,9 @@ import (
 	"cmp"
 	"context"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"slices"
@@ -39,7 +39,7 @@ type (
 
 	StreamCollection struct {
 		ContinueWatchingList []*Episode             `json:"continueWatchingList"`
-		Anime                []*anilist.BaseAnime   `json:"anime"`
+		Anime                []*media.Anime         `json:"anime"`
 		ListData             map[int]*EntryListData `json:"listData"`
 	}
 
@@ -55,15 +55,15 @@ type (
 	}
 
 	LibraryCollectionList struct {
-		Type    anilist.MediaListStatus   `json:"type"`
-		Status  anilist.MediaListStatus   `json:"status"`
+		Type    media.MediaListStatus     `json:"type"`
+		Status  media.MediaListStatus     `json:"status"`
 		Entries []*LibraryCollectionEntry `json:"entries"`
 	}
 
 	// LibraryCollectionEntry holds the data for a single entry in a LibraryCollectionList.
 	// It is a slimmed down version of Entry. It holds the media, media id, library data, and list data.
 	LibraryCollectionEntry struct {
-		Media                  *anilist.BaseAnime      `json:"media"`
+		Media                  *media.Anime            `json:"media"`
 		MediaId                int                     `json:"mediaId"`
 		EntryLibraryData       *EntryLibraryData       `json:"libraryData"`                 // Library data
 		NakamaEntryLibraryData *NakamaEntryLibraryData `json:"nakamaLibraryData,omitempty"` // Library data from Nakama
@@ -72,9 +72,9 @@ type (
 
 	// UnmatchedGroup holds the data for a group of unmatched local files.
 	UnmatchedGroup struct {
-		Dir         string               `json:"dir"`
-		LocalFiles  []*LocalFile         `json:"localFiles"`
-		Suggestions []*anilist.BaseAnime `json:"suggestions"`
+		Dir         string         `json:"dir"`
+		LocalFiles  []*LocalFile   `json:"localFiles"`
+		Suggestions []*media.Anime `json:"suggestions"`
 	}
 	// UnknownGroup holds the data for a group of local files whose media is not in the user's AniList.
 	// The client will use this data to suggest media to the user, so they can add it to their AniList.
@@ -87,7 +87,7 @@ type (
 type (
 	// NewLibraryCollectionOptions is a struct that holds the data needed for creating a new LibraryCollection.
 	NewLibraryCollectionOptions struct {
-		AnimeCollection     *anilist.AnimeCollection
+		AnimeCollection     *media.AnimeCollection
 		LocalFiles          []*LocalFile
 		PlatformRef         *util.Ref[platform.Platform]
 		MetadataProviderRef *util.Ref[metadata_provider.Provider]
@@ -172,7 +172,7 @@ func NewLibraryCollection(ctx context.Context, opts *NewLibraryCollectionOptions
 
 func (lc *LibraryCollection) hydrateCollectionLists(
 	localFiles []*LocalFile,
-	aniLists []*anilist.AnimeCollection_MediaListCollection_Lists,
+	aniLists []*media.AnimeCollection_MediaListCollection_Lists,
 ) {
 
 	// Group local files by media id
@@ -225,8 +225,8 @@ func (lc *LibraryCollection) hydrateCollectionLists(
 								Score:       entry.GetScoreSafe(),
 								Status:      entry.Status,
 								Repeat:      entry.GetRepeatSafe(),
-								StartedAt:   anilist.ToEntryStartDate(entry.StartedAt),
-								CompletedAt: anilist.ToEntryCompletionDate(entry.CompletedAt),
+								StartedAt:   media.ToEntryStartDate(entry.StartedAt),
+								CompletedAt: media.ToEntryCompletionDate(entry.CompletedAt),
 							},
 						}
 					} else {
@@ -264,22 +264,22 @@ func (lc *LibraryCollection) hydrateCollectionLists(
 
 	// Merge repeating to current (no need to show repeating as a separate list)
 	repeatingList, ok := lo.Find(lists, func(item *LibraryCollectionList) bool {
-		return item.Status == anilist.MediaListStatusRepeating
+		return item.Status == media.MediaListStatusRepeating
 	})
 	if ok {
 		currentList, ok := lo.Find(lists, func(item *LibraryCollectionList) bool {
-			return item.Status == anilist.MediaListStatusCurrent
+			return item.Status == media.MediaListStatusCurrent
 		})
 		if len(repeatingList.Entries) > 0 && ok {
 			currentList.Entries = append(currentList.Entries, repeatingList.Entries...)
 		} else if len(repeatingList.Entries) > 0 {
 			newCurrentList := repeatingList
-			newCurrentList.Type = anilist.MediaListStatusCurrent
+			newCurrentList.Type = media.MediaListStatusCurrent
 			lists = append(lists, newCurrentList)
 		}
 		// Remove repeating from lists
 		lists = lo.Filter(lists, func(item *LibraryCollectionList, index int) bool {
-			return item.Status != anilist.MediaListStatusRepeating
+			return item.Status != media.MediaListStatusRepeating
 		})
 	}
 
@@ -328,9 +328,9 @@ func (lc *LibraryCollection) hydrateStats(lfs []*LocalFile) {
 		for _, entry := range list.Entries {
 			stats.TotalEntries++
 			if entry.Media.Format != nil {
-				if *entry.Media.Format == anilist.MediaFormatMovie {
+				if *entry.Media.Format == media.MediaFormatMovie {
 					stats.TotalMovies++
-				} else if *entry.Media.Format == anilist.MediaFormatSpecial || *entry.Media.Format == anilist.MediaFormatOva {
+				} else if *entry.Media.Format == media.MediaFormatSpecial || *entry.Media.Format == media.MediaFormatOva {
 					stats.TotalSpecials++
 				} else {
 					stats.TotalShows++
@@ -349,14 +349,14 @@ func (lc *LibraryCollection) hydrateStats(lfs []*LocalFile) {
 func (lc *LibraryCollection) hydrateContinueWatchingList(
 	ctx context.Context,
 	localFiles []*LocalFile,
-	animeCollection *anilist.AnimeCollection,
+	animeCollection *media.AnimeCollection,
 	platformRef *util.Ref[platform.Platform],
 	metadataProviderRef *util.Ref[metadata_provider.Provider],
 ) {
 
 	// Get currently watching list
 	current, found := lo.Find(lc.Lists, func(item *LibraryCollectionList) bool {
-		return item.Status == anilist.MediaListStatusCurrent
+		return item.Status == media.MediaListStatusCurrent
 	})
 
 	// If no currently watching list is found, return an empty slice
@@ -443,7 +443,7 @@ func (lc *LibraryCollection) hydrateUnmatchedGroups() {
 		groups = append(groups, &UnmatchedGroup{
 			Dir:         key,
 			LocalFiles:  value,
-			Suggestions: make([]*anilist.BaseAnime, 0),
+			Suggestions: make([]*media.Anime, 0),
 		})
 	}
 
@@ -457,10 +457,10 @@ func (lc *LibraryCollection) hydrateUnmatchedGroups() {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// getLibraryCollectionEntryFromListStatus maps anilist.MediaListStatus to LibraryCollectionListType.
-func getLibraryCollectionEntryFromListStatus(st anilist.MediaListStatus) anilist.MediaListStatus {
-	if st == anilist.MediaListStatusRepeating {
-		return anilist.MediaListStatusCurrent
+// getLibraryCollectionEntryFromListStatus maps media.MediaListStatus to LibraryCollectionListType.
+func getLibraryCollectionEntryFromListStatus(st media.MediaListStatus) media.MediaListStatus {
+	if st == media.MediaListStatusRepeating {
+		return media.MediaListStatusCurrent
 	}
 
 	return st

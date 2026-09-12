@@ -2,9 +2,9 @@ package nativeplayer
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/events"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mkvparser"
 
 	"github.com/rs/zerolog"
@@ -50,7 +50,7 @@ type (
 		SubtitleTracks     []*VideoSubtitleTrack `json:"subtitleTracks,omitempty"`
 		EntryListData      *anime.EntryListData  `json:"entryListData,omitempty"` // nil if not in list
 		Episode            *anime.Episode        `json:"episode"`
-		Media              *anilist.BaseAnime    `json:"media"`
+		Media              *media.Anime          `json:"media"`
 		IsNakamaWatchParty bool                  `json:"isNakamaWatchParty"` // Is the stream from Nakama Watch Party
 		LocalFile          *anime.LocalFile      `json:"localFile,omitempty"`
 

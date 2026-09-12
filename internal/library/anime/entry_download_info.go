@@ -3,10 +3,10 @@ package anime
 import (
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/hook"
+	"seanime/internal/media"
 	"seanime/internal/util"
 	"strconv"
 
@@ -37,9 +37,9 @@ type (
 		// Media's local files
 		LocalFiles          []*LocalFile
 		AnimeMetadata       *metadata.AnimeMetadata
-		Media               *anilist.BaseAnime
+		Media               *media.Anime
 		Progress            *int
-		Status              *anilist.MediaListStatus
+		Status              *media.MediaListStatus
 		MetadataProviderRef *util.Ref[metadata_provider.Provider]
 	}
 )
@@ -72,7 +72,7 @@ func NewEntryDownloadInfo(opts *NewEntryDownloadInfoOptions) (*EntryDownloadInfo
 	opts.Progress = reqEvent.Progress
 	opts.Status = reqEvent.Status
 
-	if *opts.Media.Status == anilist.MediaStatusNotYetReleased {
+	if *opts.Media.Status == media.MediaStatusNotYetReleased {
 		return &EntryDownloadInfo{}, nil
 	}
 	if opts.AnimeMetadata == nil {
@@ -137,13 +137,13 @@ func NewEntryDownloadInfo(opts *NewEntryDownloadInfoOptions) (*EntryDownloadInfo
 		progress = *opts.Progress
 	}
 	if opts.Status != nil {
-		if *opts.Status == anilist.MediaListStatusCompleted {
+		if *opts.Status == media.MediaListStatusCompleted {
 			progress = 0
 		}
 	}
 
 	hasInaccurateSchedule := false
-	if opts.Media.NextAiringEpisode == nil && *opts.Media.Status == anilist.MediaStatusReleasing {
+	if opts.Media.NextAiringEpisode == nil && *opts.Media.Status == media.MediaStatusReleasing {
 		hasInaccurateSchedule = true
 	}
 
@@ -236,7 +236,7 @@ func NewEntryDownloadInfo(opts *NewEntryDownloadInfoOptions) (*EntryDownloadInfo
 	//--------------
 
 	canBatch := false
-	if *opts.Media.GetStatus() == anilist.MediaStatusFinished && opts.Media.GetTotalEpisodeCount() > 0 {
+	if *opts.Media.GetStatus() == media.MediaStatusFinished && opts.Media.GetTotalEpisodeCount() > 0 {
 		canBatch = true
 	}
 	batchAll := false
@@ -244,7 +244,7 @@ func NewEntryDownloadInfo(opts *NewEntryDownloadInfoOptions) (*EntryDownloadInfo
 		batchAll = true
 	}
 	rewatch := false
-	if opts.Status != nil && *opts.Status == anilist.MediaListStatusCompleted {
+	if opts.Status != nil && *opts.Status == media.MediaListStatusCompleted {
 		rewatch = true
 	}
 

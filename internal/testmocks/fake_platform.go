@@ -3,7 +3,8 @@ package testmocks
 import (
 	"context"
 	"fmt"
-	"seanime/internal/api/anilist"
+	"seanime/internal/api/bangumi"
+	"seanime/internal/media"
 )
 
 type FakePlatformBuilder struct {
@@ -11,15 +12,15 @@ type FakePlatformBuilder struct {
 }
 
 type FakePlatform struct {
-	animeByID                   map[int]*anilist.BaseAnime
-	mangaByID                   map[int]*anilist.BaseManga
-	animeCollection             *anilist.AnimeCollection
-	rawAnimeCollection          *anilist.AnimeCollection
-	animeCollectionWithRel      *anilist.AnimeCollectionWithRelations
-	mangaCollection             *anilist.MangaCollection
-	rawMangaCollection          *anilist.MangaCollection
-	animeAiringSchedule         *anilist.AnimeAiringSchedule
-	viewerStats                 *anilist.ViewerStats
+	animeByID                   map[int]*media.Anime
+	mangaByID                   map[int]*media.Manga
+	animeCollection             *media.AnimeCollection
+	rawAnimeCollection          *media.AnimeCollection
+	animeCollectionWithRel      *media.AnimeCollectionWithRelations
+	mangaCollection             *media.MangaCollection
+	rawMangaCollection          *media.MangaCollection
+	animeAiringSchedule         *media.AnimeAiringSchedule
+	viewerStats                 *media.ViewerStats
 	animeCollectionErr          error
 	rawAnimeCollectionErr       error
 	animeCollectionWithRelErr   error
@@ -43,11 +44,11 @@ type FakePlatform struct {
 
 type FakeUpdateEntryCall struct {
 	MediaID     int
-	Status      *anilist.MediaListStatus
+	Status      *media.MediaListStatus
 	ScoreRaw    *int
 	Progress    *int
-	StartedAt   *anilist.FuzzyDateInput
-	CompletedAt *anilist.FuzzyDateInput
+	StartedAt   *media.FuzzyDateInput
+	CompletedAt *media.FuzzyDateInput
 }
 
 type FakeUpdateEntryProgressCall struct {
@@ -59,29 +60,29 @@ type FakeUpdateEntryProgressCall struct {
 func NewFakePlatformBuilder() *FakePlatformBuilder {
 	return &FakePlatformBuilder{
 		platform: &FakePlatform{
-			animeByID:  make(map[int]*anilist.BaseAnime),
-			mangaByID:  make(map[int]*anilist.BaseManga),
+			animeByID:  make(map[int]*media.Anime),
+			mangaByID:  make(map[int]*media.Manga),
 			animeCalls: make(map[int]int),
 			mangaCalls: make(map[int]int),
 		},
 	}
 }
 
-func (b *FakePlatformBuilder) WithAnime(anime *anilist.BaseAnime) *FakePlatformBuilder {
+func (b *FakePlatformBuilder) WithAnime(anime *media.Anime) *FakePlatformBuilder {
 	if anime != nil {
 		b.platform.animeByID[anime.ID] = anime
 	}
 	return b
 }
 
-func (b *FakePlatformBuilder) WithManga(manga *anilist.BaseManga) *FakePlatformBuilder {
+func (b *FakePlatformBuilder) WithManga(manga *media.Manga) *FakePlatformBuilder {
 	if manga != nil {
 		b.platform.mangaByID[manga.ID] = manga
 	}
 	return b
 }
 
-func (b *FakePlatformBuilder) WithAnimeCollection(collection *anilist.AnimeCollection) *FakePlatformBuilder {
+func (b *FakePlatformBuilder) WithAnimeCollection(collection *media.AnimeCollection) *FakePlatformBuilder {
 	b.platform.animeCollection = collection
 	return b
 }
@@ -91,27 +92,27 @@ func (b *FakePlatformBuilder) WithAnimeCollectionError(err error) *FakePlatformB
 	return b
 }
 
-func (b *FakePlatformBuilder) WithRawAnimeCollection(collection *anilist.AnimeCollection) *FakePlatformBuilder {
+func (b *FakePlatformBuilder) WithRawAnimeCollection(collection *media.AnimeCollection) *FakePlatformBuilder {
 	b.platform.rawAnimeCollection = collection
 	return b
 }
 
-func (b *FakePlatformBuilder) WithAnimeCollectionWithRelations(collection *anilist.AnimeCollectionWithRelations) *FakePlatformBuilder {
+func (b *FakePlatformBuilder) WithAnimeCollectionWithRelations(collection *media.AnimeCollectionWithRelations) *FakePlatformBuilder {
 	b.platform.animeCollectionWithRel = collection
 	return b
 }
 
-func (b *FakePlatformBuilder) WithMangaCollection(collection *anilist.MangaCollection) *FakePlatformBuilder {
+func (b *FakePlatformBuilder) WithMangaCollection(collection *media.MangaCollection) *FakePlatformBuilder {
 	b.platform.mangaCollection = collection
 	return b
 }
 
-func (b *FakePlatformBuilder) WithAnimeAiringSchedule(schedule *anilist.AnimeAiringSchedule) *FakePlatformBuilder {
+func (b *FakePlatformBuilder) WithAnimeAiringSchedule(schedule *media.AnimeAiringSchedule) *FakePlatformBuilder {
 	b.platform.animeAiringSchedule = schedule
 	return b
 }
 
-func (b *FakePlatformBuilder) WithViewerStats(stats *anilist.ViewerStats) *FakePlatformBuilder {
+func (b *FakePlatformBuilder) WithViewerStats(stats *media.ViewerStats) *FakePlatformBuilder {
 	b.platform.viewerStats = stats
 	return b
 }
@@ -151,7 +152,7 @@ func (f *FakePlatform) UpdateEntryCalls() []FakeUpdateEntryCall {
 	return ret
 }
 
-func (f *FakePlatform) UpdateEntry(_ context.Context, mediaID int, status *anilist.MediaListStatus, scoreRaw *int, progress *int, startedAt *anilist.FuzzyDateInput, completedAt *anilist.FuzzyDateInput) error {
+func (f *FakePlatform) UpdateEntry(_ context.Context, mediaID int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
 	call := FakeUpdateEntryCall{MediaID: mediaID}
 	if status != nil {
 		statusCopy := *status
@@ -182,7 +183,8 @@ func (f *FakePlatform) UpdateEntryProgress(_ context.Context, mediaID int, progr
 	call.MediaID = mediaID
 	call.Progress = progress
 	if totalEpisodes != nil {
-		call.TotalEpisodes = new(*totalEpisodes)
+		totalEpisodesCopy := *totalEpisodes
+		call.TotalEpisodes = &totalEpisodesCopy
 	}
 	f.updateEntryProgressCalls = append(f.updateEntryProgressCalls, call)
 	return f.updateEntryProgressErr
@@ -196,7 +198,7 @@ func (f *FakePlatform) DeleteEntry(context.Context, int, int) error {
 	return nil
 }
 
-func (f *FakePlatform) GetAnime(_ context.Context, mediaID int) (*anilist.BaseAnime, error) {
+func (f *FakePlatform) GetAnime(_ context.Context, mediaID int) (*media.Anime, error) {
 	f.animeCalls[mediaID]++
 	anime, ok := f.animeByID[mediaID]
 	if !ok {
@@ -205,19 +207,19 @@ func (f *FakePlatform) GetAnime(_ context.Context, mediaID int) (*anilist.BaseAn
 	return anime, nil
 }
 
-func (f *FakePlatform) GetAnimeByMalID(context.Context, int) (*anilist.BaseAnime, error) {
+func (f *FakePlatform) GetAnimeByMalID(context.Context, int) (*media.Anime, error) {
 	return nil, nil
 }
 
-func (f *FakePlatform) GetAnimeWithRelations(context.Context, int) (*anilist.CompleteAnime, error) {
+func (f *FakePlatform) GetAnimeWithRelations(context.Context, int) (*media.CompleteAnime, error) {
 	return nil, nil
 }
 
-func (f *FakePlatform) GetAnimeDetails(context.Context, int) (*anilist.AnimeDetailsById_Media, error) {
+func (f *FakePlatform) GetAnimeDetails(context.Context, int) (*media.AnimeDetails, error) {
 	return nil, nil
 }
 
-func (f *FakePlatform) GetManga(_ context.Context, mediaID int) (*anilist.BaseManga, error) {
+func (f *FakePlatform) GetManga(_ context.Context, mediaID int) (*media.Manga, error) {
 	f.mangaCalls[mediaID]++
 	manga, ok := f.mangaByID[mediaID]
 	if !ok {
@@ -226,18 +228,18 @@ func (f *FakePlatform) GetManga(_ context.Context, mediaID int) (*anilist.BaseMa
 	return manga, nil
 }
 
-func (f *FakePlatform) GetAnimeCollection(context.Context, bool) (*anilist.AnimeCollection, error) {
+func (f *FakePlatform) GetAnimeCollection(context.Context, bool) (*media.AnimeCollection, error) {
 	f.animeCollectionCalls++
 	if f.animeCollectionErr != nil {
 		return nil, f.animeCollectionErr
 	}
 	if f.animeCollection == nil {
-		f.animeCollection = &anilist.AnimeCollection{}
+		f.animeCollection = &media.AnimeCollection{}
 	}
 	return f.animeCollection, nil
 }
 
-func (f *FakePlatform) GetRawAnimeCollection(context.Context, bool) (*anilist.AnimeCollection, error) {
+func (f *FakePlatform) GetRawAnimeCollection(context.Context, bool) (*media.AnimeCollection, error) {
 	f.rawAnimeCollectionCalls++
 	if f.rawAnimeCollectionErr != nil {
 		return nil, f.rawAnimeCollectionErr
@@ -245,11 +247,11 @@ func (f *FakePlatform) GetRawAnimeCollection(context.Context, bool) (*anilist.An
 	return f.rawAnimeCollection, nil
 }
 
-func (f *FakePlatform) GetMangaDetails(context.Context, int) (*anilist.MangaDetailsById_Media, error) {
+func (f *FakePlatform) GetMangaDetails(context.Context, int) (*media.MangaDetails, error) {
 	return nil, nil
 }
 
-func (f *FakePlatform) GetAnimeCollectionWithRelations(context.Context) (*anilist.AnimeCollectionWithRelations, error) {
+func (f *FakePlatform) GetAnimeCollectionWithRelations(context.Context) (*media.AnimeCollectionWithRelations, error) {
 	f.animeCollectionWithRelCalls++
 	if f.animeCollectionWithRelErr != nil {
 		return nil, f.animeCollectionWithRelErr
@@ -257,7 +259,7 @@ func (f *FakePlatform) GetAnimeCollectionWithRelations(context.Context) (*anilis
 	return f.animeCollectionWithRel, nil
 }
 
-func (f *FakePlatform) GetMangaCollection(context.Context, bool) (*anilist.MangaCollection, error) {
+func (f *FakePlatform) GetMangaCollection(context.Context, bool) (*media.MangaCollection, error) {
 	f.mangaCollectionCalls++
 	if f.mangaCollectionErr != nil {
 		return nil, f.mangaCollectionErr
@@ -265,7 +267,7 @@ func (f *FakePlatform) GetMangaCollection(context.Context, bool) (*anilist.Manga
 	return f.mangaCollection, nil
 }
 
-func (f *FakePlatform) GetRawMangaCollection(context.Context, bool) (*anilist.MangaCollection, error) {
+func (f *FakePlatform) GetRawMangaCollection(context.Context, bool) (*media.MangaCollection, error) {
 	f.rawMangaCollectionCalls++
 	if f.rawMangaCollectionErr != nil {
 		return nil, f.rawMangaCollectionErr
@@ -277,23 +279,24 @@ func (f *FakePlatform) AddMediaToCollection(context.Context, []int) error {
 	return nil
 }
 
-func (f *FakePlatform) GetStudioDetails(context.Context, int) (*anilist.StudioDetails, error) {
+func (f *FakePlatform) GetStudioDetails(context.Context, int) (*media.StudioDetails, error) {
 	return nil, nil
 }
 
-func (f *FakePlatform) GetAnilistClient() anilist.AnilistClient {
+// GetBangumiClient 返回 Bangumi client（FakePlatform 默认无 client，测试按需注入）。
+func (f *FakePlatform) GetBangumiClient() *bangumi.Client {
 	return nil
 }
 
-func (f *FakePlatform) RefreshAnimeCollection(context.Context) (*anilist.AnimeCollection, error) {
+func (f *FakePlatform) RefreshAnimeCollection(context.Context) (*media.AnimeCollection, error) {
 	return nil, nil
 }
 
-func (f *FakePlatform) RefreshMangaCollection(context.Context) (*anilist.MangaCollection, error) {
+func (f *FakePlatform) RefreshMangaCollection(context.Context) (*media.MangaCollection, error) {
 	return nil, nil
 }
 
-func (f *FakePlatform) GetViewerStats(context.Context) (*anilist.ViewerStats, error) {
+func (f *FakePlatform) GetViewerStats(context.Context) (*media.ViewerStats, error) {
 	f.viewerStatsCalls++
 	if f.viewerStatsErr != nil {
 		return nil, f.viewerStatsErr
@@ -301,7 +304,7 @@ func (f *FakePlatform) GetViewerStats(context.Context) (*anilist.ViewerStats, er
 	return f.viewerStats, nil
 }
 
-func (f *FakePlatform) GetAnimeAiringSchedule(context.Context) (*anilist.AnimeAiringSchedule, error) {
+func (f *FakePlatform) GetAnimeAiringSchedule(context.Context) (*media.AnimeAiringSchedule, error) {
 	f.animeAiringScheduleCalls++
 	if f.animeAiringScheduleErr != nil {
 		return nil, f.animeAiringScheduleErr

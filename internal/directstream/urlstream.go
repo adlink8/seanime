@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"seanime/internal/api/anilist"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mkvparser"
 	"seanime/internal/player"
 	"seanime/internal/util/result"
@@ -41,7 +41,7 @@ func (s *UrlStream) GetAttachmentByName(filename string) (*mkvparser.AttachmentI
 type PlayUrlStreamOptions struct {
 	StreamUrl    string
 	AnidbEpisode string
-	Media        *anilist.BaseAnime
+	Media        *media.Anime
 	ClientId     string
 }
 

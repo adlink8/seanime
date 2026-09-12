@@ -1,13 +1,12 @@
 package anime_test
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/api/metadata_provider"
-	"seanime/internal/extension"
 	"seanime/internal/library/anime"
-	"seanime/internal/platforms/anilist_platform"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
+	"seanime/internal/testmocks"
 	"seanime/internal/testutil"
 	"seanime/internal/util"
 	"sort"
@@ -18,7 +17,7 @@ import (
 )
 
 type animeTestWrapper struct {
-	animeCollection     *anilist.AnimeCollection
+	animeCollection     *media.AnimeCollection
 	metadataProvider    *animeTestMetadataProvider
 	platformRef         *util.Ref[platform.Platform]
 	metadataProviderRef *util.Ref[metadata_provider.Provider]
@@ -40,13 +39,13 @@ func newAnimeTestWrapper(t *testing.T) *animeTestWrapper {
 		Provider:  metadata_provider.NewTestProviderWithEnv(env, database),
 		overrides: make(map[int]*metadata.AnimeMetadata),
 	}
-	anilistClient := anilist.NewTestAnilistClient()
-	anilistPlatform := anilist_platform.NewAnilistPlatform(util.NewRef(anilistClient), util.NewRef(extension.NewUnifiedBank()), logger, database)
-	animeCollection, err := anilistPlatform.GetAnimeCollection(t.Context(), false)
+	// Bangumi 锚点：测试基建改用 FakePlatform（原 AniList fixture client 已随包裁剪）。
+	fakePlatform := testmocks.NewFakePlatformBuilder().Build()
+	animeCollection, err := fakePlatform.GetAnimeCollection(t.Context(), false)
 	require.NoError(t, err)
 
 	metadataProviderInterface := metadata_provider.Provider(metadataProvider)
-	platformInterface := platform.Platform(anilistPlatform)
+	platformInterface := platform.Platform(fakePlatform)
 
 	return &animeTestWrapper{
 		animeCollection:     animeCollection,
@@ -63,7 +62,7 @@ func (p *animeTestMetadataProvider) GetAnimeMetadata(platform metadata.Platform,
 	return p.Provider.GetAnimeMetadata(platform, mediaID)
 }
 
-func (h *animeTestWrapper) findEntry(t *testing.T, mediaID int) *anilist.AnimeListEntry {
+func (h *animeTestWrapper) findEntry(t *testing.T, mediaID int) *media.AnimeListEntry {
 	t.Helper()
 	return findCollectionEntryByMediaID(t, h.animeCollection, mediaID)
 }
@@ -150,7 +149,7 @@ func (h *animeTestWrapper) newLibraryCollection(t *testing.T, localFiles []*anim
 	return libraryCollection
 }
 
-func (h *animeTestWrapper) newEntryDownloadInfo(t *testing.T, mediaID int, localFiles []*anime.LocalFile, progress int, status anilist.MediaListStatus) *anime.EntryDownloadInfo {
+func (h *animeTestWrapper) newEntryDownloadInfo(t *testing.T, mediaID int, localFiles []*anime.LocalFile, progress int, status media.MediaListStatus) *anime.EntryDownloadInfo {
 	t.Helper()
 
 	animeMetadata, err := h.metadataProvider.GetAnimeMetadata(metadata.AnilistPlatform, mediaID)
@@ -195,31 +194,31 @@ func (h *animeTestWrapper) newUpcomingEpisodes(t *testing.T) *anime.UpcomingEpis
 	return upcomingEpisodes
 }
 
-func patchAnimeCollectionEntry(t *testing.T, collection *anilist.AnimeCollection, mediaID int, patch anilist.AnimeCollectionEntryPatch) *anilist.AnimeListEntry {
+func patchAnimeCollectionEntry(t *testing.T, collection *media.AnimeCollection, mediaID int, patch media.AnimeCollectionEntryPatch) *media.AnimeListEntry {
 	t.Helper()
-	anilist.PatchAnimeCollectionEntry(collection, mediaID, patch)
+	media.PatchAnimeCollectionEntry(collection, mediaID, patch)
 	return findCollectionEntryByMediaID(t, collection, mediaID)
 }
 
-func patchCollectionEntryFormat(t *testing.T, collection *anilist.AnimeCollection, mediaID int, format anilist.MediaFormat) {
+func patchCollectionEntryFormat(t *testing.T, collection *media.AnimeCollection, mediaID int, format media.MediaFormat) {
 	t.Helper()
 	entry := findCollectionEntryByMediaID(t, collection, mediaID)
 	entry.Media.Format = &format
 }
 
-func patchCollectionEntryEpisodeCount(t *testing.T, collection *anilist.AnimeCollection, mediaID int, episodeCount int) {
+func patchCollectionEntryEpisodeCount(t *testing.T, collection *media.AnimeCollection, mediaID int, episodeCount int) {
 	t.Helper()
 	entry := findCollectionEntryByMediaID(t, collection, mediaID)
 	entry.Media.Episodes = &episodeCount
 	entry.Media.NextAiringEpisode = nil
 }
 
-func patchEntryMediaStatus(t *testing.T, collection *anilist.AnimeCollection, mediaID int, status anilist.MediaStatus) {
+func patchEntryMediaStatus(t *testing.T, collection *media.AnimeCollection, mediaID int, status media.MediaStatus) {
 	t.Helper()
 	findCollectionEntryByMediaID(t, collection, mediaID).Media.Status = new(status)
 }
 
-func findCollectionEntryByMediaID(t *testing.T, collection *anilist.AnimeCollection, mediaID int) *anilist.AnimeListEntry {
+func findCollectionEntryByMediaID(t *testing.T, collection *media.AnimeCollection, mediaID int) *media.AnimeListEntry {
 	t.Helper()
 	entry, found := collection.GetListEntryFromAnimeId(mediaID)
 	require.True(t, found)

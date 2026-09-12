@@ -1,17 +1,15 @@
 package local
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/db"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/database/models"
 	"seanime/internal/events"
-	"seanime/internal/extension"
 	"seanime/internal/library/anime"
 	"seanime/internal/manga"
-	"seanime/internal/platforms/anilist_platform"
 	"seanime/internal/platforms/platform"
+	"seanime/internal/testmocks"
 	"seanime/internal/testutil"
 	"seanime/internal/util"
 	"testing"
@@ -28,11 +26,9 @@ func NewTestManager(t *testing.T, db *db.Database) Manager {
 	mangaRepository := manga.NewTestRepositoryWithEnv(env, db)
 
 	wsEventManager := events.NewMockWSEventManager(logger)
-	anilistClient := anilist.NewFixtureAnilistClient()
-	anilistClientRef := util.NewRef[anilist.AnilistClient](anilistClient)
-	extensionBankRef := util.NewRef(extension.NewUnifiedBank())
-	anilistPlatform := anilist_platform.NewAnilistPlatform(anilistClientRef, extensionBankRef, logger, db)
-	anilistPlatformRef := util.NewRef[platform.Platform](anilistPlatform)
+	// Bangumi 锚点：测试基建改用 FakePlatform（原 AniList fixture client 已随包裁剪）。
+	fakePlatform := testmocks.NewFakePlatformBuilder().Build()
+	anilistPlatformRef := util.NewRef[platform.Platform](fakePlatform)
 
 	localDir := env.MustMkdirData("offline")
 	assetsDir := env.MustMkdirData("offline", "assets")

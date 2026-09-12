@@ -3,7 +3,6 @@ package autoscanner
 import (
 	"context"
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/db"
 	"seanime/internal/database/db_bridge"
@@ -12,6 +11,7 @@ import (
 	"seanime/internal/library/autodownloader"
 	"seanime/internal/library/scanner"
 	"seanime/internal/library/summary"
+	"seanime/internal/media"
 	"seanime/internal/notifier"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
@@ -41,7 +41,7 @@ type (
 		logsDir             string
 		scanning            atomic.Bool
 		onRefreshCollection func()
-		animeCollection     *anilist.AnimeCollection
+		animeCollection     *media.AnimeCollection
 	}
 	NewAutoScannerOptions struct {
 		Database            *db.Database
@@ -82,7 +82,7 @@ func New(opts *NewAutoScannerOptions) *AutoScanner {
 	}
 }
 
-func (as *AutoScanner) SetAnimeCollection(ac *anilist.AnimeCollection) {
+func (as *AutoScanner) SetAnimeCollection(ac *media.AnimeCollection) {
 	as.animeCollection = ac
 }
 

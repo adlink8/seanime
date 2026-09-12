@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
-	"seanime/internal/api/anilist"
 	"seanime/internal/database/db_bridge"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -217,11 +217,11 @@ func (h *Handler) HandleDeleteAutoDownloaderRule(c echo.Context) error {
 			return h.RespondWithError(c, err)
 		}
 		for _, rule := range rules {
-			media, ok := animeCollection.FindAnime(rule.MediaId)
+			an, ok := animeCollection.FindAnime(rule.MediaId)
 			if !ok {
 				continue
 			}
-			if media.Status != nil && *media.Status == anilist.MediaStatusFinished {
+			if an.Status != nil && *an.Status == media.MediaStatusFinished {
 				_ = db_bridge.DeleteAutoDownloaderRule(h.App.Database, rule.DbID)
 			}
 		}

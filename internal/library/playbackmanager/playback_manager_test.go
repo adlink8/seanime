@@ -2,7 +2,6 @@ package playbackmanager
 
 import (
 	"errors"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/continuity"
 	"seanime/internal/database/db"
@@ -10,6 +9,7 @@ import (
 	"seanime/internal/database/models"
 	"seanime/internal/events"
 	"seanime/internal/library/anime"
+	medialib "seanime/internal/media"
 	"seanime/internal/mediaplayers/mediaplayer"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/testmocks"
@@ -33,7 +33,7 @@ func TestPlaybackManagerUnitNewDefaultsAndSetters(t *testing.T) {
 	require.True(t, h.playbackManager.nextEpisodeLocalFile.IsAbsent())
 	require.True(t, h.playbackManager.animeCollection.IsAbsent())
 
-	collection := &anilist.AnimeCollection{}
+	collection := &medialib.AnimeCollection{}
 	h.playbackManager.SetAnimeCollection(collection)
 	require.True(t, h.playbackManager.animeCollection.IsPresent())
 	require.Same(t, collection, h.playbackManager.animeCollection.MustGet())
@@ -51,7 +51,7 @@ func TestPlaybackManagerUnitNewDefaultsAndSetters(t *testing.T) {
 func TestPlaybackManagerUnitCheckOrLoadAnimeCollectionCachesResult(t *testing.T) {
 	// the first call should hit the platform, and later calls should reuse the cached collection.
 	h := newPlaybackManagerTestWrapper(t)
-	expectedCollection := &anilist.AnimeCollection{}
+	expectedCollection := &medialib.AnimeCollection{}
 	h.platform = testmocks.NewFakePlatformBuilder().WithAnimeCollection(expectedCollection).Build()
 	h.playbackManager.platformRef = util.NewRef[platform.Platform](h.platform)
 
@@ -62,7 +62,7 @@ func TestPlaybackManagerUnitCheckOrLoadAnimeCollectionCachesResult(t *testing.T)
 	require.NoError(t, h.playbackManager.checkOrLoadAnimeCollection())
 	require.Equal(t, 1, h.platform.AnimeCollectionCalls())
 
-	h.playbackManager.animeCollection = mo.None[*anilist.AnimeCollection]()
+	h.playbackManager.animeCollection = mo.None[*medialib.AnimeCollection]()
 	h.platform = testmocks.NewFakePlatformBuilder().WithAnimeCollectionError(errors.New("collection failed")).Build()
 	h.playbackManager.platformRef = util.NewRef[platform.Platform](h.platform)
 	err := h.playbackManager.checkOrLoadAnimeCollection()
@@ -256,7 +256,7 @@ func TestPlaybackManagerUnitLocalPlaybackStatusAndProgressTracking(t *testing.T)
 	wrapperEntry, ok := wrapper.GetLocalEntryById(media.ID)
 	require.True(t, ok)
 
-	h.playbackManager.currentMediaListEntry = mo.Some(&anilist.AnimeListEntry{
+	h.playbackManager.currentMediaListEntry = mo.Some(&medialib.AnimeListEntry{
 		Media:    media,
 		Progress: new(1),
 	})
@@ -362,14 +362,14 @@ func TestPlaybackManagerTrackingStartedUsesNewLocalFileState(t *testing.T) {
 	oldWrapperEntry, ok := wrapper.GetLocalEntryById(oldMedia.ID)
 	require.True(t, ok)
 
-	statusCurrent := anilist.MediaListStatusCurrent
-	oldEntry := &anilist.AnimeListEntry{Media: oldMedia, Progress: new(9)}
-	newEntry := &anilist.AnimeListEntry{Media: newMedia, Progress: new(0)}
-	h.playbackManager.SetAnimeCollection(&anilist.AnimeCollection{
-		MediaListCollection: &anilist.AnimeCollection_MediaListCollection{
-			Lists: []*anilist.AnimeCollection_MediaListCollection_Lists{{
+	statusCurrent := medialib.MediaListStatusCurrent
+	oldEntry := &medialib.AnimeListEntry{Media: oldMedia, Progress: new(9)}
+	newEntry := &medialib.AnimeListEntry{Media: newMedia, Progress: new(0)}
+	h.playbackManager.SetAnimeCollection(&medialib.AnimeCollection{
+		MediaListCollection: &medialib.AnimeCollection_MediaListCollection{
+			Lists: []*medialib.AnimeCollection_MediaListCollection_Lists{{
 				Status: new(statusCurrent),
-				Entries: []*anilist.AnimeCollection_MediaListCollection_Lists_Entries{
+				Entries: []*medialib.AnimeCollection_MediaListCollection_Lists_Entries{
 					oldEntry,
 					newEntry,
 				},
@@ -418,8 +418,8 @@ func TestPlaybackManagerUnitStreamPlaybackStatusAndProgressTracking(t *testing.T
 		WithUserPreferredTitle("Dungeon Meshi").
 		WithEpisodes(24).
 		Build()
-	entry := &anilist.AnimeListEntry{Media: media, Progress: new(1)}
-	collection := newAnimeCollection(media, entry, anilist.MediaListStatusCurrent)
+	entry := &medialib.AnimeListEntry{Media: media, Progress: new(1)}
+	collection := newAnimeCollection(media, entry, medialib.MediaListStatusCurrent)
 	h.playbackManager.SetAnimeCollection(collection)
 	h.playbackManager.currentStreamMedia = mo.Some(media)
 	h.playbackManager.currentStreamEpisode = mo.Some(&anime.Episode{EpisodeNumber: 2, ProgressNumber: 2, AniDBEpisode: "2"})
@@ -498,8 +498,8 @@ func TestPlaybackManagerUnitManualProgressTrackingSyncsProgress(t *testing.T) {
 		WithUserPreferredTitle("Orb").
 		WithEpisodes(25).
 		Build()
-	entry := &anilist.AnimeListEntry{Media: media, Progress: new(4)}
-	h.platform = testmocks.NewFakePlatformBuilder().WithAnimeCollection(newAnimeCollection(media, entry, anilist.MediaListStatusCurrent)).Build()
+	entry := &medialib.AnimeListEntry{Media: media, Progress: new(4)}
+	h.platform = testmocks.NewFakePlatformBuilder().WithAnimeCollection(newAnimeCollection(media, entry, medialib.MediaListStatusCurrent)).Build()
 	h.playbackManager.platformRef = util.NewRef[platform.Platform](h.platform)
 
 	err := h.playbackManager.StartManualProgressTracking(&StartManualProgressTrackingOptions{
@@ -581,10 +581,10 @@ func TestPlaybackManagerLiveRepositoryStreamCompletionSyncsProgress(t *testing.T
 		WithUserPreferredTitle("Lazarus").
 		WithEpisodes(13).
 		Build()
-	h.playbackManager.SetAnimeCollection(newAnimeCollection(media, &anilist.AnimeListEntry{
+	h.playbackManager.SetAnimeCollection(newAnimeCollection(media, &medialib.AnimeListEntry{
 		Media:    media,
 		Progress: new(0),
-	}, anilist.MediaListStatusCurrent))
+	}, medialib.MediaListStatusCurrent))
 	h.playbackManager.currentStreamMedia = mo.Some(media)
 	h.playbackManager.currentStreamEpisode = mo.Some(&anime.Episode{EpisodeNumber: 1, ProgressNumber: 1, AniDBEpisode: "1"})
 	h.playbackManager.currentStreamAniDbEpisode = mo.Some("1")
@@ -724,14 +724,14 @@ func (m *recordingWSEventManager) lastType() string {
 	return m.events[len(m.events)-1].Type
 }
 
-func newAnimeCollection(media *anilist.BaseAnime, entry *anilist.AnimeListEntry, status anilist.MediaListStatus) *anilist.AnimeCollection {
+func newAnimeCollection(media *medialib.Anime, entry *medialib.AnimeListEntry, status medialib.MediaListStatus) *medialib.AnimeCollection {
 	entry.Status = new(status)
 	entry.Media = media
-	return &anilist.AnimeCollection{
-		MediaListCollection: &anilist.AnimeCollection_MediaListCollection{
-			Lists: []*anilist.AnimeCollection_MediaListCollection_Lists{{
+	return &medialib.AnimeCollection{
+		MediaListCollection: &medialib.AnimeCollection_MediaListCollection{
+			Lists: []*medialib.AnimeCollection_MediaListCollection_Lists{{
 				Status:  new(status),
-				Entries: []*anilist.AnimeCollection_MediaListCollection_Lists_Entries{entry},
+				Entries: []*medialib.AnimeCollection_MediaListCollection_Lists_Entries{entry},
 			}},
 		},
 	}

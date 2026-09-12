@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/db"
 	"seanime/internal/extension"
 	hibikeonlinestream "seanime/internal/extension/hibike/onlinestream"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/util"
 	"seanime/internal/util/filecache"
@@ -28,7 +28,7 @@ type (
 		fileCacher            *filecache.Cacher
 		metadataProviderRef   *util.Ref[metadata_provider.Provider]
 		platformRef           *util.Ref[platform.Platform]
-		anilistBaseAnimeCache *anilist.BaseAnimeCache
+		anilistBaseAnimeCache *media.BaseAnimeCache
 		db                    *db.Database
 	}
 )
@@ -68,8 +68,8 @@ type (
 	}
 
 	EpisodeListResponse struct {
-		Episodes []*Episode         `json:"episodes"`
-		Media    *anilist.BaseAnime `json:"media"`
+		Episodes []*Episode   `json:"episodes"`
+		Media    *media.Anime `json:"media"`
 	}
 
 	Subtitle struct {
@@ -96,7 +96,7 @@ func NewRepository(opts *NewRepositoryOptions) *Repository {
 		metadataProviderRef:   opts.MetadataProviderRef,
 		fileCacher:            opts.FileCacher,
 		extensionBankRef:      opts.ExtensionBankRef,
-		anilistBaseAnimeCache: anilist.NewBaseAnimeCache(),
+		anilistBaseAnimeCache: media.NewBaseAnimeCache(),
 		platformRef:           opts.PlatformRef,
 		db:                    opts.Database,
 	}
@@ -122,8 +122,8 @@ func (r *Repository) getFcEpisodeListBucket(provider string, mediaId int) fileca
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (r *Repository) getMedia(ctx context.Context, mId int) (*anilist.BaseAnime, error) {
-	media, err := r.anilistBaseAnimeCache.GetOrSet(mId, func() (*anilist.BaseAnime, error) {
+func (r *Repository) getMedia(ctx context.Context, mId int) (*media.Anime, error) {
+	media, err := r.anilistBaseAnimeCache.GetOrSet(mId, func() (*media.Anime, error) {
 		media, err := r.platformRef.Get().GetAnime(ctx, mId)
 		if err != nil {
 			return nil, err
@@ -136,7 +136,7 @@ func (r *Repository) getMedia(ctx context.Context, mId int) (*anilist.BaseAnime,
 	return media, nil
 }
 
-func (r *Repository) GetMedia(ctx context.Context, mId int) (*anilist.BaseAnime, error) {
+func (r *Repository) GetMedia(ctx context.Context, mId int) (*media.Anime, error) {
 	return r.getMedia(ctx, mId)
 }
 
@@ -149,7 +149,7 @@ func (r *Repository) EmptyCache(mediaId int) error {
 	return nil
 }
 
-func (r *Repository) GetMediaEpisodes(provider string, media *anilist.BaseAnime, dubbed bool) ([]*Episode, error) {
+func (r *Repository) GetMediaEpisodes(provider string, media *media.Anime, dubbed bool) ([]*Episode, error) {
 	episodes := make([]*Episode, 0)
 
 	if provider == "" {

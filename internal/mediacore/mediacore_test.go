@@ -1,9 +1,9 @@
 package mediacore
 
 import (
-	"seanime/internal/api/anilist"
 	"seanime/internal/continuity"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/player"
 	"seanime/internal/testutil"
 	"testing"
@@ -253,7 +253,7 @@ func TestCoordinatorRestoresContinuityBeforeWatch(t *testing.T) {
 
 	coordinator.Watch(player.TargetMpvCore, "client-1", &player.PlaybackInfo{
 		ID:      "play-1",
-		Media:   &anilist.BaseAnime{ID: 42},
+		Media:   &media.Anime{ID: 42},
 		Episode: &anime.Episode{EpisodeNumber: 3},
 	})
 
@@ -292,7 +292,7 @@ func TestCoordinatorPersistsContinuityOnPause(t *testing.T) {
 			PlaybackInfo: &player.PlaybackInfo{
 				ID:           "play-1",
 				PlaybackType: player.PlaybackTypeLocalFile,
-				Media:        &anilist.BaseAnime{ID: 84},
+				Media:        &media.Anime{ID: 84},
 				Episode:      &anime.Episode{EpisodeNumber: 6},
 			},
 		},

@@ -3,12 +3,12 @@ package torrentstream
 import (
 	"context"
 	"encoding/json"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/database/models"
 	"seanime/internal/events"
 	hibiketorrent "seanime/internal/extension/hibike/torrent"
 	"seanime/internal/library/anime"
+	medialib "seanime/internal/media"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/testmocks"
 	"seanime/internal/testutil"
@@ -90,8 +90,8 @@ func newTorrentstreamTestRepositoryWithMetadataProvider(t *testing.T, metadataPr
 
 	repo := NewRepository(&NewRepositoryOptions{
 		Logger:              env.Logger(),
-		BaseAnimeCache:      anilist.NewBaseAnimeCache(),
-		CompleteAnimeCache:  anilist.NewCompleteAnimeCache(),
+		BaseAnimeCache:      medialib.NewBaseAnimeCache(),
+		CompleteAnimeCache:  medialib.NewCompleteAnimeCache(),
 		PlatformRef:         util.NewRef[platform.Platform](nil),
 		MetadataProviderRef: util.NewRef[metadata_provider.Provider](metadataProvider),
 		WSEventManager:      ws,
@@ -108,7 +108,7 @@ func newTorrentstreamTestRepositoryWithMetadataProvider(t *testing.T, metadataPr
 func TestHydrateStreamCollectionMergesAniListAndLibraryState(t *testing.T) {
 	mediaInLibrary := testmocks.NewBaseAnimeBuilder(1, "Library Show").WithEpisodes(12).Build()
 	mediaAlreadyQueued := testmocks.NewBaseAnimeBuilder(2, "Queued Show").WithEpisodes(12).Build()
-	unreleasedMedia := testmocks.NewBaseAnimeBuilder(3, "Unreleased Show").WithEpisodes(12).WithStatus(anilist.MediaStatusNotYetReleased).Build()
+	unreleasedMedia := testmocks.NewBaseAnimeBuilder(3, "Unreleased Show").WithEpisodes(12).WithStatus(medialib.MediaStatusNotYetReleased).Build()
 
 	fakeMetadata := testmocks.NewFakeMetadataProviderBuilder().
 		WithAnimeMetadata(mediaInLibrary.ID, anime.NewAnimeMetadataFromEpisodeCount(mediaInLibrary, []int{1, 2, 3})).
@@ -124,7 +124,7 @@ func TestHydrateStreamCollectionMergesAniListAndLibraryState(t *testing.T) {
 			EpisodeMetadata: &anime.EpisodeMetadata{},
 		}},
 		Lists: []*anime.LibraryCollectionList{{
-			Status: anilist.MediaListStatusCurrent,
+			Status: medialib.MediaListStatusCurrent,
 			Entries: []*anime.LibraryCollectionEntry{{
 				Media:   mediaInLibrary,
 				MediaId: mediaInLibrary.ID,
@@ -133,16 +133,16 @@ func TestHydrateStreamCollectionMergesAniListAndLibraryState(t *testing.T) {
 	}
 
 	repo.HydrateStreamCollection(&HydrateStreamCollectionOptions{
-		AnimeCollection: &anilist.AnimeCollection{
-			MediaListCollection: &anilist.AnimeCollection_MediaListCollection{
-				Lists: []*anilist.AnimeCollection_MediaListCollection_Lists{
-					newAnimeCollectionList(anilist.MediaListStatusCurrent,
-						newAnimeCollectionEntry(mediaInLibrary, 1, anilist.MediaListStatusCurrent),
-						newAnimeCollectionEntry(mediaAlreadyQueued, 0, anilist.MediaListStatusCurrent),
-						newAnimeCollectionEntry(unreleasedMedia, 0, anilist.MediaListStatusCurrent),
+		AnimeCollection: &medialib.AnimeCollection{
+			MediaListCollection: &medialib.AnimeCollection_MediaListCollection{
+				Lists: []*medialib.AnimeCollection_MediaListCollection_Lists{
+					newAnimeCollectionList(medialib.MediaListStatusCurrent,
+						newAnimeCollectionEntry(mediaInLibrary, 1, medialib.MediaListStatusCurrent),
+						newAnimeCollectionEntry(mediaAlreadyQueued, 0, medialib.MediaListStatusCurrent),
+						newAnimeCollectionEntry(unreleasedMedia, 0, medialib.MediaListStatusCurrent),
 					),
-					newAnimeCollectionList(anilist.MediaListStatusRepeating,
-						newAnimeCollectionEntry(mediaInLibrary, 1, anilist.MediaListStatusRepeating),
+					newAnimeCollectionList(medialib.MediaListStatusRepeating,
+						newAnimeCollectionEntry(mediaInLibrary, 1, medialib.MediaListStatusRepeating),
 					),
 				},
 			},
@@ -180,11 +180,11 @@ func TestHydrateStreamCollectionFallsBackWhenEpisodeMetadataMissing(t *testing.T
 	libraryCollection := &anime.LibraryCollection{}
 
 	repo.HydrateStreamCollection(&HydrateStreamCollectionOptions{
-		AnimeCollection: &anilist.AnimeCollection{
-			MediaListCollection: &anilist.AnimeCollection_MediaListCollection{
-				Lists: []*anilist.AnimeCollection_MediaListCollection_Lists{
-					newAnimeCollectionList(anilist.MediaListStatusCurrent,
-						newAnimeCollectionEntry(media, 1, anilist.MediaListStatusCurrent),
+		AnimeCollection: &medialib.AnimeCollection{
+			MediaListCollection: &medialib.AnimeCollection_MediaListCollection{
+				Lists: []*medialib.AnimeCollection_MediaListCollection_Lists{
+					newAnimeCollectionList(medialib.MediaListStatusCurrent,
+						newAnimeCollectionEntry(media, 1, medialib.MediaListStatusCurrent),
 					),
 				},
 			},
@@ -430,8 +430,8 @@ func decodePayloadMap(t *testing.T, payload interface{}) map[string]interface{} 
 	return ret
 }
 
-func newAnimeCollectionList(status anilist.MediaListStatus, entries ...*anilist.AnimeCollection_MediaListCollection_Lists_Entries) *anilist.AnimeCollection_MediaListCollection_Lists {
-	return &anilist.AnimeCollection_MediaListCollection_Lists{
+func newAnimeCollectionList(status medialib.MediaListStatus, entries ...*medialib.AnimeCollection_MediaListCollection_Lists_Entries) *medialib.AnimeCollection_MediaListCollection_Lists {
+	return &medialib.AnimeCollection_MediaListCollection_Lists{
 		Status:       &status,
 		Name:         new(string(status)),
 		IsCustomList: new(false),
@@ -439,8 +439,8 @@ func newAnimeCollectionList(status anilist.MediaListStatus, entries ...*anilist.
 	}
 }
 
-func newAnimeCollectionEntry(media *anilist.BaseAnime, progress int, status anilist.MediaListStatus) *anilist.AnimeCollection_MediaListCollection_Lists_Entries {
-	return &anilist.AnimeCollection_MediaListCollection_Lists_Entries{
+func newAnimeCollectionEntry(media *medialib.Anime, progress int, status medialib.MediaListStatus) *medialib.AnimeCollection_MediaListCollection_Lists_Entries {
+	return &medialib.AnimeCollection_MediaListCollection_Lists_Entries{
 		Media:    media,
 		Progress: &progress,
 		Score:    new(8.5),

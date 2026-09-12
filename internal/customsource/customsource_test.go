@@ -2,10 +2,10 @@ package customsource
 
 import (
 	"context"
-	"seanime/internal/api/anilist"
 	"seanime/internal/api/metadata"
 	"seanime/internal/extension"
 	hibikecustomsource "seanime/internal/extension/hibike/customsource"
+	"seanime/internal/media"
 	"seanime/internal/testutil"
 	"seanime/internal/util"
 	"testing"
@@ -57,7 +57,7 @@ func TestSiteURLHelpers(t *testing.T) {
 
 	t.Run("keeps AniList urls untouched", func(t *testing.T) {
 		// AniList URLs are intentionally left alone so downstream code can still treat them as native AniList media.
-		aniListURL := "https://anilist.co/anime/1"
+		aniListURL := "https://media.co/anime/1"
 		formatted := formatSiteUrl("demo", &aniListURL)
 		require.Same(t, &aniListURL, formatted)
 
@@ -72,10 +72,10 @@ func TestSiteURLHelpers(t *testing.T) {
 func TestNormalizeMedia(t *testing.T) {
 	t.Run("normalizes anime ids urls and title fallback", func(t *testing.T) {
 		// Normalization rewrites both the ID and the site URL so the rest of the app can tell this apart from AniList media.
-		anime := &anilist.BaseAnime{
+		anime := &media.Anime{
 			ID:      25,
 			SiteURL: new("https://example.com/anime/25"),
-			Title: &anilist.BaseAnime_Title{
+			Title: &media.Anime_Title{
 				English: new("Fresh Anime"),
 			},
 		}
@@ -93,7 +93,7 @@ func TestNormalizeMedia(t *testing.T) {
 
 	t.Run("fills missing manga title", func(t *testing.T) {
 		// Providers are allowed to omit titles, but the app expects something printable.
-		manga := &anilist.BaseManga{ID: 30}
+		manga := &media.Manga{ID: 30}
 
 		NormalizeMedia(21, "reader", manga)
 
@@ -130,13 +130,13 @@ func TestManagerProviderResolution(t *testing.T) {
 	require.Nil(t, missingExt)
 	require.Zero(t, missingLocalID)
 
-	baseAnimeExt, animeLocalID, animeIsCustom, animeExists := manager.GetProviderFromBaseAnime(&anilist.BaseAnime{ID: customID})
+	baseAnimeExt, animeLocalID, animeIsCustom, animeExists := manager.GetProviderFromBaseAnime(&media.Anime{ID: customID})
 	require.True(t, animeIsCustom)
 	require.True(t, animeExists)
 	require.NotNil(t, baseAnimeExt)
 	require.Equal(t, 55, animeLocalID)
 
-	baseMangaExt, mangaLocalID, mangaIsCustom, mangaExists := manager.GetProviderFromBaseManga(&anilist.BaseManga{ID: 123})
+	baseMangaExt, mangaLocalID, mangaIsCustom, mangaExists := manager.GetProviderFromBaseManga(&media.Manga{ID: 123})
 	require.False(t, mangaIsCustom)
 	require.False(t, mangaExists)
 	require.Nil(t, baseMangaExt)
@@ -148,7 +148,7 @@ func TestManagerProviderResolution(t *testing.T) {
 func TestGetCustomSourceAnimeEntriesRefreshesMedia(t *testing.T) {
 	provider := &fakeCustomSourceProvider{
 		extensionIdentifier: 13,
-		animeByID: map[int]*anilist.BaseAnime{
+		animeByID: map[int]*media.Anime{
 			101: newBaseAnime(101, "Fresh Title", "https://example.com/fresh"),
 		},
 	}
@@ -158,14 +158,14 @@ func TestGetCustomSourceAnimeEntriesRefreshesMedia(t *testing.T) {
 		provider:   provider,
 	})
 
-	require.NoError(t, manager.SaveCustomSourceAnimeEntries("anime-ext", map[int]*anilist.AnimeListEntry{
+	require.NoError(t, manager.SaveCustomSourceAnimeEntries("anime-ext", map[int]*media.AnimeListEntry{
 		101: {
 			ID:     101,
-			Status: new(anilist.MediaListStatusCurrent),
+			Status: new(media.MediaListStatusCurrent),
 			Media:  newBaseAnime(101, "Stale Title", "https://example.com/stale"),
 		},
 	}))
-	require.NoError(t, manager.SaveCustomSourceAnimeEntries("missing-ext", map[int]*anilist.AnimeListEntry{
+	require.NoError(t, manager.SaveCustomSourceAnimeEntries("missing-ext", map[int]*media.AnimeListEntry{
 		9: {ID: 9, Media: newBaseAnime(9, "Ghost", "https://example.com/ghost")},
 	}))
 
@@ -183,7 +183,7 @@ func TestGetCustomSourceAnimeEntriesRefreshesMedia(t *testing.T) {
 func TestUpdateEntryAnimeLifecycle(t *testing.T) {
 	provider := &fakeCustomSourceProvider{
 		extensionIdentifier: 3,
-		animeByID: map[int]*anilist.BaseAnime{
+		animeByID: map[int]*media.Anime{
 			77: newBaseAnime(77, "Tracked Anime", "https://example.com/anime/77"),
 		},
 	}
@@ -194,11 +194,11 @@ func TestUpdateEntryAnimeLifecycle(t *testing.T) {
 	})
 
 	mediaID := GenerateMediaId(3, 77)
-	status := anilist.MediaListStatusPlanning
+	status := media.MediaListStatusPlanning
 	score := 84
 	progress := 6
-	startedAt := &anilist.FuzzyDateInput{Year: new(2024), Month: new(2), Day: new(10)}
-	completedAt := &anilist.FuzzyDateInput{Year: new(2024), Month: new(3), Day: new(1)}
+	startedAt := &media.FuzzyDateInput{Year: new(2024), Month: new(2), Day: new(10)}
+	completedAt := &media.FuzzyDateInput{Year: new(2024), Month: new(3), Day: new(1)}
 
 	// This walks the main mutation flow: create the entry, advance progress, bump repeat count, then remove it.
 	require.NoError(t, manager.UpdateEntry(context.Background(), mediaID, &status, &score, &progress, startedAt, completedAt))
@@ -217,7 +217,7 @@ func TestUpdateEntryAnimeLifecycle(t *testing.T) {
 	entries, ok = manager.GetCustomSourceAnimeEntries()
 	require.True(t, ok)
 	entry = entries["tracker"][77]
-	require.Equal(t, anilist.MediaListStatusCompleted, *entry.Status)
+	require.Equal(t, media.MediaListStatusCompleted, *entry.Status)
 	require.Equal(t, 12, *entry.Progress)
 
 	require.NoError(t, manager.UpdateEntryRepeat(context.Background(), mediaID, 2))
@@ -238,7 +238,7 @@ func TestUpdateEntryAnimeLifecycle(t *testing.T) {
 func TestUpdateEntryCreatesMangaEntryWhenAnimeLookupMisses(t *testing.T) {
 	provider := &fakeCustomSourceProvider{
 		extensionIdentifier: 5,
-		mangaByID: map[int]*anilist.BaseManga{
+		mangaByID: map[int]*media.Manga{
 			88: newBaseManga(88, "Tracked Manga", "https://example.com/manga/88"),
 		},
 	}
@@ -249,7 +249,7 @@ func TestUpdateEntryCreatesMangaEntryWhenAnimeLookupMisses(t *testing.T) {
 	})
 
 	mediaID := GenerateMediaId(5, 88)
-	status := anilist.MediaListStatusCurrent
+	status := media.MediaListStatusCurrent
 	progress := 14
 
 	// UpdateEntry tries anime first, then falls back to manga when the anime lookup does not return anything.
@@ -269,7 +269,7 @@ func TestUpdateEntryCreatesMangaEntryWhenAnimeLookupMisses(t *testing.T) {
 func TestMergeAnimeEntries(t *testing.T) {
 	provider := &fakeCustomSourceProvider{
 		extensionIdentifier: 11,
-		animeByID: map[int]*anilist.BaseAnime{
+		animeByID: map[int]*media.Anime{
 			41: newBaseAnime(41, "Merged Anime", "https://example.com/merged"),
 		},
 	}
@@ -279,20 +279,20 @@ func TestMergeAnimeEntries(t *testing.T) {
 		provider:   provider,
 	})
 
-	require.NoError(t, manager.SaveCustomSourceAnimeEntries("merge-ext", map[int]*anilist.AnimeListEntry{
+	require.NoError(t, manager.SaveCustomSourceAnimeEntries("merge-ext", map[int]*media.AnimeListEntry{
 		41: {
 			ID:       41,
-			Status:   new(anilist.MediaListStatusCurrent),
+			Status:   new(media.MediaListStatusCurrent),
 			Progress: new(4),
 			Media:    newBaseAnime(41, "Stored Anime", "https://example.com/stored"),
 		},
 	}))
 
-	collection := &anilist.AnimeCollection{
-		MediaListCollection: &anilist.AnimeCollection_MediaListCollection{
-			Lists: []*anilist.AnimeCollection_MediaListCollection_Lists{{
-				Status:  new(anilist.MediaListStatusPlanning),
-				Entries: []*anilist.AnimeCollection_MediaListCollection_Lists_Entries{},
+	collection := &media.AnimeCollection{
+		MediaListCollection: &media.AnimeCollection_MediaListCollection{
+			Lists: []*media.AnimeCollection_MediaListCollection_Lists{{
+				Status:  new(media.MediaListStatusPlanning),
+				Entries: []*media.AnimeCollection_MediaListCollection_Lists_Entries{},
 			}},
 		},
 	}
@@ -301,7 +301,7 @@ func TestMergeAnimeEntries(t *testing.T) {
 	manager.MergeAnimeEntries(collection)
 
 	require.Len(t, collection.MediaListCollection.Lists, 2)
-	currentList := findAnimeListByStatus(t, collection, anilist.MediaListStatusCurrent)
+	currentList := findAnimeListByStatus(t, collection, media.MediaListStatusCurrent)
 	require.Len(t, currentList.Entries, 1)
 	require.Equal(t, GenerateMediaId(11, 41), currentList.Entries[0].ID)
 	require.Equal(t, GenerateMediaId(11, 41), currentList.Entries[0].Media.ID)
@@ -339,7 +339,7 @@ func newCustomSourceTestManager(t *testing.T, exts ...customSourceTestExtension)
 	return manager
 }
 
-func findAnimeListByStatus(t *testing.T, collection *anilist.AnimeCollection, status anilist.MediaListStatus) *anilist.AnimeCollection_MediaListCollection_Lists {
+func findAnimeListByStatus(t *testing.T, collection *media.AnimeCollection, status media.MediaListStatus) *media.AnimeCollection_MediaListCollection_Lists {
 	t.Helper()
 
 	for _, list := range collection.MediaListCollection.Lists {
@@ -352,21 +352,21 @@ func findAnimeListByStatus(t *testing.T, collection *anilist.AnimeCollection, st
 	return nil
 }
 
-func newBaseAnime(id int, title string, siteURL string) *anilist.BaseAnime {
-	return &anilist.BaseAnime{
+func newBaseAnime(id int, title string, siteURL string) *media.Anime {
+	return &media.Anime{
 		ID:      id,
 		SiteURL: new(siteURL),
-		Title: &anilist.BaseAnime_Title{
+		Title: &media.Anime_Title{
 			English: new(title),
 		},
 	}
 }
 
-func newBaseManga(id int, title string, siteURL string) *anilist.BaseManga {
-	return &anilist.BaseManga{
+func newBaseManga(id int, title string, siteURL string) *media.Manga {
+	return &media.Manga{
 		ID:      id,
 		SiteURL: new(siteURL),
-		Title: &anilist.BaseManga_Title{
+		Title: &media.Manga_Title{
 			English: new(title),
 		},
 	}
@@ -374,8 +374,8 @@ func newBaseManga(id int, title string, siteURL string) *anilist.BaseManga {
 
 type fakeCustomSourceProvider struct {
 	extensionIdentifier int
-	animeByID           map[int]*anilist.BaseAnime
-	mangaByID           map[int]*anilist.BaseManga
+	animeByID           map[int]*media.Anime
+	mangaByID           map[int]*media.Manga
 	animeErr            error
 	mangaErr            error
 }
@@ -393,12 +393,12 @@ func (f *fakeCustomSourceProvider) GetSettings() hibikecustomsource.Settings {
 	}
 }
 
-func (f *fakeCustomSourceProvider) GetAnime(_ context.Context, ids []int) ([]*anilist.BaseAnime, error) {
+func (f *fakeCustomSourceProvider) GetAnime(_ context.Context, ids []int) ([]*media.Anime, error) {
 	if f.animeErr != nil {
 		return nil, f.animeErr
 	}
 
-	ret := make([]*anilist.BaseAnime, 0, len(ids))
+	ret := make([]*media.Anime, 0, len(ids))
 	for _, id := range ids {
 		if media, ok := f.animeByID[id]; ok {
 			ret = append(ret, media)
@@ -411,7 +411,7 @@ func (f *fakeCustomSourceProvider) ListAnime(_ context.Context, _ string, _ int,
 	return nil, nil
 }
 
-func (f *fakeCustomSourceProvider) GetAnimeWithRelations(_ context.Context, _ int) (*anilist.CompleteAnime, error) {
+func (f *fakeCustomSourceProvider) GetAnimeWithRelations(_ context.Context, _ int) (*media.CompleteAnime, error) {
 	return nil, nil
 }
 
@@ -419,16 +419,16 @@ func (f *fakeCustomSourceProvider) GetAnimeMetadata(_ context.Context, _ int) (*
 	return nil, nil
 }
 
-func (f *fakeCustomSourceProvider) GetAnimeDetails(_ context.Context, _ int) (*anilist.AnimeDetailsById_Media, error) {
+func (f *fakeCustomSourceProvider) GetAnimeDetails(_ context.Context, _ int) (*media.AnimeDetails, error) {
 	return nil, nil
 }
 
-func (f *fakeCustomSourceProvider) GetManga(_ context.Context, ids []int) ([]*anilist.BaseManga, error) {
+func (f *fakeCustomSourceProvider) GetManga(_ context.Context, ids []int) ([]*media.Manga, error) {
 	if f.mangaErr != nil {
 		return nil, f.mangaErr
 	}
 
-	ret := make([]*anilist.BaseManga, 0, len(ids))
+	ret := make([]*media.Manga, 0, len(ids))
 	for _, id := range ids {
 		if media, ok := f.mangaByID[id]; ok {
 			ret = append(ret, media)
@@ -441,6 +441,6 @@ func (f *fakeCustomSourceProvider) ListManga(_ context.Context, _ string, _ int,
 	return nil, nil
 }
 
-func (f *fakeCustomSourceProvider) GetMangaDetails(_ context.Context, _ int) (*anilist.MangaDetailsById_Media, error) {
+func (f *fakeCustomSourceProvider) GetMangaDetails(_ context.Context, _ int) (*media.MangaDetails, error) {
 	return nil, nil
 }

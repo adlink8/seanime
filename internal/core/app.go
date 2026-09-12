@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"seanime/internal/api/anilist"
+	"seanime/internal/api/bangumi"
 	"seanime/internal/api/metadata_provider"
 	"seanime/internal/constants"
 	"seanime/internal/continuity"
@@ -39,7 +39,7 @@ import (
 	"seanime/internal/nakama"
 	"seanime/internal/nativeplayer"
 	"seanime/internal/onlinestream"
-	"seanime/internal/platforms/anilist_platform"
+	"seanime/internal/platforms/bangumi_platform"
 	"seanime/internal/platforms/offline_platform"
 	"seanime/internal/platforms/platform"
 	"seanime/internal/platforms/simulated_platform"
@@ -81,7 +81,7 @@ type (
 		Watcher *scanner.Watcher
 
 		// API clients and providers
-		AnilistClientRef    *util.Ref[anilist.AnilistClient]
+		BangumiClientRef    *util.Ref[*bangumi.Client]
 		AnilistPlatformRef  *util.Ref[platform.Platform]
 		OfflinePlatformRef  *util.Ref[platform.Platform]
 		MetadataProviderRef *util.Ref[metadata_provider.Provider]
@@ -159,7 +159,7 @@ type (
 		Version          string
 		TotalLibrarySize uint64
 		LibraryDir       string
-		AnilistCacheDir  string
+		BangumiCacheDir  string
 		IsDesktopSidecar bool
 		Flags            SeanimeFlags
 
@@ -264,15 +264,16 @@ func NewApp(configOpts *ConfigOptions, selfupdater *updater.SelfUpdater) *App {
 		AnimeLibraryPaths: &animeLibraryPaths,
 	})
 
-	// Get Anilist token from database if available
-	anilistToken := database.GetAnilistToken()
+	// Get Bangumi token from database if available
+	// Bangumi 锚点：token 沿用 account 表存储（原 AniList token 字段，Phase 4 统一清理命名）
+	bangumiToken := database.GetAnilistToken()
 
-	anilistCacheDir := filepath.Join(cfg.Cache.Dir, "anilist")
+	bangumiCacheDir := filepath.Join(cfg.Cache.Dir, "bangumi")
 
-	// Initialize Anilist API client with the token
+	// Initialize Bangumi API client with the token
 	// If the token is empty, the client will not be authenticated
-	anilistCW := anilist.NewAnilistClient(anilistToken, anilistCacheDir)
-	anilistCWRef := util.NewRef[anilist.AnilistClient](anilistCW)
+	bangumiClient := bangumi.New(bangumiToken)
+	bangumiClientRef := util.NewRef[*bangumi.Client](bangumiClient)
 
 	// Initialize WebSocket event manager for real-time communication
 	wsEventManager := events.NewWSEventManager(logger)
@@ -327,14 +328,14 @@ func NewApp(configOpts *ConfigOptions, selfupdater *updater.SelfUpdater) *App {
 		ExtensionBankRef: extensionBankRef,
 	})
 
-	// Initialize Anilist platform
-	anilistPlatform := anilist_platform.NewAnilistPlatform(anilistCWRef, extensionBankRef, logger, database, func() {
+	// Initialize Bangumi platform
+	bangumiPlatform := bangumi_platform.NewBangumiPlatform(bangumiClientRef.Get(), bangumiCacheDir, extensionBankRef, logger, database, func() {
 		if app != nil {
 			app.LogoutFromAnilist()
 		}
 	})
 
-	activePlatformRef := util.NewRef[platform.Platform](anilistPlatform)
+	activePlatformRef := util.NewRef[platform.Platform](bangumiPlatform)
 	metadataProviderRef := util.NewRef[metadata_provider.Provider](activeMetadataProvider)
 
 	// Initialize sync manager for offline/online synchronization
@@ -359,13 +360,13 @@ func NewApp(configOpts *ConfigOptions, selfupdater *updater.SelfUpdater) *App {
 	}
 
 	// Initialize local platform for offline operations
-	offlinePlatform, err := offline_platform.NewOfflinePlatform(localManager, anilistCWRef, logger)
+	offlinePlatform, err := offline_platform.NewOfflinePlatform(localManager, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("app: Failed to initialize local platform")
 	}
 
 	// Initialize simulated platform for unauthenticated operations
-	simulatedPlatform, err := simulated_platform.NewSimulatedPlatform(localManager, anilistCWRef, extensionBankRef, logger, database)
+	simulatedPlatform, err := simulated_platform.NewSimulatedPlatform(localManager, bangumiClientRef.Get(), bangumiCacheDir, extensionBankRef, logger, database)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("app: Failed to initialize simulated platform")
 	}
@@ -374,8 +375,8 @@ func NewApp(configOpts *ConfigOptions, selfupdater *updater.SelfUpdater) *App {
 	if cfg.Server.Offline {
 		logger.Warn().Msg("app: Offline mode is active, using offline platform")
 		activePlatformRef.Set(offlinePlatform)
-	} else if !anilistCWRef.Get().IsAuthenticated() {
-		logger.Warn().Msg("app: Anilist client is not authenticated, using simulated platform")
+	} else if bangumiToken == "" {
+		logger.Warn().Msg("app: Bangumi client is not authenticated, using simulated platform")
 		activePlatformRef.Set(simulatedPlatform)
 	}
 
@@ -409,12 +410,12 @@ func NewApp(configOpts *ConfigOptions, selfupdater *updater.SelfUpdater) *App {
 		Flags:                         configOpts.Flags,
 		FeatureManager:                NewFeatureManager(logger, configOpts.Flags),
 		Database:                      database,
-		AnilistClientRef:              anilistCWRef,
+		BangumiClientRef:              bangumiClientRef,
 		AnilistPlatformRef:            activePlatformRef,
 		OfflinePlatformRef:            offlinePlatformRef,
 		LocalManager:                  localManager,
 		WSEventManager:                wsEventManager,
-		AnilistCacheDir:               anilistCacheDir,
+		BangumiCacheDir:               bangumiCacheDir,
 		Logger:                        logger,
 		Version:                       constants.Version,
 		Updater:                       updater.New(constants.Version, logger, wsEventManager),
