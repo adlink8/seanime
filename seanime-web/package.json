@@ -16,6 +16,7 @@
     "build:denshi": "npm run typecheck && env-cmd -f .env.denshi rsbuild build",
     "build:development:desktop": "npm run typecheck && env-cmd -f .env.development.desktop rsbuild build",
     "preview": "rsbuild preview",
+    "check:i18n-safety": "node scripts/check-i18n-safety.mjs",
     "test": "vitest run"
   },
   "dependencies": {
