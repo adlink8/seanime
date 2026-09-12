@@ -32,6 +32,7 @@ import { IconButton } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { Popover } from "@/components/ui/popover"
 import { Select } from "@/components/ui/select"
+import { t } from "@/lib/i18n"
 import { useSetAtom } from "jotai"
 import { useAtom, useAtomValue } from "jotai/react"
 import React from "react"
@@ -247,8 +248,9 @@ export function MangaReaderBar(props: MangaReaderBarProps) {
                 {!!selectedChapter &&
                     <div data-manga-reader-bar-chapter-nav-container className="flex gap-3 items-center flex-none whitespace-nowrap ">
                         <ChapterNavButton dir="left" />
-                        <span className="hidden md:inline-block">Chapter </span>
+                        <span className="hidden md:inline-block">{t("manga.reader.chapter_prefix")}</span>
                         {`${selectedChapter?.chapterNumber}`}
+                        <span className="hidden md:inline-block">{t("manga.reader.chapter_suffix")}</span>
                         <ChapterNavButton dir="right" />
                     </div>}
 

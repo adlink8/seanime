@@ -3,6 +3,7 @@ import { useMangaReaderUtils } from "@/app/(main)/manga/_lib/handle-manga-utils"
 import { IconButton } from "@/components/ui/button"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { HIDE_IMAGES } from "@/types/constants.ts"
 import React from "react"
 import { FaRedo } from "react-icons/fa"
@@ -99,7 +100,7 @@ export function ChapterPage(props: ChapterPageProps) {
                     data-chapter-page-image
                     data-page-index={index}
                     src={pageUrl}
-                    alt={`Page ${index}`}
+                    alt={t("manga.reader.page_alt", { n: index })}
                     crossOrigin="anonymous"
                     draggable={false}
                     className={imageClass}

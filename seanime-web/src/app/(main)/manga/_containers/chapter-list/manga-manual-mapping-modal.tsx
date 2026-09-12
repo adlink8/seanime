@@ -19,6 +19,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import { useRouter } from "@/lib/navigation"
 import React from "react"
 import { FiSearch } from "react-icons/fi"
@@ -41,8 +42,8 @@ export function MangaManualMappingModal(props: MangaManualMappingModalProps) {
         <>
             <Modal
                 data-manga-manual-mapping-modal
-                title="Manual match"
-                description="Match this manga to a search result"
+                title={t("manga.manual_match.title")}
+                description={t("manga.manual_match.description")}
                 trigger={children}
                 contentClass="max-w-4xl"
             >
@@ -98,29 +99,29 @@ function Content({ entry }: { entry: Manga_Entry }) {
 
     const [selectedResult, setSelectedResult] = React.useState<HibikeManga_SearchResult | null>(null)
     const confirmMatch = useConfirmationDialog({
-        title: "Manual match",
+        title: t("manga.manual_match.title"),
         description: selectedResult && mappingPreview ? (
             <div className="space-y-3 text-left">
-                <p>Match this entry to <span className="font-medium">{selectedResult.title}</span>?</p>
+                <p>{t("manga.manual_match.confirm_match", { title: selectedResult.title })}</p>
                 <div className="grid grid-cols-2 gap-3 rounded-[--radius-md] border p-3 text-sm">
                     <div>
-                        <p className="text-[--muted]">Distinct chapters</p>
+                        <p className="text-[--muted]">{t("manga.manual_match.distinct_chapters")}</p>
                         <p className="font-medium">{mappingPreview.chapterCount}</p>
                     </div>
                     <div>
-                        <p className="text-[--muted]">Latest chapter</p>
-                        <p className="font-medium">{mappingPreview.latest || "Unknown"}</p>
+                        <p className="text-[--muted]">{t("manga.manual_match.latest_chapter")}</p>
+                        <p className="font-medium">{mappingPreview.latest || t("manga.manual_match.unknown")}</p>
                     </div>
                 </div>
                 {!!mappingPreview.languages?.length && (
-                    <p className="text-sm"><span className="text-[--muted]">Languages:</span> {mappingPreview.languages.join(", ")}</p>
+                    <p className="text-sm"><span className="text-[--muted]">{t("manga.manual_match.languages_label")}</span> {mappingPreview.languages.join(", ")}</p>
                 )}
                 {!!mappingPreview.scanlators?.length && (
-                    <p className="text-sm"><span className="text-[--muted]">Scanlators:</span> {mappingPreview.scanlators.join(", ")}</p>
+                    <p className="text-sm"><span className="text-[--muted]">{t("manga.manual_match.scanlators_label")}</span> {mappingPreview.scanlators.join(", ")}</p>
                 )}
             </div>
-        ) : "Review the provider result before saving this match.",
-        actionText: "Confirm",
+        ) : t("manga.manual_match.review_notice"),
+        actionText: t("media.action.confirm"),
         actionIntent: "success",
         onCancel: () => {
             resetPreview()
@@ -150,7 +151,7 @@ function Content({ entry }: { entry: Manga_Entry }) {
                         {!!existingMapping?.mangaId ? (
                             <AppLayoutStack>
                                 <p>
-                                    Current mapping: <span>{existingMapping.mangaId}</span>
+                                    {t("manga.manual_match.current_mapping")} <span>{existingMapping.mangaId}</span>
                                 </p>
                                 <Button
                                     intent="alert-subtle" loading={isUnmatching} onClick={() => {
@@ -162,11 +163,11 @@ function Content({ entry }: { entry: Manga_Entry }) {
                                     }
                                 }}
                                 >
-                                    Remove mapping
+                                    {t("manga.manual_match.remove_mapping")}
                                 </Button>
                             </AppLayoutStack>
                         ) : (
-                            <p className="text-[--muted] italic">No manual match</p>
+                            <p className="text-[--muted] italic">{t("manga.manual_match.no_match")}</p>
                         )}
                     </div>
 
@@ -176,7 +177,7 @@ function Content({ entry }: { entry: Manga_Entry }) {
                         <div className="flex gap-2 items-center">
                             <Field.Text
                                 name="query"
-                                placeholder="Enter a title..."
+                                placeholder={t("manga.manual_match.search_placeholder")}
                                 leftIcon={<FiSearch className="text-xl text-[--muted]" />}
                                 fieldClass="w-full"
                             />
@@ -185,7 +186,7 @@ function Content({ entry }: { entry: Manga_Entry }) {
                                 intent="white"
                                 loading={isMatching || previewLoading || searchLoading || mappingLoading}
                                 className=""
-                            >Search</Field.Submit>
+                            >{t("entry.torrent_search.search_placeholder")}</Field.Submit>
                         </div>
                     </Form>
 
@@ -204,7 +205,7 @@ function Content({ entry }: { entry: Manga_Entry }) {
                                             previewMapping({ provider: selectedProvider, mangaId: item.id }, {
                                                 onSuccess: preview => {
                                                     if (!preview?.chapterCount) {
-                                                        toast.error("No chapters were found for this result")
+                                                        toast.error(t("manga.manual_match.no_chapters_toast"))
                                                         setSelectedResult(null)
                                                         resetPreview()
                                                         return

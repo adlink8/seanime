@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { DataGrid, defineDataGridColumns } from "@/components/ui/datagrid"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Select } from "@/components/ui/select"
+import { t } from "@/lib/i18n"
 import { useAtom, useAtomValue, useSetAtom } from "jotai/react"
 import React from "react"
 import { ErrorBoundary } from "react-error-boundary"
@@ -129,12 +130,12 @@ export function ChapterList(props: ChapterListProps) {
     const columns = React.useMemo(() => defineDataGridColumns<HibikeManga_ChapterDetails>(() => [
         {
             accessorKey: "title",
-            header: "Name",
+            header: t("manga.chapter_list.name"),
             size: 90,
         },
         ...(selectedExtension?.settings?.supportsMultiScanlator ? [{
             id: "scanlator",
-            header: "Scanlator",
+            header: t("manga.chapter_list.scanlator"),
             size: 30,
             accessorFn: (row: any) => row.scanlator,
             enableSorting: true,
@@ -142,7 +143,7 @@ export function ChapterList(props: ChapterListProps) {
         }] : []),
         ...(selectedExtension?.settings?.supportsMultiLanguage ? [{
             id: "language",
-            header: "Language",
+            header: t("entry.torrent_filter.languages"),
             size: 40,
             accessorFn: (row: any) => LANGUAGES_LIST[row.language]?.nativeName || row.language,
             enableSorting: true,
@@ -150,7 +151,7 @@ export function ChapterList(props: ChapterListProps) {
         }] : []),
         {
             id: "number",
-            header: "Number",
+            header: t("manga.chapter_list.number"),
             size: 10,
             enableSorting: true,
             accessorFn: (row) => {
@@ -173,7 +174,7 @@ export function ChapterList(props: ChapterListProps) {
                             icon={<LuDownload className="text-xl" />}
                             className="opacity-50 hover:opacity-100"
                         />}
-                        {isChapterQueued(row.original) && <p className="text-[--muted]">Queued</p>}
+                        {isChapterQueued(row.original) && <p className="text-[--muted]">{t("manga.chapter_list.queued")}</p>}
                         {isChapterDownloaded(row.original) && <p className="text-[--green] px-1"><MdOutlineOfflinePin className="text-2xl" /></p>}
                         <IconButton
                             intent="gray-subtle"
@@ -199,12 +200,10 @@ export function ChapterList(props: ChapterListProps) {
     }), [unreadChapters, downloadData, isChapterDownloaded, isChapterLocal, isChapterQueued])
 
     const confirmDownloadUnread = useConfirmationDialog({
-        title: "Download unread chapters",
+        title: t("manga.chapter_list.download_unread_title"),
         actionIntent: "primary",
-        actionText: "Add to queue",
-        description: `Add ${downloadableUnreadChapters.length} unread ${downloadableUnreadChapters.length === 1
-            ? "chapter"
-            : "chapters"} to the download queue?`,
+        actionText: t("manga.chapter_list.add_to_queue"),
+        description: t("manga.chapter_list.add_unread_confirm", { count: downloadableUnreadChapters.length }),
         onConfirm: () => downloadChapters(downloadableUnreadChapters),
     })
 
@@ -254,11 +253,11 @@ export function ChapterList(props: ChapterListProps) {
                 data: nextChapter,
                 id: `next-chapter-${nextChapter.id}`,
                 value: `${nextChapter.chapter}`,
-                heading: "Next Chapter",
+                heading: t("manga.chapter_list.next_chapter_heading"),
                 priority: 2,
                 render: () => (
                     <div className="flex gap-1 items-center w-full">
-                        <p className="max-w-[70%] truncate">Chapter {nextChapter.chapter}</p>
+                        <p className="max-w-[70%] truncate">{t("manga.chapter.x", { n: nextChapter.chapter })}</p>
                         {nextChapter.scanlator && (
                             <p className="text-[--muted]">({nextChapter.scanlator})</p>
                         )}
@@ -279,11 +278,11 @@ export function ChapterList(props: ChapterListProps) {
                 data: chapter,
                 id: `chapter-${chapter.id}`,
                 value: `${chapter.chapter}`,
-                heading: "Upcoming Chapters",
+                heading: t("manga.chapter_list.upcoming_chapters_heading"),
                 priority: 1,
                 render: () => (
                     <div className="flex gap-1 items-center w-full">
-                        <p className="max-w-[70%] truncate">Chapter {chapter.chapter}</p>
+                        <p className="max-w-[70%] truncate">{t("manga.chapter.x", { n: chapter.chapter })}</p>
                         {chapter.scanlator && (
                             <p className="text-[--muted]">({chapter.scanlator})</p>
                         )}
@@ -335,7 +334,7 @@ export function ChapterList(props: ChapterListProps) {
                         mId: mediaId,
                         provider: v,
                     })}
-                    leftAddon="Source"
+                    leftAddon={t("manga.chapter_list.source")}
                     size="sm"
                     disabled={sourceRefreshRunning}
                 />
@@ -346,16 +345,16 @@ export function ChapterList(props: ChapterListProps) {
                     onClick={() => {
                         if (mediaId) {
                             startSourceRefresh({ mode: "refresh_selected", mediaIds: [Number(mediaId)] }, {
-                                onSuccess: () => toast.info("Source refresh started"),
+                                onSuccess: () => toast.info(t("manga.refresh.started_toast")),
                             })
                         }
                     }}
                     loading={isStartingSourceRefresh || sourceRefreshRunning}
                     disabled={!preferencesHydrated || !selectedExtension || !sourceRefreshEligible || sourceRefreshRunning}
-                    title={!sourceRefreshEligible ? "Source refresh is available for current and re-reading manga" : undefined}
+                    title={!sourceRefreshEligible ? t("manga.refresh.not_eligible_title") : undefined}
                     size="sm"
                 >
-                    {sourceRefreshRunning ? "Refresh running" : "Refresh source"}
+                    {sourceRefreshRunning ? t("manga.refresh.refresh_running") : t("manga.chapter_list.refresh_source")}
                 </Button>
 
                 <MangaManualMappingModal entry={entry}>
@@ -365,7 +364,7 @@ export function ChapterList(props: ChapterListProps) {
                         size="sm"
                         disabled={!selectedExtension}
                     >
-                        Manual match
+                        {t("manga.chapter_list.manual_match")}
                     </Button>
                 </MangaManualMappingModal>
             </div>
@@ -373,18 +372,18 @@ export function ChapterList(props: ChapterListProps) {
             {!providerExtensionsLoading && !selectedExtension && (
                 <Alert
                     intent="warning-basic"
-                    title={selectedProvider ? "Saved source unavailable" : "No manga source available"}
+                    title={selectedProvider ? t("manga.chapter_list.saved_source_unavailable") : t("manga.chapter_list.no_source_available")}
                     description={selectedProvider
-                        ? `The saved source “${selectedProvider}” is not currently installed. Install it again or choose another source to continue.`
-                        : "Install or select a manga source to load chapters."}
+                        ? t("manga.chapter_list.saved_source_uninstalled", { provider: selectedProvider })
+                        : t("manga.chapter_list.install_source_hint")}
                 />
             )}
 
             <ErrorBoundary
                 fallbackRender={({ error }) => <Alert
                     intent="alert"
-                    title="Client side error"
-                    description={`Could not load chapter filters. Please contact the extension developer: "${error}"`}
+                    title={t("common.error.client_side")}
+                    description={t("manga.chapter_list.filters_error", { error: String(error) })}
                 />}
             >
                 {(selectedExtension?.settings?.supportsMultiLanguage || selectedExtension?.settings?.supportsMultiScanlator) && (
@@ -394,13 +393,13 @@ export function ChapterList(props: ChapterListProps) {
                                 <Select
                                     fieldClass="w-64"
                                     options={scanlatorOptions}
-                                    placeholder="All"
+                                    placeholder={t("library.filter.all")}
                                     value={selectedFilters.scanlators[0] || ""}
                                     onValueChange={v => setSelectedScanlator({
                                         mId: mediaId,
                                         scanlators: [v],
                                     })}
-                                    leftAddon="Scanlator"
+                                    leftAddon={t("manga.chapter_list.scanlator")}
                                     // intent="filled"
                                     // size="sm"
                                 />
@@ -410,13 +409,13 @@ export function ChapterList(props: ChapterListProps) {
                             <Select
                                 fieldClass="w-64"
                                 options={languageOptions}
-                                placeholder="All"
+                                placeholder={t("library.filter.all")}
                                 value={selectedFilters.language}
                                 onValueChange={v => setSelectedLanguage({
                                     mId: mediaId,
                                     language: v,
                                 })}
-                                leftAddon="Language"
+                                leftAddon={t("entry.torrent_filter.languages")}
                                 // intent="filled"
                                 // size="sm"
                             />
@@ -426,27 +425,27 @@ export function ChapterList(props: ChapterListProps) {
             </ErrorBoundary>
 
             {chapterContainerLoading ? <LoadingSpinner /> : (
-                chapterContainerError ? <LuffyError title="No chapters found">
+                chapterContainerError ? <LuffyError title={t("manga.chapter_list.no_chapters")}>
                     <MangaManualMappingModal entry={entry}>
                         <Button
                             leftIcon={<LuSearch className="text-lg" />}
                             intent="gray-outline"
                             size="md"
                         >
-                            Manual match
+                            {t("manga.chapter_list.manual_match")}
                         </Button>
                     </MangaManualMappingModal>
                 </LuffyError> : (
                     <>
 
                         {chapterContainer?.chapters?.length === 0 && (
-                            <LuffyError title="No chapters found"><p>Try another source</p></LuffyError>
+                            <LuffyError title={t("manga.chapter_list.no_chapters")}><p>{t("manga.chapter_list.try_another_source")}</p></LuffyError>
                         )}
 
                         {!!chapterContainer?.chapters?.length && (
                             <>
                                 <div data-chapter-list-header-container className="flex gap-2 items-center w-full pb-2">
-                                    <h2 className="px-1">Chapters</h2>
+                                    <h2 className="px-1">{t("manga.chapter_list.chapters")}</h2>
                                     <div className="flex flex-1"></div>
                                     <div>
                                         {!!unreadChapters?.length && <Button
@@ -463,7 +462,7 @@ export function ChapterList(props: ChapterListProps) {
                                                 })
                                             }}
                                         >
-                                            {!!entry.listData?.progress ? "Continue reading" : "Start reading"}
+                                            {!!entry.listData?.progress ? t("manga.reader.continue_reading") : t("media.action.start_reading")}
                                         </Button>}
                                     </div>
                                 </div>
@@ -491,14 +490,14 @@ export function ChapterList(props: ChapterListProps) {
 
                                     <div data-chapter-list-bulk-actions-checkboxes-container className="flex flex-wrap items-center gap-4">
                                         <Checkbox
-                                            label="Show unread"
+                                            label={t("manga.chapter_list.show_unread")}
                                             value={showUnreadChapter}
                                             onValueChange={v => setShowUnreadChapter(v as boolean)}
                                             fieldClass="w-fit"
                                             {...monochromeCheckboxClasses}
                                         />
                                         {selectedProvider !== "local-manga" && <Checkbox
-                                            label={<span className="flex gap-2 items-center"><IoLibrary /> Show downloaded</span>}
+                                            label={<span className="flex gap-2 items-center"><IoLibrary /> {t("manga.chapter_list.show_downloaded")}</span>}
                                             value={showDownloadedChapters}
                                             onValueChange={v => setShowDownloadedChapters(v as boolean)}
                                             fieldClass="w-fit"

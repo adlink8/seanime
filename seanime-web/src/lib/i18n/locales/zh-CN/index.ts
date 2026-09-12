@@ -8,6 +8,7 @@ import { mediaDictionary } from "./media"
 import { navigationDictionary } from "./navigation"
 import { playerDictionary } from "./player"
 import { scheduleDictionary } from "./schedule"
+import { mangaDictionary } from "./manga"
 import { searchDictionary } from "./search"
 import { entryDictionary } from "./entry"
 import { mpvDictionary } from "./mpv"
@@ -29,6 +30,7 @@ const moduleDictionaries: readonly [string, Dictionary][] = [
     ["mpv", mpvDictionary],
     ["discover", discoverDictionary],
     ["schedule", scheduleDictionary],
+    ["manga", mangaDictionary],
 ]
 
 /** 合并后的 zh-CN 单一字典 */
@@ -43,6 +45,7 @@ export const zhCN = {
     ...mediaDictionary,
     ...discoverDictionary,
     ...scheduleDictionary,
+    ...mangaDictionary,
     ...settingsMediaDictionary,
     ...entryDictionary,
     ...mpvDictionary,

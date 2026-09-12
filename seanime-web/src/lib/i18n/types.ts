@@ -21,6 +21,7 @@ export type DictionaryModule =
     | "media"
     | "discover"
     | "schedule"
+    | "manga"
     | "settings-media"
     | "entry"
     | "mpv"

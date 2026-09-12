@@ -21,6 +21,7 @@ import { Carousel, CarouselContent, CarouselDotButtons } from "@/components/ui/c
 import { cn } from "@/components/ui/core/styling"
 import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useRouter } from "@/lib/navigation"
 import { getMangaCollectionTitle } from "@/lib/server/utils"
@@ -75,17 +76,17 @@ export function MangaLibraryView(props: MangaLibraryViewProps) {
                 <AnimatePresence mode="wait" initial={false}>
 
                     {!!collection && !hasManga && <LuffyError
-                        title="未找到漫画"
+                        title={t("manga.library.not_found_title")}
                     >
                         <div className="space-y-2">
                             <p>
-                                您的媒体库中尚未添加任何漫画。
+                                {t("manga.library.empty_hint")}
                             </p>
 
                             <div className="!mt-4">
                                 <SeaLink href="/discover?type=manga">
                                     <Button intent="white-outline" rounded>
-                                        浏览漫画
+                                        {t("manga.library.browse_manga")}
                                     </Button>
                                 </SeaLink>
                             </div>
@@ -284,7 +285,7 @@ const CollectionListItem = memo(({ list, storedProviders, showStatuses, type, wi
                     data: entry,
                     id: `manga-${entry.mediaId}`,
                     value: entry.media?.title?.userPreferred || "",
-                    heading: "Currently Reading",
+                    heading: t("common.state.reading"),
                     priority: 100,
                     render: () => (
                         <CommandItemMedia media={entry.media!} type="manga" />
@@ -308,7 +309,7 @@ const CollectionListItem = memo(({ list, storedProviders, showStatuses, type, wi
         <React.Fragment>
 
             <div className="flex gap-3 items-center" data-manga-library-view-collection-list-item-header-container>
-                <h2 data-manga-library-view-collection-list-item-header-title>{list.type === "CURRENT" ? "Continue reading" : getMangaCollectionTitle(
+                <h2 data-manga-library-view-collection-list-item-header-title>{list.type === "CURRENT" ? t("manga.reader.continue_reading") : getMangaCollectionTitle(
                     list.type)}</h2>
                 <div className="flex flex-1" data-manga-library-view-collection-list-item-header-spacer></div>
 
@@ -324,7 +325,7 @@ const CollectionListItem = memo(({ list, storedProviders, showStatuses, type, wi
                             })
                         }}
                     >
-                        Show all
+                        {t("library.collection.show_all")}
                     </Button>
                 )}
 
@@ -338,16 +339,16 @@ const CollectionListItem = memo(({ list, storedProviders, showStatuses, type, wi
                                 onClick={() => setSourceRefreshModalOpen(true)}
                                 hideTextOnSmallScreen
                             >
-                                Refresh
+                                {t("common.action.refresh")}
                             </Button>
                             {sourceRefreshRunning &&
                                 <div
                                     className="absolute -top-1 -right-1 bg-[--orange] size-2.5 rounded-full"
-                                    aria-label="Source refresh running"
+                                    aria-label={t("manga.library.aria_refresh_running")}
                                 ></div>}
                         </div>}
                     >
-                        {sourceRefreshRunning ? "View manga source refresh" : "Refresh manga sources"}
+                        {sourceRefreshRunning ? t("manga.library.view_source_refresh") : t("manga.library.refresh_manga_sources")}
                     </Tooltip>}
 
                     {list.type === "CURRENT" && <DropdownMenu
@@ -357,19 +358,19 @@ const CollectionListItem = memo(({ list, storedProviders, showStatuses, type, wi
                                 data-manga-library-dropdown-menu-trigger
                                 icon={<BiDotsVerticalRounded className="text-2xl" />}
                                 intent="gray-basic"
-                                aria-label="Manga list actions"
+                                aria-label={t("manga.library.aria_list_actions")}
                             />
                             {!isMangaPage && sourceRefreshRunning &&
                                 <div
                                     className="absolute -top-1 -right-1 bg-[--orange] size-2.5 rounded-full"
-                                    aria-label="Source refresh running"
+                                    aria-label={t("manga.library.aria_refresh_running")}
                                 ></div>}
                         </div>}
                     >
                         {!isMangaPage && <DropdownMenuItem
                             onClick={() => setSourceRefreshModalOpen(true)}
                         >
-                            <LuRefreshCcw /> {sourceRefreshRunning ? "View source refresh" : "Refresh sources"}
+                            <LuRefreshCcw /> {sourceRefreshRunning ? t("manga.library.view_refresh_short") : t("manga.library.refresh_sources_short")}
                         </DropdownMenuItem>}
                         <DropdownMenuItem
                             onClick={() => {
@@ -379,7 +380,7 @@ const CollectionListItem = memo(({ list, storedProviders, showStatuses, type, wi
                                 })
                             }}
                         >
-                            <LuBookOpenCheck /> {params.unreadOnly ? "Show all" : "Unread chapters only"}
+                            <LuBookOpenCheck /> {params.unreadOnly ? t("library.collection.show_all") : t("manga.library.unread_only")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             disabled={isUpdatingTheme}
@@ -392,7 +393,7 @@ const CollectionListItem = memo(({ list, storedProviders, showStatuses, type, wi
                             })}
                         >
                             {ts.showMangaUnreadCount ? <LuEyeOff /> : <LuEye />}
-                            {ts.showMangaUnreadCount ? "Hide unread counts" : "Show unread counts"}
+                            {ts.showMangaUnreadCount ? t("manga.library.hide_unread_counts") : t("manga.library.show_unread_counts")}
                         </DropdownMenuItem>
                         <PluginMangaLibraryDropdownItems />
                     </DropdownMenu>}

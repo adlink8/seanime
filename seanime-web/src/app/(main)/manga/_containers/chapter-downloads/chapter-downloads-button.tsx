@@ -1,5 +1,6 @@
 import { __manga_chapterDownloadsDrawerIsOpenAtom } from "@/app/(main)/manga/_containers/chapter-downloads/chapter-downloads-drawer"
 import { Button } from "@/components/ui/button"
+import { t } from "@/lib/i18n"
 import { usePathname } from "@/lib/navigation"
 import { useSetAtom } from "jotai/react"
 import React from "react"
@@ -31,7 +32,7 @@ export function ChapterDownloadsButton(props: ChapterDownloadsButtonProps) {
                 size="sm"
                 leftIcon={<LuFolderDown />}
             >
-                Downloads
+                {t("manga.downloads.button")}
             </Button>
         </>
     )

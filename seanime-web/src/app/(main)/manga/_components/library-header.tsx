@@ -2,6 +2,7 @@ import { AL_BaseManga } from "@/api/generated/types"
 import { TRANSPARENT_SIDEBAR_BANNER_IMG_STYLE } from "@/app/(main)/_features/custom-ui/styles"
 import { SeaImage } from "@/components/shared/sea-image"
 import { cn } from "@/components/ui/core/styling"
+import { t } from "@/lib/i18n"
 import { getImageUrl } from "@/lib/server/assets"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
 import { __isDesktop__ } from "@/types/constants"
@@ -126,7 +127,7 @@ export function MangaLibraryHeader({ manga }: { manga: AL_BaseManga[] }) {
                                 <MotionImage
                                     data-library-header-banner-image
                                     src={getImageUrl(actualImage || prevImage!)}
-                                    alt="banner image"
+                                    alt={t("manga.library.banner_alt")}
                                     fill
                                     quality={100}
                                     sizes="100vw"

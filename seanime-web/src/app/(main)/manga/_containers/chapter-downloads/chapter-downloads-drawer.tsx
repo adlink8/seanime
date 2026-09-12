@@ -13,6 +13,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { ProgressBar } from "@/components/ui/progress-bar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { t } from "@/lib/i18n"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -38,7 +39,7 @@ export function ChapterDownloadsDrawer(props: ChapterDownloadQueueDrawerProps) {
                 open={isOpen}
                 onOpenChange={setIsOpen}
                 contentClass="max-w-5xl"
-                title="Downloaded chapters"
+                title={t("manga.downloads.title")}
                 data-chapter-downloads-modal
             >
 
@@ -87,7 +88,7 @@ export function ChapterDownloadQueue(props: ChapterDownloadQueueProps) {
             <div className="space-y-4" data-chapter-download-queue-container>
 
                 <div className="flex w-full items-center" data-chapter-download-queue-header>
-                    <h3>Queue</h3>
+                    <h3>{t("manga.downloads.queue")}</h3>
                     <div className="flex flex-1" data-chapter-download-queue-header-spacer></div>
                     {(!downloadQueueLoading && !downloadQueueError) &&
                         <div className="flex gap-2 items-center" data-chapter-download-queue-header-actions>
@@ -99,7 +100,7 @@ export function ChapterDownloadQueue(props: ChapterDownloadQueueProps) {
                                 onClick={() => resetErroredChapters()}
                                 loading={isResettingErroredChapters}
                             >
-                                Reset errored chapters
+                                {t("manga.downloads.reset_errored")}
                             </Button>}
 
                             {!!downloadQueue?.find(n => n.status === "downloading") ? (
@@ -110,7 +111,7 @@ export function ChapterDownloadQueue(props: ChapterDownloadQueueProps) {
                                         onClick={() => stopDownloadQueue()}
                                         loading={isStoppingDownloadQueue}
                                     >
-                                        Stop
+                                        {t("manga.action.stop")}
                                     </Button>
                                 </>
                             ) : (
@@ -123,7 +124,7 @@ export function ChapterDownloadQueue(props: ChapterDownloadQueueProps) {
                                         leftIcon={<MdClear className="text-xl" />}
                                         loading={isClearingDownloadQueue}
                                     >
-                                        Clear all
+                                        {t("manga.action.clear_all")}
                                     </Button>}
 
                                     {(!!downloadQueue?.length && !!downloadQueue?.find(n => n.status === "not_started")) && <Button
@@ -134,7 +135,7 @@ export function ChapterDownloadQueue(props: ChapterDownloadQueueProps) {
                                         leftIcon={<TbWorldDownload className="text-xl" />}
                                         loading={isStartingDownloadQueue}
                                     >
-                                        Start
+                                        {t("manga.action.start")}
                                     </Button>}
                                 </>
                             )}
@@ -145,8 +146,8 @@ export function ChapterDownloadQueue(props: ChapterDownloadQueueProps) {
 
                     {downloadQueueLoading
                         ? <LoadingSpinner />
-                        : (downloadQueueError ? <LuffyError title="Oops!">
-                            <p>Could not fetch the download queue</p>
+                        : (downloadQueueError ? <LuffyError title={t("manga.downloads.oops")}>
+                            <p>{t("manga.downloads.fetch_queue_failed")}</p>
                         </LuffyError> : null)}
 
                     {!!downloadQueue?.length ? (
@@ -168,13 +169,13 @@ export function ChapterDownloadQueue(props: ChapterDownloadQueueProps) {
                                                     className="font-semibold max-w-[180px] text-ellipsis truncate underline"
                                                     href={`/manga/entry?id=${media.id}`}
                                                 >{media.title?.userPreferred}</SeaLink>}
-                                                <p>Chapter {item.chapterNumber} <span className="text-[--muted] italic">(id: {item.chapterId})</span>
+                                                <p>{t("manga.chapter.x", { n: item.chapterNumber })} <span className="text-[--muted] italic">(id: {item.chapterId})</span>
                                                 </p>
                                                 {item.status === "errored" && (
                                                     <div className="flex gap-1 items-center text-[--orange]">
                                                         <PiWarningOctagonDuotone className="text-2xl text-[--orange]" />
                                                         <p>
-                                                            Errored
+                                                            {t("manga.downloads.errored")}
                                                         </p>
                                                     </div>
                                                 )}
@@ -189,7 +190,7 @@ export function ChapterDownloadQueue(props: ChapterDownloadQueueProps) {
                         </ScrollArea>
                     ) : ((!downloadQueueLoading && !downloadQueueError) && (
                         <p className="text-center text-[--muted] text-sm" data-chapter-download-queue-empty-state>
-                            Nothing in the queue
+                            {t("manga.downloads.empty_queue")}
                         </p>
                     ))}
 
@@ -215,7 +216,7 @@ export function ChapterDownloadList(props: ChapterDownloadListProps) {
             <div className="space-y-4" data-chapter-download-list-container>
 
                 <div className="flex w-full items-center" data-chapter-download-list-header>
-                    <h3>Downloaded</h3>
+                    <h3>{t("manga.downloads.downloaded_header")}</h3>
                     <div className="flex flex-1" data-chapter-download-list-header-spacer></div>
                 </div>
 
@@ -223,8 +224,8 @@ export function ChapterDownloadList(props: ChapterDownloadListProps) {
 
                     {isLoading
                         ? <LoadingSpinner />
-                        : (isError ? <LuffyError title="Oops!">
-                            <p>Could not fetch the download queue</p>
+                        : (isError ? <LuffyError title={t("manga.downloads.oops")}>
+                            <p>{t("manga.downloads.fetch_queue_failed")}</p>
                         </LuffyError> : null)}
 
                     {!!data?.length ? (
@@ -243,12 +244,11 @@ export function ChapterDownloadList(props: ChapterDownloadListProps) {
                                             <SeaLink
                                                 className="font-semibold underline"
                                                 href={`/manga/entry?id=${item.mediaId}`}
-                                            >Media {item.mediaId}</SeaLink>
+                                            >{t("manga.downloads.media_id", { id: item.mediaId })}</SeaLink>
 
                                             <div className="flex items-center gap-2">
-                                                <p>{Object.values(item.downloadData)
-                                                    .flatMap(n => n).length} chapters</p> - <em className="text-[--muted]">Not in your AniList
-                                                                                                                           collection</em>
+                                                <p>{t("manga.downloads.n_chapters", { count: Object.values(item.downloadData)
+                                                    .flatMap(n => n).length })}</p> - <em className="text-[--muted]">{t("manga.downloads.not_in_anilist")}</em>
                                             </div>
                                         </Card>
                                     )
@@ -272,7 +272,7 @@ export function ChapterDownloadList(props: ChapterDownloadListProps) {
                                                 hideAnilistEntryEditButton
                                                 overlay={<p
                                                     className="font-semibold text-white bg-gray-950 z-[-1] absolute right-0 w-fit px-4 py-1.5 text-center !bg-opacity-90 text-sm lg:text-base rounded-none rounded-bl-lg"
-                                                >{nb} chapter{nb === 1 ? "" : "s"}</p>}
+                                                >{t("manga.downloads.n_chapters_badge", { count: nb })}</p>}
                                             />
                                         </div>
                                     })}
@@ -280,7 +280,7 @@ export function ChapterDownloadList(props: ChapterDownloadListProps) {
                         </>
                     ) : ((!isLoading && !isError) && (
                         <p className="text-center text-[--muted] italic" data-chapter-download-list-empty-state>
-                            No chapters downloaded
+                            {t("manga.downloads.no_chapters")}
                         </p>
                     ))}
 

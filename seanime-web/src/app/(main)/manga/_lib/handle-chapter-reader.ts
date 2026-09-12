@@ -2,6 +2,7 @@ import { Manga_ChapterContainer, Manga_PageContainer, Nullish } from "@/api/gene
 import { manga_doFlashAction } from "@/app/(main)/manga/_containers/chapter-reader/manga-reader-action-display"
 import { useMangaEntryDownloadedChapters } from "@/app/(main)/manga/_lib/handle-manga-downloads"
 import { getDecimalFromChapter, isChapterAfter, isChapterBefore } from "@/app/(main)/manga/_lib/handle-manga-utils"
+import { t } from "@/lib/i18n"
 import {
     __manga_currentPageIndexAtom,
     __manga_currentPaginationMapIndexAtom,
@@ -374,7 +375,7 @@ export function useMangaPageZoomControls() {
             const nextValue = typeof value === "function" ? value(previous) : value
             const clamped = clampMangaPageZoom(nextValue)
             if (flash && clamped !== previous) {
-                setFlashAction({ message: `Zoom: ${Math.round(clamped * 100)}%` })
+                setFlashAction({ message: t("manga.reader.zoom_flash", { value: Math.round(clamped * 100) }) })
             }
             return clamped
         })
@@ -706,7 +707,7 @@ export function useSwitchSettingsWithKeys() {
     const incrementOffset = () => {
         setDoublePageOffset(prev => {
             const newValue = Math.max(0, prev + 1)
-            setFlashAction({ message: `Double Page Offset: ${newValue}` })
+            setFlashAction({ message: t("manga.reader.offset_flash", { value: newValue }) })
             return newValue
         })
     }
@@ -714,7 +715,7 @@ export function useSwitchSettingsWithKeys() {
     const decrementOffset = () => {
         setDoublePageOffset(prev => {
             const newValue = Math.max(0, prev - 1)
-            setFlashAction({ message: `Double Page Offset: ${newValue}` })
+            setFlashAction({ message: t("manga.reader.offset_flash", { value: newValue }) })
             return newValue
         })
     }

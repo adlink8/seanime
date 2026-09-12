@@ -33,6 +33,7 @@ import { Button, IconButton } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { Drawer } from "@/components/ui/drawer"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { t } from "@/lib/i18n"
 import { __isDesktop__ } from "@/types/constants"
 import { useAtom, useAtomValue, useSetAtom } from "jotai/react"
 import mousetrap from "mousetrap"
@@ -146,7 +147,7 @@ export function ChapterReaderDrawer(props: ChapterDrawerProps) {
                 !pageContainerError &&
                 (!pageContainer?.pageDimensions || Object.keys(pageContainer.pageDimensions).length === 0)
             ) {
-                toast.error("Could not get page dimensions from this provider. Switching to paged mode.")
+                toast.error(t("manga.reader.toast_no_page_dimensions"))
                 setReadingMode(MangaReadingMode.PAGED)
             }
         }
@@ -357,12 +358,12 @@ export function ChapterReaderDrawer(props: ChapterDrawerProps) {
         inject("close-manga-reader", {
             items: [{
                 id: "close-reader",
-                value: "Close reader",
-                heading: "Reader",
+                value: t("manga.reader.close_reader"),
+                heading: t("manga.reader.heading"),
                 priority: 100,
                 render: () => (
                     <div className="flex gap-1 items-center w-full">
-                        <p>Close reader</p>
+                        <p>{t("manga.reader.close_reader")}</p>
                     </div>
                 ),
                 onSelect: () => setCurrentChapter(undefined),
@@ -417,7 +418,10 @@ export function ChapterReaderDrawer(props: ChapterDrawerProps) {
                     loading={isUpdatingProgress}
                     disabled={isUpdatingProgress}
                 >
-                    Update progress ({chapterIdToNumbersMap.get(currentChapter?.chapterId || "")} / {entry?.media?.chapters || "-"})
+                    {t("manga.reader.update_progress", {
+                        current: chapterIdToNumbersMap.get(currentChapter?.chapterId || "") ?? "",
+                        total: entry?.media?.chapters || "-",
+                    })}
                 </Button>
             </div>
 
@@ -453,14 +457,14 @@ export function ChapterReaderDrawer(props: ChapterDrawerProps) {
 
                 {pageContainerError ? (
                     <LuffyError
-                        title="Failed to load pages"
+                        title={t("manga.reader.failed_to_load_pages")}
                     >
-                        <p>An error occurred while trying to load pages for this chapter.</p>
-                        <p>Reload the page, reload sources or change the source.</p>
+                        <p>{t("manga.reader.load_pages_error")}</p>
+                        <p>{t("manga.reader.load_pages_error_hint")}</p>
 
                         <div className="mt-2">
                             <Button intent="white" onClick={() => retryFetchPageContainer()}>
-                                Retry
+                                {t("common.action.retry")}
                             </Button>
                         </div>
                     </LuffyError>
