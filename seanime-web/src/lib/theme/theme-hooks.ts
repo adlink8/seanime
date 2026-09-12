@@ -2,6 +2,7 @@ import { Models_Theme } from "@/api/generated/types"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import React from "react"
 import { useWindowSize } from "react-use"
+import { t } from "@/lib/i18n"
 
 export const enum ThemeLibraryScreenBannerType {
     Dynamic = "dynamic",
@@ -20,32 +21,32 @@ export const enum ThemeMediaPageBannerType {
 
 export const ThemeMediaPageBannerTypeOptions = [
     {
-        value: ThemeMediaPageBannerType.Default as string, label: "Default",
-        description: "Always show a banner image. If not available, the cover image will be used instead.",
+        value: ThemeMediaPageBannerType.Default as string, label: t("settings.theme.banner_default"),
+        description: t("settings.theme.banner_default_desc"),
     },
     {
-        value: ThemeMediaPageBannerType.BlurWhenUnavailable as string, label: "Blur when unavailable",
-        description: "Show the banner image if available. If not available, the cover image will be used and blurred.",
+        value: ThemeMediaPageBannerType.BlurWhenUnavailable as string, label: t("settings.theme.banner_blur"),
+        description: t("settings.theme.banner_blur_desc"),
     },
     {
-        value: ThemeMediaPageBannerType.DimWhenUnavailable as string, label: "Dim if unavailable",
-        description: "Show the banner image if available. If not available, the banner will be dimmed.",
+        value: ThemeMediaPageBannerType.DimWhenUnavailable as string, label: t("settings.theme.banner_dim"),
+        description: t("settings.theme.banner_dim_desc"),
     },
     {
-        value: ThemeMediaPageBannerType.HideWhenUnavailable as string, label: "Hide if unavailable",
-        description: "Show the banner image if available. If not available, the banner will be hidden.",
+        value: ThemeMediaPageBannerType.HideWhenUnavailable as string, label: t("settings.theme.banner_hide"),
+        description: t("settings.theme.banner_hide_desc"),
     },
     {
-        value: ThemeMediaPageBannerType.Dim as string, label: "Dim",
-        description: "Always dim the banner image.",
+        value: ThemeMediaPageBannerType.Dim as string, label: t("settings.theme.banner_dim_always"),
+        description: t("settings.theme.banner_dim_always_desc"),
     },
     {
-        value: ThemeMediaPageBannerType.Blur as string, label: "Blur",
-        description: "Always blur the banner image.",
+        value: ThemeMediaPageBannerType.Blur as string, label: t("settings.theme.banner_blur_always"),
+        description: t("settings.theme.banner_blur_always_desc"),
     },
     {
-        value: ThemeMediaPageBannerType.Hide as string, label: "Hide",
-        description: "Always hide the banner image.",
+        value: ThemeMediaPageBannerType.Hide as string, label: t("settings.theme.banner_hide_always"),
+        description: t("settings.theme.banner_hide_always_desc"),
     },
 ]
 
@@ -56,12 +57,12 @@ export const enum ThemeMediaPageBannerSize {
 
 export const ThemeMediaPageBannerSizeOptions = [
     {
-        value: ThemeMediaPageBannerSize.Default as string, label: "Large",
-        description: "Fill a large portion of the screen.",
+        value: ThemeMediaPageBannerSize.Default as string, label: t("settings.theme.banner_size_large"),
+        description: t("settings.theme.banner_size_large_desc"),
     },
     {
-        value: ThemeMediaPageBannerSize.Small as string, label: "Smaller",
-        description: "Use a smaller banner size, displaying more of the image.",
+        value: ThemeMediaPageBannerSize.Small as string, label: t("settings.theme.banner_size_smaller"),
+        description: t("settings.theme.banner_size_smaller_desc"),
     },
 ]
 
@@ -73,11 +74,11 @@ export const enum ThemeMediaPageInfoBoxSize {
 
 export const ThemeMediaPageInfoBoxSizeOptions = [
     {
-        value: ThemeMediaPageInfoBoxSize.Fluid as string, label: "Fluid",
+        value: ThemeMediaPageInfoBoxSize.Fluid as string, label: t("settings.theme.infobox_fluid"),
         // description: "Full-width info box with rearrangement of elements.",
     },
     {
-        value: ThemeMediaPageInfoBoxSize.Boxed as string, label: "Boxed",
+        value: ThemeMediaPageInfoBoxSize.Boxed as string, label: t("settings.theme.infobox_boxed"),
         // description: "Display the media banner as a box",
     },
 ]

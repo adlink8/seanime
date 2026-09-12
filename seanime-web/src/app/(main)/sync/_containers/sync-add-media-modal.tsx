@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/components/ui/core/styling"
 import { Modal } from "@/components/ui/modal"
+import { t } from "@/lib/i18n"
 import { useAtomValue } from "jotai/react"
 import React from "react"
 import { FaCircleCheck, FaRegCircleCheck } from "react-icons/fa6"
@@ -38,7 +39,7 @@ export function SyncAddMediaModal(props: SyncAddMediaModalProps) {
 
     return (
         <Modal
-            title="Saved media"
+            title={t("misc.sync.saved_media")}
             contentClass="max-w-4xl"
             trigger={<Button
                 intent="gray-subtle"
@@ -46,12 +47,12 @@ export function SyncAddMediaModal(props: SyncAddMediaModalProps) {
                 leftIcon={<MdOutlineDownloadForOffline className="text-2xl" />}
                 loading={isAdding}
             >
-                Select media to save
+                {t("misc.sync.select_media")}
             </Button>}
         >
 
             <p className="text-[--muted]">
-                Select the media you want to save locally. Click on already saved media to remove it from local storage.
+                {t("misc.sync.select_media_desc")}
             </p>
 
             <MediaSelector
@@ -150,12 +151,12 @@ function MediaSelector(props: MediaSelectorProps) {
                     rounded
                     leftIcon={<MdOutlineDownloadForOffline className="text-2xl" />}
                 >
-                    Save locally
+                    {t("media.action.save_locally")}
                 </Button>
             </div>
 
             {animeLibraryCollection && <>
-                <h2 className="text-center">Anime</h2>
+                <h2 className="text-center">{t("search.type.anime")}</h2>
                 <MediaList
                     collection={animeLibraryCollection}
                     selectedMedia={selectedMedia}
@@ -176,7 +177,7 @@ function MediaSelector(props: MediaSelectorProps) {
                 />
             </>}
             {mangaLibraryCollection && <>
-                <h2 className="text-center">Manga</h2>
+                <h2 className="text-center">{t("search.type.manga")}</h2>
                 <MediaList
                     collection={mangaLibraryCollection}
                     selectedMedia={selectedMedia}
@@ -239,7 +240,7 @@ function MediaList(props: {
             {!!lists.CURRENT.length && (
                 <MediaListSection
                     listType="CURRENT"
-                    title="Current"
+                    title={t("common.state.watching")}
                     entries={lists.CURRENT}
                     selectedMedia={selectedMedia}
                     savedMediaIds={savedMediaIds}
@@ -250,7 +251,7 @@ function MediaList(props: {
             {!!lists.PAUSED.length && (
                 <MediaListSection
                     listType="PAUSED"
-                    title="Paused"
+                    title={t("common.state.paused")}
                     entries={lists.PAUSED}
                     selectedMedia={selectedMedia}
                     savedMediaIds={savedMediaIds}
@@ -261,7 +262,7 @@ function MediaList(props: {
             {!!lists.PLANNING.length && (
                 <MediaListSection
                     listType="PLANNING"
-                    title="Planning"
+                    title={t("common.state.planning")}
                     entries={lists.PLANNING}
                     selectedMedia={selectedMedia}
                     savedMediaIds={savedMediaIds}
@@ -272,7 +273,7 @@ function MediaList(props: {
             {!!lists.COMPLETED.length && (
                 <MediaListSection
                     listType="COMPLETED"
-                    title="Completed"
+                    title={t("common.state.completed")}
                     entries={lists.COMPLETED}
                     selectedMedia={selectedMedia}
                     savedMediaIds={savedMediaIds}
@@ -283,7 +284,7 @@ function MediaList(props: {
             {!!lists.DROPPED.length && (
                 <MediaListSection
                     listType="DROPPED"
-                    title="Dropped"
+                    title={t("common.state.dropped")}
                     entries={lists.DROPPED}
                     selectedMedia={selectedMedia}
                     savedMediaIds={savedMediaIds}
@@ -358,8 +359,8 @@ function MediaItem(props: {
     const { entry, onClick, isSelected, isSaved, onUntrack, isPending } = props
 
     const confirmUntrack = useConfirmationDialog({
-        title: "Remove offline data",
-        description: "This action will remove the offline data for this media entry. Are you sure you want to proceed?",
+        title: t("media.action.remove_offline_data"),
+        description: t("media.confirm.remove_offline_data_description"),
         onConfirm: () => {
             onUntrack()
         },

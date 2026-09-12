@@ -11,6 +11,7 @@ import {
 } from "@/app/(main)/_features/sea-command/sea-command-torrent-magnet.tsx"
 import { SeaCommand_ParsedCommandProps, useSeaCommand_ParseCommand } from "@/app/(main)/_features/sea-command/utils"
 import { CommandDialog, CommandInput, CommandList } from "@/components/ui/command"
+import { t } from "@/lib/i18n"
 import { usePathname, useRouter, useSearchParams } from "@/lib/navigation"
 import { atom } from "jotai"
 import { useAtom, useSetAtom } from "jotai/react"
@@ -217,7 +218,7 @@ export function SeaCommand() {
             >
 
                 <CommandInput
-                    placeholder="Type a command or input..."
+                    placeholder={t("misc.sea_command.input_placeholder")}
                     value={input}
                     onValueChange={setInput}
                 />

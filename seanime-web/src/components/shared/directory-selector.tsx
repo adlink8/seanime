@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/select"
 import { TextInput, TextInputProps } from "@/components/ui/text-input"
 import { useBoolean } from "@/hooks/use-disclosure"
 import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { BiCheck, BiFolderOpen, BiFolderPlus, BiX } from "react-icons/bi"
 import { FaFolder } from "react-icons/fa"
@@ -114,7 +115,7 @@ export const DirectorySelector = React.memo(React.forwardRef<HTMLInputElement, D
                                     className="w-[400px] p-2 ml-[30px]"
                                     sideOffset={-4}
                                     trigger={<Button size="sm" intent="gray-link" leftIcon={<HiMiniChevronUpDown />} className="!text-[--muted]">
-                                        Change library
+                                        {t("common.action.change_library")}
                                     </Button>}
                                 >
                                     <Select
@@ -157,7 +158,7 @@ export const DirectorySelector = React.memo(React.forwardRef<HTMLInputElement, D
                         checkDirectoryExists()
                     }
                 }}
-                title="Select a directory"
+                title={t("common.file.select_directory")}
                 contentClass="mt-4 space-y-2 max-w-4xl"
             >
                 <div className="flex gap-2 items-center">

@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/components/ui/core/styling"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePathname, useRouter } from "@/lib/navigation"
+import { t } from "@/lib/i18n"
 import { useQueryClient } from "@tanstack/react-query"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
@@ -206,7 +207,7 @@ export function IssueReport() {
         }
         catch (err) {
             console.error("Failed to start rrweb recording:", err)
-            toast.error("Failed to start DOM recording")
+            toast.error(t("misc.issue.dom_recording_failed"))
         }
     }, [])
 
@@ -580,7 +581,7 @@ export function IssueReport() {
         const canvas = document.createElement("canvas")
         const ctx = canvas.getContext("2d")
         if (!ctx) {
-            toast.error("Unable to capture screenshot")
+            toast.error(t("misc.issue.screenshot_capture_failed"))
             return
         }
 
@@ -619,14 +620,14 @@ export function IssueReport() {
     }
 
     function addScreenshot(data: string) {
-        const caption = prompt("Add a caption for this screenshot (optional):") || ""
+        const caption = prompt(t("misc.issue.caption_prompt")) || ""
         setScreenshots(prev => [...prev, {
             data,
             caption,
             pageUrl: window.location.href.replace(window.location.host, "{client}"),
             timestamp: new Date().toISOString(),
         }])
-        toast.success("Screenshot added to report")
+        toast.success(t("misc.issue.screenshot_added"))
     }
 
     const { password, getHMACTokenQueryParam } = useServerHMACAuth()
@@ -642,7 +643,7 @@ export function IssueReport() {
             credentials: "include",
         })
         if (!response.ok) {
-            let message = "failed to download issue report"
+            let message = t("misc.issue.download_failed_msg")
             try {
                 const data: unknown = await response.json()
                 if (typeof data === "object" && data !== null && "error" in data && typeof data.error === "string" && data.error.trim()) {
@@ -702,7 +703,7 @@ export function IssueReport() {
             })
             setDownloadingReport(true)
             await downloadIssueReport()
-            toast.success("Issue report saved successfully")
+            toast.success(t("misc.issue.report_saved"))
         }
         catch (error) {
             if (typeof error === "object" && error !== null && "isAxiosError" in error) {
@@ -751,7 +752,7 @@ export function IssueReport() {
                                 <VscDebugAlt className="text-xl text-[--brand]" />
                             </div>
                             <div>
-                                <p className="font-semibold text-sm text-gray-100">Issue Recorder</p>
+                                <p className="font-semibold text-sm text-gray-100">{t("misc.issue.recorder_title")}</p>
                             </div>
                             <div className="ml-auto">
                                 <IconButton
@@ -764,7 +765,7 @@ export function IssueReport() {
                         </div>
                         <div className="border-t border-[--border] pt-2 space-y-2">
                             <Checkbox
-                                label="Include library scanner logs"
+                                label={t("misc.issue.include_scanner_logs")}
                                 value={recordLocalFiles}
                                 onValueChange={v => typeof v === "boolean" && setRecordLocalFiles(v)}
                                 size="md"
@@ -776,7 +777,7 @@ export function IssueReport() {
                                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 transition-colors text-sm font-medium text-white"
                             >
                                 <PiRecordFill className="text-white animate-pulse" />
-                                Start Recording
+                                {t("misc.issue.start_recording")}
                             </button>
                         </div>
                     </div> : <div className="space-y-3 min-w-[320px]">
@@ -786,14 +787,14 @@ export function IssueReport() {
                                 <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
                                 <div className="absolute inset-0 w-3 h-3 rounded-full bg-red-500 animate-ping opacity-50" />
                             </div>
-                            <span className="text-sm font-semibold text-red-400">Recording</span>
+                            <span className="text-sm font-semibold text-red-400">{t("misc.issue.recording")}</span>
                             <span className="text-xs text-gray-400 tabular-nums font-mono bg-gray-800 px-1.5 py-0.5 rounded">
                                 {formatElapsed(recordingElapsed)}
                             </span>
                             <div className="ml-auto flex items-center gap-2">
-                                <span className="text-xs text-gray-500 tabular-nums">{eventCount} events</span>
+                                <span className="text-xs text-gray-500 tabular-nums">{t("misc.issue.events_count", { count: eventCount })}</span>
                                 {screenshots.length > 0 && (
-                                    <span className="text-xs text-gray-500">{screenshots.length} imgs</span>
+                                    <span className="text-xs text-gray-500">{t("misc.issue.images_count", { count: screenshots.length })}</span>
                                 )}
                             </div>
                         </div>
@@ -805,7 +806,7 @@ export function IssueReport() {
                                         bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors border border-gray-700"
                             >
                                 <BiCamera className="text-sm" />
-                                Attach screenshot
+                                {t("misc.issue.attach_screenshot")}
                             </button>
                             <Tooltip
                                 trigger={
@@ -819,12 +820,12 @@ export function IssueReport() {
                                         )}
                                     >
                                         <BiNote className="text-sm" />
-                                        {description ? "Edit note" : "Add note"}
+                                        {description ? t("misc.issue.edit_note") : t("misc.issue.add_note")}
                                     </button>
                                 }
                                 className="z-[101]"
                             >
-                                Add a description of what you're experiencing
+                                {t("misc.issue.description_tooltip")}
                             </Tooltip>
                         </div>
 
@@ -832,7 +833,7 @@ export function IssueReport() {
                             <textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Describe the issue you're experiencing..."
+                                placeholder={t("misc.issue.description_placeholder")}
                                 className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-sm text-gray-200
                                     placeholder-gray-500 resize-none focus:outline-none focus:border-brand-500 transition-colors"
                                 rows={3}
@@ -847,7 +848,7 @@ export function IssueReport() {
                                     transition-colors text-sm font-medium text-white flex-1 justify-center disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 <PiStopCircleFill className="text-lg" />
-                                {isPending || isDownloadingReport ? "Saving..." : "Stop & Save"}
+                                {isPending || isDownloadingReport ? t("misc.issue.saving") : t("misc.issue.stop_and_save")}
                             </button>
                             <Tooltip
                                 trigger={<IconButton
@@ -858,7 +859,7 @@ export function IssueReport() {
                                 />}
                                 className="z-[101]"
                             >
-                                Cancel recording
+                                {t("misc.issue.cancel_recording")}
                             </Tooltip>
                         </div>
                     </div>}

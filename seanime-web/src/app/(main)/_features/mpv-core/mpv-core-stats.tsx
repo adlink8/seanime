@@ -176,10 +176,10 @@ export function MpvCoreStats(props: MpvCoreStatsProps) {
                 <StatLine label={t("mpv.stats.hw_decode")} value={String(props.diagnostics["hwdec-current"] || "no")} />
                 <StatLine label={t("mpv.stats.container")} value={String(props.diagnostics["file-format"] || props.info?.mimeType || "unknown")} />
                 {props.shaderMode === "anime4k" && (
-                    <StatLine label={t("mpv.shader.title")} value={`Anime4K (${props.anime4kMode}) - ${props.anime4kQuality.toUpperCase()}`} />
+                    <StatLine label={t("mpv.shader.title")} value={t("misc.player.anime4k_stats", { mode: props.anime4kMode, quality: props.anime4kQuality.toUpperCase() })} />
                 )}
                 {props.shaderMode === "custom" && (
-                    <StatLine label={t("mpv.shader.title")} value={`Custom (${props.customShadersCount} active)`} />
+                    <StatLine label={t("mpv.shader.title")} value={t("mpv.stats.custom_shaders_active", { count: props.customShadersCount })} />
                 )}
             </div>
         </div>

@@ -9,6 +9,10 @@ import { navigationDictionary } from "./navigation"
 import { playerDictionary } from "./player"
 import { scheduleDictionary } from "./schedule"
 import { mangaDictionary } from "./manga"
+import { torrentDictionary } from "./torrent"
+import { autodownloaderDictionary } from "./autodownloader"
+import { extensionsDictionary } from "./extensions"
+import { miscDictionary } from "./misc"
 import { searchDictionary } from "./search"
 import { entryDictionary } from "./entry"
 import { mpvDictionary } from "./mpv"
@@ -31,6 +35,10 @@ const moduleDictionaries: readonly [string, Dictionary][] = [
     ["discover", discoverDictionary],
     ["schedule", scheduleDictionary],
     ["manga", mangaDictionary],
+    ["torrent", torrentDictionary],
+    ["autodownloader", autodownloaderDictionary],
+    ["extensions", extensionsDictionary],
+    ["misc", miscDictionary],
 ]
 
 /** 合并后的 zh-CN 单一字典 */
@@ -49,6 +57,10 @@ export const zhCN = {
     ...settingsMediaDictionary,
     ...entryDictionary,
     ...mpvDictionary,
+    ...torrentDictionary,
+    ...autodownloaderDictionary,
+    ...extensionsDictionary,
+    ...miscDictionary,
 } satisfies Dictionary
 
 /** 全部合法词条 key */

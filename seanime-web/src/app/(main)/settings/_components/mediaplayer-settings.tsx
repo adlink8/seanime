@@ -145,7 +145,7 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
                             <div className="flex gap-4">
                                 <Field.Text
                                     name="mpvSocket"
-                                    label="Socket"
+                                    label={t("settings.mediaplayer.socket_label")}
                                     placeholder={t("settings.mediaplayer.socket_placeholder")}
                                     help={t("settings.mediaplayer.socket_help")}
                                 />
@@ -176,7 +176,7 @@ export function MediaplayerSettings(props: MediaplayerSettingsProps) {
                             <div className="flex gap-4">
                                 <Field.Text
                                     name="iinaSocket"
-                                    label="Socket"
+                                    label={t("settings.mediaplayer.socket_label")}
                                     placeholder={t("settings.mediaplayer.socket_default", { value: getDefaultIinaSocket(serverStatus?.os ?? "") })}
                                 />
                                 <Field.Text

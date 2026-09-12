@@ -1,4 +1,5 @@
 import { __isDesktop__ } from "@/types/constants"
+import { t } from "@/lib/i18n"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { cva } from "class-variance-authority"
@@ -144,7 +145,7 @@ export function Modal(props: ModalProps) {
                     >
                         {!title && !description ? (
                             <VisuallyHidden>
-                                <DialogPrimitive.Title>Dialog</DialogPrimitive.Title>
+                                <DialogPrimitive.Title>{t("common.a11y.dialog")}</DialogPrimitive.Title>
                             </VisuallyHidden>
                         ) : (
                             <div className={cn(ModalAnatomy.header(), headerClass)}>

@@ -1,5 +1,6 @@
 import { Updater_Update } from "@/api/generated/types"
 import { useGetChangelog } from "@/api/hooks/releases.hooks"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { AiFillExclamationCircle } from "react-icons/ai"
 
@@ -58,15 +59,15 @@ export function UpdateChangelogBody(props: UpdateChangelogBodyProps) {
         <>
             <div className="bg-gray-950/50 rounded-[--radius] p-4 max-h-[70vh] overflow-y-auto halo-2">
                 {body.some(n => n.includes("🚑️")) &&
-                    <p className="text-red-300 font-semibold flex gap-2 items-center">This update includes a critical patch</p>}
+                    <p className="text-red-300 font-semibold flex gap-2 items-center">{t("misc.update.critical_patch")}</p>}
                 <div className="rounded-[--radius] space-y-1">
-                    <h5>What's new?</h5>
+                    <h5>{t("misc.update.whats_new")}</h5>
                     <RenderLines lines={body} />
                 </div>
             </div>
 
             {!!changelog?.length && <>
-                <p className="text-center font-semibold">Other updates you've missed</p>
+                <p className="text-center font-semibold">{t("misc.update.other_updates")}</p>
                 <div className="bg-gray-950/50 rounded-[--radius] p-4 max-h-[40vh] overflow-y-auto space-y-1.5">
                     {changelog?.map((item) => (
                         <div key={item.version} className="rounded-[--radius]">

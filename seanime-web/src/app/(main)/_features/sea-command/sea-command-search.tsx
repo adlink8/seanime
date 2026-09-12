@@ -6,6 +6,7 @@ import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { SeaImage } from "@/components/shared/sea-image"
 import { CommandGroup, CommandItem } from "@/components/ui/command"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { t } from "@/lib/i18n"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useRouter } from "@/lib/navigation"
 import { atom } from "jotai"
@@ -97,12 +98,12 @@ export function SeaCommandSearch() {
                 <>
                     <CommandHelperText
                         command="/search [title]"
-                        description="Search anime"
+                        description={t("misc.sea_command.search_anime")}
                         show={true}
                     />
                     <CommandHelperText
                         command="/search manga [title]"
-                        description="Search manga"
+                        description={t("misc.sea_command.search_manga")}
                         show={true}
                     />
                 </>
@@ -127,10 +128,9 @@ export function SeaCommandSearch() {
                                     className="object-contain object-top"
                                 />
                             </div>}
-                            <h5 className="mt-4 font-semibold text-[--foreground]">Nothing
-                                                                                   found</h5>
+                            <h5 className="mt-4 font-semibold text-[--foreground]">{t("misc.sea_command.nothing_found")}</h5>
                             <p className="mt-2 text-[--muted]">
-                                We couldn't find anything with that name. Please try again.
+                                {t("misc.sea_command.nothing_found_desc")}
                             </p>
                         </div>
                     )}

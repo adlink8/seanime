@@ -6,6 +6,7 @@ import { PlaylistEditorModal } from "@/app/(main)/_features/playlists/_component
 import { usePlaylistManager } from "@/app/(main)/_features/playlists/_containers/global-playlist-manager"
 import { usePlaylistEditorManager } from "@/app/(main)/_features/playlists/lib/playlist-editor-manager"
 import { imageShimmer } from "@/components/shared/image-helpers"
+import { t } from "@/lib/i18n"
 import { SeaImage } from "@/components/shared/sea-image"
 import { Button } from "@/components/ui/button"
 import { Carousel, CarouselContent, CarouselDotButtons, CarouselItem } from "@/components/ui/carousel"
@@ -96,7 +97,7 @@ export function PlaylistListModal() {
                 <div className="space-y-6">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
-                            <h4 className="flex items-center">Playlists</h4>
+                            <h4 className="flex items-center">{t("common.action.playlists")}</h4>
                         </div>
                         <div className="flex gap-2 items-center md:pr-8">
                             <PlaylistEditorModal
@@ -106,7 +107,7 @@ export function PlaylistListModal() {
                                         intent="white"
                                         className={cn("rounded-full", selectedMedia && "animate-pulse")}
                                     >
-                                        {selectedMedia ? "Add to new Playlist" : "Create a Playlist"}
+                                        {selectedMedia ? t("misc.playlist.add_to_new_playlist") : t("misc.playlist.create_playlist")}
                                     </Button>
                                 }
                             />
@@ -137,7 +138,7 @@ function PlaylistLists({ libraryCollection }: { libraryCollection: Anime_Library
             <div className="text-center text-[--muted] space-y-1 py-6">
                 <MdOutlineVideoLibrary className="mx-auto text-5xl text-[--muted]" />
                 <div>
-                    No playlists
+                    {t("misc.playlist.no_playlists")}
                 </div>
             </div>
         )

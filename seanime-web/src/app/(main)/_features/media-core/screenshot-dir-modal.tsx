@@ -2,6 +2,7 @@ import { DirectorySelector } from "@/components/shared/directory-selector"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { BiFolder } from "react-icons/bi"
 
@@ -44,29 +45,29 @@ export function ScreenshotDirModal({ open, onClose, onSave, portalContainer }: S
             onOpenChange={v => {
                 if (!v && !saving) onClose()
             }}
-            title="Screenshot Folder"
+            title={t("misc.player.screenshot_folder")}
             contentClass="max-w-md space-y-4"
             portalContainer={portalContainer || undefined}
         >
 
             <p className="text-sm text-[--muted]">
-                Select the folder where you would like to save your video screenshots.
+                {t("misc.player.screenshot_dir_desc")}
             </p>
 
             <DirectorySelector
                 value={path}
                 onSelect={setPath}
-                label="Screenshot Folder"
+                label={t("misc.player.screenshot_folder")}
                 leftIcon={<BiFolder className="text-[--indigo]" />}
-                error={!isAbsolute ? "Must be an absolute path" : ""}
+                error={!isAbsolute ? t("misc.player.absolute_path_required") : ""}
             />
 
             <div className="flex justify-end gap-2 mt-4">
                 <Button intent="gray-basic" onClick={onClose} disabled={saving}>
-                    Cancel
+                    {t("library.common.cancel")}
                 </Button>
                 <Button intent="white" onClick={handleSave} disabled={!path || !isAbsolute} loading={saving}>
-                    Save
+                    {t("media.action.save")}
                 </Button>
             </div>
         </Modal>

@@ -1,23 +1,24 @@
 import { Badge, BadgeProps } from "@/components/ui/badge"
 import { cn } from "../ui/core/styling"
+import { t } from "@/lib/i18n"
 
 type Props = BadgeProps
 
 export function BetaBadge({ className, ...props }: Props) {
     return (
-        <Badge intent="warning" size="sm" className={cn("align-middle ml-2 border-transparent", className)} {...props}>Beta</Badge>
+        <Badge intent="warning" size="sm" className={cn("align-middle ml-2 border-transparent", className)} {...props}>{t("common.badge.beta")}</Badge>
     )
 }
 
 export function AlphaBadge({ className, ...props }: Props) {
     return (
-        <Badge intent="warning" size="sm" className={cn("align-middle ml-2 border-transparent", className)} {...props}>Alpha</Badge>
+        <Badge intent="warning" size="sm" className={cn("align-middle ml-2 border-transparent", className)} {...props}>{t("common.badge.alpha")}</Badge>
     )
 }
 
 
-export function ExperimentalBadge({ className, title = "Experimental", ...props }: Props) {
+export function ExperimentalBadge({ className, title, ...props }: Props) {
     return (
-        <Badge intent="warning" size="sm" className={cn("align-middle ml-2 border-transparent", className)} {...props}>{title}</Badge>
+        <Badge intent="warning" size="sm" className={cn("align-middle ml-2 border-transparent", className)} {...props}>{title ?? t("common.badge.experimental")}</Badge>
     )
 }

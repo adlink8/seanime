@@ -4,6 +4,7 @@ import { LoadingOverlay } from "@/components/ui/loading-spinner"
 import { useRouter } from "@/lib/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import React from "react"
+import { t } from "@/lib/i18n"
 
 export default function _page() {
 
@@ -39,14 +40,14 @@ export default function _page() {
 
     if (!state || !code || !challenge) return (
         <div className="p-12 space-y-4 text-center">
-            Invalid URL or Challenge
+            {t("misc.mal.invalid_url")}
         </div>
     )
 
     return (
         <div>
             <LoadingOverlay className="fixed w-full h-full z-[80]">
-                <h3 className="mt-2">Authenticating...</h3>
+                <h3 className="mt-2">{t("misc.mal.authenticating")}</h3>
             </LoadingOverlay>
         </div>
     )

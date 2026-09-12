@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardProps } from "@/components/ui/card"
 import { cn } from "@/components/ui/core/styling"
 import { Field, Form } from "@/components/ui/form"
+import { t } from "@/lib/i18n"
 import { useRouter } from "@/lib/navigation"
 import {
     DEFAULT_TORRENT_PROVIDER,
@@ -86,36 +87,36 @@ const stepVariants = {
 const STEPS = [
     {
         id: "library",
-        title: "本地番剧库",
-        description: "选择你存放本地动漫文件的目录",
+        title: t("misc.getting_started.step_library"),
+        description: t("misc.getting_started.step_library_desc"),
         icon: IoLibraryOutline,
         gradient: "from-blue-500 to-cyan-500",
     },
     {
         id: "player",
-        title: "播放器配置",
-        description: "配置你的本地视频播放器",
+        title: t("misc.getting_started.step_player"),
+        description: t("misc.getting_started.step_player_desc"),
         icon: LuMonitorPlay,
         gradient: "from-green-500 to-emerald-500",
     },
     {
         id: "torrents",
-        title: "下载设置",
-        description: "配置种子下载器与来源",
+        title: t("misc.getting_started.step_downloading"),
+        description: t("misc.getting_started.step_downloading_desc"),
         icon: BiDownload,
         gradient: "from-orange-500 to-red-500",
     },
     {
         id: "debrid",
-        title: "Debrid 云解析",
-        description: "可选的高级云端流媒体服务",
+        title: t("misc.getting_started.step_debrid"),
+        description: t("misc.getting_started.step_debrid_desc"),
         icon: HiOutlineServerStack,
         gradient: "from-indigo-500 to-indigo-500",
     },
     {
         id: "features",
-        title: "功能选项",
-        description: "启用扩展功能与模式",
+        title: t("misc.getting_started.step_features"),
+        description: t("misc.getting_started.step_features_desc"),
         icon: LuSparkles,
         gradient: "from-teal-500 to-blue-500",
     },
@@ -128,7 +129,7 @@ function StepIndicator({ currentStep, totalSteps, onStepClick }: { currentStep: 
                 <div className="relative mx-auto size-16">
                     <motion.img
                         src="/seanime-logo.png"
-                        alt="Seanime Logo"
+                        alt={t("misc.getting_started.alt_logo")}
                         className="w-full h-full object-contain"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -139,7 +140,7 @@ function StepIndicator({ currentStep, totalSteps, onStepClick }: { currentStep: 
 
             <div className="text-center mb-8">
                 <p className="text-[--muted] text-sm ">
-                    这些设置后续可随时在【系统设置】中更改
+                    {t("misc.getting_started.settings_note")}
                 </p>
             </div>
 
@@ -251,9 +252,9 @@ function LibraryStep({ form }: { form: any }) {
             className="space-y-8"
         >
             <motion.div variants={itemVariants} className="text-center space-y-4">
-                <h2 className="text-3xl font-bold">Anime Library</h2>
+                <h2 className="text-3xl font-bold">{t("misc.getting_started.library_title")}</h2>
                 <p className="text-[--muted] text-sm max-w-lg mx-auto">
-                    Choose the folder where your anime files are stored. This is where Seanime will scan for your collection.
+                    {t("misc.getting_started.library_desc")}
                 </p>
             </motion.div>
 
@@ -261,10 +262,10 @@ function LibraryStep({ form }: { form: any }) {
                 <motion.div variants={itemVariants}>
                     <Field.DirectorySelector
                         name="libraryPath"
-                        label="Anime Library Path"
+                        label={t("misc.getting_started.library_path_label")}
                         leftIcon={<BiFolder className="text-blue-500" />}
                         shouldExist
-                        help="Select the main folder containing your anime collection. You can add more folders later."
+                        help={t("misc.getting_started.library_path_help")}
                         className="w-full"
                     />
                 </motion.div>
@@ -289,12 +290,12 @@ function PlayerStep({ form, status }: { form: any, status: Status }) {
             <motion.div variants={itemVariants} className="text-center space-y-4">
 
                 {__isElectronDesktop__ && <div className="max-w-3xl mx-auto p-4 rounded-xl border !mb-8 font-medium">
-                    Seanime Denshi includes a built-in media player that is enabled by default. You can still configure an external media player.
+                    {t("misc.getting_started.denshi_note")}
                 </div>}
 
-                <h2 className="text-3xl font-bold">{__isDesktop__ ? "External " : ""}Media Player</h2>
+                <h2 className="text-3xl font-bold">{t("misc.getting_started.media_player_title", { external: __isDesktop__ ? t("misc.getting_started.external_prefix") : "" })}</h2>
                 <p className="text-[--muted] text-sm max-w-lg mx-auto">
-                    Configure your preferred external media player for watching anime and tracking progress automatically.
+                    {t("misc.getting_started.media_player_desc")}
                 </p>
             </motion.div>
 
@@ -302,14 +303,14 @@ function PlayerStep({ form, status }: { form: any, status: Status }) {
                 <motion.div variants={itemVariants} className="space-y-6">
                     <Field.Select
                         name="defaultPlayer"
-                        label="Desktop Media Player"
+                        label={t("misc.getting_started.desktop_player_label")}
                         help={status?.os !== "darwin"
-                            ? "MPV is recommended for better subtitle rendering, torrent streaming."
-                            : "Both MPV and IINA are recommended for macOS."}
+                            ? t("misc.getting_started.mpv_help_win")
+                            : t("misc.getting_started.mpv_help_mac")}
                         required
                         leftIcon={<BiPlay className="text-green-500" />}
                         options={[
-                            { label: "MPV (Recommended)", value: "mpv" },
+                            { label: t("misc.getting_started.mpv_recommended"), value: "mpv" },
                             { label: "VLC", value: "vlc" },
                             ...(status?.os === "windows" ? [{ label: "MPC-HC", value: "mpc-hc" }] : []),
                             ...(status?.os === "darwin" ? [{ label: "IINA", value: "iina" }] : []),
@@ -320,7 +321,7 @@ function PlayerStep({ form, status }: { form: any, status: Status }) {
                         {defaultPlayer === "mpv" && (
                             <>
                                 <p className="text-pretty">
-                                    On Windows, install MPV easily using Scoop or Chocolatey. On macOS, install MPV using Homebrew.
+                                    {t("misc.getting_started.mpv_install_hint")}
                                 </p>
                                 {/*<motion.div*/}
                                 {/*    key="mpv"*/}
@@ -362,12 +363,7 @@ function PlayerStep({ form, status }: { form: any, status: Status }) {
 
                                 <Alert
                                     intent="info-basic"
-                                    description={<p>For IINA to work correctly with Seanime, make sure <strong>Quit after all windows are
-                                                                                                               closed</strong> is <span
-                                        className="underline"
-                                    >checked</span> and <strong>Keep window open after playback
-                                                                finishes</strong> is <span className="underline">unchecked</span> in
-                                                    your IINA general settings.</p>}
+                                    description={<p>{t("misc.getting_started.iina_alert")}</p>}
                                 />
                             </motion.div>
                         )}
@@ -382,17 +378,17 @@ function PlayerStep({ form, status }: { form: any, status: Status }) {
                             >
                                 <div className="flex items-center space-x-3">
                                     <SiVlcmediaplayer className="w-6 h-6 text-orange-500" />
-                                    <h4 className="font-semibold">VLC Configuration</h4>
+                                    <h4 className="font-semibold">{t("misc.getting_started.vlc_config")}</h4>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Field.Text name="mediaPlayerHost" label="Host" />
-                                    <Field.Number name="vlcPort" label="Port" formatOptions={{ useGrouping: false }} />
+                                    <Field.Text name="mediaPlayerHost" label={t("misc.getting_started.host")} />
+                                    <Field.Number name="vlcPort" label={t("misc.getting_started.port")} formatOptions={{ useGrouping: false }} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Field.Text name="vlcUsername" label="Username" />
-                                    <Field.Text name="vlcPassword" label="Password" type="password" />
+                                    <Field.Text name="vlcUsername" label={t("misc.getting_started.username")} />
+                                    <Field.Text name="vlcPassword" label={t("misc.getting_started.password")} type="password" />
                                 </div>
-                                <Field.Text name="vlcPath" label="VLC Executable Path" />
+                                <Field.Text name="vlcPath" label={t("misc.getting_started.vlc_path_label")} />
                             </motion.div>
                         )}
 
@@ -406,13 +402,13 @@ function PlayerStep({ form, status }: { form: any, status: Status }) {
                             >
                                 <div className="flex items-center space-x-3">
                                     <HiOutlineDesktopComputer className="w-6 h-6 text-blue-500" />
-                                    <h4 className="font-semibold">MPC-HC Configuration</h4>
+                                    <h4 className="font-semibold">{t("misc.getting_started.mpc_config")}</h4>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Field.Text name="mediaPlayerHost" label="Host" />
-                                    <Field.Number name="mpcPort" label="Port" formatOptions={{ useGrouping: false }} />
+                                    <Field.Text name="mediaPlayerHost" label={t("misc.getting_started.host")} />
+                                    <Field.Number name="mpcPort" label={t("misc.getting_started.port")} formatOptions={{ useGrouping: false }} />
                                 </div>
-                                <Field.Text name="mpcPath" label="MPC-HC Executable Path" />
+                                <Field.Text name="mpcPath" label={t("misc.getting_started.mpc_path_label")} />
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -435,9 +431,9 @@ function TorrentStep({ form }: { form: any }) {
             className="space-y-8"
         >
             <motion.div variants={itemVariants} className="text-center space-y-4">
-                <h2 className="text-3xl font-bold">Downloading</h2>
+                <h2 className="text-3xl font-bold">{t("misc.getting_started.downloading_title")}</h2>
                 <p className="text-[--muted] text-sm max-w-lg mx-auto">
-                    Configure your torrent client for downloading.
+                    {t("misc.getting_started.downloading_desc")}
                 </p>
             </motion.div>
 
@@ -447,18 +443,18 @@ function TorrentStep({ form }: { form: any }) {
                     <motion.div variants={itemVariants} className="space-y-4">
                         <div className="flex items-center space-x-3 mb-4">
                             <ImDownload className="w-6 h-6 text-blue-500" />
-                            <h3 className="text-xl font-semibold">Torrent Client</h3>
+                            <h3 className="text-xl font-semibold">{t("misc.getting_started.torrent_client")}</h3>
                         </div>
                         <p className="text-sm text-[--muted]">
-                            Client used to download anime torrents
+                            {t("misc.getting_started.torrent_client_desc")}
                         </p>
                         <Field.Select
                             name="defaultTorrentClient"
-                            label="Client"
+                            label={t("misc.getting_started.client_label")}
                             options={[
                                 { label: "qBittorrent", value: "qbittorrent" },
                                 { label: "Transmission", value: "transmission" },
-                                { label: "None", value: "none" },
+                                { label: t("misc.getting_started.none_option"), value: "none" },
                             ]}
                         />
                     </motion.div>
@@ -479,16 +475,16 @@ function TorrentStep({ form }: { form: any }) {
                                 <>
                                     <div className="flex items-center space-x-3">
                                         <SiQbittorrent className="w-8 h-8 text-blue-600" />
-                                        <h4 className="text-xl font-semibold">qBittorrent Settings</h4>
+                                        <h4 className="text-xl font-semibold">{t("misc.getting_started.qb_settings")}</h4>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <Field.Text name="qbittorrentHost" label="Host" />
-                                        <Field.Text name="qbittorrentUsername" label="Username" />
-                                        <Field.Text name="qbittorrentPassword" label="Password" />
+                                        <Field.Text name="qbittorrentHost" label={t("misc.getting_started.host")} />
+                                        <Field.Text name="qbittorrentUsername" label={t("misc.getting_started.username")} />
+                                        <Field.Text name="qbittorrentPassword" label={t("misc.getting_started.password")} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 lg:grid-cols-[200px_1fr]">
-                                        <Field.Number name="qbittorrentPort" label="Port" formatOptions={{ useGrouping: false }} />
-                                        <Field.Text name="qbittorrentPath" label="Executable Path" />
+                                        <Field.Number name="qbittorrentPort" label={t("misc.getting_started.port")} formatOptions={{ useGrouping: false }} />
+                                        <Field.Text name="qbittorrentPath" label={t("misc.getting_started.exe_path")} />
                                     </div>
                                 </>
                             )}
@@ -497,16 +493,16 @@ function TorrentStep({ form }: { form: any }) {
                                 <>
                                     <div className="flex items-center space-x-3">
                                         <SiTransmission className="w-8 h-8 text-red-600" />
-                                        <h4 className="text-xl font-semibold">Transmission Settings</h4>
+                                        <h4 className="text-xl font-semibold">{t("misc.getting_started.transmission_settings")}</h4>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <Field.Text name="transmissionHost" label="Host" />
-                                        <Field.Text name="transmissionUsername" label="Username" />
-                                        <Field.Text name="transmissionPassword" label="Password" />
+                                        <Field.Text name="transmissionHost" label={t("misc.getting_started.host")} />
+                                        <Field.Text name="transmissionUsername" label={t("misc.getting_started.username")} />
+                                        <Field.Text name="transmissionPassword" label={t("misc.getting_started.password")} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 lg:grid-cols-[200px_1fr]">
-                                        <Field.Number name="transmissionPort" label="Port" formatOptions={{ useGrouping: false }} />
-                                        <Field.Text name="transmissionPath" label="Executable Path" />
+                                        <Field.Number name="transmissionPort" label={t("misc.getting_started.port")} formatOptions={{ useGrouping: false }} />
+                                        <Field.Text name="transmissionPath" label={t("misc.getting_started.exe_path")} />
                                     </div>
                                 </>
                             )}
@@ -530,9 +526,9 @@ function DebridStep({ form }: { form: any }) {
             className="space-y-8"
         >
             <motion.div variants={itemVariants} className="text-center space-y-4">
-                <h2 className="text-3xl font-bold">Debrid Service</h2>
+                <h2 className="text-3xl font-bold">{t("misc.getting_started.debrid_service")}</h2>
                 <p className="text-[--muted] text-sm max-w-lg mx-auto">
-                    Debrid services offer faster downloads and instant streaming from the cloud.
+                    {t("misc.getting_started.debrid_desc")}
                 </p>
             </motion.div>
 
@@ -540,10 +536,10 @@ function DebridStep({ form }: { form: any }) {
                 <motion.div variants={itemVariants} className="space-y-6">
                     <Field.Select
                         name="debridProvider"
-                        label="Debrid Service"
+                        label={t("misc.getting_started.debrid_service")}
                         leftIcon={<HiServerStack className="text-[--purple]" />}
                         options={[
-                            { label: "None", value: "none" },
+                            { label: t("misc.getting_started.none_option"), value: "none" },
                             { label: "TorBox", value: "torbox" },
                             { label: "Real-Debrid", value: "realdebrid" },
                             { label: "AllDebrid", value: "alldebrid" },
@@ -561,8 +557,8 @@ function DebridStep({ form }: { form: any }) {
                             >
                                 <Field.Text
                                     name="debridApiKey"
-                                    label="API Key"
-                                    help="The API key provided by the debrid service."
+                                    label={t("player.prefs.api_key")}
+                                    help={t("misc.getting_started.api_key_help")}
                                 />
                             </motion.div>
                         )}
@@ -578,43 +574,43 @@ function FeaturesStep({ form }: { form: any }) {
         {
             name: "enableManga",
             icon: FaBook,
-            title: "Manga",
-            description: "Read and download manga chapters",
+            title: t("discover.tab.manga"),
+            description: t("misc.getting_started.feature_manga_desc"),
             gradient: "from-orange-500 to-yellow-500",
         },
         {
             name: "enableTorrentStreaming",
             icon: BiDownload,
-            title: "Torrent Streaming",
-            description: "Stream torrents without waiting for download",
+            title: t("entry.torrent_stream.view"),
+            description: t("misc.getting_started.feature_torrent_streaming_desc"),
             gradient: "from-violet-500 to-indigo-500",
         },
         {
             name: "enableAdultContent",
             icon: HiEye,
-            title: "NSFW Content",
-            description: "Show adult content in library and search",
+            title: t("misc.getting_started.feature_nsfw"),
+            description: t("misc.getting_started.feature_nsfw_desc"),
             gradient: "from-red-500 to-pink-500",
         },
         {
             name: "enableOnlinestream",
             icon: HiGlobeAlt,
-            title: "Online Streaming",
-            description: "Watch anime from online sources",
+            title: t("misc.changelog.online_streaming"),
+            description: t("misc.getting_started.feature_online_streaming_desc"),
             gradient: "from-green-500 to-emerald-500",
         },
         {
             name: "enableRichPresence",
             icon: FaDiscord,
-            title: "Discord Rich Presence",
-            description: "Show what you're watching on Discord",
+            title: t("misc.getting_started.feature_discord"),
+            description: t("misc.getting_started.feature_discord_desc"),
             gradient: "from-indigo-500 to-blue-500",
         },
         {
             name: "enableTranscode",
             icon: MdOutlineBroadcastOnHome,
-            title: "Transcoding / Direct Play",
-            description: "Stream downloaded files on other devices",
+            title: t("misc.getting_started.feature_transcode"),
+            description: t("misc.getting_started.feature_transcode_desc"),
             gradient: "from-cyan-500 to-indigo-500",
         },
     ]
@@ -628,9 +624,9 @@ function FeaturesStep({ form }: { form: any }) {
             className="space-y-8"
         >
             <motion.div variants={itemVariants} className="text-center space-y-4">
-                <h2 className="text-3xl font-bold">Additional Features</h2>
+                <h2 className="text-3xl font-bold">{t("misc.getting_started.additional_features")}</h2>
                 <p className="text-[--muted] text-sm max-w-lg mx-auto">
-                    Choose which additional features you'd like to enable. You can enable or disable these later in settings.
+                    {t("misc.getting_started.additional_features_desc")}
                 </p>
             </motion.div>
 
@@ -831,7 +827,7 @@ export function GettingStartedPage({ status }: { status: Status }) {
                                     className="flex items-center space-x-2"
                                     leftIcon={<BiChevronLeft className="text-xl" />}
                                 >
-                                    上一步
+                                    {t("misc.tour.back")}
                                 </Button>
 
                                 {currentStep === STEPS.length - 1 ? (
@@ -841,7 +837,7 @@ export function GettingStartedPage({ status }: { status: Status }) {
                                         loading={isPending}
                                         rightIcon={<BiRocket className="size-6" />}
                                     >
-                                        <span>启动并进入 Seanime</span>
+                                        <span>{t("misc.getting_started.launch_btn")}</span>
                                     </Button>
                                 ) : (
                                     <Button
@@ -854,7 +850,7 @@ export function GettingStartedPage({ status }: { status: Status }) {
                                         className="flex items-center space-x-2"
                                         rightIcon={<BiChevronRight className="text-xl" />}
                                     >
-                                        下一步
+                                        {t("misc.tour.next")}
                                     </Button>
                                 )}
                             </motion.div>
@@ -868,7 +864,7 @@ export function GettingStartedPage({ status }: { status: Status }) {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1 }}
                 >
-                    By 5rahim
+                    {t("misc.getting_started.by_author")}
                 </motion.p>
             </div>
         </div>

@@ -12,6 +12,7 @@ import { cn } from "@/components/ui/core/styling"
 import { Modal } from "@/components/ui/modal"
 import { RadioGroup } from "@/components/ui/radio-group"
 import { VerticalMenu } from "@/components/ui/vertical-menu"
+import { t } from "@/lib/i18n"
 import { WSEvents } from "@/lib/server/ws-events"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
@@ -81,7 +82,7 @@ export function UpdateModal(props: UpdateModalProps) {
                 items={[
                     {
                         iconType: AiFillExclamationCircle,
-                        name: "Update available",
+                        name: t("misc.update.available_menu"),
                         onClick: () => setUpdateModalOpen(true),
                     },
                 ]}
@@ -95,14 +96,14 @@ export function UpdateModal(props: UpdateModalProps) {
                 <Downloader release={updateData?.release} />
 
                 <div className="space-y-2">
-                    <h3 className="text-center">A new update is available!</h3>
+                    <h3 className="text-center">{t("misc.update.available_toast_title")}</h3>
                     <h4 className="font-bold flex gap-2 text-center items-center justify-center">
                         <span className="text-[--muted]">{updateData?.current_version}</span> <FiArrowRight />
                         <span className="text-indigo-200">{updateData?.release?.version}</span></h4>
 
                     {serverStatus?.isDesktopSidecar && <Alert
                         intent="info"
-                        description="Update Seanime from the desktop application."
+                        description={t("misc.update.from_desktop")}
                     />}
 
                     <UpdateChangelogBody updateData={updateData} />
@@ -110,27 +111,26 @@ export function UpdateModal(props: UpdateModalProps) {
                     <div className="flex gap-2 w-full items-center !mt-4">
                         {!serverStatus?.isDesktopSidecar && <Modal
                             trigger={<Button leftIcon={<GrInstall className="text-2xl" />}>
-                                Update now
+                                {t("misc.update.update_now")}
                             </Button>}
                             contentClass="max-w-xl"
-                            title={<span>Update Seanime</span>}
+                            title={<span>{t("misc.update.update_seanime")}</span>}
                         >
                             <div className="space-y-4">
                                 <p>
-                                    Seanime will perform an update by downloading and replacing existing files.
-                                    Refer to the documentation for more information.
+                                    {t("misc.update.update_note")}
                                 </p>
                                 <Button className="w-full" onClick={handleInstallUpdate} disabled={isPending}>
-                                    Download and Install
+                                    {t("misc.update.download_and_install")}
                                 </Button>
                             </div>
                         </Modal>}
                         <div className="flex flex-1" />
                         <SeaLink href={updateData?.release?.html_url || ""} target="_blank">
-                            <Button intent="white-subtle" rightIcon={<BiLinkExternal />}>See on GitHub</Button>
+                            <Button intent="white-subtle" rightIcon={<BiLinkExternal />}>{t("misc.update.see_on_github")}</Button>
                         </SeaLink>
                         {!serverStatus?.isDesktopSidecar &&
-                            <Button intent="white" leftIcon={<BiDownload />} onClick={() => setDownloaderOpen(true)}>Download</Button>}
+                            <Button intent="white" leftIcon={<BiDownload />} onClick={() => setDownloaderOpen(true)}>{t("entry.torrent_download.download")}</Button>}
                     </div>
                 </div>
             </Modal>
@@ -175,7 +175,7 @@ export function Downloader(props: DownloaderProps) {
         <Modal
             open={downloaderOpen}
             onOpenChange={() => setDownloaderOpen(false)}
-            title="Download new release"
+            title={t("misc.update.download_new_release")}
             contentClass="space-y-4 max-w-2xl overflow-hidden"
         >
             <div>
@@ -203,13 +203,13 @@ export function Downloader(props: DownloaderProps) {
                 />
             </div>
             <DirectorySelector
-                label="Select destination"
+                label={t("misc.update.select_destination")}
                 onSelect={setDestination}
                 value={destination}
                 rightAddon={`/seanime-${release.version}`}
             />
             <div className="flex gap-2 justify-end mt-2">
-                <Button intent="white" leftIcon={<BiDownload />} onClick={handleDownloadRelease} loading={isPending}>Download</Button>
+                <Button intent="white" leftIcon={<BiDownload />} onClick={handleDownloadRelease} loading={isPending}>{t("entry.torrent_download.download")}</Button>
             </div>
         </Modal>
     )

@@ -5,6 +5,7 @@ import { websocketConnectedAtom, websocketConnectionErrorCountAtom } from "@/app
 import { LuffyError } from "@/components/shared/luffy-error"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
+import { t } from "@/lib/i18n"
 import { useAtomValue } from "jotai/react"
 import React from "react"
 import { toast } from "sonner"
@@ -153,7 +154,7 @@ export function ElectronRestartServerPrompt() {
                 <LuffyError>
                     <div className="space-y-4 flex flex-col items-center">
                         <p className="text-lg max-w-sm">
-                            The background server process has stopped responding. Please restart it to continue.
+                            {t("misc.electron.restart_server_desc")}
                         </p>
 
                         <Button
@@ -163,10 +164,10 @@ export function ElectronRestartServerPrompt() {
                             size="lg"
                             className="rounded-full"
                         >
-                            Restart server
+                            {t("misc.electron.restart_server")}
                         </Button>
                         <p className="text-[--muted] text-sm max-w-xl">
-                            If this message persists after multiple tries, please relaunch the application.
+                            {t("misc.electron.restart_server_hint")}
                         </p>
                     </div>
                 </LuffyError>

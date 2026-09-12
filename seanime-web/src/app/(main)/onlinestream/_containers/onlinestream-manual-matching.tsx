@@ -15,6 +15,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { BiLinkExternal } from "react-icons/bi"
 import { FiSearch } from "react-icons/fi"
@@ -37,8 +38,8 @@ export function OnlinestreamManualMappingModal(props: OnlinestreamManualMappingM
     return (
         <>
             <Modal
-                title="Manual match"
-                description="Match this anime to a search result from the provider."
+                title={t("misc.onlinestream.manual_match")}
+                description={t("misc.onlinestream.manual_match_desc")}
                 trigger={children}
                 contentClass="max-w-4xl"
             >
@@ -83,9 +84,9 @@ function Content({ entry, provider }: { entry: Anime_Entry, provider: string }) 
 
     const [animeId, setAnimeId] = React.useState<string | null>(null)
     const confirmMatch = useConfirmationDialog({
-        title: "Manual match",
-        description: "Are you sure you want to match this anime to the search result?",
-        actionText: "Confirm",
+        title: t("misc.onlinestream.manual_match"),
+        description: t("misc.onlinestream.confirm_match_desc"),
+        actionText: t("media.action.confirm"),
         actionIntent: "success",
         onConfirm: () => {
             if (animeId && selectedProvider) {
@@ -110,7 +111,7 @@ function Content({ entry, provider }: { entry: Anime_Entry, provider: string }) 
                         {!!existingMapping?.animeId ? (
                             <AppLayoutStack>
                                 <p>
-                                    Current mapping: <span>{existingMapping.animeId}</span>
+                                    {t("misc.onlinestream.current_mapping")} <span>{existingMapping.animeId}</span>
                                 </p>
                                 <Button
                                     intent="alert-subtle" loading={isUnmatching} onClick={() => {
@@ -122,11 +123,11 @@ function Content({ entry, provider }: { entry: Anime_Entry, provider: string }) 
                                     }
                                 }}
                                 >
-                                    Remove mapping
+                                    {t("misc.onlinestream.remove_mapping")}
                                 </Button>
                             </AppLayoutStack>
                         ) : (
-                            <p className="text-[--muted] italic">No manual match</p>
+                            <p className="text-[--muted] italic">{t("misc.onlinestream.no_manual_match")}</p>
                         )}
                     </div>
 
@@ -136,19 +137,19 @@ function Content({ entry, provider }: { entry: Anime_Entry, provider: string }) 
                         <div className="space-y-2">
                             <Field.Text
                                 name="query"
-                                placeholder="Enter a title..."
+                                placeholder={t("misc.onlinestream.search_placeholder")}
                                 leftIcon={<FiSearch className="text-xl text-[--muted]" />}
                                 fieldClass="w-full"
                             />
 
                             <Field.Switch
                                 name="dubbed"
-                                label="Look for dubs"
+                                label={t("misc.onlinestream.look_for_dubs")}
                                 side="right"
-                                moreHelp="Only applies to providers that support dubs in search results."
+                                moreHelp={t("misc.onlinestream.dubs_help")}
                             />
 
-                            <Field.Submit intent="white" loading={isMatching || searchLoading || mappingLoading} className="">Search</Field.Submit>
+                            <Field.Submit intent="white" loading={isMatching || searchLoading || mappingLoading} className="">{t("navigation.item.search")}</Field.Submit>
                         </div>
                     </Form>
 
@@ -182,7 +183,7 @@ function Content({ entry, provider }: { entry: Anime_Entry, provider: string }) 
                                                         size="xs"
                                                     />}
                                                 >
-                                                    Open in browser
+                                                    {t("torrent.qbittorrent.open_in_browser")}
                                                 </Tooltip>
                                             </SeaLink>
                                         </div>

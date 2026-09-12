@@ -592,14 +592,14 @@ function MpvCorePlayerContent(props: MpvCorePlayerContentProps) {
         const defaults = getDefaultSkipChapters(chapters, { guardIntro: false })
         if (!defaults.opening && skipData?.op?.interval) {
             chapters.push({
-                label: "Opening",
+                label: t("misc.player.opening"),
                 start: skipData.op.interval.startTime,
                 end: skipData.op.interval.endTime,
             })
         }
         if (!defaults.ending && skipData?.ed?.interval) {
             chapters.push({
-                label: "Ending",
+                label: t("misc.player.ending"),
                 start: skipData.ed.interval.startTime,
                 end: skipData.ed.interval.endTime,
             })

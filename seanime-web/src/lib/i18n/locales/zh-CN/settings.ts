@@ -371,4 +371,26 @@ export const settingsDictionary = {
 
     // —— 07-01 追加：settings-submit-button.tsx ——
     "settings.toast.unsaved_changes": "您有未保存的更改。", // settings-submit-button.tsx
+
+    // —— 09-05 追加：theme-hooks.ts ——
+    "settings.theme.banner_default": "默认", // theme-hooks.ts
+    "settings.theme.banner_default_desc": "始终显示横幅图片。若不可用，则使用封面图代替。", // theme-hooks.ts
+    "settings.theme.banner_blur": "不可用时模糊", // theme-hooks.ts
+    "settings.theme.banner_blur_desc": "若可用则显示横幅图片。若不可用，则使用封面图并模糊处理。", // theme-hooks.ts
+    "settings.theme.banner_dim": "不可用时调暗", // theme-hooks.ts
+    "settings.theme.banner_dim_desc": "若可用则显示横幅图片。若不可用，则将横幅调暗。", // theme-hooks.ts
+    "settings.theme.banner_hide": "不可用时隐藏", // theme-hooks.ts
+    "settings.theme.banner_hide_desc": "若可用则显示横幅图片。若不可用，则隐藏横幅。", // theme-hooks.ts
+    "settings.theme.banner_dim_always": "调暗", // theme-hooks.ts
+    "settings.theme.banner_dim_always_desc": "始终将横幅图片调暗。", // theme-hooks.ts
+    "settings.theme.banner_blur_always": "模糊", // theme-hooks.ts
+    "settings.theme.banner_blur_always_desc": "始终模糊横幅图片。", // theme-hooks.ts
+    "settings.theme.banner_hide_always": "隐藏", // theme-hooks.ts
+    "settings.theme.banner_hide_always_desc": "始终隐藏横幅图片。", // theme-hooks.ts
+    "settings.theme.banner_size_large": "大", // theme-hooks.ts
+    "settings.theme.banner_size_large_desc": "占据屏幕较大部分。", // theme-hooks.ts
+    "settings.theme.banner_size_smaller": "较小", // theme-hooks.ts
+    "settings.theme.banner_size_smaller_desc": "使用较小的横幅尺寸，显示更多图像内容。", // theme-hooks.ts
+    "settings.theme.infobox_fluid": "流式", // theme-hooks.ts
+    "settings.theme.infobox_boxed": "盒式", // theme-hooks.ts
 } satisfies Dictionary

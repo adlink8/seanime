@@ -2,6 +2,7 @@ import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { PageWrapper } from "@/components/shared/page-wrapper"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { t } from "@/lib/i18n"
 import { __isElectronDesktop__ } from "@/types/constants"
 import React from "react"
 import { LuExternalLink } from "react-icons/lu"
@@ -34,7 +35,7 @@ export default function Page() {
             <header className="flex items-center justify-between">
                 <div>
                     <h2>qBittorrent</h2>
-                    <p className="text-[--muted]">Access the embedded qBittorrent client Web UI.</p>
+                    <p className="text-[--muted]">{t("torrent.qbittorrent.description")}</p>
                 </div>
                 {__isElectronDesktop__ && (
                     <div className="flex items-center gap-2">
@@ -47,7 +48,7 @@ export default function Page() {
                                 intent="gray-outline"
                                 leftIcon={<LuExternalLink />}
                             >
-                                Open in browser
+                                {t("torrent.qbittorrent.open_in_browser")}
                             </Button>
                         </a>
                     </div>
@@ -70,10 +71,9 @@ export default function Page() {
                 <div className="flex items-center justify-center h-[calc(100vh-16rem)]">
                     <Card className="max-w-md p-8 text-center space-y-6 border border-[--border] bg-gray-900/40 backdrop-blur-sm rounded-2xl shadow-xl">
                         <div className="space-y-2">
-                            <h3 className="text-xl font-semibold tracking-tight text-white">Open in a new tab</h3>
+                            <h3 className="text-xl font-semibold tracking-tight text-white">{t("torrent.qbittorrent.open_new_tab_title")}</h3>
                             <p className="text-sm text-[--muted]">
-                                Due to browser security policies (COEP and Clickjacking protection), the embedded client cannot be loaded inside the
-                                iframe here.
+                                {t("torrent.qbittorrent.browser_policy")}
                             </p>
                         </div>
                         <a
@@ -87,7 +87,7 @@ export default function Page() {
                                 intent="primary"
                                 leftIcon={<LuExternalLink />}
                             >
-                                Open qBittorrent Web UI
+                                {t("torrent.qbittorrent.open_webui")}
                             </Button>
                         </a>
                     </Card>

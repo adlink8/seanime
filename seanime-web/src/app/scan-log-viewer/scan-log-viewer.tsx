@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
+import { t } from "@/lib/i18n"
 import { TextInput } from "@/components/ui/text-input"
 import React, { useMemo, useState } from "react"
 import { BiCheck, BiChevronDown, BiChevronRight, BiError, BiFile, BiInfoCircle, BiLinkAlt, BiSearch, BiX } from "react-icons/bi"
@@ -261,7 +262,7 @@ export function ScanLogViewer({ content }: { content: string }) {
     if (!content) {
         return (
             <div className="flex items-center justify-center h-[40vh] text-[--muted]">
-                <p className="text-lg">Load a scan log file to begin analysis</p>
+                <p className="text-lg">{t("misc.scan_log.empty_hint")}</p>
             </div>
         )
     }
@@ -273,7 +274,7 @@ export function ScanLogViewer({ content }: { content: string }) {
             <div className="space-y-0">
                 <div className="flex items-center gap-2 bg-gray-950 border-b border-[--border] p-2 rounded-t-lg sticky top-0 z-20">
                     <Button intent="gray" size="sm" onClick={() => setSelectedFile(null)}>
-                        ← Back
+                        {t("misc.scan_log.back")}
                     </Button>
                     <BiFile className="text-blue-400" />
                     <span className="text-sm font-medium text-gray-200 break-all">{selectedFile}</span>
@@ -282,7 +283,7 @@ export function ScanLogViewer({ content }: { content: string }) {
                     {group ? (
                         <FileFlowPanel group={group} />
                     ) : (
-                        <p className="text-gray-500 text-sm">No logs found for this file.</p>
+                        <p className="text-gray-500 text-sm">{t("misc.scan_log.no_logs_file")}</p>
                     )}
                 </div>
             </div>
@@ -293,11 +294,11 @@ export function ScanLogViewer({ content }: { content: string }) {
         <div className="space-y-0">
             <div className="flex gap-1 bg-gray-950 border-b border-[--border] p-1 rounded-t-lg sticky top-0 z-20">
                 {([
-                    { key: "overview", label: "Overview", icon: BiInfoCircle },
-                    { key: "parsing", label: "Parsed Files", icon: BiFile },
-                    { key: "matcher", label: "Matcher", icon: BiSearch },
-                    { key: "hydrator", label: "Hydrator", icon: RiFileSettingsFill },
-                    { key: "issues", label: `Issues (${stats.errorCount + stats.warningCount})`, icon: BiError },
+                    { key: "overview", label: t("misc.scan_log.tab_overview"), icon: BiInfoCircle },
+                    { key: "parsing", label: t("misc.scan_log.tab_parsed"), icon: BiFile },
+                    { key: "matcher", label: t("misc.scan_log.tab_matcher"), icon: BiSearch },
+                    { key: "hydrator", label: t("misc.scan_log.tab_hydrator"), icon: RiFileSettingsFill },
+                    { key: "issues", label: t("misc.scan_log.tab_issues", { count: stats.errorCount + stats.warningCount }), icon: BiError },
                 ] as const).map(({ key, label, icon: Icon }) => (
                     <button
                         key={key}
@@ -357,22 +358,22 @@ function OverviewPanel({ stats, lines }: { stats: ScanStats; lines: ParsedLogLin
     return (
         <div className="p-4 space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <StatCard label="Total Files" value={stats.totalFiles} icon={<BiFile />} color="text-blue-400" />
+                <StatCard label={t("misc.scan_log.total_files")} value={stats.totalFiles} icon={<BiFile />} color="text-blue-400" />
                 <StatCard
-                    label="Matched"
+                    label={t("library.explorer.matched")}
                     value={stats.matchedFiles}
                     icon={<BiCheck />}
                     color="text-green-400"
                     sub={stats.totalFiles > 0 ? `${((stats.matchedFiles / stats.totalFiles) * 100).toFixed(0)}%` : undefined}
                 />
                 <StatCard
-                    label="Unmatched"
+                    label={t("library.explorer.not_matched")}
                     value={stats.unmatchedFiles}
                     icon={<BiX />}
                     color={stats.unmatchedFiles > 0 ? "text-orange-400" : "text-gray-500"}
                 />
                 <StatCard
-                    label="Issues"
+                    label={t("misc.scan_log.issues")}
                     value={stats.errorCount + stats.warningCount}
                     icon={<BiError />}
                     color={stats.errorCount > 0 ? "text-red-400" : "text-gray-500"}
@@ -380,22 +381,22 @@ function OverviewPanel({ stats, lines }: { stats: ScanStats; lines: ParsedLogLin
             </div>
 
             <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Pipeline</h3>
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t("misc.scan_log.pipeline")}</h3>
                 <div className="flex items-center gap-2 flex-wrap">
-                    <PipelineStep label="File Discovery" detail={`${stats.totalFiles} files`} />
+                    <PipelineStep label={t("misc.scan_log.file_discovery")} detail={t("misc.scan_log.n_files", { count: stats.totalFiles })} />
                     <BiChevronRight className="text-[--muted] text-lg flex-shrink-0" />
-                    <PipelineStep label="Media Fetch" detail={`${stats.fetchedMediaCount} media (${stats.unknownMediaCount} new)`} />
+                    <PipelineStep label={t("misc.scan_log.media_fetch")} detail={t("misc.scan_log.n_media_new", { count: stats.fetchedMediaCount, count2: stats.unknownMediaCount })} />
                     <BiChevronRight className="text-[--muted] text-lg flex-shrink-0" />
-                    <PipelineStep label="Token Index" detail={`${stats.tokenIndexSize} tokens`} />
+                    <PipelineStep label={t("misc.scan_log.token_index")} detail={t("misc.scan_log.n_tokens", { count: stats.tokenIndexSize })} />
                     <BiChevronRight className="text-[--muted] text-lg flex-shrink-0" />
-                    <PipelineStep label="Matcher" detail={stats.matcherDuration || "—"} />
+                    <PipelineStep label={t("misc.scan_log.tab_matcher")} detail={stats.matcherDuration || "—"} />
                     <BiChevronRight className="text-[--muted] text-lg flex-shrink-0" />
-                    <PipelineStep label="Hydrator" detail={stats.hydratorDuration || "—"} />
+                    <PipelineStep label={t("misc.scan_log.tab_hydrator")} detail={stats.hydratorDuration || "—"} />
                 </div>
             </div>
 
             <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Events</h3>
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t("misc.scan_log.events")}</h3>
                 <Virtuoso
                     style={{ height: "40vh" }}
                     totalCount={lines.length}
@@ -491,10 +492,10 @@ function ParsingPanel({ lines, searchQuery, setSearchQuery, onSelectFile }: {
                 <TextInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search parsed files..."
+                    placeholder={t("misc.scan_log.search_parsed")}
                     className="max-w-md"
                 />
-                <span className="text-sm text-gray-500">{filtered.length} files</span>
+                <span className="text-sm text-gray-500">{t("misc.scan_log.n_files", { count: filtered.length })}</span>
             </div>
             <Virtuoso
                 style={{ height: "calc(100vh - 200px)" }}
@@ -562,14 +563,14 @@ function ParsedFileLine({ line, onSelectFile, isExpanded, toggleExpanded }: {
                                 onSelectFile(d.filename)
                             }}
                             >
-                                View full flow
+                                {t("misc.scan_log.view_full_flow")}
                             </Button>
                         </div>
                     )}
                     <div className="text-sm text-gray-500 font-mono break-all">{d.path}</div>
                     {d.parsedData && (
                         <div className="space-y-1">
-                            <p className="text-sm font-semibold text-gray-400">Parsed Data</p>
+                            <p className="text-sm font-semibold text-gray-400">{t("misc.scan_log.parsed_data")}</p>
                             <DataGrid data={d.parsedData} />
                         </div>
                     )}
@@ -653,15 +654,15 @@ function MatcherPanel({
                 <TextInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by filename or match..."
+                    placeholder={t("misc.scan_log.search_match")}
                     className="max-w-md"
                 />
                 <div className="flex gap-1">
                     {([
-                        { key: "all" as const, label: "All" },
-                        { key: "matched" as const, label: `Matched (${matchedCount})` },
-                        { key: "unmatched" as const, label: `Unmatched (${unmatchedCount})` },
-                        { key: "errors" as const, label: "Issues" },
+                        { key: "all" as const, label: t("library.filter.all") },
+                        { key: "matched" as const, label: t("misc.scan_log.n_matched", { count: matchedCount }) },
+                        { key: "unmatched" as const, label: t("misc.scan_log.n_unmatched", { count: unmatchedCount }) },
+                        { key: "errors" as const, label: t("misc.scan_log.issues") },
                     ]).map(({ key, label }) => (
                         <button
                             key={key}
@@ -761,7 +762,7 @@ function MatcherFileGroup({ group, onSelectFile, isExpanded, toggleExpanded }: {
                             onSelectFile(group.filename)
                         }}
                         >
-                            View full flow
+                            {t("misc.scan_log.view_full_flow")}
                         </Button>
                     </div>
                     <div className="space-y-0.5 p-2">
@@ -832,7 +833,7 @@ function MatcherLogLine({ line }: { line: ParsedLogLine }) {
                         </span>
                     )}
                     {isCandidates && (
-                        <><span className="text-white">{d.candidates}</span> candidates found</>
+                        <><span className="text-white">{d.candidates}</span> {t("misc.scan_log.candidates_found", { count: d.candidates })}</>
                     )}
                     {isMetadata && (
                         <>
@@ -948,7 +949,7 @@ function HydratorPanel({
                 <TextInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by filename or media ID..."
+                    placeholder={t("misc.scan_log.search_media")}
                     className="max-w-md"
                 />
                 <div className="flex gap-1">
@@ -1045,7 +1046,7 @@ function HydratorFileGroup({ group, onSelectFile, isExpanded, toggleExpanded }: 
                             onSelectFile(group.filename)
                         }}
                         >
-                            View full flow
+                            {t("misc.scan_log.view_full_flow")}
                         </Button>
                     </div>
                     {group.hydratorLogs.map((log) => (
@@ -1127,15 +1128,15 @@ function IssuesPanel({ lines, searchQuery, setSearchQuery }: { lines: ParsedLogL
                 <TextInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search issues..."
+                    placeholder={t("misc.scan_log.search_issues")}
                     className="max-w-md"
                 />
-                <span className="text-sm text-gray-500">{filtered.length} issues</span>
+                <span className="text-sm text-gray-500">{t("misc.scan_log.n_issues", { count: filtered.length })}</span>
             </div>
 
             {filtered.length === 0 && (
                 <div className="flex items-center justify-center h-[20vh] text-green-400">
-                    <p className="flex items-center gap-2"><BiCheck className="text-xl" /> No issues found</p>
+                    <p className="flex items-center gap-2"><BiCheck className="text-xl" /> {t("misc.scan_log.no_issues")}</p>
                 </div>
             )}
 
@@ -1264,7 +1265,7 @@ function FileFlowPanel({ group }: { group: FileGroup }) {
         <div className="space-y-4">
             {/* Parsing */}
             {group.parsingLog && (
-                <FlowSection title="Parsing" icon={<BiFile className="text-blue-400" />}>
+                <FlowSection title={t("misc.scan_log.parsing")} icon={<BiFile className="text-blue-400" />}>
                     <ParsedFileLine line={group.parsingLog} />
                 </FlowSection>
             )}
@@ -1272,13 +1273,13 @@ function FileFlowPanel({ group }: { group: FileGroup }) {
             {/* Matcher */}
             {group.matcherLogs.length > 0 && (
                 <FlowSection
-                    title="Matcher"
+                    title={t("misc.scan_log.tab_matcher")}
                     icon={<BiSearch className="text-indigo-400" />}
                     badge={group.matchResult
                         ? <Badge size="sm" intent="unstyled" className="text-[--green]">→ {group.matchResult.match} [{group.matchResult.id}]
                                                                                         (score: {group.matchResult.score})</Badge>
                         : group.isUnmatched
-                            ? <Badge size="sm" intent="warning">unmatched</Badge>
+                            ? <Badge size="sm" intent="warning">{t("library.explorer.not_matched")}</Badge>
                             : undefined
                     }
                 >
@@ -1293,7 +1294,7 @@ function FileFlowPanel({ group }: { group: FileGroup }) {
             {/* Hydrator */}
             {group.hydratorLogs.length > 0 && (
                 <FlowSection
-                    title="Hydrator"
+                    title={t("misc.scan_log.tab_hydrator")}
                     icon={<RiFileSettingsFill className="text-cyan-400" />}
                     badge={group.hydrationResult
                         ? <Badge size="sm" intent={group.hydrationResult.type === "main" ? "success" : "warning"}>{group.hydrationResult.type} →
@@ -1310,7 +1311,7 @@ function FileFlowPanel({ group }: { group: FileGroup }) {
             )}
 
             {group.matcherLogs.length === 0 && group.hydratorLogs.length === 0 && !group.parsingLog && (
-                <p className="text-gray-500 text-sm">No logs found for this file across any phase.</p>
+                <p className="text-gray-500 text-sm">{t("misc.scan_log.no_logs_any_phase")}</p>
             )}
         </div>
     )

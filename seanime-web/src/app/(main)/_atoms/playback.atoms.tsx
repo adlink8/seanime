@@ -4,6 +4,7 @@ import { useAtom } from "jotai/react"
 import { atomWithStorage } from "jotai/utils"
 import { FaShareFromSquare } from "react-icons/fa6"
 import { PiVideoFill } from "react-icons/pi"
+import { t } from "@/lib/i18n"
 
 export const enum ElectronPlaybackMethod {
     NativePlayer = "nativePlayer", // Desktop media player or Integrated player (media streaming)
@@ -25,13 +26,13 @@ export const playbackDownloadedMediaOptions = [
     {
         label: <div className="flex items-center gap-4 md:gap-2 w-full">
             <PiVideoFill className="text-2xl flex-none" />
-            <p className="max-w-[90%]">Desktop media player or Transcoding / Direct Play</p>
+            <p className="max-w-[90%]">{t("misc.getting_started.desktop_player_or_transcode")}</p>
         </div>, value: PlaybackDownloadedMedia.Default,
     },
     {
         label: <div className="flex items-center gap-4 md:gap-2 w-full">
             <FaShareFromSquare className="text-2xl flex-none" />
-            <p className="max-w-[90%]">External player link</p>
+            <p className="max-w-[90%]">{t("misc.getting_started.external_player_link")}</p>
         </div>, value: PlaybackDownloadedMedia.ExternalPlayerLink,
     },
 ]
@@ -49,13 +50,13 @@ export const playbackTorrentStreamingOptions = [
     {
         label: <div className="flex items-center gap-4 md:gap-2 w-full">
             <PiVideoFill className="text-2xl flex-none" />
-            <p className="max-w-[90%]">Desktop media player</p>
+            <p className="max-w-[90%]">{t("misc.getting_started.desktop_player_label")}</p>
         </div>, value: PlaybackTorrentStreaming.Default,
     },
     {
         label: <div className="flex items-center gap-4 md:gap-2 w-full">
             <FaShareFromSquare className="text-2xl flex-none" />
-            <p className="max-w-[90%]">External player link</p>
+            <p className="max-w-[90%]">{t("misc.getting_started.external_player_link")}</p>
         </div>, value: PlaybackTorrentStreaming.ExternalPlayerLink,
     },
 ]

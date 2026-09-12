@@ -33,6 +33,26 @@ export const libraryDictionary = {
     "library.sort.title": "标题 (A-Z)", // src/lib/helpers/filtering.ts
     "library.sort.last_watched_desc": "最近观看", // src/lib/helpers/filtering.ts
     "library.sort.unread_chapters_desc": "未读章节最多", // src/lib/helpers/filtering.ts
+    "library.sort.episodes": "最低集数", // src/lib/helpers/filtering.ts
+    "library.sort.unwatched": "未看集数最少", // src/lib/helpers/filtering.ts
+    "library.sort.score": "评分最低", // src/lib/helpers/filtering.ts
+    "library.sort.start_date_desc": "最近开播", // src/lib/helpers/filtering.ts
+    "library.sort.start_date": "最早开播", // src/lib/helpers/filtering.ts
+    "library.sort.last_watched": "最早观看", // src/lib/helpers/filtering.ts
+    "library.sort.title_desc": "标题 (Z-A)", // src/lib/helpers/filtering.ts
+    "library.sort.audience_score_desc": "观众评分最高", // src/lib/helpers/filtering.ts
+    "library.sort.audience_score": "观众评分最低", // src/lib/helpers/filtering.ts
+    "library.sort.progress_desc": "观看进度最高", // src/lib/helpers/filtering.ts
+    "library.sort.progress": "观看进度最低", // src/lib/helpers/filtering.ts
+    "library.sort.added_desc": "最近添加/开始", // src/lib/helpers/filtering.ts
+    "library.sort.added": "最早添加/开始", // src/lib/helpers/filtering.ts
+    "library.sort.ended_desc": "最近完结", // src/lib/helpers/filtering.ts
+    "library.sort.ended": "最早完结", // src/lib/helpers/filtering.ts
+    "library.sort.released_desc": "最新发布", // src/lib/helpers/filtering.ts
+    "library.sort.released": "最早发布", // src/lib/helpers/filtering.ts
+    "library.sort.unread_chapters": "未读章节最少", // src/lib/helpers/filtering.ts
+    "library.sort.airdate_updates_desc": "最近播出且有更新", // src/lib/helpers/filtering.ts
+    "library.sort.airdate_updates": "最早播出且有更新", // src/lib/helpers/filtering.ts
 
     // ===== P5 / 05-03 追加：媒体库与库浏览器 =====
 

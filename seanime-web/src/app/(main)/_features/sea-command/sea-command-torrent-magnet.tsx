@@ -1,5 +1,6 @@
 import { Anime_Episode, HibikeTorrent_AnimeTorrent } from "@/api/generated/types"
 import { useGetAnimeCollection } from "@/api/hooks/anilist.hooks"
+import { t } from "@/lib/i18n"
 import { useGetAnimeEpisodeCollection } from "@/api/hooks/anime.hooks"
 import { useGetAnimeEntry } from "@/api/hooks/anime_entries.hooks"
 import { useTorrentClientDownload } from "@/api/hooks/torrent_client.hooks"
@@ -43,14 +44,14 @@ function parseMagnetMetadata(magnetLink: string) {
         const url = new URL(magnetLink)
         const xt = url.searchParams.get("xt") || ""
         return {
-            name: url.searchParams.get("dn") || "Magnet link",
+            name: url.searchParams.get("dn") || t("misc.sea_command.magnet_name"),
             infoHash: xt.replace(/^urn:btih:/i, "") || undefined,
         }
     }
     catch {
         const match = magnetLink.match(/xt=urn:btih:([^&]+)/i)
         return {
-            name: "Magnet link",
+            name: t("misc.sea_command.magnet_name"),
             infoHash: match?.[1],
         }
     }
@@ -275,7 +276,7 @@ export function SeaCommandTorrentMagnet() {
                 <>
                     <CommandHelperText
                         command="/magnet [magnet link]"
-                        description="Paste a magnet link to start streaming or downloading."
+                        description={t("misc.sea_command.magnet_desc")}
                         show={true}
                     />
                 </>
@@ -283,7 +284,7 @@ export function SeaCommandTorrentMagnet() {
                 <>
 
                     {step === "magnet" && (
-                        <CommandGroup heading="Paste a magnet link">
+                        <CommandGroup heading={t("misc.sea_command.magnet_heading")}>
                             {isValidMagnet ? <CommandItem
                                 onSelect={() => {
                                     setStep("select-anime")
@@ -291,9 +292,9 @@ export function SeaCommandTorrentMagnet() {
                                     setInput("/magnet ")
                                 }}
                             >
-                                Continue
+                                {t("media.action.continue")}
                             </CommandItem> : <p className="px-2 pb-2 text-sm text-[--muted]">
-                                Paste a valid magnet link to continue.
+                                {t("misc.sea_command.magnet_continue_hint")}
                             </p>}
                             <CommandItem
                                 onSelect={() => {
@@ -301,18 +302,18 @@ export function SeaCommandTorrentMagnet() {
                                     setInput("/magnet ")
                                 }}
                             >
-                                Cancel
+                                {t("home.settings.cancel")}
                             </CommandItem>
                         </CommandGroup>
                     )}
 
                     {step === "select-anime" && (
-                        <CommandGroup heading="Select an anime">
+                        <CommandGroup heading={t("misc.sea_command.select_anime")}>
                             <div className="px-2 pb-2 space-y-1">
                                 {magnet && (
                                     <div className="flex items-center gap-2 line-clamp-2">
                                         <span className="text-sm text-[--muted] flex-none">
-                                            Magnet link:
+                                            {t("misc.sea_command.magnet_link_label")}
                                         </span>
                                         <span className="text-sm text-[--foreground]">
                                             {magnet}
@@ -326,9 +327,9 @@ export function SeaCommandTorrentMagnet() {
                                     setInput(`/magnet ${magnet ?? ""}`)
                                 }}
                             >
-                                Back
+                                {t("misc.sea_command.back")}
                             </CommandItem>
-                            {isAnimeLoading && <p className="px-2 pb-2 text-sm text-[--muted]">Loading your anime...</p>}
+                            {isAnimeLoading && <p className="px-2 pb-2 text-sm text-[--muted]">{t("misc.sea_command.loading_anime")}</p>}
                             {filteredAnime.map(n => (
                                 <CommandItem
                                     key={n.id}
@@ -351,7 +352,7 @@ export function SeaCommandTorrentMagnet() {
                                 {magnet && (
                                     <div className="flex items-center gap-2 line-clamp-2">
                                         <span className="text-sm text-[--muted] flex-none">
-                                            Magnet link:
+                                            {t("misc.sea_command.magnet_link_label")}
                                         </span>
                                         <span className="text-sm text-[--foreground]">
                                             {magnet}
@@ -367,7 +368,7 @@ export function SeaCommandTorrentMagnet() {
                                     setInput("/magnet ")
                                 }}
                             >
-                                Back
+                                {t("misc.sea_command.back")}
                             </CommandItem>
 
                             {/*{entry?.media && (*/}
@@ -382,11 +383,11 @@ export function SeaCommandTorrentMagnet() {
                             {/*)}*/}
 
                             {(isEntryLoading || isEpisodeLoading) && <p className="px-2 pb-2 text-sm text-[--muted]">
-                                Loading episodes...
+                                {t("misc.sea_command.loading_episodes")}
                             </p>}
 
                             {!isEntryLoading && !isEpisodeLoading && filteredEpisodes.length === 0 && (
-                                <p className="px-2 pb-2 text-sm text-[--muted]">No episodes found.</p>
+                                <p className="px-2 pb-2 text-sm text-[--muted]">{t("misc.sea_command.no_episodes")}</p>
                             )}
 
                             {filteredEpisodes.map(episode => (
@@ -415,7 +416,7 @@ export function SeaCommandTorrentMagnet() {
                                 {magnet && (
                                     <div className="flex items-center gap-2 line-clamp-2">
                                         <span className="text-sm text-[--muted] flex-none">
-                                            Magnet link:
+                                            {t("misc.sea_command.magnet_link_label")}
                                         </span>
                                         <span className="text-sm text-[--foreground]">
                                             {magnet}
@@ -431,10 +432,10 @@ export function SeaCommandTorrentMagnet() {
                                     <div className="text-[--muted]">{selectedEpisode.displayTitle}</div>
                                 )}
                                 {!canStreamSelectedEpisode && (
-                                    <div className="text-[--muted]">Streaming is unavailable for this episode because AniDB mapping is missing.</div>
+                                    <div className="text-[--muted]">{t("misc.sea_command.stream_unavailable")}</div>
                                 )}
                                 {!canDownload && serverStatus?.settings?.torrent?.defaultTorrentClient !== TORRENT_CLIENT.NONE && (
-                                    <div className="text-[--muted]">Download is unavailable because no default destination could be resolved.</div>
+                                    <div className="text-[--muted]">{t("misc.sea_command.download_unavailable")}</div>
                                 )}
                             </div>
                             <CommandItem
@@ -443,25 +444,25 @@ export function SeaCommandTorrentMagnet() {
                                     setInput("/magnet ")
                                 }}
                             >
-                                Back
+                                {t("misc.sea_command.back")}
                             </CommandItem>
                             {hasTorrentStreaming && <CommandItem
                                 onSelect={handleStartTorrentStreaming}
                                 disabled={!canStreamSelectedEpisode}
                             >
-                                {torrentStreamAutoSelectFile ? "Stream" : "Stream and pick a file"}
+                                {torrentStreamAutoSelectFile ? t("misc.sea_command.stream") : t("misc.sea_command.stream_pick_file")}
                             </CommandItem>}
                             {hasDebridService && <CommandItem
                                 onSelect={handleStartDebridStreaming}
                                 disabled={!canStreamSelectedEpisode}
                             >
-                                {debridStreamAutoSelectFile ? "Stream with Debrid" : "Stream with Debrid and pick a file"}
+                                {debridStreamAutoSelectFile ? t("misc.sea_command.stream_debrid") : t("misc.sea_command.stream_debrid_pick_file")}
                             </CommandItem>}
                             {serverStatus?.settings?.torrent?.defaultTorrentClient !== TORRENT_CLIENT.NONE && <CommandItem
                                 onSelect={handleDownload}
                                 disabled={!canDownload}
                             >
-                                Download
+                                {t("entry.torrent_download.download")}
                             </CommandItem>}
                         </CommandGroup>
                     )}

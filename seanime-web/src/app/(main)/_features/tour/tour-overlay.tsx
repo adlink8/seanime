@@ -3,6 +3,7 @@ import { useAtomValue } from "jotai/react"
 import { AnimatePresence, motion } from "motion/react"
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { tourAtom, TourStep, TourStepPlacement, useTour } from "./tour"
+import { t } from "@/lib/i18n"
 
 type Rect = { top: number; left: number; width: number; height: number }
 
@@ -273,7 +274,7 @@ const TourCard = React.forwardRef<HTMLDivElement, TourCardProps>(
                                             "px-2 py-1 rounded-md hover:bg-gray-800",
                                         )}
                                     >
-                                        Skip
+                                        {t("misc.tour.skip")}
                                     </button>
                                 )}
 
@@ -285,7 +286,7 @@ const TourCard = React.forwardRef<HTMLDivElement, TourCardProps>(
                                             "px-3 py-1.5 rounded-lg hover:bg-gray-800",
                                         )}
                                     >
-                                        {step.prevLabel ?? "Back"}
+                                        {step.prevLabel ?? t("misc.tour.back")}
                                     </button>
                                 )}
 
@@ -297,7 +298,7 @@ const TourCard = React.forwardRef<HTMLDivElement, TourCardProps>(
                                         "shadow-sm shadow-brand-500/20",
                                     )}
                                 >
-                                    {step.nextLabel ?? (isLastStep ? "Done" : "Next")}
+                                    {step.nextLabel ?? (isLastStep ? t("misc.tour.done") : t("misc.tour.next"))}
                                 </button>
                             </div>
                         </div>
@@ -351,7 +352,7 @@ function TourLoadingIndicator() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                     />
                 </svg>
-                <span className="text-sm text-gray-300">Loading…</span>
+                <span className="text-sm text-gray-300">{t("misc.tour.loading")}</span>
             </div>
         </motion.div>
     )

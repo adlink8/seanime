@@ -4,6 +4,7 @@ import { SeaImage } from "@/components/shared/sea-image"
 import { Button, IconButton } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { Modal } from "@/components/ui/modal"
+import { t } from "@/lib/i18n"
 import { openTab } from "@/lib/helpers/browser"
 import { WSEvents } from "@/lib/server/ws-events"
 import { atom, useAtomValue } from "jotai"
@@ -50,7 +51,7 @@ export function ManualProgressTrackingButton(props: ManualProgressTrackingProps)
                             leftIcon={<PiPopcornFill />}
                             onClick={() => setShowModal(true)}
                         >
-                            Currently watching
+                            {t("common.state.watching")}
                         </Button>)}
                 </>
             )}
@@ -117,12 +118,12 @@ export function ManualProgressTracking() {
                 contentClass="!space-y-2 relative max-w-2xl rounded-2xl"
             >
                 {state && <div data-manual-progress-tracking-modal-content className="text-center relative overflow-hidden space-y-2">
-                    <p className="text-[--muted]">Playing externally</p>
+                    <p className="text-[--muted]">{t("misc.progress.playing_externally")}</p>
                     {state.mediaCoverImage && <div className="size-16 rounded-full relative mx-auto overflow-hidden mb-3">
-                        <SeaImage src={state.mediaCoverImage} alt="cover image" fill className="object-cover object-center" />
+                        <SeaImage src={state.mediaCoverImage} alt={t("misc.anime.cover_image_alt")} fill className="object-cover object-center" />
                     </div>}
                     <h3 className="text-lg font-medium line-clamp-1">{state?.mediaTitle}</h3>
-                    <p className="text-2xl font-bold">Episode {state?.episodeNumber}
+                    <p className="text-2xl font-bold">{t("misc.playlist.episode_n", { count: state?.episodeNumber })}
                         <span className="text-[--muted]">{" / "}{(!!state?.mediaTotalEpisodes && state?.mediaTotalEpisodes > 0)
                             ? state?.mediaTotalEpisodes
                             : "-"}</span></p>
@@ -136,7 +137,7 @@ export function ManualProgressTracking() {
                         className="w-full"
                         loading={isSyncing}
                     >
-                        Update progress now
+                        {t("misc.progress.update_progress_now")}
                     </Button>
                     <Button
                         intent="alert-subtle"
@@ -145,14 +146,14 @@ export function ManualProgressTracking() {
                         className="w-full"
                         loading={isCanceling}
                     >
-                        Stop
+                        {t("manga.action.stop")}
                     </Button>
                 </div>
 
                 {!!currentExternalPlayerLink && (
                     <div className="flex justify-center w-full">
                         <Button intent="gray-link" size="sm" onClick={() => { openTab(currentExternalPlayerLink!) }}>
-                            Open in external player
+                            {t("misc.progress.open_in_external_player")}
                         </Button>
                     </div>
                 )}

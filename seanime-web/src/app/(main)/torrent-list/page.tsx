@@ -17,6 +17,7 @@ import { Popover } from "@/components/ui/popover"
 import { TextInput } from "@/components/ui/text-input"
 import { Tooltip } from "@/components/ui/tooltip"
 import { upath } from "@/lib/helpers/upath"
+import { t } from "@/lib/i18n"
 import { __isElectronDesktop__ } from "@/types/constants"
 import capitalize from "lodash/capitalize"
 import React from "react"
@@ -37,9 +38,9 @@ export default function Page() {
             >
                 <div data-torrent-list-page-header className="flex items-center w-full justify-between">
                     <div data-torrent-list-page-header-title>
-                        <h2>当前种子任务</h2>
+                        <h2>{t("torrent.list.title")}</h2>
                         <p className="text-[--muted]">
-                            查看正在下载或做种的种子任务
+                            {t("torrent.list.subtitle")}
                         </p>
                     </div>
                     <div data-torrent-list-page-header-actions>
@@ -47,7 +48,7 @@ export default function Page() {
                         {serverStatus?.settings?.torrent?.defaultTorrentClient === "qbittorrent" && (
                             __isElectronDesktop__ ? (
                                 <SeaLink href={`/qbittorrent`}>
-                                    <Button intent="white" rightIcon={<BiLinkExternal />}>内置客户端</Button>
+                                    <Button intent="white" rightIcon={<BiLinkExternal />}>{t("torrent.list.built_in_client")}</Button>
                                 </SeaLink>
                             ) : (
                                 <a
@@ -55,12 +56,12 @@ export default function Page() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
-                                    <Button intent="white" rightIcon={<BiLinkExternal />}>qBittorrent Web UI</Button>
+                                    <Button intent="white" rightIcon={<BiLinkExternal />}>{t("torrent.list.qbittorrent_webui")}</Button>
                                 </a>
                             )
                         )}
                         {serverStatus?.settings?.torrent?.defaultTorrentClient === "seanime" && <SeaLink href="/torrent-client">
-                            <Button intent="white" rightIcon={<BiLinkExternal />}>种子控制台</Button>
+                            <Button intent="white" rightIcon={<BiLinkExternal />}>{t("torrent.list.console")}</Button>
                         </SeaLink>}
                     </div>
                 </div>
@@ -104,8 +105,8 @@ function Content() {
 
 
     const confirmStopAllSeedingProps = useConfirmationDialog({
-        title: "停止所有做种",
-        description: "该操作将停止所有已完成种子的做种状态。",
+        title: t("torrent.list.stop_all_seeding"),
+        description: t("torrent.list.stop_all_seeding_desc"),
         actionIntent: "warning",
         onConfirm: () => {
             for (const torrent of data ?? []) {
@@ -119,14 +120,14 @@ function Content() {
         },
     })
 
-    if (!enabled) return <LuffyError title="连接失败">
+    if (!enabled) return <LuffyError title={t("torrent.list.connection_failed")}>
         <div className="flex flex-col gap-4 items-center">
-            <p className="max-w-md">无法连接至种子客户端，请检查设置并确认客户端正在运行。</p>
+            <p className="max-w-md">{t("torrent.list.connection_error")}</p>
             <Button
                 intent="primary-subtle" onClick={() => {
                 setEnabled(true)
             }}
-            >重试</Button>
+            >{t("common.action.retry")}</Button>
         </div>
     </LuffyError>
 
@@ -137,14 +138,14 @@ function Content() {
 
             <div>
                 <ul className="text-[--muted] flex flex-wrap gap-4 items-center">
-                    <li>正在下载: {data?.filter(t => t.status === "downloading" || t.status === "paused")?.length ?? 0}</li>
-                    <li>正在做种: {data?.filter(t => t.status === "seeding")?.length ?? 0}</li>
+                    <li>{t("torrent.stats.downloading")}: {data?.filter(t => t.status === "downloading" || t.status === "paused")?.length ?? 0}</li>
+                    <li>{t("torrent.stats.seeding")}: {data?.filter(t => t.status === "seeding")?.length ?? 0}</li>
                     {!!data?.filter(t => t.status === "seeding")?.length && <li>
                         <Button
                             size="xs"
                             intent="primary-link"
                             onClick={() => confirmStopAllSeedingProps.open()}
-                        >停止做种</Button>
+                        >{t("torrent.list.stop_seeding")}</Button>
                     </li>}
                     <div className="flex flex-1"></div>
                     {serverStatus?.settings?.torrent?.defaultTorrentClient === "qbittorrent" && <Popover
@@ -153,11 +154,11 @@ function Content() {
                             intent="gray-basic"
                             leftIcon={<LuListCheck className="text-[--muted] text-lg" />}
                         >
-                            分类{!!category ? `: ${category}` : ""}
+                            {t("settings.field.category")}{!!category ? `: ${category}` : ""}
                         </Button>}
                     >
                         <TextInput
-                            placeholder="按分类筛选"
+                            placeholder={t("torrent.list.filter_by_category")}
                             value={categoryInput}
                             onChange={e => setCategoryInput(e.target.value)}
                         />
@@ -170,7 +171,7 @@ function Content() {
                                 setCategoryInput(categoryInput)
                             }}
                         >
-                            确定
+                            {t("torrent.list.confirm")}
                         </Button>
                     </Popover>}
                     <Button
@@ -189,7 +190,7 @@ function Content() {
                             })
                         }}
                     >
-                        {sort === "newest" ? "最新" : sort === "oldest" ? "最旧" : sort === "name" ? "名称 (A-Z)" : "名称 (Z-A)"}
+                        {sort === "newest" ? t("torrent.sort.newest") : sort === "oldest" ? t("torrent.sort.oldest") : sort === "name" ? t("torrent.sort.name_asc") : t("torrent.sort.name_desc")}
                     </Button>
                 </ul>
             </div>
@@ -203,7 +204,7 @@ function Content() {
                         isPending={isPending}
                     />
                 })}
-                {(!isLoading && !data?.length) && <LuffyError title="暂无种子任务"></LuffyError>}
+                {(!isLoading && !data?.length) && <LuffyError title={t("torrent.list.empty")}></LuffyError>}
             </Card>
 
             <ConfirmationDialog {...confirmStopAllSeedingProps} />
@@ -224,8 +225,8 @@ const TorrentItem = React.memo(function TorrentItem({ torrent, onTorrentAction, 
     const progress = `${(torrent.progress * 100).toFixed(1)}%`
 
     const confirmDeleteTorrentProps = useConfirmationDialog({
-        title: "删除种子",
-        description: "此操作无法撤销，确定要删除吗？",
+        title: t("torrent.list.delete_torrent"),
+        description: t("torrent.list.delete_confirm"),
         onConfirm: () => {
             onTorrentAction({
                 hash: torrent.hash,
@@ -276,7 +277,7 @@ const TorrentItem = React.memo(function TorrentItem({ torrent, onTorrentAction, 
                                 {torrent.eta}
                             </>}
                             {` - `}
-                            <span>{torrent.seeds} {torrent.seeds !== 1 ? "seeds" : "seed"}</span>
+                            <span>{torrent.seeds} {t("entry.torrent_filter.seeders_unit")}</span>
                         </>
                     )}
                     {` - `}
@@ -320,7 +321,7 @@ const TorrentItem = React.memo(function TorrentItem({ torrent, onTorrentAction, 
                                 }}
                                 disabled={isPending}
                             />}
-                        >Pause</Tooltip>}
+                        >{t("player.cast.pause")}</Tooltip>}
                         {torrent.status !== "downloading" && <Tooltip
                             trigger={<IconButton
                                 icon={<BiPlay />}
@@ -337,7 +338,7 @@ const TorrentItem = React.memo(function TorrentItem({ torrent, onTorrentAction, 
                                 disabled={isPending}
                             />}
                         >
-                            Resume
+                            {t("torrent.action.resume")}
                         </Tooltip>}
                     </>
                 ) : <Tooltip
@@ -355,7 +356,7 @@ const TorrentItem = React.memo(function TorrentItem({ torrent, onTorrentAction, 
                         }}
                         disabled={isPending}
                     />}
-                >End</Tooltip>}
+                >{t("torrent.action.end")}</Tooltip>}
 
                 <div data-torrent-item-actions-buttons className="flex-none flex gap-2 items-center">
                     {/*<IconButton*/}

@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch"
 import { StaticTabs } from "@/components/ui/tabs"
 import { TextInput } from "@/components/ui/text-input"
 import { useDebounce } from "@/hooks/use-debounce"
+import { t } from "@/lib/i18n"
 import { COLLECTION_SORTING_OPTIONS } from "@/lib/helpers/filtering"
 import { getYear } from "date-fns"
 import { atom } from "jotai"
@@ -89,14 +90,14 @@ export function AnilistCollectionLists() {
                     triggerClass="px-4 py-2 h-full rounded-full"
                     pillClass="rounded-full border-transparent"
                     items={[
-                        { name: "动漫", isCurrent: pageType === "anime", onClick: () => setPageType("anime") },
+                        { name: t("search.type.anime"), isCurrent: pageType === "anime", onClick: () => setPageType("anime") },
                         ...[serverStatus?.settings?.library?.enableManga && {
-                            name: "漫画",
+                            name: t("search.type.manga"),
                             isCurrent: pageType === "manga",
                             onClick: () => setPageType("manga"),
                         }],
                         ...[!serverStatus?.user?.isSimulated && {
-                            name: "数据统计",
+                            name: t("misc.lists.tab_stats"),
                             isCurrent: pageType === "stats",
                             onClick: () => setPageType("stats"),
                         }],
@@ -122,27 +123,27 @@ export function AnilistCollectionLists() {
 
                     <div className="py-6 space-y-6" data-anilist-collection-lists-stack>
                         {(!!currentList?.entries?.length && ["-", "CURRENT"].includes(selectedIndex)) && <>
-                            <h2>正在观看 <span className="text-[--muted] font-medium ml-3">{currentList?.entries?.length}</span></h2>
+                            <h2>{t("common.state.watching")} <span className="text-[--muted] font-medium ml-3">{currentList?.entries?.length}</span></h2>
                             <AnilistAnimeEntryList type={pageType} list={currentList} />
                         </>}
                         {(!!repeatingList?.entries?.length && ["-", "REPEATING"].includes(selectedIndex)) && <>
-                            <h2>二刷重温 <span className="text-[--muted] font-medium ml-3">{repeatingList?.entries?.length}</span></h2>
+                            <h2>{t("common.state.rewatching")} <span className="text-[--muted] font-medium ml-3">{repeatingList?.entries?.length}</span></h2>
                             <AnilistAnimeEntryList type={pageType} list={repeatingList} />
                         </>}
                         {(!!planningList?.entries?.length && ["-", "PLANNING"].includes(selectedIndex)) && <>
-                            <h2>计划观看 <span className="text-[--muted] font-medium ml-3">{planningList?.entries?.length}</span></h2>
+                            <h2>{t("common.state.planning")} <span className="text-[--muted] font-medium ml-3">{planningList?.entries?.length}</span></h2>
                             <AnilistAnimeEntryList type={pageType} list={planningList} />
                         </>}
                         {(!!pausedList?.entries?.length && ["-", "PAUSED"].includes(selectedIndex)) && <>
-                            <h2>暂停搁置 <span className="text-[--muted] font-medium ml-3">{pausedList?.entries?.length}</span></h2>
+                            <h2>{t("common.state.paused")} <span className="text-[--muted] font-medium ml-3">{pausedList?.entries?.length}</span></h2>
                             <AnilistAnimeEntryList type={pageType} list={pausedList} />
                         </>}
                         {(!!completedList?.entries?.length && ["-", "COMPLETED"].includes(selectedIndex)) && <>
-                            <h2>已看完 <span className="text-[--muted] font-medium ml-3">{completedList?.entries?.length}</span></h2>
+                            <h2>{t("common.state.completed")} <span className="text-[--muted] font-medium ml-3">{completedList?.entries?.length}</span></h2>
                             <AnilistAnimeEntryList type={pageType} list={completedList} />
                         </>}
                         {(!!droppedList?.entries?.length && ["-", "DROPPED"].includes(selectedIndex)) && <>
-                            <h2>已弃番 <span className="text-[--muted] font-medium ml-3">{droppedList?.entries?.length}</span></h2>
+                            <h2>{t("common.state.dropped")} <span className="text-[--muted] font-medium ml-3">{droppedList?.entries?.length}</span></h2>
                             <AnilistAnimeEntryList type={pageType} list={droppedList} />
                         </>}
                         {customLists?.map(list => {
@@ -232,13 +233,13 @@ export function SearchOptions({
                     className="w-full"
                     fieldClass="lg:w-[200px]"
                     options={[
-                        { value: "-", label: "All lists" },
-                        { value: "CURRENT", label: "Watching" },
-                        { value: "REPEATING", label: "Repeating" },
-                        { value: "PLANNING", label: "Planning" },
-                        { value: "PAUSED", label: "Paused" },
-                        { value: "COMPLETED", label: "Completed" },
-                        { value: "DROPPED", label: "Dropped" },
+                        { value: "-", label: t("misc.lists.all_lists") },
+                        { value: "CURRENT", label: t("common.state.watching") },
+                        { value: "REPEATING", label: t("common.state.rewatching") },
+                        { value: "PLANNING", label: t("common.state.planning") },
+                        { value: "PAUSED", label: t("common.state.paused") },
+                        { value: "COMPLETED", label: t("common.state.completed") },
+                        { value: "DROPPED", label: t("common.state.dropped") },
                         ...(customLists || []).map(list => ({ value: list.name || "N/A", label: list.name || "N/A" })),
                     ]}
                     value={selectedIndex || "-"}
@@ -276,8 +277,8 @@ export function SearchOptions({
                 <Combobox
                     multiple
                     leftAddon={<TbSwords className={cn((params.genre !== null && !!params.genre?.length) && "text-indigo-300 font-bold text-xl")} />}
-                    emptyMessage="未找到流派"
-                    label="流派" placeholder="全部流派"
+                    emptyMessage={t("search.filter.genre_empty")}
+                    label={t("search.filter.genre")} placeholder={t("search.filter.genre_all")}
                     className="w-full"
                     fieldClass="w-full"
                     options={ADVANCED_SEARCH_MEDIA_GENRES.map(genre => ({ value: genre, label: GENRE_TRANSLATIONS[genre] || genre, textValue: `${genre} ${GENRE_TRANSLATIONS[genre] || ""}` }))}
@@ -292,8 +293,8 @@ export function SearchOptions({
                     multiple
                     leftAddon={!params.tags?.length &&
                         <LuTags className={cn((params.tags !== null && !!params.tags.length) && "text-indigo-300 font-bold text-xl")} />}
-                    emptyMessage="未找到标签"
-                    label="标签" placeholder="全部标签" className="w-full"
+                    emptyMessage={t("library.filter.tags_empty")}
+                    label={t("library.filter.tags")} placeholder={t("library.filter.tags_all")} className="w-full"
                     options={ADVANCED_SEARCH_MEDIA_TAGS
                         .filter(tag => {
                             if (params.isAdult && serverStatus?.settings?.anilist?.enableAdultContent) {
@@ -310,7 +311,7 @@ export function SearchOptions({
                     fieldLabelClass="hidden"
                 />
                 <Select
-                    label="排序"
+                    label={t("library.search.sorting")}
                     leftAddon={<FaSortAmountDown className={cn((params.sorting !== "SCORE_DESC") && "text-indigo-300 font-bold text-xl")} />}
                     className="w-full"
                     fieldClass="flex items-center"
@@ -327,7 +328,7 @@ export function SearchOptions({
                 {pageType === "anime" && <Select
                     leftAddon={
                         <MdPersonalVideo className={cn((params.format !== null && !!params.format?.length) && "text-indigo-300 font-bold text-xl")} />}
-                    label="格式" placeholder="全部格式"
+                    label={t("library.filter.format")} placeholder={t("library.filter.format_all")}
                     className="w-full"
                     fieldClass="w-full"
                     options={ADVANCED_SEARCH_FORMATS}
@@ -341,7 +342,7 @@ export function SearchOptions({
                 <Select
                     leftAddon={
                         <RiSignalTowerLine className={cn((params.status !== null && !!params.status?.length) && "text-indigo-300 font-bold text-xl")} />}
-                    label="状态" placeholder="全部状态"
+                    label={t("library.filter.status")} placeholder={t("library.filter.status_all")}
                     className="w-full"
                     fieldClass="w-full"
                     options={[
@@ -356,8 +357,8 @@ export function SearchOptions({
                 />
                 {pageType === "anime" && <Select
                     leftAddon={<LuLeaf className={cn((params.season !== null && !!params.season?.length) && "text-indigo-300 font-bold text-xl")} />}
-                    label="季度"
-                    placeholder="全部季度"
+                    label={t("library.filter.season")}
+                    placeholder={t("library.filter.season_all")}
                     className="w-full"
                     fieldClass="w-full flex items-center"
                     inputContainerClass="w-full"
@@ -371,7 +372,7 @@ export function SearchOptions({
                 />}
                 <Select
                     leftAddon={<LuCalendar className={cn((params.year !== null && !!params.year?.length) && "text-indigo-300 font-bold text-xl")} />}
-                    label="年份" placeholder="不限年份"
+                    label={t("library.filter.year")} placeholder={t("library.filter.year_any")}
                     className="w-full"
                     fieldClass="w-full"
                     options={[...Array(70)].map((v, idx) => getYear(new Date()) + 2 - idx).map(year => ({
@@ -388,7 +389,7 @@ export function SearchOptions({
             </div>
 
             {serverStatus?.settings?.anilist?.enableAdultContent && <Switch
-                label="成人内容 (R18)"
+                label={t("library.filter.adult")}
                 value={params.isAdult}
                 onValueChange={v => setParams(draft => {
                     draft.isAdult = v

@@ -1,6 +1,7 @@
 import { CommandHelperText } from "@/app/(main)/_features/sea-command/_components/command-utils"
 import { useSeaCommandContext } from "@/app/(main)/_features/sea-command/sea-command"
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command"
+import { t } from "@/lib/i18n"
 import { usePathname, useSearchParams } from "@/lib/navigation"
 import { useAnimeSpoilerActions, useAnimeSpoilerOverride } from "@/lib/theme/anime-spoilers"
 import React from "react"
@@ -36,12 +37,12 @@ export function SeaCommandSpoilers() {
     const items = [
         {
             value: "on",
-            description: "rehide spoilers for this anime",
+            description: t("misc.sea_command.rehide_spoilers"),
             enabled: true,
         },
         {
             value: "off",
-            description: "unhide spoilers for this anime",
+            description: t("misc.sea_command.unhide_spoilers"),
             enabled: false,
         },
     ]
@@ -56,12 +57,12 @@ export function SeaCommandSpoilers() {
         <>
             <CommandHelperText
                 command="/spoilers off"
-                description="unhide spoilers for the current anime"
+                description={t("misc.sea_command.unhide_spoilers")}
                 show={query === ""}
             />
             <CommandHelperText
                 command="/spoilers on"
-                description="rehide spoilers for the current anime"
+                description={t("misc.sea_command.rehide_spoilers")}
                 show={query === ""}
             />
 

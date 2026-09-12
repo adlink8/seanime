@@ -5,6 +5,7 @@ import { MarketplaceExtensions } from "@/app/(main)/extensions/_containers/marke
 import { PageWrapper } from "@/components/shared/page-wrapper"
 import { StaticTabs } from "@/components/ui/tabs"
 import { useSearchParams } from "@/lib/navigation"
+import { t } from "@/lib/i18n"
 import { useAtom } from "jotai"
 import { AnimatePresence } from "motion/react"
 import React from "react"
@@ -37,7 +38,7 @@ export default function Page() {
                     pillClass="rounded-full border-transparent"
                     items={[
                         {
-                            name: "已安装插件",
+                            name: t("extensions.page.tab_installed"),
                             isCurrent: page === "installed",
                             onClick: () => setPage("installed"),
                             iconType: LuPackageCheck,
@@ -48,7 +49,7 @@ export default function Page() {
                             ),
                         },
                         {
-                            name: "插件市场",
+                            name: t("extensions.page.tab_marketplace"),
                             isCurrent: page === "marketplace",
                             onClick: () => setPage("marketplace"),
                             iconType: LuShoppingBasket,

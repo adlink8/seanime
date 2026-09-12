@@ -1,6 +1,7 @@
 import { useRefreshAnimeCollection } from "@/api/hooks/anilist.hooks"
 import { Button } from "@/components/ui/button"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { IoReload } from "react-icons/io5"
 
@@ -43,7 +44,7 @@ export const RefreshAnilistButton: React.FC<RefreshAnilistButtonProps> = (props)
                     </Button>
                 }
             >
-                Refresh AniList
+                {t("common.action.refresh_anilist")}
             </Tooltip>
         </>
     )

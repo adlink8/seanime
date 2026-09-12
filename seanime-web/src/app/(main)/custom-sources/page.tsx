@@ -14,6 +14,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Pagination, PaginationEllipsis, PaginationItem, PaginationTrigger } from "@/components/ui/pagination"
 import { Select } from "@/components/ui/select"
 import { TextInput } from "@/components/ui/text-input"
+import { t } from "@/lib/i18n"
 import { useRouter, useSearchParams } from "@/lib/navigation"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -114,20 +115,20 @@ export default function Page() {
                 <div className="flex items-center gap-4">
                     <SeaLink href={`/search`}>
                         <Button leftIcon={<AiOutlineArrowLeft />} rounded intent="gray-outline" size="md">
-                            Search
+                            {t("navigation.item.search")}
                         </Button>
                     </SeaLink>
                     {/*<h3>Discover</h3>*/}
                 </div>
                 <AppLayoutStack>
                     <h3 data-search-page-title className="text-center xl:text-left">
-                        Custom source{provider ? `: ${customSource?.name ?? ""}` : "s"}
+                        {provider ? `${t("search.page.custom_source")}：${customSource?.name ?? ""}` : t("search.page.custom_source")}
                     </h3>
 
                     <div className="flex gap-2">
                         <Select
                             leftAddon={<MdDataSaverOn className={cn("text-indigo-300 font-bold text-xl")} />}
-                            placeholder="Select a source" className="w-full"
+                            placeholder={t("misc.custom_sources.select_source")} className="w-full"
                             options={customSources?.map(s => ({
                                 label: s.name,
                                 value: s.id,
@@ -146,8 +147,8 @@ export default function Page() {
                         <Select
                             className="w-full"
                             options={[
-                                ...((supportsAnime || !supportsManga) ? [{ label: "Anime", value: "anime" }] : []),
-                                ...((supportsManga || !supportsAnime) ? [{ label: "Manga", value: "manga" }] : []),
+                                ...((supportsAnime || !supportsManga) ? [{ label: t("search.type.anime"), value: "anime" }] : []),
+                                ...((supportsManga || !supportsAnime) ? [{ label: t("search.type.manga"), value: "manga" }] : []),
                             ]}
                             value={params.type}
                             onValueChange={v => setParams(draft => {
@@ -159,7 +160,7 @@ export default function Page() {
                         />
                         <TextInput
                             leftIcon={<FiSearch />}
-                            placeholder="Search titles..."
+                            placeholder={t("misc.custom_sources.search_titles")}
                             className="w-full"
                             value={searchValue}
                             onValueChange={setSearchValue}
@@ -172,12 +173,12 @@ export default function Page() {
                             onClick={handleSearch}
                             loading={isLoading}
                         >
-                            Search
+                            {t("navigation.item.search")}
                         </Button>
                     </div>
 
                     {!provider && <div className="text-center py-8 text-[--muted]">
-                        Select a source to view its content
+                        {t("misc.custom_sources.select_to_view")}
                     </div>}
 
                     {provider && <CustomSourceResults
@@ -277,8 +278,8 @@ function CustomSourceResults({
 
     if (error) {
         return (
-            <LuffyError title="Failed to load content">
-                <p>Error loading content from {provider}</p>
+            <LuffyError title={t("misc.custom_sources.load_failed")}>
+                <p>{t("misc.custom_sources.load_error", { provider })}</p>
             </LuffyError>
         )
     }
@@ -293,8 +294,8 @@ function CustomSourceResults({
 
     if (!media?.length) {
         return (
-            <LuffyError title="No results found">
-                <p>No {params.type} found for your search criteria</p>
+            <LuffyError title={t("misc.custom_sources.no_results")}>
+                <p>{t("misc.custom_sources.no_results_desc", { type: params.type === "anime" ? t("search.type.anime") : t("search.type.manga") })}</p>
             </LuffyError>
         )
     }
@@ -303,7 +304,7 @@ function CustomSourceResults({
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h4 className="text-lg font-medium">
-                    {media.length} result{media.length === 1 ? "" : "s"}
+                    {t("misc.custom_sources.n_results", { count: media.length })}
                 </h4>
                 <div className="flex items-center gap-4">
                     <Select
@@ -315,7 +316,7 @@ function CustomSourceResults({
                         })}
                         options={[20, 50, 100].map(size => ({
                             value: String(size),
-                            label: `${size} per page`,
+                            label: t("torrent.client.per_page", { count: size }),
                         }))}
                         fieldClass="w-auto"
                         className="w-auto"
@@ -323,7 +324,7 @@ function CustomSourceResults({
                     />
                     {totalPages > 1 && (
                         <div className="text-sm text-[--muted]">
-                            Page {currentPage} of {totalPages}
+                            {t("misc.custom_sources.page_of", { current: currentPage, total: totalPages })}
                         </div>
                     )}
                 </div>

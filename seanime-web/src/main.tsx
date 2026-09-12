@@ -2,6 +2,7 @@ import { useIsSimulatedUser } from "@/app/(main)/_hooks/use-server-status"
 import { ClientProviders, queryClient, store } from "@/app/client-providers"
 import "./app/globals.css"
 import { __navigationPreloadModeAtom, getActualNavigationPreloadMode, NavigationPreloadMode } from "@/lib/navigation-preload-settings"
+import { t } from "@/lib/i18n"
 import { __isElectronDesktop__ } from "@/types/constants"
 import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { useAtomValue } from "jotai/react"
@@ -110,9 +111,9 @@ function RootErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
         <div className="min-h-screen bg-[#0c0c0c] text-white flex items-center justify-center p-6">
             <div className="w-full max-w-lg rounded-2xl border bg-black/60 p-6 text-center backdrop-blur-sm space-y-4">
                 <LuffyError
-                    title="Client error"
+                    title={t("misc.error.client_title")}
                 >
-                    Seanime encountered an unexpected error. Please try again.
+                    {t("misc.error.unexpected")}
                 </LuffyError>
 
                 {!!(error as Error)?.message && (
@@ -128,7 +129,7 @@ function RootErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
                         className="rounded-full"
                         onClick={resetErrorBoundary}
                     >
-                        Retry
+                        {t("common.action.retry")}
                     </Button>
                     <Button
                         type="button"
@@ -136,7 +137,7 @@ function RootErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
                         className="rounded-full"
                         onClick={() => window.location.reload()}
                     >
-                        Reload
+                        {t("common.action.reload")}
                     </Button>
                 </div>
             </div>

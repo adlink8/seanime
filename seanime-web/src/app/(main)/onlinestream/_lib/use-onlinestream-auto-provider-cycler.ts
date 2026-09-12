@@ -1,4 +1,5 @@
 import { ExtensionRepo_OnlinestreamProviderExtensionItem, Onlinestream_EpisodeListResponse, Onlinestream_EpisodeSource } from "@/api/generated/types"
+import { t } from "@/lib/i18n"
 import { logger, useLatestFunction } from "@/lib/helpers/debug"
 import React from "react"
 import { toast } from "sonner"
@@ -106,8 +107,8 @@ export function useOnlinestreamAutoProviderCycler(props: UseOnlinestreamAutoProv
         log.warning("No working provider found", reason)
         setTrialState(null)
         setUrl(null)
-        setPlaybackError("No working providers found")
-        toast.error("No working providers found")
+        setPlaybackError(t("misc.onlinestream.no_working_providers"))
+        toast.error(t("misc.onlinestream.no_working_providers"))
     })
 
     const goToNextProvider = useLatestFunction((reason: string) => {
@@ -154,7 +155,7 @@ export function useOnlinestreamAutoProviderCycler(props: UseOnlinestreamAutoProv
     const tryAllProviders = useLatestFunction(() => {
         if (!mediaId) return
         if (!availableProviders.length) {
-            toast.warning(dubbed ? "No dubbed providers available" : "No providers available")
+            toast.warning(dubbed ? t("misc.onlinestream.no_dubbed_providers") : t("misc.onlinestream.no_providers"))
             return
         }
 
@@ -256,7 +257,7 @@ export function useOnlinestreamAutoProviderCycler(props: UseOnlinestreamAutoProv
         if (!trialRef.current) return
         setTrialState(null)
         setDetectedFailure(null)
-        toast.info("Stopped trying providers")
+        toast.info(t("misc.onlinestream.stopped_trying"))
     })
 
     React.useEffect(() => {

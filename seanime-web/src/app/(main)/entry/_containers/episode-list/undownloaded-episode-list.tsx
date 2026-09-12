@@ -28,9 +28,9 @@ export function UndownloadedEpisodeList({ downloadInfo, media, watchedProgress, 
     const { hasTorrentProvider } = useHasTorrentProvider()
 
     const text = hasTorrentProvider ? (downloadInfo?.rewatch
-            ? "You have not downloaded the following:"
-            : "You have not watched nor downloaded the following:") :
-        "The following episodes are not in your library:"
+            ? t("misc.entry.undownloaded_not_downloaded")
+            : t("misc.entry.undownloaded_not_watched")) :
+        t("misc.entry.undownloaded_not_in_library")
 
     if (!episodes?.length) return null
 

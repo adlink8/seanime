@@ -1,6 +1,7 @@
 import { cn } from "@/components/ui/core/styling"
 import { TextInput } from "@/components/ui/text-input"
 import { useDebounce } from "@/hooks/use-debounce"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { FcFolder } from "react-icons/fc"
 import { FiChevronDown, FiChevronRight, FiFile, FiSearch } from "react-icons/fi"
@@ -165,7 +166,7 @@ const FileTreeNodeComponent: React.FC<FileTreeNodeProps> = ({
                             {isLikelyMatch && (
                                 <p className="flex items-center">
                                     <MdVerified className="text-[--green] mr-1" />
-                                    <span className="text-white text-sm">Likely match</span>
+                                    <span className="text-white text-sm">{t("common.file.likely_match")}</span>
                                 </p>
                             )}
                             <p className="font-normal line-clamp-2 text-sm text-[--muted]">{node.filePreview.displayPath}</p>
@@ -228,7 +229,7 @@ export const FileTreeSelector: React.FC<FileTreeSelectorProps> = ({
             <TextInput
                 value={searchTerm}
                 onValueChange={setSearchTerm}
-                placeholder="Search files..."
+                placeholder={t("common.file.search_files")}
                 className="focus:ring-0 active:ring-0"
             />
 
@@ -486,7 +487,7 @@ export const FileTreeMultiSelector: React.FC<FileTreeMultiSelectorProps> = ({
             <TextInput
                 value={searchTerm}
                 onValueChange={setSearchTerm}
-                placeholder="Search files..."
+                placeholder={t("common.file.search_files")}
                 className="focus:ring-0 active:ring-0"
             />
 

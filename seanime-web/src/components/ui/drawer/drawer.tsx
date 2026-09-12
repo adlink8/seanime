@@ -1,4 +1,5 @@
 import { __isDesktop__ } from "@/types/constants"
+import { t } from "@/lib/i18n"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { cva, VariantProps } from "class-variance-authority"
 import { atom } from "jotai"
@@ -255,7 +256,7 @@ export function Drawer(props: DrawerProps) {
                 >
                     {!title && !description ? (
                         <VisuallyHidden>
-                            <VaulPrimitive.Title>Drawer</VaulPrimitive.Title>
+                            <VaulPrimitive.Title>{t("common.a11y.drawer")}</VaulPrimitive.Title>
                         </VisuallyHidden>
                     ) : (
                         <div className={cn(DrawerAnatomy.header(), headerClass)}>

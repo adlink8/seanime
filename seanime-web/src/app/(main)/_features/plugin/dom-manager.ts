@@ -1,6 +1,7 @@
 import { useWebsocketSender } from "@/app/(main)/_hooks/handle-websockets"
 import { useIsMainTab, useIsMainTabRef } from "@/app/websocket-provider"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { useEffect, useRef } from "react"
 import { PluginDOMElement } from "./generated/plugin-dom-types"
 import {
@@ -815,7 +816,7 @@ export function useDOMManager(extensionId: string) {
                 element.style.removeProperty(params.property)
                 break
             default:
-                console.warn(`Unknown DOM action: ${action}`)
+                console.warn(t("extensions.plugin.unknown_dom_action", { action }))
         }
 
         // Send the result back to the plugin

@@ -24,6 +24,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StaticTabs, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TextInput } from "@/components/ui/text-input"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { BiDownArrow, BiFolder, BiFolderOpen, BiPause, BiPlay, BiPlus, BiRefresh, BiRename, BiSearch, BiTrash, BiUpArrow } from "react-icons/bi"
 import { FcFolder } from "react-icons/fc"
@@ -166,12 +167,12 @@ function getVisiblePages(currentPage: number, totalPages: number) {
 }
 
 const filters: Array<{ value: StatusFilter, label: string, iconType: React.ElementType }> = [
-    { value: "all", label: "All", iconType: LuFolder },
-    { value: "downloading", label: "Downloading", iconType: LuDownload },
-    { value: "seeding", label: "Seeding", iconType: LuUpload },
-    { value: "paused", label: "Paused", iconType: LuPause },
-    { value: "active", label: "Active", iconType: LuPlay },
-    { value: "inactive", label: "Inactive", iconType: LuCircleStop },
+    { value: "all", label: t("library.filter.all"), iconType: LuFolder },
+    { value: "downloading", label: t("torrent.filter.downloading"), iconType: LuDownload },
+    { value: "seeding", label: t("entry.torrent_filter.seeders_unit"), iconType: LuUpload },
+    { value: "paused", label: t("torrent.filter.paused"), iconType: LuPause },
+    { value: "active", label: t("torrent.filter.active"), iconType: LuPlay },
+    { value: "inactive", label: t("torrent.filter.inactive"), iconType: LuCircleStop },
 ]
 
 export default function Page() {
@@ -179,9 +180,9 @@ export default function Page() {
 
     if (serverStatus?.settings?.torrent?.defaultTorrentClient !== "seanime") {
         return <PageWrapper className="p-4 sm:p-8">
-            <LuffyError title="Seanime torrent client is not active">
-                <p className="max-w-md">Select Seanime as the default torrent client to use this dashboard.</p>
-                <SeaLink href="/settings"><Button intent="white">Open settings</Button></SeaLink>
+            <LuffyError title={t("torrent.client.inactive_title")}>
+                <p className="max-w-md">{t("torrent.client.inactive_hint")}</p>
+                <SeaLink href="/settings"><Button intent="white">{t("manga.settings.open")}</Button></SeaLink>
             </LuffyError>
         </PageWrapper>
     }
@@ -296,35 +297,35 @@ function Dashboard() {
     }, [perform, selectedTorrents])
 
     const removeDialog = useConfirmationDialog({
-        title: selected.size > 1 ? `Remove ${selected.size} torrents` : "Remove torrent",
-        description: "Downloaded files will also be removed. This action cannot be undone.",
+        title: selected.size > 1 ? t("torrent.client.remove_multiple", { count: selected.size }) : t("torrent.client.remove_single"),
+        description: t("torrent.client.remove_warning"),
         actionIntent: "alert",
         onConfirm: () => performSelected("remove"),
     })
 
     if (list.isLoading) return <LoadingSpinner />
-    if (list.isError) return <PageWrapper className="p-4 sm:p-8"><LuffyError title="Could not load torrents" /></PageWrapper>
+    if (list.isError) return <PageWrapper className="p-4 sm:p-8"><LuffyError title={t("torrent.client.load_error")} /></PageWrapper>
 
     return <PageWrapper className="p-3 sm:p-6 lg:p-8 space-y-4">
         <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div>
-                <h2>Torrent client</h2>
-                <p className="text-[--muted]">Manage downloads running directly in Seanime.</p>
+                <h2>{t("torrent.client.title")}</h2>
+                <p className="text-[--muted]">{t("torrent.client.subtitle")}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-                <Button leftIcon={<LuMagnet />} intent="white" onClick={() => setAddOpen(true)}>Add torrent</Button>
+                <Button leftIcon={<LuMagnet />} intent="white" onClick={() => setAddOpen(true)}>{t("torrent.client.add_torrent")}</Button>
                 <Button
                     intent="gray-outline"
                     className="border-gray-600 text-gray-200 hover:border-gray-500 hover:text-white"
                     disabled={torrents.length === 0 || torrents.every(t => t.status === "paused" || t.status === "stopped") || action.isPending}
                     onClick={() => perform({ action: "pause-all" })}
-                >Pause all</Button>
+                >{t("torrent.client.pause_all")}</Button>
                 <Button
                     intent="gray-outline"
                     className="border-gray-600 text-gray-200 hover:border-gray-500 hover:text-white"
                     disabled={torrents.length === 0 || !torrents.some(t => t.status === "paused" || t.status === "stopped") || action.isPending}
                     onClick={() => perform({ action: "resume-all" })}
-                >Resume all</Button>
+                >{t("torrent.client.resume_all")}</Button>
             </div>
         </header>
         <div className="grid xl:min-h-[68vh] grid-cols-1 gap-4 xl:grid-cols-[12rem_minmax(0,1fr)]">
@@ -352,7 +353,7 @@ function Dashboard() {
                     })}
                 />
                 <div className="hidden xl:block mt-auto text-xs text-[--muted] px-3 py-2">
-                    {torrents.length} torrents
+                    {t("torrent.client.total_torrents", { count: torrents.length })}
                 </div>
             </div>
 
@@ -370,7 +371,7 @@ function Dashboard() {
                                             onClick={() => performSelected("resume")}
                                         />}
                                     >
-                                        Resume
+                                        {t("torrent.action.resume")}
                                     </Tooltip>
                                     <Tooltip
                                         trigger={<IconButton
@@ -380,7 +381,7 @@ function Dashboard() {
                                             onClick={() => performSelected("pause")}
                                         />}
                                     >
-                                        Pause
+                                        {t("player.cast.pause")}
                                     </Tooltip>
                                 </div>
 
@@ -395,7 +396,7 @@ function Dashboard() {
                                             onClick={() => single && perform({ hash: single.hash, action: "queue-up" })}
                                         />}
                                     >
-                                        Move up
+                                        {t("torrent.action.move_up")}
                                     </Tooltip>
                                     <Tooltip
                                         trigger={<IconButton
@@ -405,7 +406,7 @@ function Dashboard() {
                                             onClick={() => single && perform({ hash: single.hash, action: "queue-down" })}
                                         />}
                                     >
-                                        Move down
+                                        {t("torrent.action.move_down")}
                                     </Tooltip>
                                 </div>
 
@@ -421,7 +422,7 @@ function Dashboard() {
                                                 !selectedTorrents.every(t => t.forceStart))}
                                         />}
                                     >
-                                        Force start
+                                        {t("torrent.action.force_start")}
                                     </Tooltip>
                                     <Tooltip
                                         trigger={<IconButton
@@ -435,7 +436,7 @@ function Dashboard() {
                                             }}
                                         />}
                                     >
-                                        Change save path
+                                        {t("torrent.action.change_save_path")}
                                     </Tooltip>
                                     <Tooltip
                                         trigger={<IconButton
@@ -445,7 +446,7 @@ function Dashboard() {
                                             onClick={() => performSelected("recheck")}
                                         />}
                                     >
-                                        Recheck
+                                        {t("torrent.action.recheck")}
                                     </Tooltip>
                                     <Tooltip
                                         trigger={<IconButton
@@ -455,7 +456,7 @@ function Dashboard() {
                                             onClick={() => performSelected("reannounce")}
                                         />}
                                     >
-                                        Reannounce
+                                        {t("torrent.action.reannounce")}
                                     </Tooltip>
                                     <Popover
                                         open={limitsOpen}
@@ -463,27 +464,27 @@ function Dashboard() {
                                         trigger={
                                             <div>
                                                 <Tooltip trigger={<IconButton icon={<LuGauge />} intent="gray-subtle" />}>
-                                                    Speed limits
+                                                    {t("torrent.action.speed_limits")}
                                                 </Tooltip>
                                             </div>
                                         }
                                         className="w-72 space-y-3 p-3"
                                     >
-                                        <p>Global speed limits</p>
+                                        <p>{t("torrent.client.global_speed_limits")}</p>
                                         <TextInput
-                                            label="Download (KB/s)"
+                                            label={t("torrent.client.download_limit")}
                                             value={downloadLimit}
                                             onValueChange={setDownloadLimit}
                                             inputMode="numeric"
                                         />
-                                        <TextInput label="Upload (KB/s)" value={uploadLimit} onValueChange={setUploadLimit} inputMode="numeric" />
+                                        <TextInput label={t("torrent.client.upload_limit")} value={uploadLimit} onValueChange={setUploadLimit} inputMode="numeric" />
                                         <Button
                                             size="sm" intent="white" className="w-full" disabled={action.isPending} onClick={() => perform({
                                             action: "set-limits",
                                             downloadLimit: Number(downloadLimit) || 0,
                                             uploadLimit: Number(uploadLimit) || 0,
                                         })}
-                                        >Apply limits</Button>
+                                        >{t("torrent.action.apply_limits")}</Button>
                                     </Popover>
                                 </div>
 
@@ -498,7 +499,7 @@ function Dashboard() {
                                             onClick={() => removeDialog.open()}
                                         />}
                                     >
-                                        Remove
+                                        {t("entry.metadata.remove")}
                                     </Tooltip>
                                 </div>
                             </div>
@@ -506,12 +507,12 @@ function Dashboard() {
                             <div className="flex-1 flex"></div>
 
                             <div className="hidden lg:flex items-center gap-4 text-xs font-semibold tabular-nums text-[--muted] bg-gray-950/40 px-3 py-1.5 h-10 rounded-xl border border-[--border] whitespace-nowrap flex-shrink-0">
-                                <span className="flex items-center gap-1.5 whitespace-nowrap" title="Global download speed">
+                                <span className="flex items-center gap-1.5 whitespace-nowrap" title={t("torrent.client.global_download_speed")}>
                                     <BiDownArrow className="text-green-500 flex-shrink-0" />
                                     <span>DL: {formatSpeed(totalDownSpeed)}</span>
                                 </span>
                                 <span className="mx-0.5 h-3 w-px bg-[--border] flex-shrink-0" />
-                                <span className="flex items-center gap-1.5 whitespace-nowrap" title="Global upload speed">
+                                <span className="flex items-center gap-1.5 whitespace-nowrap" title={t("torrent.client.global_upload_speed")}>
                                     <BiUpArrow className="text-blue-400 flex-shrink-0" />
                                     <span>UL: {formatSpeed(totalUpSpeed)}</span>
                                 </span>
@@ -521,7 +522,7 @@ function Dashboard() {
                                 value={search}
                                 onValueChange={setSearch}
                                 leftIcon={<BiSearch />}
-                                placeholder="Filter torrents"
+                                placeholder={t("torrent.client.filter_placeholder")}
                                 className="lg:w-64 flex-shrink-0"
                                 fieldClass="w-fit"
                             />
@@ -538,16 +539,16 @@ function Dashboard() {
                                         setSelected(value === true ? new Set(visible.map(torrent => torrent.hash)) : new Set())
                                     }}
                                 /></TableHead>
-                                <TableHead className="w-[30%] min-w-80 whitespace-nowrap">Name</TableHead>
-                                <TableHead className="w-[8%] min-w-24 whitespace-nowrap">Status</TableHead>
-                                <TableHead className="w-[8%] min-w-24 text-right whitespace-nowrap">Size</TableHead>
-                                <TableHead className="w-[10%] min-w-28 text-right whitespace-nowrap">Seeds / Peers</TableHead>
-                                <TableHead className="text-right w-[10%] min-w-28 whitespace-nowrap"><BiDownArrow className="inline mr-1" />Speed</TableHead>
-                                <TableHead className="text-right w-[10%] min-w-28 whitespace-nowrap"><BiUpArrow className="inline mr-1" />Speed</TableHead>
+                                <TableHead className="w-[30%] min-w-80 whitespace-nowrap">{t("home.option.name")}</TableHead>
+                                <TableHead className="w-[8%] min-w-24 whitespace-nowrap">{t("library.filter.status")}</TableHead>
+                                <TableHead className="w-[8%] min-w-24 text-right whitespace-nowrap">{t("library.explorer.size")}</TableHead>
+                                <TableHead className="w-[10%] min-w-28 text-right whitespace-nowrap">{t("torrent.table.seeds_peers")}</TableHead>
+                                <TableHead className="text-right w-[10%] min-w-28 whitespace-nowrap"><BiDownArrow className="inline mr-1" />{t("torrent.table.speed")}</TableHead>
+                                <TableHead className="text-right w-[10%] min-w-28 whitespace-nowrap"><BiUpArrow className="inline mr-1" />{t("torrent.table.speed")}</TableHead>
                                 <TableHead className="w-[8%] min-w-20 text-right whitespace-nowrap">ETA</TableHead>
-                                <TableHead className="w-[6%] min-w-16 text-right whitespace-nowrap">Ratio</TableHead>
-                                <TableHead className="w-[12%] min-w-40 whitespace-nowrap">Date added</TableHead>
-                                <TableHead className="w-[15%] min-w-60 whitespace-nowrap">Save path</TableHead>
+                                <TableHead className="w-[6%] min-w-16 text-right whitespace-nowrap">{t("torrent.table.ratio")}</TableHead>
+                                <TableHead className="w-[12%] min-w-40 whitespace-nowrap">{t("torrent.table.date_added")}</TableHead>
+                                <TableHead className="w-[15%] min-w-60 whitespace-nowrap">{t("torrent.table.save_path")}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -564,32 +565,32 @@ function Dashboard() {
                                                 disabled={torrent.status !== "paused" && torrent.status !== "stopped" || action.isPending}
                                                 onClick={() => perform({ hash: torrent.hash, action: "resume" })}
                                             >
-                                                <BiPlay /> Resume
+                                                <BiPlay /> {t("torrent.action.resume")}
                                             </ContextMenuItem>}
                                             {!(torrent.status === "paused" || torrent.status === "stopped") && <ContextMenuItem
                                                 disabled={action.isPending}
                                                 onClick={() => perform({ hash: torrent.hash, action: "pause" })}
                                             >
-                                                <BiPause /> Pause
+                                                <BiPause /> {t("player.cast.pause")}
                                             </ContextMenuItem>}
                                             <ContextMenuItem
                                                 disabled={torrent.progress === 1 || action.isPending}
                                                 onClick={() => perform({ hash: torrent.hash, action: "force-start", value: !torrent.forceStart })}
                                             >
-                                                <LuZap /> Force start
+                                                <LuZap /> {t("torrent.action.force_start")}
                                             </ContextMenuItem>
                                             <ContextMenuSeparator />
                                             <ContextMenuItem
                                                 disabled={torrent.queueIndex === 0 || torrents.length <= 1 || action.isPending}
                                                 onClick={() => perform({ hash: torrent.hash, action: "queue-up" })}
                                             >
-                                                <FiChevronUp /> Move up
+                                                <FiChevronUp /> {t("torrent.action.move_up")}
                                             </ContextMenuItem>
                                             <ContextMenuItem
                                                 disabled={torrent.queueIndex === torrents.length - 1 || torrents.length <= 1 || action.isPending}
                                                 onClick={() => perform({ hash: torrent.hash, action: "queue-down" })}
                                             >
-                                                <FiChevronDown /> Move down
+                                                <FiChevronDown /> {t("torrent.action.move_down")}
                                             </ContextMenuItem>
                                             <ContextMenuSeparator />
                                             <ContextMenuItem
@@ -600,7 +601,7 @@ function Dashboard() {
                                                     setRenameOpen(true)
                                                 }}
                                             >
-                                                <BiRename /> Rename
+                                                <BiRename /> {t("torrent.action.rename")}
                                             </ContextMenuItem>
                                             <ContextMenuItem
                                                 disabled={torrent.size === "0 B" || action.isPending}
@@ -610,32 +611,32 @@ function Dashboard() {
                                                     setMoveOpen(true)
                                                 }}
                                             >
-                                                <BiFolder /> Change save path
+                                                <BiFolder /> {t("torrent.action.change_save_path")}
                                             </ContextMenuItem>
                                             <ContextMenuItem
                                                 disabled={torrent.size === "0 B"}
                                                 onClick={() => openInExplorer({ path: torrent.contentPath })}
                                             >
-                                                <BiFolderOpen /> Open folder
+                                                <BiFolderOpen /> {t("mpv.shader.open_folder")}
                                             </ContextMenuItem>
                                             <ContextMenuSeparator />
                                             <ContextMenuItem
                                                 disabled={torrent.size === "0 B" || action.isPending}
                                                 onClick={() => perform({ hash: torrent.hash, action: "recheck" })}
                                             >
-                                                <BiRefresh /> Recheck
+                                                <BiRefresh /> {t("torrent.action.recheck")}
                                             </ContextMenuItem>
                                             <ContextMenuItem
                                                 disabled={action.isPending}
                                                 onClick={() => perform({ hash: torrent.hash, action: "reannounce" })}
                                             >
-                                                <LuRadioTower /> Reannounce
+                                                <LuRadioTower /> {t("torrent.action.reannounce")}
                                             </ContextMenuItem>
                                             <ContextMenuItem
                                                 disabled={torrent.progress === 1 || torrent.status === "seeding" || action.isPending}
                                                 onClick={() => perform({ hash: torrent.hash, action: "set-sequential", value: !torrent.sequential })}
                                             >
-                                                <LuSettings2 /> {torrent.sequential ? "Disable sequential mode" : "Enable sequential mode"}
+                                                <LuSettings2 /> {torrent.sequential ? t("torrent.action.disable_sequential") : t("torrent.action.enable_sequential")}
                                             </ContextMenuItem>
                                             <ContextMenuSeparator />
                                             <ContextMenuItem
@@ -647,7 +648,7 @@ function Dashboard() {
                                                     setTimeout(() => removeDialog.open(), 0)
                                                 }}
                                             >
-                                                <BiTrash /> Remove
+                                                <BiTrash /> {t("entry.metadata.remove")}
                                             </ContextMenuItem>
                                         </ContextMenuGroup>
                                     }
@@ -676,7 +677,7 @@ function Dashboard() {
                             ))}
                         </TableBody>
                     </Table>
-                    {!visible.length && <div className="py-16 text-center text-[--muted]">No torrents match this view.</div>}
+                    {!visible.length && <div className="py-16 text-center text-[--muted]">{t("torrent.client.no_match")}</div>}
 
                     {totalPages > 1 && (
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-[--border] bg-gray-950/10">
@@ -688,17 +689,17 @@ function Dashboard() {
                                         setCurrentPage(1)
                                     }}
                                     options={[
-                                        { value: "20", label: "20 per page" },
-                                        { value: "50", label: "50 per page" },
-                                        { value: "100", label: "100 per page" },
-                                        { value: "200", label: "200 per page" },
+                                        { value: "20", label: t("torrent.client.per_page", { count: "20" }) },
+                                        { value: "50", label: t("torrent.client.per_page", { count: "50" }) },
+                                        { value: "100", label: t("torrent.client.per_page", { count: "100" }) },
+                                        { value: "200", label: t("torrent.client.per_page", { count: "200" }) },
                                     ]}
                                     size="sm"
                                     fieldClass="w-36"
                                     className="w-36"
                                 />
                                 <span className="text-xs text-[--muted]">
-                                    Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, visible.length)} of {visible.length}
+                                    {t("torrent.client.showing_range", { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, visible.length), total: visible.length })}
                                 </span>
                             </div>
 
@@ -750,8 +751,8 @@ function Dashboard() {
         <Modal
             open={addOpen}
             onOpenChange={setAddOpen}
-            title="Add torrent"
-            description="Add a magnet link to the Seanime torrent client."
+            title={t("torrent.client.add_torrent")}
+            description={t("torrent.client.add_description")}
             contentClass="max-w-xl"
             footer={<Button
                 intent="white" disabled={!magnet || !addDestination || action.isPending} onClick={() => {
@@ -759,13 +760,13 @@ function Dashboard() {
                 setAddOpen(false)
                 setMagnet("")
             }}
-            >Start download</Button>}
+            >{t("torrent.client.start_download")}</Button>}
         >
             <div className="space-y-4">
-                <TextInput label="Magnet link" value={magnet} onValueChange={setMagnet} />
+                <TextInput label={t("torrent.client.magnet_link")} value={magnet} onValueChange={setMagnet} />
                 <DirectorySelector
                     name="destination"
-                    label="Save path"
+                    label={t("torrent.table.save_path")}
                     leftIcon={<FcFolder />}
                     value={addDestination}
                     defaultValue={addDestination}
@@ -779,19 +780,19 @@ function Dashboard() {
         <Modal
             open={moveOpen}
             onOpenChange={setMoveOpen}
-            title="Change save path"
-            description="Seanime will pause the torrent, move its files, and verify the data."
+            title={t("torrent.action.change_save_path")}
+            description={t("torrent.client.move_description")}
             contentClass="max-w-xl"
             footer={<Button
                 intent="white" disabled={!single || !moveDestination || action.isPending} onClick={() => {
                 if (single) perform({ hash: single.hash, action: "move-storage", dir: moveDestination })
                 setMoveOpen(false)
             }}
-            >Move files</Button>}
+            >{t("torrent.action.move_files")}</Button>}
         >
             <DirectorySelector
                 name="destination"
-                label="New save path"
+                label={t("torrent.client.new_save_path")}
                 leftIcon={<FcFolder />}
                 value={moveDestination}
                 defaultValue={moveDestination}
@@ -804,16 +805,16 @@ function Dashboard() {
         <Modal
             open={renameOpen}
             onOpenChange={setRenameOpen}
-            title="Rename torrent"
+            title={t("torrent.client.rename_title")}
             contentClass="max-w-lg"
             footer={<Button
                 intent="white" disabled={!focusedHash || !newName || action.isPending} onClick={() => {
                 if (focusedHash) perform({ hash: focusedHash, action: "rename", name: newName })
                 setRenameOpen(false)
             }}
-            >Rename</Button>}
+            >{t("torrent.action.rename")}</Button>}
         >
-            <TextInput label="Display name" value={newName} onValueChange={setNewName} />
+            <TextInput label={t("torrent.client.display_name")} value={newName} onValueChange={setNewName} />
         </Modal>
 
         <ConfirmationDialog {...removeDialog} />
@@ -880,7 +881,7 @@ const TorrentRow = React.forwardRef<HTMLTableRowElement, {
         <TableCell className="text-right whitespace-nowrap tabular-nums">{torrent.upSpeed}</TableCell>
         <TableCell className="text-right whitespace-nowrap tabular-nums">{torrent.eta}</TableCell>
         <TableCell className="text-right whitespace-nowrap tabular-nums">{torrent.ratio.toFixed(2)}</TableCell>
-        <TableCell className="whitespace-nowrap">{torrent.addedAt ? new Date(torrent.addedAt).toLocaleString() : "Unknown"}</TableCell>
+        <TableCell className="whitespace-nowrap">{torrent.addedAt ? new Date(torrent.addedAt).toLocaleString() : t("manga.manual_match.unknown")}</TableCell>
         <TableCell className="max-w-80 truncate cursor-help hover:text-[--foreground] transition-colors" title={torrent.contentPath}>
             {truncatePath(torrent.contentPath, 45)}
         </TableCell>
@@ -900,7 +901,7 @@ function Inspector(props: {
     const { torrent, details, isLoading, perform, onRename, isPending, openInExplorer } = props
     const [tracker, setTracker] = React.useState("")
 
-    if (!torrent) return <Card className="py-10 text-center text-[--muted]">Select a torrent to inspect files, trackers, and peers.</Card>
+    if (!torrent) return <Card className="py-10 text-center text-[--muted]">{t("torrent.client.select_hint")}</Card>
     if (isLoading && !details) return <Card className="py-10"><LoadingSpinner /></Card>
 
     return <Card className="p-0 overflow-hidden">
@@ -916,39 +917,39 @@ function Inspector(props: {
                     leftIcon={<BiFolderOpen />}
                     disabled={isPending}
                     onClick={() => openInExplorer({ path: torrent.contentPath })}
-                >Open folder</Button>
-                <Button size="xs" intent="gray-outline" leftIcon={<BiRename />} disabled={isPending} onClick={onRename}>Rename</Button>
+                >{t("mpv.shader.open_folder")}</Button>
+                <Button size="xs" intent="gray-outline" leftIcon={<BiRename />} disabled={isPending} onClick={onRename}>{t("torrent.action.rename")}</Button>
                 <Button
                     size="xs"
                     intent={torrent.sequential ? "primary" : "gray-outline"}
                     disabled={torrent.progress === 1 || torrent.status === "seeding" || isPending}
                     onClick={() => perform({ hash: torrent.hash, action: "set-sequential", value: !torrent.sequential })}
-                >Sequential</Button>
+                >{t("torrent.action.sequential")}</Button>
             </div>
         </div>
         <Tabs defaultValue="general">
             <TabsList className="justify-start overflow-x-auto overflow-y-hidden border-b border-[--border] px-2">
-                <TabsTrigger value="general"><LuSettings2 className="mr-2" />General</TabsTrigger>
-                <TabsTrigger value="files"><LuFileCheck2 className="mr-2" />Files</TabsTrigger>
-                <TabsTrigger value="trackers"><LuRadioTower className="mr-2" />Trackers</TabsTrigger>
-                <TabsTrigger value="peers"><LuNetwork className="mr-2" />Peers</TabsTrigger>
+                <TabsTrigger value="general"><LuSettings2 className="mr-2" />{t("player.prefs.tab_general")}</TabsTrigger>
+                <TabsTrigger value="files"><LuFileCheck2 className="mr-2" />{t("library.common.file")}</TabsTrigger>
+                <TabsTrigger value="trackers"><LuRadioTower className="mr-2" />{t("torrent.details.tab_trackers")}</TabsTrigger>
+                <TabsTrigger value="peers"><LuNetwork className="mr-2" />{t("torrent.details.tab_peers")}</TabsTrigger>
             </TabsList>
             <TabsContent value="general" className="p-4">
                 <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm md:grid-cols-4">
-                    <Metric label="Progress" value={`${(torrent.progress * 100).toFixed(1)}%`} />
-                    <Metric label="Status" value={torrent.status} />
-                    <Metric label="Downloaded" value={formatBytes(details?.torrent?.downloaded ?? 0)} />
-                    <Metric label="Uploaded" value={formatBytes(details?.torrent?.uploaded ?? 0)} />
-                    <Metric label="Save path" value={torrent.contentPath} wide disableCapitalize />
-                    <Metric label="Date added" value={torrent.addedAt ? new Date(torrent.addedAt).toLocaleString() : "Unknown"} disableCapitalize />
-                    <Metric label="Queue position" value={String(torrent.queueIndex + 1)} disableCapitalize />
+                    <Metric label={t("media.field.progress")} value={`${(torrent.progress * 100).toFixed(1)}%`} />
+                    <Metric label={t("library.filter.status")} value={torrent.status} />
+                    <Metric label={t("torrent.details.downloaded")} value={formatBytes(details?.torrent?.downloaded ?? 0)} />
+                    <Metric label={t("torrent.details.uploaded")} value={formatBytes(details?.torrent?.uploaded ?? 0)} />
+                    <Metric label={t("torrent.table.save_path")} value={torrent.contentPath} wide disableCapitalize />
+                    <Metric label={t("torrent.table.date_added")} value={torrent.addedAt ? new Date(torrent.addedAt).toLocaleString() : t("manga.manual_match.unknown")} disableCapitalize />
+                    <Metric label={t("torrent.details.queue_position")} value={String(torrent.queueIndex + 1)} disableCapitalize />
                 </dl>
             </TabsContent>
             <TabsContent value="files" className="p-0">
                 <Table>
-                    <TableHeader><TableRow><TableHead>File</TableHead><TableHead className="text-right whitespace-nowrap">Progress</TableHead><TableHead
+                    <TableHeader><TableRow><TableHead>{t("library.common.file")}</TableHead><TableHead className="text-right whitespace-nowrap">{t("media.field.progress")}</TableHead><TableHead
                         className="text-right whitespace-nowrap"
-                    >Size</TableHead><TableHead>Priority</TableHead></TableRow></TableHeader>
+                    >{t("library.explorer.size")}</TableHead><TableHead>{t("torrent.details.priority")}</TableHead></TableRow></TableHeader>
                     <TableBody>{details?.files?.map(file => <TableRow key={file.index}>
                         <TableCell className="max-w-xl break-all">{file.path}</TableCell>
                         <TableCell className="text-right whitespace-nowrap tabular-nums">{(file.progress * 100).toFixed(1)}%</TableCell>
@@ -963,14 +964,14 @@ function Inspector(props: {
                                         disabled={file.progress === 1 || isPending}
                                         onClick={() => perform({ hash: torrent.hash, action: "set-file-priority", index: file.index, priority })}
                                     >
-                                        {["Skip", "Normal", "High"][priority]}
+                                        {[t("torrent.details.skip"), t("torrent.details.normal"), t("torrent.details.high")][priority]}
                                     </Button>
                                 ))}
                             </div>
                         </TableCell>
                     </TableRow>)}</TableBody>
                 </Table>
-                {!details?.files?.length && <div className="p-8 text-center text-[--muted]">Waiting for torrent metadata.</div>}
+                {!details?.files?.length && <div className="p-8 text-center text-[--muted]">{t("torrent.details.waiting_metadata")}</div>}
             </TabsContent>
             <TabsContent value="trackers" className="p-4 space-y-3">
                 <div className="flex gap-2"><TextInput
@@ -982,7 +983,7 @@ function Inspector(props: {
                     perform({ hash: torrent.hash, action: "add-tracker", tracker })
                     setTracker("")
                 }}
-                >Add</Button></div>
+                >{t("home.settings.add")}</Button></div>
                 <div className="divide-y divide-[--border]">{details?.trackers?.map(item => <div
                     key={item}
                     className="flex items-center justify-between gap-3 py-2 text-sm"
@@ -998,14 +999,14 @@ function Inspector(props: {
                             tracker: item,
                         })}
                     />}
-                >Remove tracker</Tooltip></div>)}</div>
-                {!details?.trackers?.length && <div className="py-6 text-center text-[--muted]">No trackers are listed.</div>}
+                >{t("torrent.details.remove_tracker")}</Tooltip></div>)}</div>
+                {!details?.trackers?.length && <div className="py-6 text-center text-[--muted]">{t("torrent.details.no_trackers")}</div>}
             </TabsContent>
             <TabsContent value="peers" className="p-0">
-                <Table><TableHeader><TableRow><TableHead>Address</TableHead><TableHead>Client</TableHead></TableRow></TableHeader><TableBody>{details?.peers?.map(
+                <Table><TableHeader><TableRow><TableHead>{t("torrent.details.address")}</TableHead><TableHead>{t("torrent.details.client")}</TableHead></TableRow></TableHeader><TableBody>{details?.peers?.map(
                     (peer, index) =>
-                        <TableRow key={`${peer.address}-${index}`}><TableCell>{peer.address || "Unknown"}</TableCell><TableCell>{peer.client || "Unknown"}</TableCell></TableRow>)}</TableBody></Table>
-                {!details?.peers?.length && <div className="p-8 text-center text-[--muted]">No connected peers.</div>}
+                        <TableRow key={`${peer.address}-${index}`}><TableCell>{peer.address || t("manga.manual_match.unknown")}</TableCell><TableCell>{peer.client || t("manga.manual_match.unknown")}</TableCell></TableRow>)}</TableBody></Table>
+                {!details?.peers?.length && <div className="p-8 text-center text-[--muted]">{t("torrent.details.no_peers")}</div>}
             </TabsContent>
         </Tabs>
     </Card>
@@ -1028,7 +1029,7 @@ function Status({ status, forceStart }: { status: TorrentClient_TorrentStatus, f
             status === "queued" && "bg-orange-500/15 text-orange-200",
             status === "error" && "bg-red-500/15 text-red-300",
         )}
-    >{forceStart ? "Forced" : status}</span>
+    >{forceStart ? t("torrent.status.forced") : status}</span>
 }
 
 function matchesFilter(status: TorrentClient_TorrentStatus, filter: StatusFilter) {

@@ -1,5 +1,6 @@
 import { Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { t } from "@/lib/i18n"
 import React from "react"
 
 export function ElectronCrashScreenError() {
@@ -67,7 +68,7 @@ export function ElectronCrashScreenError() {
                             }
                         }}
                     >
-                        Reload
+                        {t("common.action.reload")}
                     </Button>
                 )}
                 <Button
@@ -78,7 +79,7 @@ export function ElectronCrashScreenError() {
                         }
                     }}
                 >
-                    Close
+                    {t("manga.refresh.action_close")}
                 </Button>
             </div>
         </div>

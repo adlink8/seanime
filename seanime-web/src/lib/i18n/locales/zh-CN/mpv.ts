@@ -54,4 +54,6 @@ export const mpvDictionary = {
     "mpv.stats.av_sync": "A/V 同步", // mpv-core-stats.tsx
     "mpv.stats.hw_decode": "硬件解码", // mpv-core-stats.tsx
     "mpv.stats.container": "封装格式", // mpv-core-stats.tsx
+    // ===== 09-05 收官（player/mpv）=====
+    "mpv.stats.custom_shaders_active": "自定义着色器（{count} 个启用）", // mpv-core-stats.tsx
 } satisfies Dictionary

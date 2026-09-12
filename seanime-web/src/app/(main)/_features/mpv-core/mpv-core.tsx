@@ -69,12 +69,12 @@ export function createSkipChapterCues(skipData: Player_SkipData | null, duration
         skipData.op?.interval && {
             startTime: skipData.op.interval.startTime,
             endTime: skipData.op.interval.endTime,
-            text: "Opening",
+            text: t("misc.player.opening"),
         },
         skipData.ed?.interval && {
             startTime: skipData.ed.interval.startTime,
             endTime: skipData.ed.interval.endTime,
-            text: "Ending",
+            text: t("misc.player.ending"),
         },
     ].filter((chapter): chapter is MpvCoreChapterCue => (
         !!chapter &&

@@ -1249,7 +1249,7 @@ export function VideoCoreKeybindingController(props: {
         } else {
             // If we can't determine current chapter, just go to the beginning
             seekTo(0)
-            showOverlayFeedback({ message: "Beginning" })
+            showOverlayFeedback({ message: t("misc.player.beginning") })
         }
     }, [chapterCues, seekTo, showOverlayFeedback])
 

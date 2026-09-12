@@ -1,5 +1,6 @@
 import { cn } from "@/components/ui/core/styling"
 import { useThemeSettings } from "@/lib/theme/theme-hooks"
+import { t } from "@/lib/i18n"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import * as React from "react"
 import { Drawer as VaulPrimitive } from "vaul"
@@ -59,7 +60,7 @@ const VaulContent = React.forwardRef<
                 {/*<div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-[--subtle]" />*/}
                 {!title ? (
                     <VisuallyHidden>
-                        <VaulPrimitive.Title>Drawer</VaulPrimitive.Title>
+                        <VaulPrimitive.Title>{t("common.a11y.drawer")}</VaulPrimitive.Title>
                     </VisuallyHidden>
                 ) : <VaulTitle>
                     {title}

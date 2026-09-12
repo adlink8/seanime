@@ -23,6 +23,7 @@ import { clientIdAtom, websocketConnectedAtom } from "@/app/websocket-provider"
 import { ConfirmationDialog, useConfirmationDialog } from "@/components/shared/confirmation-dialog"
 import { GlowingEffect } from "@/components/shared/glowing-effect"
 import { SeaLink } from "@/components/shared/sea-link"
+import { t } from "@/lib/i18n"
 import { Badge } from "@/components/ui/badge"
 import { Button, IconButton } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
@@ -173,11 +174,11 @@ export function NakamaManager() {
     const handleReconnect = React.useCallback(() => {
         reconnectToHost({}, {
             onSuccess: () => {
-                toast.success("Reconnection initiated")
+                toast.success(t("misc.nakama.reconnect_initiated"))
                 refetchStatus()
             },
             onError: (error) => {
-                toast.error(`Failed to reconnect: ${error.message}`)
+                toast.error(t("misc.nakama.reconnect_failed", { message: error.message }))
             },
         })
     }, [reconnectToHost, refetchStatus])
@@ -185,11 +186,11 @@ export function NakamaManager() {
     const handleCleanupStaleConnections = React.useCallback(() => {
         removeStaleConnections({}, {
             onSuccess: () => {
-                toast.success("Stale connections cleaned up")
+                toast.success(t("misc.nakama.cleanup_success"))
                 refetchStatus()
             },
             onError: (error) => {
-                toast.error(`Failed to cleanup: ${error.message}`)
+                toast.error(t("misc.nakama.cleanup_failed", { message: error.message }))
             },
         })
     }, [removeStaleConnections, refetchStatus])
@@ -197,11 +198,11 @@ export function NakamaManager() {
     const handleCreateWatchParty = React.useCallback(() => {
         createWatchParty({ settings: watchPartySettings }, {
             onSuccess: () => {
-                toast.success("Watch party created")
+                toast.success(t("misc.nakama.party_created"))
                 refetchStatus()
             },
             onError: (error) => {
-                toast.error(`Failed to create watch party: ${error.message}`)
+                toast.error(t("misc.nakama.party_create_failed", { message: error.message }))
             },
         })
     }, [createWatchParty, watchPartySettings, refetchStatus])
@@ -211,7 +212,7 @@ export function NakamaManager() {
             clientId: clientId || "",
         }, {
             onSuccess: () => {
-                toast.info("Joining watch party")
+                toast.info(t("misc.nakama.joining_party"))
                 refetchStatus()
             },
         })
@@ -220,7 +221,7 @@ export function NakamaManager() {
     const handleLeaveWatchParty = React.useCallback(() => {
         leaveWatchParty(undefined, {
             onSuccess: () => {
-                toast.info("Leaving watch party")
+                toast.info(t("misc.nakama.leaving_party"))
                 refetchStatus()
             },
         })
@@ -229,7 +230,7 @@ export function NakamaManager() {
     const handleCreateRoom = React.useCallback(() => {
         createAndJoinRoom(undefined, {
             onSuccess: () => {
-                toast.success("Room created successfully")
+                toast.success(t("misc.nakama.room_created"))
                 refetchStatus()
             },
         })
@@ -238,11 +239,11 @@ export function NakamaManager() {
     const handleDisconnectFromRoom = React.useCallback(() => {
         disconnectFromRoom(undefined, {
             onSuccess: () => {
-                toast.info("Disconnected from room")
+                toast.info(t("misc.nakama.disconnected"))
                 refetchStatus()
             },
             onError: (error) => {
-                toast.error(`Failed to disconnect from room: ${error.message}`)
+                toast.error(t("misc.nakama.disconnect_failed", { message: error.message }))
             },
         })
     }, [disconnectFromRoom, refetchStatus])
@@ -326,8 +327,8 @@ export function NakamaManager() {
     })
 
     const confirmRoom = useConfirmationDialog({
-        title: "Create a Cloud Room",
-        description: "By continuing, you agree to broadcast your playback state through Seanime's servers to sync with peers while the room is active. You are limited to 10 rooms per day and 4 peers per room (subject to change).",
+        title: t("misc.nakama.create_cloud_room"),
+        description: t("misc.nakama.create_cloud_room_desc"),
         onConfirm: () => {
             handleCreateRoom()
         },
@@ -378,7 +379,7 @@ export function NakamaManager() {
                         intent="gray-basic"
                         leftIcon={<MdRefresh />}
                     >
-                        {isReconnecting ? "Reconnecting..." : "Reconnect"}
+                        {isReconnecting ? t("misc.nakama.reconnecting") : t("misc.nakama.reconnect")}
                     </Button>
                 </div>
             )}
@@ -389,7 +390,7 @@ export function NakamaManager() {
                     {nakamaStatus?.isHost && (
                         <>
                             <div className="flex items-center justify-between">
-                                <Badge intent="success-solid" className="px-0 text-indigo-300 bg-transparent">Currently hosting</Badge>
+                                <Badge intent="success-solid" className="px-0 text-indigo-300 bg-transparent">{t("misc.nakama.currently_hosting")}</Badge>
                                 <Button
                                     onClick={handleCleanupStaleConnections}
                                     disabled={isCleaningUp}
@@ -397,7 +398,7 @@ export function NakamaManager() {
                                     intent="gray-basic"
                                     leftIcon={<MdCleaningServices />}
                                 >
-                                    {isCleaningUp ? "Cleaning up..." : "Remove stale connections"}
+                                    {isCleaningUp ? t("misc.nakama.cleaning_up") : t("misc.nakama.remove_stale")}
                                 </Button>
                             </div>
 
@@ -406,26 +407,26 @@ export function NakamaManager() {
                                 ? (
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <h4>Cloud Room</h4>
+                                            <h4>{t("misc.nakama.cloud_room")}</h4>
                                             <Button
                                                 onClick={handleDisconnectFromRoom}
                                                 disabled={isDisconnectingFromRoom}
                                                 size="sm"
                                                 intent="alert-link"
                                             >
-                                                {isDisconnectingFromRoom ? "Disconnecting..." : "Disconnect"}
+                                                {isDisconnectingFromRoom ? t("misc.nakama.disconnecting") : t("misc.nakama.disconnect")}
                                             </Button>
                                         </div>
                                         <p className="text-sm text-[--muted]">
-                                            Cloud Rooms do not support local file and debrid playback.
+                                            {t("misc.nakama.cloud_room_limitation")}
                                         </p>
                                         <div className="p-4 border rounded-lg bg-gray-950 space-y-3">
                                             <div className="space-y-1">
-                                                <span className="text-sm text-[--muted]">Nakama Host URL and Passcode</span>
+                                                <span className="text-sm text-[--muted]">{t("misc.nakama.host_url_passcode")}</span>
                                                 <div className="flex items-center gap-2">
                                                     <TextInput
                                                         readOnly
-                                                        leftAddon="Host URL"
+                                                        leftAddon={t("misc.nakama.host_url")}
                                                         value={`room://${roomInfo.roomId}`}
                                                         onClick={(e) => e.currentTarget.select()}
                                                         addonClass="font-bold tracking-wide text-sm pr-2"
@@ -435,7 +436,7 @@ export function NakamaManager() {
                                                                 intent="gray-basic"
                                                                 onClick={() => {
                                                                     copyToClipboard(`room://${roomInfo.roomId}`)
-                                                                        .then(() => toast.success("Copied to clipboard"))
+                                                                        .then(() => toast.success(t("settings.toast.copied_to_clipboard")))
                                                                 }}
                                                                 icon={<LuClipboard />}
                                                             />
@@ -445,8 +446,8 @@ export function NakamaManager() {
                                                 <div className="flex items-center gap-2">
                                                     <TextInput
                                                         readOnly
-                                                        leftAddon="Passcode"
-                                                        value={serverStatus?.settings?.nakama?.hostPassword || "No password set"}
+                                                        leftAddon={t("misc.nakama.passcode")}
+                                                        value={serverStatus?.settings?.nakama?.hostPassword || t("misc.nakama.no_password_set")}
                                                         onClick={(e) => e.currentTarget.select()}
                                                         addonClass="font-bold tracking-wide text-sm pr-2"
                                                         rightAddon={<>
@@ -455,7 +456,7 @@ export function NakamaManager() {
                                                                 intent="gray-basic"
                                                                 onClick={() => {
                                                                     copyToClipboard(serverStatus?.settings?.nakama?.hostPassword || "")
-                                                                        .then(() => toast.success("Copied to clipboard"))
+                                                                        .then(() => toast.success(t("settings.toast.copied_to_clipboard")))
                                                                 }}
                                                                 icon={<LuClipboard />}
                                                             />
@@ -464,7 +465,7 @@ export function NakamaManager() {
                                                 </div>
                                             </div>
                                             {roomInfo.expiresAt && <div className="flex items-center gap-1">
-                                                <span className="text-sm text-[--muted]">Expires: </span>
+                                                <span className="text-sm text-[--muted]">{t("misc.nakama.expires")}</span>
                                                 <span className="text-sm font-semibold">{new Date(roomInfo.expiresAt).toLocaleString()}</span>
                                             </div>}
                                         </div>
@@ -476,11 +477,10 @@ export function NakamaManager() {
                                         <div className="flex items-center justify-between">
                                             <div className="space-y-1">
                                                 <p className="font-bold">
-                                                    Cloud Room
+                                                    {t("misc.nakama.cloud_room")}
                                                 </p>
                                                 <p className="text-sm text-[--muted] pr-4">
-                                                    Cloud Rooms use Seanime's API to enable hosting watch parties without exposing your server to the
-                                                    internet.
+                                                    {t("misc.nakama.cloud_rooms_desc")}
                                                 </p>
                                             </div>
                                             <Tooltip
@@ -491,10 +491,10 @@ export function NakamaManager() {
                                                     intent="white-subtle"
                                                     leftIcon={<TbCloudPlus className="text-2xl" />}
                                                 >
-                                                    {isCreatingRoom ? "Creating..." : "Create a Cloud Room"}
+                                                    {isCreatingRoom ? t("misc.nakama.creating") : t("misc.nakama.create_cloud_room")}
                                                 </Button>}
                                             >
-                                                You will automatically join the room.
+                                                {t("misc.nakama.auto_join_hint")}
                                             </Tooltip>
                                         </div>
                                     </div>
@@ -502,10 +502,10 @@ export function NakamaManager() {
                             )}
 
                             {nakamaStatus.connectionMode === "direct" && <>
-                                <h4>Direct connections ({nakamaStatus?.connectedPeers?.length ?? 0})</h4>
-                                <div className="p-4 border rounded-lg bg-gray-950">
-                                    {!nakamaStatus?.connectedPeers?.length &&
-                                        <p className="text-center text-sm text-[--muted]">No connected peers</p>}
+                            <h4>{t("misc.nakama.direct_connections", { count: nakamaStatus?.connectedPeers?.length ?? 0 })}</h4>
+                            <div className="p-4 border rounded-lg bg-gray-950">
+                                {!nakamaStatus?.connectedPeers?.length &&
+                                    <p className="text-center text-sm text-[--muted]">{t("misc.nakama.no_connected_peers")}</p>}
                                     {nakamaStatus?.connectedPeers?.map((peer, index) => (
                                         <div key={index} className="flex items-center justify-between py-1">
                                             <span className="font-medium">{peer}</span>
@@ -519,19 +519,19 @@ export function NakamaManager() {
                     {(nakamaStatus?.isConnectedToHost && !nakamaStatus?.isHost) && (
                         <>
 
-                            <h4>Host connection</h4>
+                            <h4>{t("misc.nakama.host_connection")}</h4>
                             <div className="p-4 border rounded-lg bg-gray-950">
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm text-[--muted]">Host</span>
+                                        <span className="text-sm text-[--muted]">{t("misc.getting_started.host")}</span>
                                         <span className="font-medium text-sm tracking-wide">
-                                            {nakamaStatus?.hostConnectionStatus?.username || "Unknown"}
+                                            {nakamaStatus?.hostConnectionStatus?.username || t("misc.stats.unknown")}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm text-[--muted]">Connection Mode</span>
+                                        <span className="text-sm text-[--muted]">{t("misc.nakama.connection_mode")}</span>
                                         <Badge intent={nakamaStatus?.hostConnectionStatus?.connectionMode === "rooms" ? "primary" : "gray"}>
-                                            {nakamaStatus?.hostConnectionStatus?.connectionMode === "rooms" ? "Cloud Room" : "Direct"}
+                                            {nakamaStatus?.hostConnectionStatus?.connectionMode === "rooms" ? t("misc.nakama.cloud_room") : t("misc.nakama.direct")}
                                         </Badge>
                                     </div>
                                 </div>
@@ -584,9 +584,9 @@ export function NakamaManager() {
 
             {!nakamaStatus?.isHost && !nakamaStatus?.isConnectedToHost && nakamaStatus !== undefined && (
                 <div className="text-center py-8">
-                    <p className="text-[--muted]">Nakama is not active</p>
+                    <p className="text-[--muted]">{t("misc.nakama.not_active")}</p>
                     <p className="text-sm text-[--muted] mt-2">
-                        Configure Nakama in settings to connect to a host or start hosting
+                        {t("misc.nakama.not_active_hint")}
                     </p>
                 </div>
             )}
@@ -621,7 +621,7 @@ function WatchPartyCreation({
 }: WatchPartyCreationProps) {
     return (
         <div className="space-y-4">
-            <h4 className="flex items-center gap-2"><LuPopcorn className="size-6" /> Watch Party</h4>
+            <h4 className="flex items-center gap-2"><LuPopcorn className="size-6" /> {t("misc.nakama.watch_party")}</h4>
             {isHost && (
                 <div className="p-4 border rounded-lg bg-gray-950">
                     <div className="space-y-4">
@@ -671,7 +671,7 @@ function WatchPartyCreation({
                             intent="primary"
                             leftIcon={<MdAdd />}
                         >
-                            {isCreating ? "Creating..." : "Create Watch Party"}
+                            {isCreating ? t("misc.nakama.creating") : t("misc.nakama.create_watch_party")}
                         </Button>
                     </div>
                 </div>
@@ -681,7 +681,7 @@ function WatchPartyCreation({
                 <div className="p-4 border rounded-lg bg-gray-950">
                     <div className="space-y-4">
                         <p className="text-sm text-[--muted]">
-                            There's an active watch party! Join to watch content together in sync.
+                            {t("misc.nakama.party_active_hint")}
                         </p>
                         <Button
                             onClick={onJoinWatchParty}
@@ -690,7 +690,7 @@ function WatchPartyCreation({
                             intent="primary"
                             leftIcon={<MdPlayArrow />}
                         >
-                            {isJoining ? "Joining..." : "Join Watch Party"}
+                            {isJoining ? t("misc.nakama.joining") : t("misc.nakama.join_watch_party")}
                         </Button>
                     </div>
                 </div>
@@ -698,13 +698,13 @@ function WatchPartyCreation({
 
             {!isHost && !isConnectedToHost && (
                 <div className="text-center py-8">
-                    <p className="text-[--muted]">Connect to a host to join a watch party</p>
+                    <p className="text-[--muted]">{t("misc.nakama.join_hint")}</p>
                 </div>
             )}
 
             {!isHost && isConnectedToHost && !hasActiveSession && (
                 <div className="text-center py-8">
-                    <p className="text-[--muted]">No active watch party</p>
+                    <p className="text-[--muted]">{t("misc.nakama.no_active_party")}</p>
                 </div>
             )}
         </div>
@@ -741,7 +741,7 @@ function WatchPartySessionView({ session, isHost, onLeave, isLeaving, isRoom }: 
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h4 className="flex items-center gap-2"><LuPopcorn className="size-6" /> Watch Party</h4>
+                <h4 className="flex items-center gap-2"><LuPopcorn className="size-6" /> {t("misc.nakama.watch_party")}</h4>
                 <div className="flex items-center gap-2">
                     {/*Enable relay mode*/}
                     {isHost && !session.isRelayMode && !isRoom && (
@@ -754,7 +754,7 @@ function WatchPartySessionView({ session, isHost, onLeave, isLeaving, isRoom }: 
                                 className={cn(enablingRelayMode && "animate-pulse")}
                             />}
                         >
-                            Enable relay mode
+                            {t("misc.nakama.enable_relay")}
                         </Tooltip>
                     )}
                     <Button
@@ -764,7 +764,7 @@ function WatchPartySessionView({ session, isHost, onLeave, isLeaving, isRoom }: 
                         intent="alert-basic"
                         // leftIcon={isHost ? <MdStop /> : <MdExitToApp />}
                     >
-                        {isLeaving ? "Leaving..." : isHost ? "Stop" : "Leave"}
+                        {isLeaving ? t("misc.nakama.leaving") : isHost ? t("manga.action.stop") : t("misc.nakama.leave")}
                     </Button>
                 </div>
             </div>
@@ -798,7 +798,7 @@ function WatchPartySessionView({ session, isHost, onLeave, isLeaving, isRoom }: 
              </div>
              </SettingsCard> */}
 
-            <h5>Participants ({participantCount})</h5>
+            <h5>{t("misc.nakama.participants", { count: participantCount })}</h5>
             <div className="p-4 border rounded-lg bg-gray-950">
                 <div className="space-y-0">
                     {participants.map((participant) => {
@@ -808,29 +808,29 @@ function WatchPartySessionView({ session, isHost, onLeave, isLeaving, isRoom }: 
                                 <div className="flex items-center gap-2">
                                     <span className="font-medium text-sm tracking-wide">
                                         {participant.username}
-                                        {isCurrentUser && <span className="text-[--muted] font-normal"> (me)</span>}
+                                        {isCurrentUser && <span className="text-[--muted] font-normal">{t("misc.nakama.me")}</span>}
                                     </span>
                                     {session.isRelayMode && participant.isHost && (
-                                        <Badge intent="unstyled" className="text-xs" leftIcon={<FaBroadcastTower />}>Relay</Badge>
+                                        <Badge intent="unstyled" className="text-xs" leftIcon={<FaBroadcastTower />}>{t("misc.nakama.relay")}</Badge>
                                     )}
                                     {participant.isHost && (
-                                        <Badge className="text-xs">Host</Badge>
+                                        <Badge className="text-xs">{t("misc.getting_started.host")}</Badge>
                                     )}
                                     {participant.isRelayOrigin && (
-                                        <Badge intent="warning" className="text-xs">Origin</Badge>
+                                        <Badge intent="warning" className="text-xs">{t("misc.nakama.origin")}</Badge>
                                     )}
                                     {enablingRelayMode && !participant.isHost && !participant.isRelayOrigin && !session.isRelayMode && (
                                         <Button
                                             size="sm" intent="white" leftIcon={<HiOutlinePlay />}
                                             onClick={() => handleEnableRelayMode(participant.id)}
-                                        >Promote to origin</Button>
+                                        >{t("misc.nakama.promote_origin")}</Button>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-[--muted]">
                                     {!participant.isHost && participant.bufferHealth !== undefined && (
                                         <Tooltip
                                             trigger={<div className="flex items-center gap-1">
-                                                <span className="text-xs">Buffer</span>
+                                                <span className="text-xs">{t("misc.nakama.buffer")}</span>
                                                 <div className="w-8 h-1 bg-gray-300 rounded-full overflow-hidden">
                                                     <div
                                                         className="h-full bg-green-500 transition-all duration-300"
@@ -840,7 +840,7 @@ function WatchPartySessionView({ session, isHost, onLeave, isLeaving, isRoom }: 
                                                 <span className="text-xs">{Math.round(participant.bufferHealth * 100)}%</span>
                                             </div>}
                                         >
-                                            Synchronization buffer health
+                                            {t("misc.nakama.buffer_health")}
                                         </Tooltip>
                                     )}
                                     {participant.latency > 0 && (
@@ -848,7 +848,7 @@ function WatchPartySessionView({ session, isHost, onLeave, isLeaving, isRoom }: 
                                     )}
                                     {participant.isBuffering ? (
                                         <Badge intent="alert-solid" className="text-xs">
-                                            Buffering
+                                            {t("misc.nakama.buffering")}
                                         </Badge>
                                     ) : null}
                                 </div>

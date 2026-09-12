@@ -3,6 +3,7 @@ import { MediaExclusionSelector, MediaExclusionSelectorProps } from "@/component
 import { IconButton } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { useDebounce } from "@/hooks/use-debounce"
+import { t } from "@/lib/i18n"
 import { colord } from "colord"
 import React, { forwardRef, useMemo } from "react"
 import { HexColorPicker } from "react-colorful"
@@ -435,7 +436,7 @@ const MultiDirectorySelectorField = React.memo(withControlledInput(forwardRef<HT
                         <DirectorySelector
                             shouldExist={shouldExist}
                             {...props}
-                            label="Directory"
+                            label={t("common.form.directory_label")}
                             value={v ?? ""}
                             defaultValue={v ?? ""}
                             onSelect={value => {

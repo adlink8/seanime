@@ -9,6 +9,7 @@ import { IconButton } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataGrid, defineDataGridColumns } from "@/components/ui/datagrid"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { t } from "@/lib/i18n"
 import { useSetAtom } from "jotai"
 import React from "react"
 import { GiOpenBook } from "react-icons/gi"
@@ -133,7 +134,7 @@ export function OfflineChapterList(props: OfflineChapterListProps) {
 
                 <div className="flex flex-wrap items-center gap-4">
                     <Checkbox
-                        label="Show unread"
+                        label={t("manga.chapter_list.show_unread")}
                         value={showUnreadChapter}
                         onValueChange={v => setShowUnreadChapter(v as boolean)}
                         fieldClass="w-fit"

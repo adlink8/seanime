@@ -2,6 +2,7 @@ import { Report_ClickLog, Report_ConsoleLog, Report_IssueReport, Report_NetworkL
 
 import { useDecompressIssueReport } from "@/api/hooks/report.hooks"
 import { ScanLogViewer } from "@/app/scan-log-viewer/scan-log-viewer"
+import { t } from "@/lib/i18n"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/shared/resizable"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -62,7 +63,7 @@ const saveReportToDB = async (report: ExtendedReport) => {
     }
     catch (error) {
         console.error("Failed to save report to DB:", error)
-        toast.error("Failed to save report to browser storage")
+        toast.error(t("misc.issue_report.save_failed_storage"))
     }
 }
 
@@ -483,7 +484,7 @@ export default function Page() {
         getReportFromDB().then((savedReport) => {
             if (savedReport) {
                 setReport(resolveRecords(savedReport))
-                toast.success("Restored previous issue report")
+                toast.success(t("misc.issue_report.restored"))
             }
             setIsLoading(false)
         })
@@ -499,18 +500,18 @@ export default function Page() {
             const formData = new FormData()
             formData.append("file", file)
 
-            toast.info("Decompressing report...")
+            toast.info(t("misc.issue_report.decompressing"))
 
             decompressReport(formData, {
                 onSuccess: (data) => {
                     const resolved = resolveRecords(data as ExtendedReport)
                     setReport(resolved)
                     saveReportToDB(resolved)
-                    toast.success("Report loaded")
+                    toast.success(t("misc.issue_report.loaded"))
                 },
                 onError: (error) => {
                     console.error(error)
-                    toast.error("Failed to decompress report")
+                    toast.error(t("misc.issue_report.decompress_failed"))
                 },
             })
             return
@@ -523,10 +524,10 @@ export default function Page() {
                 const parsed = resolveRecords(JSON.parse(content) as ExtendedReport)
                 setReport(parsed)
                 saveReportToDB(parsed)
-                toast.success("Report loaded")
+                toast.success(t("misc.issue_report.loaded"))
             }
             catch {
-                toast.error("Failed to parse report")
+                toast.error(t("misc.issue_report.parse_failed"))
             }
         }
         reader.readAsText(file)
@@ -560,7 +561,7 @@ export default function Page() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen text-[--muted]">
-                <p>Loading saved report...</p>
+                <p>{t("misc.issue_report.loading_saved")}</p>
             </div>
         )
     }
@@ -577,7 +578,7 @@ export default function Page() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/80 backdrop-blur-sm">
                     <div className="flex flex-col items-center gap-3 p-8 border-2 border-dashed border-indigo-500 rounded-xl bg-gray-900/50">
                         <BiUpload className="text-4xl text-indigo-400" />
-                        <p className="text-lg font-medium text-indigo-300">Drop report file</p>
+                        <p className="text-lg font-medium text-indigo-300">{t("misc.issue_report.drop_file")}</p>
                     </div>
                 </div>
             )}
@@ -585,12 +586,12 @@ export default function Page() {
             <div className="mb-4">
                 <div className="flex items-center gap-4 justify-between">
                     <div className="flex items-center gap-4">
-                        <h1 className="text-xl font-bold text-gray-200 tracking-tight">Issue Report</h1>
+                        <h1 className="text-xl font-bold text-gray-200 tracking-tight">{t("misc.issue_report.title")}</h1>
                         <label
                             className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border border-[--border] rounded-md cursor-pointer hover:bg-gray-700 transition-colors text-sm text-gray-300"
                         >
                             <BiUpload />
-                            <span>{report ? "Load another file" : "Load report file"}</span>
+                            <span>{report ? t("misc.issue_report.load_another") : t("misc.issue_report.load_file")}</span>
                             <input
                                 type="file"
                                 ref={fileInputRef}
@@ -606,12 +607,12 @@ export default function Page() {
                             onClick={async () => {
                                 await clearReportFromDB()
                                 setReport(null)
-                                toast.success("Cleared report")
+                                toast.success(t("misc.issue_report.cleared"))
                             }}
                             className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded-md transition-colors"
                         >
                             <BiTrash />
-                            Clear report
+                            {t("misc.issue_report.clear_report")}
                         </button>
                     )}
                 </div>
@@ -621,7 +622,7 @@ export default function Page() {
                 <ReportViewer report={report} />
             ) : (
                 <div className="flex items-center justify-center h-[40vh] text-[--muted]">
-                    <p className="text-lg">Load an issue report JSON or ZIP file</p>
+                    <p className="text-lg">{t("misc.issue_report.empty_hint")}</p>
                 </div>
             )}
         </div>
@@ -642,16 +643,16 @@ function ReportViewer({ report }: { report: ExtendedReport }) {
     const hasWsLogs = !!report.websocketLogs && report.websocketLogs.length > 0
 
     const tabs: { key: Phase; label: string; icon: React.ComponentType<any>; show?: boolean; accent?: boolean }[] = [
-        { key: "overview", label: "Overview", icon: BiInfoCircle },
-        { key: "replay", label: "Session Replay", icon: BiPlay, show: hasReplay, accent: true },
-        { key: "timeline", label: "Timeline", icon: BiNavigation },
-        { key: "network", label: `Network (${stats.networkCount})`, icon: LuGlobe as any },
-        { key: "console", label: `Console (${stats.consoleCount})`, icon: LuAppWindow as any },
-        { key: "clicks", label: `Clicks (${stats.clickCount})`, icon: FiMousePointer as any },
-        { key: "websocket", label: `WebSocket (${stats.websocketCount})`, icon: BiWifi, show: hasWsLogs },
-        { key: "server", label: "Server Logs", icon: LuTerminal as any },
-        { key: "screenshots", label: `Screenshots (${stats.screenshotCount})`, icon: BiImage, show: hasScreenshots },
-        { key: "scanlogs", label: "Scan Logs", icon: BiFile, show: hasScanLogs },
+        { key: "overview", label: t("misc.scan_log.tab_overview"), icon: BiInfoCircle },
+        { key: "replay", label: t("misc.issue_report.tab_replay"), icon: BiPlay, show: hasReplay, accent: true },
+        { key: "timeline", label: t("misc.issue_report.tab_timeline"), icon: BiNavigation },
+        { key: "network", label: t("misc.issue_report.tab_network", { count: stats.networkCount }), icon: LuGlobe as any },
+        { key: "console", label: t("misc.issue_report.tab_console", { count: stats.consoleCount }), icon: LuAppWindow as any },
+        { key: "clicks", label: t("misc.issue_report.tab_clicks", { count: stats.clickCount }), icon: FiMousePointer as any },
+        { key: "websocket", label: t("misc.issue_report.tab_websocket", { count: stats.websocketCount }), icon: BiWifi, show: hasWsLogs },
+        { key: "server", label: t("misc.issue_report.tab_server_logs"), icon: LuTerminal as any },
+        { key: "screenshots", label: t("misc.issue_report.tab_screenshots", { count: stats.screenshotCount }), icon: BiImage, show: hasScreenshots },
+        { key: "scanlogs", label: t("misc.issue_report.tab_scan_logs"), icon: BiFile, show: hasScanLogs },
     ]
 
     return (
@@ -729,19 +730,19 @@ function OverviewPanel({ report, stats, events }: { report: ExtendedReport; stat
             {/* report info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="bg-gray-900 border border-[--border] rounded-lg p-4 space-y-2">
-                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Report Info</h3>
+                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t("misc.issue_report.report_info")}</h3>
                     <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-                        <DetailLabel>Version</DetailLabel>
+                        <DetailLabel>{t("misc.issue_report.version")}</DetailLabel>
                         <DetailValue>{report.appVersion || "—"}</DetailValue>
-                        <DetailLabel>OS</DetailLabel>
+                        <DetailLabel>{t("misc.issue_report.os")}</DetailLabel>
                         <DetailValue>{report.os || "—"} / {report.arch || "—"}</DetailValue>
-                        <DetailLabel>User Agent</DetailLabel>
+                        <DetailLabel>{t("misc.issue_report.user_agent")}</DetailLabel>
                         <DetailValue className="truncate max-w-[300px]">{report.userAgent || "—"}</DetailValue>
-                        <DetailLabel>Created</DetailLabel>
+                        <DetailLabel>{t("misc.issue_report.created")}</DetailLabel>
                         <DetailValue>{report.createdAt ? format(parseISO(report.createdAt), "yyyy-MM-dd HH:mm:ss") : "—"}</DetailValue>
                         {report.viewportWidth ? (
                             <>
-                                <DetailLabel>Viewport</DetailLabel>
+                                <DetailLabel>{t("misc.issue_report.viewport")}</DetailLabel>
                                 <DetailValue>{report.viewportWidth}×{report.viewportHeight}</DetailValue>
                             </>
                         ) : null}
@@ -751,7 +752,7 @@ function OverviewPanel({ report, stats, events }: { report: ExtendedReport; stat
                 {/* description */}
                 {report.description && (
                     <div className="bg-gray-900 border border-[--border] rounded-lg p-4 space-y-2">
-                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">User Description</h3>
+                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t("misc.issue_report.user_description")}</h3>
                         <p className="text-sm text-gray-200 whitespace-pre-wrap">{report.description}</p>
                     </div>
                 )}
@@ -759,21 +760,21 @@ function OverviewPanel({ report, stats, events }: { report: ExtendedReport; stat
 
             {/* stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <StatCard label="Total Events" value={stats.totalEvents} icon={<BiInfoCircle />} color="text-blue-400" />
+                <StatCard label={t("misc.issue_report.total_events")} value={stats.totalEvents} icon={<BiInfoCircle />} color="text-blue-400" />
                 <StatCard
-                    label="Errors"
+                    label={t("misc.issue_report.errors")}
                     value={stats.errorCount}
                     icon={<BiError />}
                     color={stats.errorCount > 0 ? "text-red-400" : "text-gray-500"}
                 />
                 <StatCard
-                    label="Net Errors"
+                    label={t("misc.issue_report.net_errors")}
                     value={stats.networkErrors}
                     icon={<LuNetwork />}
                     color={stats.networkErrors > 0 ? "text-red-400" : "text-gray-500"}
                 />
                 <StatCard
-                    label="Recording"
+                    label={t("misc.issue_report.recording")}
                     value={0}
                     icon={<BiPlay />}
                     color="text-indigo-400"
@@ -784,25 +785,25 @@ function OverviewPanel({ report, stats, events }: { report: ExtendedReport; stat
 
             {/* pipeline */}
             <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Events</h3>
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t("misc.scan_log.events")}</h3>
                 <div className="flex items-center gap-2 flex-wrap">
-                    <PipelineStep label="Clicks" detail={`${stats.clickCount}`} />
+                    <PipelineStep label={t("misc.issue_report.clicks")} detail={`${stats.clickCount}`} />
                     <BiChevronRight className="text-[--muted] text-lg flex-shrink-0" />
-                    <PipelineStep label="Network" detail={`${stats.networkCount} req`} />
+                    <PipelineStep label={t("misc.issue_report.network")} detail={t("misc.issue_report.n_req", { count: stats.networkCount })} />
                     <BiChevronRight className="text-[--muted] text-lg flex-shrink-0" />
-                    <PipelineStep label="Console" detail={`${stats.consoleCount}`} />
+                    <PipelineStep label={t("misc.issue_report.console")} detail={`${stats.consoleCount}`} />
                     <BiChevronRight className="text-[--muted] text-lg flex-shrink-0" />
-                    <PipelineStep label="Queries" detail={`${stats.queryCount}`} />
+                    <PipelineStep label={t("misc.issue_report.queries")} detail={`${stats.queryCount}`} />
                     {stats.navigationCount > 0 && (
                         <>
                             <BiChevronRight className="text-[--muted] text-lg flex-shrink-0" />
-                            <PipelineStep label="Navigations" detail={`${stats.navigationCount}`} />
+                            <PipelineStep label={t("misc.issue_report.navigations")} detail={`${stats.navigationCount}`} />
                         </>
                     )}
                     {stats.screenshotCount > 0 && (
                         <>
                             <BiChevronRight className="text-[--muted] text-lg flex-shrink-0" />
-                            <PipelineStep label="Screenshots" detail={`${stats.screenshotCount}`} />
+                            <PipelineStep label={t("misc.issue_report.screenshots")} detail={`${stats.screenshotCount}`} />
                         </>
                     )}
                 </div>
@@ -811,7 +812,7 @@ function OverviewPanel({ report, stats, events }: { report: ExtendedReport; stat
             {/* server status */}
             {report.status && (
                 <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Server status</h3>
+                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t("misc.issue_report.server_status")}</h3>
                     <div className="bg-gray-900 border border-[--border] rounded-lg p-3 max-h-[40vh] overflow-auto">
                         <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap break-all">{report.status}</pre>
                     </div>
@@ -822,7 +823,7 @@ function OverviewPanel({ report, stats, events }: { report: ExtendedReport; stat
             {report.unlockedLocalFiles && report.unlockedLocalFiles.length > 0 && (
                 <div className="space-y-2">
                     <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-                        Unlocked local files ({report.unlockedLocalFiles.length})
+                        {t("misc.issue_report.unlocked_local_files", { count: report.unlockedLocalFiles.length })}
                     </h3>
                     <div className="bg-gray-900 border border-[--border] rounded-lg max-h-[30vh] overflow-auto">
                         {report.unlockedLocalFiles.map((f, i) => (
@@ -839,14 +840,14 @@ function OverviewPanel({ report, stats, events }: { report: ExtendedReport; stat
 }
 
 const FILTER_OPTIONS: { key: EventType; label: string }[] = [
-    { key: "click", label: "Clicks" },
-    { key: "network", label: "Network" },
-    { key: "console", label: "Console" },
-    { key: "query", label: "Queries" },
-    { key: "navigation", label: "Nav" },
-    { key: "server", label: "Server" },
+    { key: "click", label: t("misc.issue_report.clicks") },
+    { key: "network", label: t("misc.issue_report.network") },
+    { key: "console", label: t("misc.issue_report.console") },
+    { key: "query", label: t("misc.issue_report.queries") },
+    { key: "navigation", label: t("misc.issue_report.nav_short") },
+    { key: "server", label: t("misc.issue_report.server") },
     { key: "websocket", label: "WebSocket" },
-    { key: "screenshot", label: "Screenshots" },
+    { key: "screenshot", label: t("misc.issue_report.screenshots") },
 ]
 
 function TimelinePanel({ events, searchQuery, setSearchQuery, includeServerLogs, setIncludeServerLogs }: {
@@ -910,14 +911,14 @@ function TimelinePanel({ events, searchQuery, setSearchQuery, includeServerLogs,
                 <TextInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search events..."
+                    placeholder={t("misc.scan_log.events") + "..."}
                     className="w-full"
                 />
 
                 <div className="space-y-1">
                     <div className="flex items-center justify-between">
                         <Checkbox
-                            label="Errors only"
+                            label={t("misc.issue_report.errors_only")}
                             value={showOnlyErrors}
                             onValueChange={v => setShowOnlyErrors(v as boolean)}
                             size="sm"
@@ -958,8 +959,8 @@ function TimelinePanel({ events, searchQuery, setSearchQuery, includeServerLogs,
 
             <div className="flex-1 min-w-0 bg-gray-950">
                 <div className="p-2 border-b border-[--border] flex items-center justify-between">
-                    <span className="text-sm text-gray-400 font-medium">Events</span>
-                    <span className="text-xs text-gray-500">{filtered.length} filtered events</span>
+                    <span className="text-sm text-gray-400 font-medium">{t("misc.issue_report.events")}</span>
+                    <span className="text-xs text-gray-500">{t("misc.issue_report.filtered_events", { count: filtered.length })}</span>
                 </div>
                 <Virtuoso
                     style={{ height: "calc(100% - 40px)" }}
@@ -1068,7 +1069,7 @@ function TimelineEventRow({ event, isExpanded, toggleExpanded }: {
                     {event.type === "screenshot" && event.raw.data ? (
                         <div className="space-y-2">
                             {event.raw.caption && <p className="text-sm text-gray-300 italic">"{event.raw.caption}"</p>}
-                            <img src={event.raw.data} alt="Screenshot" className="max-w-full max-h-[50vh] rounded-lg border border-[--border]" />
+                            <img src={event.raw.data} alt={t("misc.issue_report.screenshot_alt")} className="max-w-full max-h-[50vh] rounded-lg border border-[--border]" />
                         </div>
                     ) : (
                         <DataGrid data={event.raw} />
@@ -1120,7 +1121,7 @@ function NetworkPanel({ logs, searchQuery, setSearchQuery }: {
                 <TextInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search network requests..."
+                    placeholder={t("misc.issue_report.search_network")}
                     className="max-w-md"
                     fieldClass="w-fit"
                 />
@@ -1185,7 +1186,7 @@ function NetworkPanel({ logs, searchQuery, setSearchQuery }: {
                                         <div className="text-xs text-gray-500 font-mono break-all">{log.pageUrl}</div>
                                         {log.body && log.body !== "null" && (
                                             <div className="space-y-1">
-                                                <p className="text-sm font-semibold text-gray-400">Request Body</p>
+                                                <p className="text-sm font-semibold text-gray-400">{t("misc.issue_report.request_body")}</p>
                                                 <pre className="text-xs font-mono text-gray-300 bg-gray-900 p-2 rounded break-all whitespace-pre-wrap max-h-[200px] overflow-auto">
                                                     {tryFormatJSON(log.body)}
                                                 </pre>
@@ -1193,7 +1194,7 @@ function NetworkPanel({ logs, searchQuery, setSearchQuery }: {
                                         )}
                                         {log.dataPreview && (
                                             <div className="space-y-1">
-                                                <p className="text-sm font-semibold text-gray-400">Response</p>
+                                                <p className="text-sm font-semibold text-gray-400">{t("misc.issue_report.response")}</p>
                                                 <pre className="text-xs font-mono text-gray-300 bg-gray-900 p-2 rounded break-all whitespace-pre-wrap max-h-[200px] overflow-auto">
                                                     {tryFormatJSON(log.dataPreview)}
                                                 </pre>
@@ -1248,16 +1249,16 @@ function ConsolePanel({ logs, searchQuery, setSearchQuery }: {
                 <TextInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search console logs..."
+                    placeholder={t("misc.issue_report.search_console")}
                     className="max-w-md"
                     fieldClass="w-fit"
                 />
                 <div className="flex gap-1">
                     {([
-                        { key: "all" as const, label: "All" },
-                        { key: "error" as const, label: `Errors (${errorCount})` },
-                        { key: "warn" as const, label: `Warnings (${warnCount})` },
-                        { key: "log" as const, label: "Logs" },
+                        { key: "all" as const, label: t("library.filter.all") },
+                        { key: "error" as const, label: t("misc.issue_report.n_errors", { count: errorCount }) },
+                        { key: "warn" as const, label: t("misc.issue_report.n_warnings", { count: warnCount }) },
+                        { key: "log" as const, label: t("misc.issue_report.logs") },
                     ]).map(({ key, label }) => (
                         <button
                             key={key}
@@ -1271,7 +1272,7 @@ function ConsolePanel({ logs, searchQuery, setSearchQuery }: {
                         </button>
                     ))}
                 </div>
-                <span className="text-sm text-gray-500 self-center flex-none">{filtered.length} entries</span>
+                <span className="text-sm text-gray-500 self-center flex-none">{t("misc.issue_report.entries", { count: filtered.length })}</span>
             </div>
 
             <Virtuoso
@@ -1341,7 +1342,7 @@ function ClicksPanel({ logs, searchQuery, setSearchQuery }: {
                 <TextInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search clicks..."
+                    placeholder={t("misc.issue_report.search_clicks")}
                     className="max-w-md"
                     fieldClass="w-fit"
                 />
@@ -1395,7 +1396,7 @@ function ServerLogsPanel({ serverLogs, searchQuery, setSearchQuery }: {
                 <TextInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search server logs..."
+                    placeholder={t("misc.issue_report.search_server")}
                     className="max-w-md"
                     fieldClass="w-fit"
                 />
@@ -1432,7 +1433,7 @@ function ScreenshotsPanel({ screenshots }: { screenshots: Screenshot[] }) {
     if (screenshots.length === 0) {
         return (
             <div className="flex items-center justify-center h-[40vh] text-gray-500">
-                <p>No screenshots in this report</p>
+                <p>{t("misc.issue_report.no_screenshots")}</p>
             </div>
         )
     }
@@ -1440,7 +1441,7 @@ function ScreenshotsPanel({ screenshots }: { screenshots: Screenshot[] }) {
     return (
         <div className="p-4 space-y-4">
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-                Screenshots ({screenshots.length})
+                {t("misc.issue_report.screenshots_count", { count: screenshots.length })}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {screenshots.map((ss, i) => (
@@ -1452,9 +1453,9 @@ function ScreenshotsPanel({ screenshots }: { screenshots: Screenshot[] }) {
                             selectedIndex === i ? "border-indigo-500" : "border-[--border]",
                         )}
                     >
-                        <img src={ss.data} alt={ss.caption || `Screenshot ${i + 1}`} className="w-full h-[160px] object-cover" />
+                        <img src={ss.data} alt={ss.caption || t("misc.issue_report.screenshot_n", { count: i + 1 })} className="w-full h-[160px] object-cover" />
                         <div className="p-3 space-y-1">
-                            <p className="text-sm text-gray-300 font-medium">{ss.caption || `Screenshot ${i + 1}`}</p>
+                            <p className="text-sm text-gray-300 font-medium">{ss.caption || t("misc.issue_report.screenshot_n", { count: i + 1 })}</p>
                             <p className="text-xs text-gray-500">{ss.timestamp ? format(parseISO(ss.timestamp), "HH:mm:ss") : "—"}</p>
                             <p className="text-xs text-gray-600 truncate">{ss.pageUrl}</p>
                         </div>
@@ -1467,7 +1468,7 @@ function ScreenshotsPanel({ screenshots }: { screenshots: Screenshot[] }) {
                 <div className="bg-gray-900 border border-[--border] rounded-lg p-4">
                     <img
                         src={screenshots[selectedIndex].data}
-                        alt="Full screenshot"
+                        alt={t("misc.issue_report.full_screenshot_alt")}
                         className="max-w-full max-h-[60vh] rounded-lg mx-auto"
                     />
                     {screenshots[selectedIndex].caption && (
@@ -1567,7 +1568,7 @@ function ReplayPanel({ rrwebEvents, unifiedEvents, includeServerLogs, setInclude
                 if (containerRef.current) {
                     containerRef.current.innerHTML = `
                         <div style="display:flex;align-items:center;justify-content:center;height:400px;color:#888;font-size:14px;">
-                            Failed to load session replay player
+                            ${t("misc.issue_report.replay_load_failed")}
                         </div>
                     `
                 }
@@ -1640,7 +1641,7 @@ function ReplayPanel({ rrwebEvents, unifiedEvents, includeServerLogs, setInclude
     if (rrwebEvents.length === 0) {
         return (
             <div className="flex items-center justify-center h-[40vh] text-gray-500">
-                <p>No session replay data in this report</p>
+                <p>{t("misc.issue_report.no_replay_data")}</p>
             </div>
         )
     }
@@ -1648,11 +1649,11 @@ function ReplayPanel({ rrwebEvents, unifiedEvents, includeServerLogs, setInclude
     return (
         <div className="h-[calc(100vh-120px)] overflow-hidden flex flex-col">
             <div className="px-4 py-2 flex items-center gap-3 border-b border-[--border] bg-gray-950 flex-none">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Session Replay</h3>
-                <span className="text-xs text-gray-500">{rrwebEvents.length} DOM events</span>
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t("misc.issue_report.tab_replay")}</h3>
+                <span className="text-xs text-gray-500">{t("misc.issue_report.n_dom_events", { count: rrwebEvents.length })}</span>
                 <div className="ml-auto">
                     <Checkbox
-                        label="Include server logs"
+                        label={t("misc.issue_report.include_server_logs")}
                         value={includeServerLogs}
                         onValueChange={v => setIncludeServerLogs(v as boolean)}
                         size="sm"
@@ -1676,7 +1677,7 @@ function ReplayPanel({ rrwebEvents, unifiedEvents, includeServerLogs, setInclude
                     <div className="h-full bg-gray-950 flex flex-col flex-none">
                         <div className="p-2 border-b border-[--border] bg-gray-900/50 space-y-2">
                             <div className="flex items-center justify-between">
-                                <p className="text-xs text-center font-medium text-gray-400">Timeline ({visibleEvents.length})</p>
+                                <p className="text-xs text-center font-medium text-gray-400">{t("misc.issue_report.timeline_count", { count: visibleEvents.length })}</p>
                             </div>
                             <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar mask-fade-right">
                                 {FILTER_OPTIONS.map(({ key, label }) => (
@@ -1698,7 +1699,7 @@ function ReplayPanel({ rrwebEvents, unifiedEvents, includeServerLogs, setInclude
                         <div className="flex-1 overflow-hidden">
                             {visibleEvents.length === 0 ? (
                                 <div className="h-full flex items-center justify-center text-gray-600 text-sm">
-                                    Waiting for events...
+                                    {t("misc.issue_report.waiting_events")}
                                 </div>
                             ) : (
                                 <Virtuoso
@@ -1766,15 +1767,15 @@ function WebSocketPanel({ logs, searchQuery, setSearchQuery }: {
                 <TextInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search WebSocket events..."
+                    placeholder={t("misc.issue_report.search_websocket")}
                     className="max-w-md"
                     fieldClass="w-fit"
                 />
                 <div className="flex gap-1">
                     {([
-                        { key: "all" as const, label: "All" },
-                        { key: "incoming" as const, label: "Incoming" },
-                        { key: "outgoing" as const, label: "Outgoing" },
+                        { key: "all" as const, label: t("library.filter.all") },
+                        { key: "incoming" as const, label: t("misc.issue_report.incoming") },
+                        { key: "outgoing" as const, label: t("misc.issue_report.outgoing") },
                     ]).map(({ key, label }) => (
                         <button
                             key={key}
@@ -1840,19 +1841,19 @@ function ScanLogsPanel({ scanLogs }: { scanLogs: string[] }) {
     return (
         <div className="p-4 space-y-3">
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-                Scan Logs ({scanLogs.length})
+                {t("misc.issue_report.scan_logs_count", { count: scanLogs.length })}
             </h3>
             <p>
-                First = earliest
+                {t("misc.issue_report.first_is_earliest")}
             </p>
             <div className="flex gap-2 flex-wrap">
                 {scanLogs.map((log, index) => (
                     <Drawer
-                        title={`Scan Log ${index + 1}`}
+                        title={t("misc.issue_report.scan_log_n", { count: index + 1 })}
                         size="full"
                         trigger={
                             <Button intent="gray-outline" className="mt-1" leftIcon={<BiFile />}>
-                                Scan Log {index + 1}
+                                {t("misc.issue_report.scan_log_n", { count: index + 1 })}
                             </Button>
                         }
                         key={index}

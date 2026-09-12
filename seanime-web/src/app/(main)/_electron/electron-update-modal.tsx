@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { VerticalMenu } from "@/components/ui/vertical-menu"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { WSEvents } from "@/lib/server/ws-events"
 import { atom } from "jotai"
 import { useAtom } from "jotai/react"
@@ -98,7 +99,7 @@ export function ElectronUpdateModal(props: UpdateModalProps) {
             const removeUpdateError = window.electron.on("update-error", (error: string) => {
                 logger("ELECTRON").error("Update error", error)
                 if (!isMacOS) {
-                    toast.error(`Update error: ${error}`)
+                    toast.error(t("misc.update.update_error", { message: error }))
                     setIsUpdating(false)
                     setIsDownloading(false)
                 }
@@ -182,7 +183,7 @@ export function ElectronUpdateModal(props: UpdateModalProps) {
                     }, {
                         onSuccess: () => {
                             setIsInstalled(true)
-                            toast.success("Update installed! Closing app...")
+                            toast.success(t("misc.update.installed_closing"))
                             // Close the app after a short delay
                             setTimeout(() => {
                                 window.electron?.send("quit-app")
@@ -190,7 +191,7 @@ export function ElectronUpdateModal(props: UpdateModalProps) {
                         },
                         onError: (error) => {
                             logger("ELECTRON").error("Failed to install macOS update", error)
-                            toast.error(`Failed to install update: ${error.message}`)
+                            toast.error(t("misc.update.install_failed", { message: error.message }))
                             setIsUpdating(false)
                             setIsDownloading(false)
                         },
@@ -227,12 +228,12 @@ export function ElectronUpdateModal(props: UpdateModalProps) {
                 setIsInstalled(true)
 
                 // Electron will automatically restart the app
-                toast.info("Update installed. Restarting app...")
+                toast.info(t("misc.update.installed_restarting"))
             }
         }
         catch (e) {
             logger("ELECTRON").error("Failed to install update", e)
-            toast.error(`Failed to install update: ${JSON.stringify(e)}`)
+            toast.error(t("misc.update.install_failed", { message: JSON.stringify(e) }))
             setIsUpdating(false)
             setIsDownloading(false)
         }
@@ -247,7 +248,7 @@ export function ElectronUpdateModal(props: UpdateModalProps) {
                     <img src="/seanime-logo.png" alt="logo" className="w-14 h-auto" />
                 </div>
                 <p className="text-center text-lg">
-                    Update installed. Restart the app.
+                    {t("misc.update.installed_restart_app")}
                 </p>
             </div>
         </div>
@@ -260,7 +261,7 @@ export function ElectronUpdateModal(props: UpdateModalProps) {
                 items={[
                     {
                         iconType: AiFillExclamationCircle,
-                        name: "Update available",
+                        name: t("misc.update.available_menu"),
                         onClick: () => setUpdateModalOpen(true),
                     },
                 ]}
@@ -272,15 +273,14 @@ export function ElectronUpdateModal(props: UpdateModalProps) {
                 contentClass="max-w-3xl"
             >
                 <div className="space-y-2">
-                    <h3 className="text-center">A new update is available!</h3>
+                    <h3 className="text-center">{t("misc.update.available_toast_title")}</h3>
                     <h4 className="font-bold flex gap-2 text-center items-center justify-center">
                         <span className="text-[--muted]">{updateData?.current_version}</span> <FiArrowRight />
                         <span className="text-indigo-200">{updateData?.release?.version}</span></h4>
 
                     {!electronUpdate && !isMacOS && (
                         <Alert intent="warning">
-                            This update is not yet available for desktop clients.
-                            Wait a few minutes or check the GitHub page for more information.
+                            {t("misc.update.desktop_unavailable")}
                         </Alert>
                     )}
 
@@ -294,8 +294,8 @@ export function ElectronUpdateModal(props: UpdateModalProps) {
                             disabled={isLoading}
                         >
 
-                            {isDownloading ? `Downloading... ${downloadProgress}%` :
-                                isDownloaded ? "Install now" : "Download & Install"}
+                            {isDownloading ? t("misc.update.downloading_pct", { count: downloadProgress }) :
+                                isDownloaded ? t("misc.update.install_now") : t("misc.update.download_and_install")}
                         </Button>}
                         {electronUpdate && isMacOS && <Button
                             leftIcon={<GrInstall className="text-2xl" />}
@@ -303,11 +303,11 @@ export function ElectronUpdateModal(props: UpdateModalProps) {
                             loading={isUpdating || isMacUpdatePending}
                             disabled={isLoading}
                         >
-                            {(isMacUpdatePending) ? "Installing..." : "Install now"}
+                            {(isMacUpdatePending) ? t("misc.update.installing") : t("misc.update.install_now")}
                         </Button>}
                         <div className="flex flex-1" />
                         {!updateData?.release?.tag_name?.includes("v2.") && <SeaLink href={updateData?.release?.html_url || ""} target="_blank">
-                            <Button intent="white-subtle" rightIcon={<BiLinkExternal />}>See on GitHub</Button>
+                            <Button intent="white-subtle" rightIcon={<BiLinkExternal />}>{t("misc.update.see_on_github")}</Button>
                         </SeaLink>}
                     </div>
                 </div>

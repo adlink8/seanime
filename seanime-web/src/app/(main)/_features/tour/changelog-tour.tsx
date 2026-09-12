@@ -1,6 +1,7 @@
 import { useSeaCommand } from "@/app/(main)/_features/sea-command/sea-command.tsx"
 import { SeaImage } from "@/components/shared/sea-image"
 import { useRouter } from "@/lib/navigation"
+import { t } from "@/lib/i18n"
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import React from "react"
@@ -26,19 +27,19 @@ function useSetupTour(): Record<string, () => TourStep[]> {
                 id: "changelog-1",
                 content: (
                     <div>
-                        <h4 className="text-xl font-bold text-white">What's New in 3.5.0?</h4>
-                        <p>Let's take a look at some of the new features.</p>
+                        <h4 className="text-xl font-bold text-white">{t("misc.changelog.whats_new_350")}</h4>
+                        <p>{t("misc.changelog.intro_features")}</p>
                     </div>
                 ),
                 route: "/",
-                nextLabel: "Start",
+                nextLabel: t("manga.action.start"),
                 ignoreOutsideClick: true,
             },
             {
                 id: "scanner",
                 target: "[data-home-toolbar-scan-button]",
-                title: "New Scanner",
-                content: "The scanner's internal logic has been completely overhauled. It now uses a more context-aware algorithm which is more accurate.",
+                title: t("misc.changelog.new_scanner"),
+                content: t("misc.changelog.new_scanner_content"),
                 route: "/",
                 advanceOnTargetClick: true,
                 ignoreOutsideClick: true,
@@ -48,8 +49,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "scanner-2",
                 target: "[data-scanner-modal-content]",
-                title: "New Scanner",
-                content: "The scanner now supports Anime Offline Database for matching data.",
+                title: t("misc.changelog.new_scanner"),
+                content: t("misc.changelog.new_scanner_content2"),
                 route: "/",
                 prepare: () => {
                     openScannerModal(true)
@@ -62,8 +63,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "scanner-3",
                 target: "[data-settings-anime-library='advanced-accordion-trigger']",
-                title: "Scanner Configuration",
-                content: "You can now fine-tune the scanner's matching behavior. Check out the documentation for more information.",
+                title: t("misc.changelog.scanner_config"),
+                content: t("misc.changelog.scanner_config_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("library")
@@ -76,18 +77,18 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "issue-recorder",
                 target: "[data-open-issue-recorder-button]",
-                title: "Issue Recorder",
+                title: t("misc.changelog.issue_recorder"),
                 // content: "The issue recorder has been improved and will now record the UI.",
                 content: <div>
                     <SeaImage
                         src="https://github.com/5rahim/hibike/blob/main/changelog/3_5-issue-recorder.gif?raw=true"
-                        alt="Issue Recorder"
+                        alt={t("misc.changelog.issue_recorder")}
                         width="100%"
                         height="auto"
                         className="rounded-md"
                         allowGif
                     />
-                    <p className="mt-2">The issue recorder has improved and can now record the UI, making bug reports more insightful.</p>
+                    <p className="mt-2">{t("misc.changelog.issue_recorder_content")}</p>
                 </div>,
                 route: "/settings",
                 prepare: async () => {
@@ -100,8 +101,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "transcode-new-player",
                 target: "[data-tab-trigger='mediastream']",
-                title: "Transcode Player",
-                content: "Transcoding/Direct Play now uses the custom Seanime player used by Seanime Denshi and Online Streaming.",
+                title: t("misc.changelog.transcode_player"),
+                content: t("misc.changelog.transcode_player_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("mediastream")
@@ -112,24 +113,24 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "search",
                 target: "[data-vertical-menu-item='Search']",
-                title: "Search",
-                content: "The search menu item now opens the search page. You can still quickly search from any page by pressing 'S'.",
+                title: t("navigation.item.search"),
+                content: t("misc.changelog.search_content"),
                 route: "/search",
                 advanceOnTargetClick: false,
                 ignoreOutsideClick: true,
             },
             {
                 id: "entry",
-                title: "New Player Features",
+                title: t("misc.changelog.new_player_features"),
                 content: <div>
                     <SeaImage
                         src="https://github.com/5rahim/hibike/blob/main/changelog/3_5-videocore-characters.png?raw=true"
-                        alt="Character Lookup"
+                        alt={t("misc.changelog.char_lookup_alt")}
                         width="100%"
                         height="auto"
                         className="rounded-md"
                     />
-                    <p className="mt-2">Press 'H' to quickly look up characters while watching. Press 'Z' to toggle Stats for Nerds.</p>
+                    <p className="mt-2">{t("misc.changelog.char_lookup_content")}</p>
                 </div>,
                 route: "/",
                 advanceOnTargetClick: false,
@@ -145,18 +146,18 @@ function useSetupTour(): Record<string, () => TourStep[]> {
                 id: "changelog-1",
                 content: (
                     <div>
-                        <h4 className="text-xl font-bold text-white">What's New in 3.7.0?</h4>
-                        <p>Let's take a look at some of the new features.</p>
+                        <h4 className="text-xl font-bold text-white">{t("misc.changelog.whats_new_370")}</h4>
+                        <p>{t("misc.changelog.intro_features")}</p>
                     </div>
                 ),
                 route: "/",
-                nextLabel: "Start",
+                nextLabel: t("manga.action.start"),
                 ignoreOutsideClick: true,
             },
             {
                 id: "security",
-                title: "Security Improvements",
-                content: "3.7.0 includes several security improvements, including secure modes. Check out the documentation for more information.",
+                title: t("misc.changelog.security_improvements"),
+                content: t("misc.changelog.security_content"),
                 route: "/",
                 advanceOnTargetClick: true,
                 ignoreOutsideClick: true,
@@ -164,8 +165,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "search",
                 target: "[data-advanced-search-options-tags='true']",
-                title: "Tags",
-                content: "The search page now supports searching by tags.",
+                title: t("library.filter.tags"),
+                content: t("misc.changelog.tags_content"),
                 route: "/search",
                 advanceOnTargetClick: false,
                 ignoreOutsideClick: true,
@@ -173,8 +174,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "search",
                 target: ".sea-command-content",
-                title: "Adult Entries in Global Search",
-                content: "Global search no longer filters out adult entries if you have adult content enabled. (Reminder: Press 's' to open global search)",
+                title: t("misc.changelog.adult_global_search"),
+                content: t("misc.changelog.adult_content"),
                 route: "/search",
                 advanceOnTargetClick: false,
                 ignoreOutsideClick: true,
@@ -189,8 +190,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             },
             {
                 id: "changelog-2",
-                title: "Bug Fixes",
-                content: "Several bugs have been fixed in this release, including some related to Seanime Denshi and plugins. Read the full changelog for more details.",
+                title: t("misc.changelog.bug_fixes"),
+                content: t("misc.changelog.bug_fixes_content_37"),
                 route: "/",
                 ignoreOutsideClick: true,
             },
@@ -203,33 +204,33 @@ function useSetupTour(): Record<string, () => TourStep[]> {
                 id: "changelog-1",
                 content: (
                     <div>
-                        <h4 className="text-xl font-bold text-white">What's New in 3.8.0?</h4>
-                        <p>Let's take a look at the biggest additions in this release.</p>
+                        <h4 className="text-xl font-bold text-white">{t("misc.changelog.whats_new_380")}</h4>
+                        <p>{t("misc.changelog.intro_biggest")}</p>
                     </div>
                 ),
                 route: "/",
-                nextLabel: "Start",
+                nextLabel: t("manga.action.start"),
                 ignoreOutsideClick: true,
             },
             {
                 id: "torrent-search",
-                title: "Torrent Search and Downloads",
-                content: "Torrent search can now fan out across many providers at once. This release also smooths out a few debrid download edge cases.",
+                title: t("misc.changelog.torrent_search_downloads"),
+                content: t("misc.changelog.torrent_content"),
                 route: "/",
                 ignoreOutsideClick: true,
             },
             {
                 id: "subtitle-translation",
-                title: "Subtitle Translation",
-                content: "Subtitle Translator now supports OpenAI-compatible local LLMs, so tools like LM Studio and Ollama can be used as local translation backends.",
+                title: t("misc.changelog.subtitle_translation"),
+                content: t("misc.changelog.subtitle_content"),
                 route: "/",
                 ignoreOutsideClick: true,
             },
             {
                 id: "external-player-link",
                 target: "[data-settings-external-player-link-scheme]",
-                title: "Local Subtitle Files",
-                content: "Local subtitle files are now picked up automatically from the video folder, and external player links can use the new '{subtitleUrl}' placeholder for those local subtitle files.",
+                title: t("misc.changelog.local_subtitle_files"),
+                content: t("misc.changelog.local_sub_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("external-player-link")
@@ -241,8 +242,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "spoilers",
                 target: "[data-settings-hide-anime-spoilers]",
-                title: "Hide Spoilers",
-                content: "You can now hide spoilers across the app, and on anime pages the new '/spoilers' command lets you toggle spoiler hiding for that specific anime.",
+                title: t("misc.changelog.hide_spoilers"),
+                content: t("misc.changelog.spoilers_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("seanime")
@@ -254,8 +255,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "online-streaming",
                 target: "[data-settings-enable-onlinestream]",
-                title: "Online Streaming",
-                content: "Online streaming now uses a new HTTP/1-based proxy and can automatically cycle through providers until it finds one that works.",
+                title: t("misc.changelog.online_streaming"),
+                content: t("misc.changelog.online_content_38"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("onlinestream")
@@ -267,8 +268,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "default-episode-source",
                 target: "[data-settings-default-episode-source]",
-                title: "Default Episode Source",
-                content: "Choose which episode source Seanime should open by default when you land on an anime page.",
+                title: t("misc.changelog.default_episode_source"),
+                content: t("misc.changelog.episode_source_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("seanime")
@@ -280,8 +281,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "ui-settings-redesign",
                 target: "[data-settings-ui-panel-tabs]",
-                title: "Redesigned UI Settings",
-                content: "The User Interface settings panel has been redesigned so it is easier to navigate.",
+                title: t("misc.changelog.redesigned_ui"),
+                content: t("misc.changelog.ui_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("ui")
@@ -293,8 +294,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "ui-settings-redesign2",
                 target: ".settings-ui-navigation-preloading",
-                title: "Route Preloading",
-                content: "Seanime can now preload routes in the background to make navigation feel instant. You can adjust the preloading behavior in the new UI settings panel.",
+                title: t("misc.changelog.route_preloading"),
+                content: t("misc.changelog.preloading_content"),
                 prepare: async () => {
                     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
                     await new Promise(resolve => setTimeout(resolve, 1000))
@@ -306,8 +307,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             {
                 id: "entry-header-redesign",
                 target: "[data-media-page-header]",
-                title: "UI Updates",
-                content: "The media header has been slightly redesigned. There are also new animations and transitions for a snappier experience.",
+                title: t("misc.changelog.ui_updates"),
+                content: t("misc.changelog.ui_updates_content"),
                 prepare: async () => {
                     router.push("/entry?id=21827")
                     await tourHelpers.waitForSelector("[data-media-page-header]")
@@ -317,16 +318,16 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             },
             {
                 id: "extensions",
-                title: "Extensions",
-                content: "Extensions can now be disabled without uninstalling them, and plugins have new APIs for settings, auth, and extension management.",
+                title: t("misc.changelog.extensions"),
+                content: t("misc.changelog.extensions_content"),
                 route: "/extensions",
                 ignoreOutsideClick: true,
             },
             {
                 id: "extension-secure-mode",
                 target: "[data-settings-enable-extension-secure-mode]",
-                title: "Extension Secure Mode",
-                content: "Enable Extension Secure Mode to get a confirmation prompt whenever an extension tries to perform a sensitive action.",
+                title: t("misc.changelog.extension_secure_mode"),
+                content: t("misc.changelog.secure_mode_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("seanime")
@@ -337,8 +338,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             },
             {
                 id: "denshi",
-                title: "Denshi Window State",
-                content: "Seanime Denshi now remembers its window position and size, so reopening the app brings you back to the same desktop layout.",
+                title: t("misc.changelog.denshi_window_state"),
+                content: t("misc.changelog.denshi_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("denshi")
@@ -377,8 +378,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             // },
             {
                 id: "changelog-2",
-                title: "Bug Fixes",
-                content: "Several bugs have been fixed in this release, including some related to the built-in player. Read the full changelog for more details.",
+                title: t("misc.changelog.bug_fixes"),
+                content: t("misc.changelog.bug_fixes_content_38"),
                 route: "/",
                 ignoreOutsideClick: true,
             },
@@ -391,19 +392,19 @@ function useSetupTour(): Record<string, () => TourStep[]> {
                 id: "changelog-1",
                 content: (
                     <div>
-                        <h4 className="text-xl font-bold text-white">What's New in 3.9.0?</h4>
-                        <p>Let's take a look at the biggest additions in this release.</p>
+                        <h4 className="text-xl font-bold text-white">{t("misc.changelog.whats_new_390")}</h4>
+                        <p>{t("misc.changelog.intro_biggest")}</p>
                     </div>
                 ),
                 route: "/",
-                nextLabel: "Start",
+                nextLabel: t("manga.action.start"),
                 ignoreOutsideClick: true,
             },
             {
                 id: "libmpv-player",
                 target: "[data-tab-trigger='playback']",
-                title: "New Built-in Player (Denshi)",
-                content: "Denshi now features a libmpv-based built-in player. It offers hardware-accelerated rendering directly in the app viewport, flawless codec & subtitle support, and supports mpv.conf options and shaders.",
+                title: t("misc.changelog.new_built_in_player"),
+                content: t("misc.changelog.denshi_player_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("playback")
@@ -416,22 +417,22 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             },
             {
                 id: "torrent-streaming-perf",
-                title: "Faster Torrent Streaming",
-                content: "Torrent streaming startup is now up to 20% faster depending on seeding, with more accurate download progress reporting and fixed batch selection.",
+                title: t("misc.changelog.faster_torrent_streaming"),
+                content: t("misc.changelog.faster_torrent_content"),
                 route: "/",
                 ignoreOutsideClick: true,
             },
             {
                 id: "debrid-streaming-perf",
-                title: "Faster Debrid Streaming",
-                content: "Debrid streaming launch is now up to 5 seconds faster for cached streams.",
+                title: t("misc.changelog.faster_debrid_streaming"),
+                content: t("misc.changelog.faster_debrid_content"),
                 route: "/",
                 ignoreOutsideClick: true,
             },
             {
                 id: "changelog-2",
-                title: "Bug Fixes",
-                content: "Several bugs have been fixed in this release, including progress tracking for MPV/IINA, manga image proxy issues, and Seanime Denshi's Electron has been updated to 42.4.0. Read the full changelog for more details.",
+                title: t("misc.changelog.bug_fixes"),
+                content: t("misc.changelog.bug_fixes_content_39"),
                 route: "/",
                 ignoreOutsideClick: true,
             },
@@ -444,26 +445,26 @@ function useSetupTour(): Record<string, () => TourStep[]> {
                 id: "changelog-1",
                 content: (
                     <div>
-                        <h4 className="text-xl font-bold text-white">What's New in 3.10.0?</h4>
-                        <p>Let's take a look at the biggest additions in this release.</p>
+                        <h4 className="text-xl font-bold text-white">{t("misc.changelog.whats_new_3100")}</h4>
+                        <p>{t("misc.changelog.intro_biggest")}</p>
                     </div>
                 ),
                 route: "/",
-                nextLabel: "Start",
+                nextLabel: t("manga.action.start"),
                 ignoreOutsideClick: true,
             },
             {
                 id: "manga-source-refresh",
-                title: "Manga Source Refresh",
-                content: "Manga source refreshing has been improved. In addition to updating saved sources, you can now assign sources to manga who have none, or re-evaluate all of them.",
+                title: t("misc.changelog.manga_source_refresh"),
+                content: t("misc.changelog.manga_refresh_content"),
                 route: "/manga",
                 ignoreOutsideClick: true,
             },
             {
                 id: "torrent-availability",
                 target: "[data-settings-show-torrent-availability]",
-                title: "Torrent Availability",
-                content: "Enable this to show availability badges on recent episodes missing from your library and in Continue Watching when using torrent or Debrid streaming.",
+                title: t("misc.changelog.torrent_availability"),
+                content: t("misc.changelog.availability_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("torrent")
@@ -474,23 +475,23 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             },
             {
                 id: "online-streaming",
-                title: "Online Streaming",
-                content: "Online streaming can now proxy subtitles, refresh stale source URLs, and keep your provider, server, quality, audio, and subtitle choices more reliably.",
+                title: t("misc.changelog.online_streaming"),
+                content: t("misc.changelog.online_content_310"),
                 route: "/",
                 ignoreOutsideClick: true,
             },
             {
                 id: "plugin-tray-badges",
-                title: "Plugin Tray Badges",
-                content: "Badge counts from tray plugins are now shown on the main tray icon even when the plugin is not pinned.",
+                title: t("misc.changelog.plugin_tray_badges"),
+                content: t("misc.changelog.tray_badges_content"),
                 route: "/",
                 ignoreOutsideClick: true,
             },
             {
                 id: "mpvcore-logs",
                 target: "[data-tab-trigger='playback']",
-                title: "Export MpvCore Logs",
-                content: "When MpvCore logging is enabled you can now export its logs from the Video Playback settings for faster bug reports.",
+                title: t("misc.changelog.export_mpvcore_logs"),
+                content: t("misc.changelog.mpvcore_logs_content"),
                 route: "/settings",
                 prepare: async () => {
                     setSettingsTab("playback")
@@ -503,8 +504,8 @@ function useSetupTour(): Record<string, () => TourStep[]> {
             },
             {
                 id: "changelog-2",
-                title: "Bug Fixes",
-                content: "This release also fixes lagging or missing subtitles in VideoCore, MPV/IINA watch progress, media container detection, and more. Read the full changelog for details.",
+                title: t("misc.changelog.bug_fixes"),
+                content: t("misc.changelog.bug_fixes_content_310"),
                 route: "/",
                 ignoreOutsideClick: true,
             },

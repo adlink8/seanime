@@ -4,6 +4,7 @@ import { PlaylistEditor, PlaylistMediaEntry } from "@/app/(main)/_features/playl
 import { Button } from "@/components/ui/button"
 import { DangerZone } from "@/components/ui/form"
 import { Modal } from "@/components/ui/modal"
+import { t } from "@/lib/i18n"
 import { TextInput } from "@/components/ui/text-input"
 import React from "react"
 import { toast } from "sonner"
@@ -76,7 +77,7 @@ export function PlaylistEditorModal(props: PlaylistEditorModalProps) {
 
                 <div className="space-y-4">
                     <TextInput
-                        label="Name"
+                        label={t("home.option.name")}
                         value={name}
                         onChange={e => setName(e.target.value)}
                     />
@@ -100,13 +101,13 @@ export function PlaylistEditorModal(props: PlaylistEditorModalProps) {
                             loading={isCreating || isDeleting || isUpdating}
                             className="w-full"
                         >
-                            {isUpdate ? "Update" : "Create"}
+                            {isUpdate ? t("autodownloader.action.update") : t("autodownloader.action.create")}
                         </Button>
                     </div>
                 </div>
 
                 {isUpdate && <DangerZone
-                    actionText="Delete playlist" onDelete={() => {
+                    actionText={t("misc.playlist.delete_playlist")} onDelete={() => {
                     if (isUpdate && !!playlist) {
                         deletePlaylist({ dbId: playlist.dbId }, {
                             onSuccess: () => {

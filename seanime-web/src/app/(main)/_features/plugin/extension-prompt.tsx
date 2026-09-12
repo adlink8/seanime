@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { Modal } from "@/components/ui/modal"
 import { WSEvents } from "@/lib/server/ws-events"
+import { t } from "@/lib/i18n"
 import { useAtomValue } from "jotai"
 import * as React from "react"
 import { LuDownload, LuKeyRound, LuPackage, LuSettings, LuShieldCheck, LuTerminal } from "react-icons/lu"
@@ -94,7 +95,7 @@ export function ExtensionPrompt() {
     if (!isMainTab || !prompt) return null
 
     const Icon = getIcon(prompt.kind)
-    const title = prompt.message || `Allow the extension "${prompt.extension?.name || "Extension"}" to ${prompt.action}?`
+    const title = prompt.message || t("misc.plugin.allow_extension", { name: prompt.extension?.name || "Extension", action: prompt.action })
 
     return (
         <Modal
@@ -130,8 +131,8 @@ export function ExtensionPrompt() {
                     </div>
 
                     <p className="text-sm text-[--muted] mb-2 text-pretty break-all">
-                        {prompt.extension?.name || "An extension"} would like to perform the following action{!!prompt.resource
-                        ? ` on "${prompt.resource}"`
+                        {prompt.extension?.name || t("misc.plugin.anonymous_extension")}{t("misc.plugin.would_like_action")}{!!prompt.resource
+                        ? t("misc.plugin.on_resource", { resource: prompt.resource })
                         : ""}:
                     </p>
 
@@ -168,7 +169,7 @@ export function ExtensionPrompt() {
                         className="h-12 rounded-full border-0 bg-gray-200 text-base text-gray-950 shadow-none hover:bg-gray-300"
                         onClick={() => respond(false)}
                     >
-                        {prompt.denyLabel || "Don't Allow"}
+                        {prompt.denyLabel || t("misc.plugin.dont_allow")}
                     </Button>
                     <Button
                         intent="warning-subtle"
@@ -176,7 +177,7 @@ export function ExtensionPrompt() {
                         className="h-12 rounded-full border-0 text-base shadow-none"
                         onClick={() => respond(true)}
                     >
-                        {prompt.allowLabel || "Allow"}
+                        {prompt.allowLabel || t("misc.plugin.allow")}
                     </Button>
                 </div>
             </div>

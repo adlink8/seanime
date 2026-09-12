@@ -8,6 +8,7 @@ import { LuClipboard } from "react-icons/lu"
 import { LuSearch } from "react-icons/lu"
 import { LuTrash2 } from "react-icons/lu"
 import { LuX } from "react-icons/lu"
+import { t } from "@/lib/i18n"
 
 export type DebugLogEntry = Plugin_Server_DebugLogEventPayload & {
     id: number
@@ -265,7 +266,7 @@ export function PluginDebugWindow({
                                 onClick={copyLogs}
                             />
                         </div>}
-                    >Copy</Tooltip>
+                    >{t("misc.plugin.copy")}</Tooltip>
                     <Tooltip
                         trigger={<div>
                             <IconButton
@@ -276,7 +277,7 @@ export function PluginDebugWindow({
                                 onClick={onClear}
                             />
                         </div>}
-                    >Clear</Tooltip>
+                    >{t("misc.plugin.clear")}</Tooltip>
                     <Tooltip
                         trigger={<div>
                             <IconButton
@@ -287,7 +288,7 @@ export function PluginDebugWindow({
                                 onClick={onClose}
                             />
                         </div>}
-                    >Close</Tooltip>
+                    >{t("misc.plugin.close")}</Tooltip>
                 </div>
             </div>
             <div className="flex flex-col gap-2 border-b border-[--border] px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
@@ -295,7 +296,7 @@ export function PluginDebugWindow({
                     <TextInput
                         value={search}
                         onChange={event => setSearch(event.target.value)}
-                        placeholder="Search logs..."
+                        placeholder={t("misc.plugin.search_logs")}
                         size="sm"
                         leftIcon={<LuSearch className="size-3.5" />}
                         fieldClass="w-full max-w-xs"
@@ -322,7 +323,7 @@ export function PluginDebugWindow({
             </div>
             <div ref={listRef} onScroll={onListScroll} className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
                 {!visibleLogs.length && <div className="flex h-full items-center justify-center text-sm text-[--muted]">
-                    No logs
+                    {t("misc.plugin.no_logs")}
                 </div>}
                 {visibleLogs.map(log => (
                     <div key={log.id} className="rounded-md border border-[--border] bg-[--paper] p-2 hover:bg-[--subtle]">

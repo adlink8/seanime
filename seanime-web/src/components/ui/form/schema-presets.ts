@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { t } from "@/lib/i18n"
 
 export const schemaPresets = {
     name: z.string().min(2).trim(),
@@ -16,10 +17,10 @@ export const schemaPresets = {
     phone: z.string().min(10, "Invalid phone number"),
     files: z
         .array(z.custom<File>())
-        .refine((files) => files.every((file) => file instanceof File), { message: "Expected a file" }),
+        .refine((files) => files.every((file) => file instanceof File), { message: t("common.form.expected_file") }),
     filesOrEmpty: z
         .array(z.custom<File>()).min(0)
-        .refine((files) => files.every((file) => file instanceof File), { message: "Expected a file" }),
+        .refine((files) => files.every((file) => file instanceof File), { message: t("common.form.expected_file") }),
     dateRangePicker: z.object({ from: z.date(), to: z.date() }),
     datePicker: z.date(),
 }

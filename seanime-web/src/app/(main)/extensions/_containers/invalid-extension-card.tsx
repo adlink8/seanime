@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button, IconButton } from "@/components/ui/button"
 import { cn } from "@/components/ui/core/styling"
 import { Modal } from "@/components/ui/modal"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { BiCog, BiInfoCircle } from "react-icons/bi"
 import { FaCode } from "react-icons/fa"
@@ -52,14 +53,14 @@ export function InvalidExtensionCard(props: InvalidExtensionCardProps) {
                         intent="alert-basic"
                         icon={<BiInfoCircle />}
                     />}
-                    title="Error details"
+                    title={t("extensions.invalid.error_details_title")}
                     contentClass="max-w-2xl"
                 >
                     <p>
-                        Seanime failed to load this extension. If you aren't sure what this means, please contact the author.
+                        {t("extensions.invalid.load_failed")}
                     </p>
                     <p>
-                        Code: <strong>{extension.code}</strong>
+                        {t("extensions.invalid.code_label")} <strong>{extension.code}</strong>
                     </p>
                     <code className="code text-red-200">
                         {extension.reason}
@@ -96,7 +97,7 @@ export function InvalidExtensionCard(props: InvalidExtensionCardProps) {
                     intent="gray-basic"
                     icon={<LuRefreshCcw />}
                     onClick={() => {
-                        if (!extension.extension?.id) return toast.error("Extension has no ID")
+                        if (!extension.extension?.id) return toast.error(t("extensions.card.toast_no_id"))
                         reloadExternalExtension({ id: extension.extension?.id ?? "" })
                     }}
                     disabled={isReloadingExtension}
@@ -109,7 +110,7 @@ export function InvalidExtensionCard(props: InvalidExtensionCardProps) {
                         {!!extension.extension?.icon ? (
                             <SeaImage
                                 src={extension.extension?.icon}
-                                alt="extension icon"
+                                alt={t("extensions.card.alt_icon")}
                                 crossOrigin="anonymous"
                                 fill
                                 quality={100}
@@ -125,19 +126,19 @@ export function InvalidExtensionCard(props: InvalidExtensionCardProps) {
 
                     <div>
                         <p className="font-semibold line-clamp-1">
-                            {extension.extension?.name ?? "Unknown"}
+                            {extension.extension?.name ?? t("manga.manual_match.unknown")}
                         </p>
                         <p className="text-[--muted] text-sm line-clamp-1 italic">
-                            {extension.extension?.id ?? "Invalid ID"}
+                            {extension.extension?.id ?? t("extensions.invalid.invalid_id")}
                         </p>
                     </div>
                 </div>
 
                 <div>
                     <p className="text-red-400 text-sm">
-                        {extension.code === "invalid_manifest" && "Manifest error"}
-                        {extension.code === "invalid_semver_constraint" && "Incompatible with this version of Seanime"}
-                        {extension.code === "invalid_payload" && "Invalid or incompatible code"}
+                        {extension.code === "invalid_manifest" && t("extensions.invalid.manifest_error")}
+                        {extension.code === "invalid_semver_constraint" && t("extensions.invalid.incompatible")}
+                        {extension.code === "invalid_payload" && t("extensions.invalid.invalid_code")}
                     </p>
                 </div>
 
@@ -210,12 +211,12 @@ export function UnauthorizedExtensionPluginCard(props: UnauthorizedExtensionPlug
                         intent="warning-basic"
                         leftIcon={<LuShieldCheck />}
                         className="animate-bounce"
-                    >Grant</Button>}
-                    title="Permissions required"
+                    >{t("extensions.invalid.grant")}</Button>}
+                    title={t("extensions.list.section_permissions_required")}
                     contentClass="max-w-2xl"
                 >
                     <p>
-                        The plugin <span className="font-bold">{extension.extension?.name}</span> is requesting the following permissions:
+                        {t("extensions.invalid.permission_request", { name: extension.extension?.name ?? "" })}
                     </p>
 
                     <p className="whitespace-pre-wrap w-full max-w-full overflow-x-auto text-md leading-relaxed text-left bg-gray-800 border p-3 rounded-xl">
@@ -248,7 +249,7 @@ export function UnauthorizedExtensionPluginCard(props: UnauthorizedExtensionPlug
                     {isUnsafe && <Alert
                         intent="warning"
                         className="!text-[--muted] !bg-gray-800"
-                        description="This plugin relies on unsafe flags to function. Seanime cannot guarantee that it is safe to use."
+                        description={t("extensions.invalid.unsafe_warning")}
                         // className="mb-4"
                     />}
 
@@ -263,7 +264,7 @@ export function UnauthorizedExtensionPluginCard(props: UnauthorizedExtensionPlug
                                 intent="gray-subtle"
                                 className="w-full"
                             >
-                                View code
+                                {t("extensions.invalid.view_code")}
                             </Button>
                         </ExtensionCodeModal>
 
@@ -273,7 +274,7 @@ export function UnauthorizedExtensionPluginCard(props: UnauthorizedExtensionPlug
                             leftIcon={<LuShieldCheck className="size-5" />}
                             className="w-full"
                             onClick={() => {
-                                if (!extension.extension?.id) return toast.error("Extension has no ID")
+                                if (!extension.extension?.id) return toast.error(t("extensions.card.toast_no_id"))
                                 pendingGrantRef.current = true
                                 React.startTransition(() => {
                                     grantPluginPermissions({ id: extension.extension?.id ?? "", clientId: "" })
@@ -281,7 +282,7 @@ export function UnauthorizedExtensionPluginCard(props: UnauthorizedExtensionPlug
                             }}
                             loading={isGrantingPluginPermissions}
                         >
-                            Grant permissions
+                            {t("extensions.invalid.grant_permissions")}
                         </Button>
                     </div>
                 </Modal>
@@ -325,7 +326,7 @@ export function UnauthorizedExtensionPluginCard(props: UnauthorizedExtensionPlug
                         {!!extension.extension?.icon ? (
                             <SeaImage
                                 src={extension.extension?.icon}
-                                alt="extension icon"
+                                alt={t("extensions.card.alt_icon")}
                                 crossOrigin="anonymous"
                                 fill
                                 quality={100}
@@ -341,18 +342,18 @@ export function UnauthorizedExtensionPluginCard(props: UnauthorizedExtensionPlug
 
                     <div>
                         <p className="font-semibold line-clamp-1">
-                            {extension.extension?.name ?? "Unknown"}
+                            {extension.extension?.name ?? t("manga.manual_match.unknown")}
                         </p>
                         <p className="text-[--muted] text-xs line-clamp-1 italic">
-                            {extension.extension?.id ?? "Invalid ID"}
+                            {extension.extension?.id ?? t("extensions.invalid.invalid_id")}
                         </p>
                     </div>
                 </div>
 
                 <div>
                     <p className="text-red-400 text-sm">
-                        {extension.code === "invalid_manifest" && "Manifest error"}
-                        {extension.code === "invalid_payload" && "Invalid or incompatible code"}
+                        {extension.code === "invalid_manifest" && t("extensions.invalid.manifest_error")}
+                        {extension.code === "invalid_payload" && t("extensions.invalid.invalid_code")}
                     </p>
                 </div>
 
@@ -365,7 +366,7 @@ export function UnauthorizedExtensionPluginCard(props: UnauthorizedExtensionPlug
                     </Badge>
                     <Badge className="border-transparent rounded-md" intent="unstyled">
                         {/*{extension.extension.lang.toUpperCase()}*/}
-                        {LANGUAGES_LIST[extension.extension.lang?.toLowerCase()]?.nativeName || extension.extension.lang?.toUpperCase() || "Unknown"}
+                        {LANGUAGES_LIST[extension.extension.lang?.toLowerCase()]?.nativeName || extension.extension.lang?.toUpperCase() || t("manga.manual_match.unknown")}
                     </Badge>
                 </div>
 

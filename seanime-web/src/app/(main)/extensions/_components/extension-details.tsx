@@ -9,6 +9,7 @@ import capitalize from "lodash/capitalize"
 import React from "react"
 import { FaFileAlt, FaLink } from "react-icons/fa"
 import { FaArrowRight } from "react-icons/fa6"
+import { t } from "@/lib/i18n"
 
 type ExtensionDetailsProps = {
     extension: Extension_Extension
@@ -29,7 +30,7 @@ export function ExtensionDetails(props: ExtensionDetailsProps) {
                 {!!extension.icon ? (
                     <SeaImage
                         src={extension.icon}
-                        alt="extension icon"
+                        alt={t("extensions.card.alt_icon")}
                         crossOrigin="anonymous"
                         fill
                         quality={100}
@@ -62,7 +63,7 @@ export function ExtensionDetails(props: ExtensionDetailsProps) {
                             intent="gray-outline"
                             leftIcon={<FaLink />}
                         >
-                            Website
+                            {t("extensions.details.website")}
                         </Button>
                     </SeaLink>}
                 </div>
@@ -73,17 +74,17 @@ export function ExtensionDetails(props: ExtensionDetailsProps) {
 
                 <div className="flex gap-2 flex-wrap">
                     {isBuiltin && <Badge className="rounded-md tracking-wide border-transparent px-0 italic opacity-50" intent="unstyled">
-                        Built-in
+                        {t("extensions.card.builtin")}
                     </Badge>}
                     {<Badge className="rounded-md tracking-wide" intent={"unstyled"}>
-                        ID: {extension.id}
+                        {t("extensions.details.id_label")} {extension.id}
                     </Badge>}
                     {!isBuiltin && <Badge className="rounded-md" intent="unstyled">
-                        Author: {extension.author}
+                        {t("extensions.details.author_label")} {extension.author}
                     </Badge>}
                     {<Badge className="rounded-md" intent="unstyled">
                         {/*{extension.lang.toUpperCase()}*/}
-                        Language: {LANGUAGES_LIST[extension.lang?.toLowerCase()]?.nativeName || extension.lang?.toUpperCase() || "Unknown"}
+                        {t("extensions.details.language_label")} {LANGUAGES_LIST[extension.lang?.toLowerCase()]?.nativeName || extension.lang?.toUpperCase() || t("manga.manual_match.unknown")}
                     </Badge>}
                     {<Badge className="rounded-md" intent="unstyled">
                         {/*{extension.lang.toUpperCase()}*/}
@@ -92,7 +93,7 @@ export function ExtensionDetails(props: ExtensionDetailsProps) {
                 </div>
 
                 {(!!extension.manifestURI && !isBuiltin) && <p className="text-sm w-full tracking-wide">
-                    <span className="text-[--muted]">Manifest URL:</span> <span className="select-all break-all">{extension.manifestURI}</span>
+                    <span className="text-[--muted]">{t("extensions.details.manifest_url")}</span> <span className="select-all break-all">{extension.manifestURI}</span>
                 </p>}
 
                 {!!extension.readme && <div className="">
@@ -102,12 +103,12 @@ export function ExtensionDetails(props: ExtensionDetailsProps) {
                         rightIcon={<FaArrowRight />}
                         onClick={() => openTab(extension.readme)}
                     >
-                        Documentation
+                        {t("extensions.card.documentation")}
                     </Button>
                 </div>}
 
                 {(!!extension.notes) && <div className="text-md w-full tracking-wide space-y-1 py-2">
-                    <p className="text-[--muted] text-sm">Notes:</p>
+                    <p className="text-[--muted] text-sm">{t("extensions.details.notes_label")}</p>
                     <div className="text-pretty space-y-1">{extension.notes.split("\n").map((line, i) => {
                         // return <p>
                         //     {line.replaceAll("\t", "    ")}

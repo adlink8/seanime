@@ -67,9 +67,9 @@ export function EpisodeSection({ entry, details, bottomSection, hideCarousel, ma
                 data: episode,
                 id: `${episode.type}-${episode.localFile?.path || ""}-${episode.episodeNumber}`,
                 value: `${episode.episodeNumber}`,
-                heading: episode.type === "next" ? "Next Episode" :
-                    episode.type === "special" ? "Specials" :
-                        episode.type === "other" ? "Others" : "Episodes",
+                heading: episode.type === "next" ? t("misc.progress.next_episode") :
+                    episode.type === "special" ? t("misc.entry.episode_section_specials") :
+                        episode.type === "other" ? t("misc.entry.episode_section_others") : t("misc.entry.episode_section_episodes"),
                 priority: episode.type === "next" ? 2 :
                     episode.type === "main" ? 1 : 0,
                 render: () => (

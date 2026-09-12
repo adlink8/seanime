@@ -7,6 +7,7 @@ import { LuChevronLeft, LuChevronRight, LuVolume, LuVolume1, LuVolume2, LuVolume
 import { RiPauseLargeLine, RiPlayLargeLine } from "react-icons/ri"
 import { RxEnterFullScreen, RxExitFullScreen } from "react-icons/rx"
 import { TbPictureInPicture, TbPictureInPictureOff } from "react-icons/tb"
+import { t } from "@/lib/i18n"
 
 export function formatTime(seconds: number) {
     const sign = seconds < 0 ? "-" : ""
@@ -707,7 +708,7 @@ export function MediaCoreTimeRangeView(props: MediaCoreTimeRangeViewProps) {
             aria-valuenow={progressPercentage}
             aria-valuetext={`${Math.round(progressPercentage)}%`}
             aria-orientation="horizontal"
-            aria-label="Video playback time"
+            aria-label={t("misc.player.video_playback_time")}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
             onPointerLeave={onPointerLeave}
@@ -727,7 +728,7 @@ export function MediaCoreTimeRangeView(props: MediaCoreTimeRangeViewProps) {
                         <Image
                             data-vc-element="preview-thumbnail-image"
                             src={previewThumbnailUrl}
-                            alt="Preview"
+                            alt={t("misc.player.preview_alt")}
                             fill
                             sizes={`${previewWidth}px`}
                             className="object-cover rounded-md"
@@ -868,7 +869,7 @@ function MediaCoreTimeRangeSegment(props: {
                     style={{
                         right: `-${CHAPTER_GAP / 2}px`,
                     }}
-                    aria-label={`Seek to end of chapter ${idx + 1}`}
+                    aria-label={t("misc.player.seek_chapter_end", { count: idx + 1 })}
                     tabIndex={-1}
                 >
                     <FaDiamond className="size-2.5 text-white/20 hover:text-white/100 transition-colors duration-100" />

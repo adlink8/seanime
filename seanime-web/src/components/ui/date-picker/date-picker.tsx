@@ -2,6 +2,7 @@ import { weekStartsOnAtom } from "@/app/(main)/schedule/_components/schedule-cal
 import { cva } from "class-variance-authority"
 import { Day, formatISO, getYear, Locale, setYear } from "date-fns"
 import { useAtomValue } from "jotai/react"
+import { t } from "@/lib/i18n"
 import * as React from "react"
 import { PropsBase } from "react-day-picker"
 import { BasicField, BasicFieldOptions, extractBasicFieldProps } from "../basic-field"
@@ -210,7 +211,7 @@ export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>((
                     }}
                     className="px-4 py-2 text-sm text-[--muted] hover:text-[--text] transition-colors"
                 >
-                    Clear
+                    {t("common.action.clear")}
                 </button>
             </div>
         </div>

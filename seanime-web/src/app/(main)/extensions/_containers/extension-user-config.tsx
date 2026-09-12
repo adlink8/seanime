@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/modal"
 import { Select } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { TextInput } from "@/components/ui/text-input"
+import { t } from "@/lib/i18n"
 import { atomWithImmer } from "jotai-immer"
 import { useAtom } from "jotai/react"
 import React from "react"
@@ -33,7 +34,7 @@ export function ExtensionUserConfigModal(props: ExtensionUserConfigModalProps) {
             <Modal
                 contentClass="max-w-3xl"
                 trigger={children}
-                title="Preferences"
+                title={t("extensions.card.preferences")}
                 // size="xl"
                 // contentClass="space-y-4"
             >
@@ -90,7 +91,7 @@ function Content({ extension, userConfigError }: { extension: Extension_Extensio
                     {extension.name}
                 </p>
                 <div className="text-sm text-[--muted]">
-                    You can edit the preferences for this extension here.
+                    {t("extensions.user_config.edit_hint")}
                 </div>
             </div>
 
@@ -98,7 +99,7 @@ function Content({ extension, userConfigError }: { extension: Extension_Extensio
                 <Alert
                     intent="warning"
                     description={userConfigError.reason.includes("user config is missing")
-                        ? "Fill out the required configuration options."
+                        ? t("extensions.user_config.fill_required")
                         : userConfigError.reason}
                 />
             )}
@@ -114,7 +115,7 @@ function Content({ extension, userConfigError }: { extension: Extension_Extensio
                                 draft[field.name] = v
                                 return
                             })}
-                            help={!!field.default ? `Default: ${field.default}` : undefined}
+                            help={!!field.default ? t("extensions.user_config.default_value", { value: field.default }) : undefined}
                         />
                     )
                 }
@@ -128,7 +129,7 @@ function Content({ extension, userConfigError }: { extension: Extension_Extensio
                                 draft[field.name] = v ? "true" : "false"
                                 return
                             })}
-                            help={!!field.default ? `Default: ${field.default}` : undefined}
+                            help={!!field.default ? t("extensions.user_config.default_value", { value: field.default }) : undefined}
                         />
                     )
                 }
@@ -143,7 +144,7 @@ function Content({ extension, userConfigError }: { extension: Extension_Extensio
                                 return
                             })}
                             options={field.options}
-                            help={!!field.default ? `Default: ${field.options.find(n => n.value === field.default)?.label ?? "N/A"}` : undefined}
+                            help={!!field.default ? t("extensions.user_config.default_value", { value: field.options.find(n => n.value === field.default)?.label ?? t("extensions.user_config.na") }) : undefined}
                         />
                     )
                 }
@@ -156,7 +157,7 @@ function Content({ extension, userConfigError }: { extension: Extension_Extensio
                     onClick={handleSave}
                     className={cn(!!userConfigError && "animate-pulse")}
                 >
-                    Save
+                    {t("library.common.save")}
                 </Button>
                 <div className="flex flex-1"></div>
             </div>

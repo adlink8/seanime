@@ -1,3 +1,5 @@
+import { t } from "@/lib/i18n"
+
 import {
     AL_AnimeCollection_MediaListCollection_Lists_Entries,
     AL_BaseAnime,
@@ -59,51 +61,51 @@ type ContinueWatchingSorting =
     | "LAST_WATCHED_DESC"
 
 export const CONTINUE_WATCHING_SORTING_OPTIONS = [
-    { label: "最近播出", value: "AIRDATE_DESC" },
-    { label: "最早播出", value: "AIRDATE" },
-    { label: "最高集数", value: "EPISODE_NUMBER_DESC" },
-    { label: "最低集数", value: "EPISODE_NUMBER" },
-    { label: "未看集数最多", value: "UNWATCHED_EPISODES_DESC" },
-    { label: "未看集数最少", value: "UNWATCHED_EPISODES" },
-    { label: "评分最高", value: "SCORE_DESC" },
-    { label: "评分最低", value: "SCORE" },
-    { label: "最近开播", value: "START_DATE_DESC" },
-    { label: "最早开播", value: "START_DATE" },
-    { label: "最近观看", value: "LAST_WATCHED_DESC" },
-    { label: "最早观看", value: "LAST_WATCHED" },
+    { label: t("library.sort.airdate_desc"), value: "AIRDATE_DESC" },
+    { label: t("library.sort.airdate"), value: "AIRDATE" },
+    { label: t("library.sort.episodes_desc"), value: "EPISODE_NUMBER_DESC" },
+    { label: t("library.sort.episodes"), value: "EPISODE_NUMBER" },
+    { label: t("library.sort.unwatched_desc"), value: "UNWATCHED_EPISODES_DESC" },
+    { label: t("library.sort.unwatched"), value: "UNWATCHED_EPISODES" },
+    { label: t("library.sort.score_desc"), value: "SCORE_DESC" },
+    { label: t("library.sort.score"), value: "SCORE" },
+    { label: t("library.sort.start_date_desc"), value: "START_DATE_DESC" },
+    { label: t("library.sort.start_date"), value: "START_DATE" },
+    { label: t("library.sort.last_watched_desc"), value: "LAST_WATCHED_DESC" },
+    { label: t("library.sort.last_watched"), value: "LAST_WATCHED" },
 ]
 
 
 export const COLLECTION_SORTING_OPTIONS = [
-    { label: "评分最高", value: "SCORE_DESC" },
-    { label: "评分最低", value: "SCORE" },
-    { label: "标题 (A-Z)", value: "TITLE" },
-    { label: "标题 (Z-A)", value: "TITLE_DESC" },
-    { label: "观众评分最高", value: "AUDIENCE_SCORE_DESC" },
-    { label: "观众评分最低", value: "AUDIENCE_SCORE" },
-    { label: "观看进度最高", value: "PROGRESS_DESC" },
-    { label: "观看进度最低", value: "PROGRESS" },
-    { label: "最近添加/开始", value: "START_DATE_DESC" },
-    { label: "最早添加/开始", value: "START_DATE" },
-    { label: "最近完结", value: "END_DATE_DESC" },
-    { label: "最早完结", value: "END_DATE" },
-    { label: "最新发布", value: "RELEASE_DATE_DESC" },
-    { label: "最早发布", value: "RELEASE_DATE" },
+    { label: t("library.sort.score_desc"), value: "SCORE_DESC" },
+    { label: t("library.sort.score"), value: "SCORE" },
+    { label: t("library.sort.title"), value: "TITLE" },
+    { label: t("library.sort.title_desc"), value: "TITLE_DESC" },
+    { label: t("library.sort.audience_score_desc"), value: "AUDIENCE_SCORE_DESC" },
+    { label: t("library.sort.audience_score"), value: "AUDIENCE_SCORE" },
+    { label: t("library.sort.progress_desc"), value: "PROGRESS_DESC" },
+    { label: t("library.sort.progress"), value: "PROGRESS" },
+    { label: t("library.sort.added_desc"), value: "START_DATE_DESC" },
+    { label: t("library.sort.added"), value: "START_DATE" },
+    { label: t("library.sort.ended_desc"), value: "END_DATE_DESC" },
+    { label: t("library.sort.ended"), value: "END_DATE" },
+    { label: t("library.sort.released_desc"), value: "RELEASE_DATE_DESC" },
+    { label: t("library.sort.released"), value: "RELEASE_DATE" },
 ]
 
 export const ANIME_COLLECTION_SORTING_OPTIONS = [
-    { label: "最近播出且有更新", value: "AIRDATE_DESC" },
-    { label: "最早播出且有更新", value: "AIRDATE" },
-    { label: "未看集数最多", value: "UNWATCHED_EPISODES_DESC" },
-    { label: "未看集数最少", value: "UNWATCHED_EPISODES" },
-    { label: "最近观看", value: "LAST_WATCHED_DESC" },
-    { label: "最早观看", value: "LAST_WATCHED" },
+    { label: t("library.sort.airdate_updates_desc"), value: "AIRDATE_DESC" },
+    { label: t("library.sort.airdate_updates"), value: "AIRDATE" },
+    { label: t("library.sort.unwatched_desc"), value: "UNWATCHED_EPISODES_DESC" },
+    { label: t("library.sort.unwatched"), value: "UNWATCHED_EPISODES" },
+    { label: t("library.sort.last_watched_desc"), value: "LAST_WATCHED_DESC" },
+    { label: t("library.sort.last_watched"), value: "LAST_WATCHED" },
     ...COLLECTION_SORTING_OPTIONS,
 ]
 
 export const MANGA_COLLECTION_SORTING_OPTIONS = [
-    { label: "未读章节最多", value: "UNREAD_CHAPTERS_DESC" },
-    { label: "未读章节最少", value: "UNREAD_CHAPTERS" },
+    { label: t("library.sort.unread_chapters_desc"), value: "UNREAD_CHAPTERS_DESC" },
+    { label: t("library.sort.unread_chapters"), value: "UNREAD_CHAPTERS" },
     ...COLLECTION_SORTING_OPTIONS,
 ]
 

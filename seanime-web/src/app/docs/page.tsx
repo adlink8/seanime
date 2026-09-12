@@ -3,6 +3,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Separator } from "@/components/ui/separator"
+import { t } from "@/lib/i18n"
 import React from "react"
 
 export default function Page() {
@@ -52,7 +53,7 @@ export default function Page() {
                                     </div>}
 
                                     {!!route.api!.params?.length && <div className="space-y-2">
-                                        <h5>URL Params</h5>
+                                        <h5>{t("misc.docs.url_params")}</h5>
                                         <ul className="list-disc pl-4">
                                             {route.api!.params?.map((param, i) => (
                                                 <li key={param.name + i} className="flex gap-2 items-center">
@@ -70,7 +71,7 @@ export default function Page() {
                                     </div>}
 
                                     {!!route.api?.bodyFields?.length && <div className="space-y-2">
-                                        <h5>Body</h5>
+                                        <h5>{t("misc.docs.body")}</h5>
                                         <ul className="list-disc pl-4">
                                             {route.api?.bodyFields?.map((field, i) => (
                                                 <li key={field.name + i} className="flex gap-2 items-center">
@@ -86,7 +87,7 @@ export default function Page() {
                                     </div>}
 
                                     <div className="flex gap-2 items-center">
-                                        <p className="font-medium text-[--muted]">Returns</p>
+                                        <p className="font-medium text-[--muted]">{t("misc.docs.returns")}</p>
                                         <p className="font-bold text-brand-900">{route.api!.returnTypescriptType}</p>
                                     </div>
                                 </AccordionContent>

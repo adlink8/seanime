@@ -1,6 +1,7 @@
 import { Button, ButtonProps } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { useDisclosure, UseDisclosureReturn } from "@/hooks/use-disclosure"
+import { t } from "@/lib/i18n"
 import React from "react"
 
 type ConfirmationDialogHookProps = {
@@ -29,9 +30,9 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogHookProps & UseDiscl
         onConfirm,
         onCancel,
         title,
-        description = "Are you sure you want to continue?",
-        actionText = "Confirm",
-        cancelText = "Cancel",
+        description = t("common.dialog.confirm_description"),
+        actionText = t("common.action.confirm"),
+        cancelText = t("common.action.cancel"),
         actionIntent = "alert-subtle",
     } = props
 

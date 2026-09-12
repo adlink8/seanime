@@ -1,4 +1,5 @@
 import { SeaLink } from "@/components/shared/sea-link"
+import { t } from "@/lib/i18n"
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu"
 import { cva, VariantProps } from "class-variance-authority"
 import * as React from "react"
@@ -179,7 +180,7 @@ export const NavigationMenu = React.forwardRef<HTMLDivElement, NavigationMenuPro
                 )}
                 onClick={() => setMobileOpen(s => !s)}
             >
-                <span className="sr-only">Open main menu</span>
+                <span className="sr-only">{t("common.a11y.open_main_menu")}</span>
                 {mobileOpen ? (
                     <svg
                         xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"

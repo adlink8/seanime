@@ -32,6 +32,7 @@ import {
 } from "@/app/(main)/_features/plugin/components/registry-components"
 import type React from "react"
 import { createContext, useContext } from "react"
+import { t } from "@/lib/i18n"
 
 // Create and initialize the registry
 export const registry: ComponentRegistry = new Map([
@@ -84,7 +85,7 @@ function DefaultFallback({ type }: { type: string }) {
 function ErrorFallbackComponent({ error }: { error: Error }) {
     return (
         <div className="p-4 text-destructive" role="alert">
-            <p>Something went wrong:</p>
+            <p>{t("misc.plugin.something_went_wrong")}</p>
             <pre className="mt-2 text-sm">{error.message}</pre>
         </div>
     )

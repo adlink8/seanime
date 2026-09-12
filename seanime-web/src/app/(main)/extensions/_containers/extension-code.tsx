@@ -10,6 +10,7 @@ import { unifiedMergeView } from "@codemirror/merge"
 import { vscodeDark } from "@uiw/codemirror-theme-vscode"
 import CodeMirror, { EditorView } from "@uiw/react-codemirror"
 import React, { useMemo } from "react"
+import { t } from "@/lib/i18n"
 
 
 type ExtensionCodeModalProps = {
@@ -26,7 +27,7 @@ export function ExtensionCodeModal(props: ExtensionCodeModalProps) {
         <Modal
             contentClass="max-w-5xl"
             trigger={props.children}
-            title="Code"
+            title={t("extensions.card.code")}
             onInteractOutside={e => {
                 if (!props.readOnly) e.preventDefault()
             }}
@@ -88,12 +89,12 @@ function Content(props: ExtensionCodeModalProps) {
                     {extension.name}
                 </p>
                 {!readOnly && !diff && <div className="text-sm text-[--muted]">
-                    You can edit the code of the extension here.
+                    {t("extensions.code.edit_hint")}
                 </div>}
             </div>
             {!readOnly && <div className="flex">
                 <Button intent="white" loading={isPending} onClick={handleSave}>
-                    Save
+                    {t("library.common.save")}
                 </Button>
                 <div className="flex flex-1"></div>
             </div>}

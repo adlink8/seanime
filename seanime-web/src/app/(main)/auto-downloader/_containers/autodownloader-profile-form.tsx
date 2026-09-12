@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { TextInput } from "@/components/ui/text-input"
+import { t } from "@/lib/i18n"
 import { DndContext, DragEndEvent } from "@dnd-kit/core"
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
@@ -154,14 +155,14 @@ export function AutoDownloaderProfileForm(props: AutoDownloaderProfileFormProps)
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-                <label className="text-sm font-medium">Profile Name</label>
+                <label className="text-sm font-medium">{t("settings.debrid.profile_name")}</label>
                 <TextInput
                     value={formData.name}
                     onValueChange={(v) => setFormData(draft => {
                         draft.name = v
                         return
                     })}
-                    placeholder="Name"
+                    placeholder={t("home.option.name")}
                     required
                 />
             </div>
@@ -175,8 +176,8 @@ export function AutoDownloaderProfileForm(props: AutoDownloaderProfileFormProps)
                     })}
                 />
                 <label className="text-sm">
-                    Global
-                    <span className="text-[--muted] block text-xs">Apply this profile to all rules automatically</span>
+                    {t("autodownloader.field.global")}
+                    <span className="text-[--muted] block text-xs">{t("autodownloader.help.global")}</span>
                 </label>
             </div>
 
@@ -189,9 +190,9 @@ export function AutoDownloaderProfileForm(props: AutoDownloaderProfileFormProps)
             <ConditionsSortableField />
 
             <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-                <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Thresholds</div>
+                <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("settings.autoselect.thresholds")}</div>
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Minimum Score</label>
+                    <label className="text-sm font-medium">{t("autodownloader.field.minimum_score")}</label>
                     <TextInput
                         type="number"
                         value={formData.minimumScore}
@@ -201,11 +202,11 @@ export function AutoDownloaderProfileForm(props: AutoDownloaderProfileFormProps)
                         })}
                         placeholder="0"
                     />
-                    <p className="text-sm text-[--muted]">Torrents with a score lower than this will be rejected</p>
+                    <p className="text-sm text-[--muted]">{t("autodownloader.help.minimum_score")}</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Min Seeders</label>
+                        <label className="text-sm font-medium">{t("settings.autoselect.min_seeders")}</label>
                         <TextInput
                             type="number"
                             value={formData.minSeeders}
@@ -218,25 +219,25 @@ export function AutoDownloaderProfileForm(props: AutoDownloaderProfileFormProps)
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Min Size</label>
+                        <label className="text-sm font-medium">{t("settings.autoselect.min_size")}</label>
                         <TextInput
                             value={formData.minSize}
                             onChange={(e) => setFormData(draft => {
                                 draft.minSize = e.target.value
                                 return
                             })}
-                            placeholder="e.g. 100MB"
+                            placeholder={t("settings.autoselect.min_size_placeholder")}
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Max Size</label>
+                        <label className="text-sm font-medium">{t("settings.autoselect.max_size")}</label>
                         <TextInput
                             value={formData.maxSize}
                             onChange={(e) => setFormData(draft => {
                                 draft.maxSize = e.target.value
                                 return
                             })}
-                            placeholder="e.g. 2GB or 10GiB"
+                            placeholder={t("settings.autoselect.max_size_placeholder")}
                         />
                     </div>
                 </div>
@@ -245,13 +246,12 @@ export function AutoDownloaderProfileForm(props: AutoDownloaderProfileFormProps)
             <ProvidersFieldControlled />
 
             <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-                <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Delay</div>
+                <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("autodownloader.section.delay")}</div>
                 <p className="text-sm text-[--muted]">
-                    Wait for better releases before downloading. The delay period will start once a first match is found.
-                    If a higher delay profile is assigned to a rule or applied globally, this one will be ignored.
+                    {t("autodownloader.help.delay")}
                 </p>
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Delay</label>
+                    <label className="text-sm font-medium">{t("autodownloader.field.delay_minutes")}</label>
                     <NumberInput
                         value={formData.delayMinutes}
                         onValueChange={(v) => setFormData(draft => {
@@ -261,13 +261,13 @@ export function AutoDownloaderProfileForm(props: AutoDownloaderProfileFormProps)
                         placeholder="0"
                         min={0}
                         formatOptions={{ useGrouping: false }}
-                        rightAddon="minutes"
-                        help="Wait this many minutes before downloading"
+                        rightAddon={t("entry.episode.minutes")}
+                        help={t("autodownloader.help.delay_minutes")}
                     />
                 </div>
                 {formData.delayMinutes > 0 && (
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Skip Delay Score</label>
+                        <label className="text-sm font-medium">{t("autodownloader.field.skip_delay_score")}</label>
                         <NumberInput
                             value={formData.skipDelayScore}
                             onValueChange={(v) => setFormData(draft => {
@@ -276,7 +276,7 @@ export function AutoDownloaderProfileForm(props: AutoDownloaderProfileFormProps)
                             })}
                             placeholder="0"
                             formatOptions={{ useGrouping: false }}
-                            help="Skip the delay if torrent score exceeds this value"
+                            help={t("autodownloader.help.skip_delay_score")}
                         />
                         <p className="text-sm text-[--muted]"></p>
                     </div>
@@ -289,7 +289,7 @@ export function AutoDownloaderProfileForm(props: AutoDownloaderProfileFormProps)
                     intent={profile ? "primary" : "success"}
                     loading={creating || updating}
                 >
-                    {profile ? "Update" : "Create"}
+                    {profile ? t("autodownloader.action.update") : t("autodownloader.action.create")}
                 </Button>
             </div>
         </form>
@@ -356,10 +356,9 @@ function ReleaseGroupsSortableField() {
 
     return (
         <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Release Groups</div>
+            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("autodownloader.section.release_groups")}</div>
             <p className="text-sm text-[--muted]">
-                List of release groups to look for. If empty, any release group will be accepted.
-                Rules can override this.
+                {t("autodownloader.help.release_groups")}
             </p>
 
             <div className="flex flex-wrap gap-2 mb-2">
@@ -409,7 +408,7 @@ function ReleaseGroupsSortableField() {
                 size="sm"
                 type="button"
             >
-                Add Release Group
+                {t("autodownloader.action.add_release_group")}
             </Button>
         </div>
     )
@@ -467,9 +466,9 @@ function ResolutionsSortableField() {
 
     return (
         <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Resolutions</div>
+            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("entry.torrent_search.resolution")}</div>
             <p className="text-sm text-[--muted]">
-                Drag and drop to reorder. The first matching resolution will be picked. Rules can override this.
+                {t("autodownloader.help.resolutions_sortable")}
             </p>
 
             <div className="flex flex-wrap gap-2 mb-2">
@@ -519,7 +518,7 @@ function ResolutionsSortableField() {
                 size="sm"
                 type="button"
             >
-                Add Resolution
+                {t("autodownloader.action.add_resolution")}
             </Button>
         </div>
     )
@@ -579,9 +578,9 @@ function ConditionsSortableField() {
 
     return (
         <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Conditions</div>
+            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("autodownloader.section.conditions")}</div>
             <p className="text-sm text-[--muted]">
-                Add conditions to filter torrents or adjust their score.
+                {t("autodownloader.help.conditions")}
             </p>
 
             <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={onDragEnd}>
@@ -605,7 +604,7 @@ function ConditionsSortableField() {
                 size="sm"
                 type="button"
             >
-                Add Condition
+                {t("autodownloader.action.add_condition")}
             </Button>
         </div>
     )
@@ -626,9 +625,9 @@ function ConditionItem(props: ConditionItemProps) {
                 <TextInput
                     value={field.term}
                     onChange={(e) => onUpdateField(field.id, "term", e.target.value)}
-                    placeholder="e.g. Blu-Ray, BluRay or \b(group)\bi"
+                    placeholder={t("autodownloader.placeholder.condition_term")}
                     className="w-full"
-                    help="Comma-separated case insensitive values or regex pattern"
+                    help={t("autodownloader.help.condition_term")}
                 />
                 <div className="space-y-2">
                     <div className="flex items-center gap-6 flex-wrap">
@@ -636,11 +635,11 @@ function ConditionItem(props: ConditionItemProps) {
                             value={field.action}
                             onValueChange={(value) => onUpdateField(field.id, "action", value)}
                             options={[
-                                { label: "Score", value: "score" },
-                                { label: "Block", value: "block" },
-                                { label: "Require", value: "require" },
+                                { label: t("media.field.score"), value: "score" },
+                                { label: t("autodownloader.option.block"), value: "block" },
+                                { label: t("autodownloader.option.require"), value: "require" },
                             ]}
-                            label="Action:"
+                            label={`${t("autodownloader.field.action")}：`}
                             fieldClass="!flex !items-center gap-2 w-fit"
                             labelProps={{ className: "items-center text-sm font-semibold pt-1" }}
                             className="w-32"
@@ -649,8 +648,8 @@ function ConditionItem(props: ConditionItemProps) {
                             <NumberInput
                                 value={field.score}
                                 onValueChange={(v) => onUpdateField(field.id, "score", v || 0)}
-                                placeholder="Score"
-                                label="Score:"
+                                placeholder={t("media.field.score")}
+                                label={`${t("media.field.score")}：`}
                                 fieldClass="!flex !items-center gap-2 w-fit"
                                 labelProps={{ className: "items-center text-sm font-semibold pt-1" }}
                                 className="w-32"
@@ -664,7 +663,7 @@ function ConditionItem(props: ConditionItemProps) {
                         <Checkbox
                             value={field.isRegex}
                             onValueChange={(value) => onUpdateField(field.id, "isRegex", !!value)}
-                            label="Regex"
+                            label={t("autodownloader.field.regex")}
                         />
                         <IconButton
                             icon={<BiTrash />}
@@ -715,9 +714,9 @@ function ProvidersFieldControlled() {
 
     return (
         <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Providers</div>
+            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("settings.debrid.provider")}</div>
             <p className="text-sm text-[--muted]">
-                Select specific providers to look for. If empty, the default provider will be used.
+                {t("autodownloader.help.providers")}
             </p>
             <Combobox
                 value={formData.providers}
@@ -731,8 +730,8 @@ function ProvidersFieldControlled() {
                     value: ext.id,
                 })) ?? []}
                 multiple
-                label="Select providers"
-                emptyMessage="No providers found"
+                label={t("autodownloader.field.select_providers")}
+                emptyMessage={t("settings.autoselect.empty_providers")}
             />
         </div>
     )

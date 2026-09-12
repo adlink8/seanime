@@ -2,6 +2,7 @@ import { AutoplayState } from "@/app/(main)/_features/autoplay/autoplay"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { BiSolidSkipNextCircle } from "react-icons/bi"
 
 interface AutoplayCountdownModalProps {
@@ -51,7 +52,7 @@ export function AutoplayCountdownModal({
         }
 
         return {
-            title: "Next Episode",
+            title: t("misc.progress.next_episode"),
             episodeTitle: null,
             image: null,
         }
@@ -69,7 +70,7 @@ export function AutoplayCountdownModal({
             }}
             titleClass="text-center"
             hideCloseButton
-            title="Playing next episode in"
+            title={t("misc.progress.playing_next_in")}
             contentClass="!space-y-4 relative max-w-xl border-transparent !rounded-3xl"
             closeClass="!text-[--red]"
         >
@@ -118,7 +119,7 @@ export function AutoplayCountdownModal({
                         className="flex-1"
                         size="sm"
                     >
-                        Cancel
+                        {t("home.settings.cancel")}
                     </Button>
 
                     {onPlayNow && (
@@ -129,7 +130,7 @@ export function AutoplayCountdownModal({
                             size="sm"
                             leftIcon={<BiSolidSkipNextCircle />}
                         >
-                            Play Now
+                            {t("misc.progress.play_now")}
                         </Button>
                     )}
                 </div>

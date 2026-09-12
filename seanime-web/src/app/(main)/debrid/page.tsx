@@ -17,6 +17,7 @@ import { cn } from "@/components/ui/core/styling"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import { WSEvents } from "@/lib/server/ws-events"
 import { formatDate, isValid } from "date-fns"
 import { atom } from "jotai"
@@ -72,9 +73,9 @@ export default function Page() {
     if (!serverStatus) return <LoadingSpinner />
 
     if (!serverStatus?.debridSettings?.enabled || !serverStatus?.debridSettings?.provider) return <LuffyError
-        title="Debrid not enabled"
+        title={t("misc.debrid.not_enabled_title")}
     >
-        Debrid service is not enabled or configured
+        {t("misc.debrid.not_enabled")}
     </LuffyError>
 
     return (
@@ -131,14 +132,14 @@ function Content() {
         }
     }, [status])
 
-    if (!enabled) return <LuffyError title="Failed to connect">
+    if (!enabled) return <LuffyError title={t("misc.debrid.failed_title")}>
         <div className="flex flex-col gap-4 items-center">
-            <p className="max-w-md">Failed to connect to the Debrid service, verify your settings.</p>
+            <p className="max-w-md">{t("misc.debrid.failed")}</p>
             <Button
                 intent="primary-subtle" onClick={() => {
                 setEnabled(true)
             }}
-            >Retry</Button>
+            >{t("common.action.retry")}</Button>
         </div>
     </LuffyError>
 
@@ -150,7 +151,7 @@ function Content() {
                 <div>
                     <h2>{getServiceName(serverStatus?.debridSettings?.provider!)}</h2>
                     <p className="text-[--muted]">
-                        See your debrid service torrents
+                        {t("misc.debrid.see_torrents")}
                     </p>
                 </div>
                 <div className="flex flex-1"></div>
@@ -160,15 +161,15 @@ function Content() {
                         leftIcon={<BiRefresh className="text-2xl" />}
                         onClick={() => {
                             refetch()
-                            toast.info("Refreshed")
+                            toast.info(t("misc.debrid.refreshed"))
                         }}
-                    >Refresh</Button>
+                    >{t("common.action.refresh")}</Button>
                     {!!getDashboardLink(serverStatus?.debridSettings?.provider!) && (
                         <SeaLink href={getDashboardLink(serverStatus?.debridSettings?.provider!)} target="_blank">
                             <Button
                                 intent="primary-subtle"
                                 rightIcon={<BiLinkExternal className="text-xl" />}
-                            >Dashboard</Button>
+                            >{t("misc.debrid.dashboard")}</Button>
                         </SeaLink>
                     )}
                 </div>
@@ -179,8 +180,8 @@ function Content() {
 
                     <div>
                         <ul className="text-[--muted] flex flex-wrap gap-4">
-                            <li>Downloading: {data?.filter(t => t.status === "downloading" || t.status === "paused")?.length ?? 0}</li>
-                            <li>Seeding: {data?.filter(t => t.status === "seeding")?.length ?? 0}</li>
+                            <li>{t("torrent.stats.downloading")}：{data?.filter(t => t.status === "downloading" || t.status === "paused")?.length ?? 0}</li>
+                            <li>{t("torrent.stats.seeding")}：{data?.filter(t => t.status === "seeding")?.length ?? 0}</li>
                         </ul>
                     </div>
 
@@ -192,7 +193,7 @@ function Content() {
                                 downloadProgress={downloadProgressMap[torrent.id] ?? null}
                             />
                         })}
-                        {(!isLoading && !data?.length) && <LuffyError title="暂无内容">暂无活跃的种子任务</LuffyError>}
+                        {(!isLoading && !data?.length) && <LuffyError title={t("common.empty.title")}>{t("common.empty.debrid_torrents")}</LuffyError>}
                     </Card>
                 </AppLayoutStack>
             </div>
@@ -223,14 +224,14 @@ type DownloadProgress = {
 function getLocalDownloadStatus(torrent: Debrid_TorrentItem, downloadProgress?: DownloadProgress | null) {
     if (downloadProgress || torrent.isDownloadingLocally) {
         return {
-            label: "Downloading",
+            label: t("torrent.filter.downloading"),
             intent: "blue" as const,
         }
     }
 
     if (torrent.isQueuedForLocalDownload) {
         return {
-            label: torrent.isReady ? "Queued" : "Waiting...",
+            label: torrent.isReady ? t("misc.debrid.queued") : t("misc.debrid.waiting"),
             intent: "warning" as const,
         }
     }
@@ -252,8 +253,8 @@ const TorrentItem = React.memo(function TorrentItem({ torrent, isPending, downlo
     const canOpenDownloadModal = torrent.isReady && !isDownloadingLocally
 
     const confirmDeleteTorrentProps = useConfirmationDialog({
-        title: "Remove torrent",
-        description: "This action cannot be undone.",
+        title: t("torrent.client.remove_single"),
+        description: t("library.explorer.delete_desc"),
         onConfirm: () => {
             deleteTorrent({
                 torrentItem: torrent,
@@ -347,14 +348,14 @@ const TorrentItem = React.memo(function TorrentItem({ torrent, isPending, downlo
                             <HiFolderDownload className="text-2xl animate-pulse text-[--blue]" />
                         </p>}
                     >
-                        Downloading locally
+                        {t("misc.debrid.downloading_locally")}
                     </Tooltip>
                     {downloadProgress ? (
                         <p>
                             {downloadProgress.totalBytes}<span className="text-[--muted]"> / {downloadProgress.totalSize}</span>
                         </p>
                     ) : (
-                        <p className="text-sm text-[--muted]">Preparing local files</p>
+                        <p className="text-sm text-[--muted]">{t("misc.debrid.preparing")}</p>
                     )}
                     <Tooltip
                         trigger={<p>
@@ -368,7 +369,7 @@ const TorrentItem = React.memo(function TorrentItem({ torrent, isPending, downlo
                             />
                         </p>}
                     >
-                        Cancel download
+                        {t("misc.debrid.cancel_download")}
                     </Tooltip>
                 </div>}
                 <IconButton
@@ -431,7 +432,7 @@ function TorrentItemModal(props: TorrentItemModalProps) {
             onOpenChange={() => {
                 setSelectedTorrentItem(null)
             }}
-            title="Download"
+            title={t("misc.debrid.download")}
             contentClass="max-w-2xl"
         >
             <p className="text-center line-clamp-2 text-sm">
@@ -441,13 +442,13 @@ function TorrentItemModal(props: TorrentItemModalProps) {
             <div className="space-y-4 mt-4">
                 <DirectorySelector
                     name="destination"
-                    label="Destination"
+                    label={t("misc.debrid.destination")}
                     leftIcon={<FcFolder />}
                     value={destination}
                     defaultValue={destination}
                     onSelect={setDestination}
                     shouldExist={false}
-                    help="Where to save the torrent"
+                    help={t("misc.debrid.destination_help")}
                     libraryPathSelectionProps={libraryPathSelectionProps}
                 />
 
@@ -459,7 +460,7 @@ function TorrentItemModal(props: TorrentItemModalProps) {
                         disabled={!destination || destination.length < 2}
                         onClick={handleDownload}
                     >
-                        Download
+                        {t("misc.debrid.download")}
                     </Button>
                 </div>
             </div>

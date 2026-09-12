@@ -3,6 +3,7 @@ import { useGetMangaCollection } from "@/api/hooks/manga.hooks"
 import { useLibraryCollection } from "@/app/(main)/_hooks/anime-library-collection-loader.ts"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command"
+import { t } from "@/lib/i18n"
 import { useRouter } from "@/lib/navigation"
 import React from "react"
 import { BiArrowBack } from "react-icons/bi"
@@ -37,24 +38,24 @@ export function SeaCommandUserMediaNavigation() {
                 <>
                     <CommandHelperText
                         command="/anime [title]"
-                        description="Find anime in your collection"
+                        description={t("misc.sea_command.find_anime_collection")}
                         show={command === "anime"}
                     />
                     <CommandHelperText
                         command="/manga [title]"
-                        description="Find manga in your collection"
+                        description={t("misc.sea_command.find_manga_collection")}
                         show={command === "manga"}
                     />
                     <CommandHelperText
                         command="/library [title]"
-                        description="Find anime in your library"
+                        description={t("misc.sea_command.find_anime_library")}
                         show={command === "library"}
                     />
                 </>
             )}
 
             {command === "anime" && filteredAnime.length > 0 && (
-                <CommandGroup heading="My anime">
+                <CommandGroup heading={t("misc.sea_command.my_anime")}>
                     {filteredAnime.map(n => (
                         <CommandItem
                             key={n.id}
@@ -116,67 +117,67 @@ export function SeaCommandNavigation() {
 
     const pages = [
         {
-            name: "Home",
+            name: t("navigation.item.home"),
             href: "/",
             flag: "home",
             show: !serverStatus?.isOffline,
         },
         {
-            name: "Schedule",
+            name: t("navigation.item.schedule"),
             href: "/schedule",
             flag: "schedule",
             show: !serverStatus?.isOffline,
         },
         {
-            name: "Settings",
+            name: t("navigation.sidebar.settings"),
             href: "/settings",
             flag: "settings",
             show: !serverStatus?.isOffline,
         },
         {
-            name: "Manga",
+            name: t("navigation.item.manga"),
             href: "/manga",
             flag: "manga",
             show: !serverStatus?.isOffline,
         },
         {
-            name: "Discover",
+            name: t("navigation.item.discover"),
             href: "/discover",
             flag: "discover",
             show: !serverStatus?.isOffline,
         },
         {
-            name: "My lists",
+            name: t("navigation.item.lists"),
             href: "/lists",
             flag: "lists",
             show: !serverStatus?.isOffline,
         },
         {
-            name: "Auto Downloader",
+            name: t("navigation.sidebar.auto_downloader"),
             href: "/auto-downloader",
             flag: "auto-downloader",
             show: !serverStatus?.isOffline,
         },
         {
-            name: "Torrent list",
+            name: t("navigation.sidebar.torrent_list"),
             href: "/torrent-list",
             flag: "torrent-list",
             show: !serverStatus?.isOffline,
         },
         {
-            name: "Scan summaries",
+            name: t("navigation.sidebar.scan_summaries"),
             href: "/scan-summaries",
             flag: "scan-summaries",
             show: !serverStatus?.isOffline,
         },
         {
-            name: "Extensions",
+            name: t("navigation.sidebar.extensions"),
             href: "/extensions",
             flag: "extensions",
             show: !serverStatus?.isOffline,
         },
         {
-            name: "Advanced search",
+            name: t("misc.sea_command.advanced_search"),
             href: "/search",
             flag: "search",
             show: !serverStatus?.isOffline,
@@ -194,7 +195,7 @@ export function SeaCommandNavigation() {
     return (
         <>
             {command.startsWith("ba") && (
-                <CommandGroup heading="Navigation">
+                <CommandGroup heading={t("misc.sea_command.navigation")}>
                     <CommandItem
                         onSelect={() => {
                             select(() => {
@@ -203,7 +204,7 @@ export function SeaCommandNavigation() {
                         }}
                     >
                         <BiArrowBack className="mr-2 h-4 w-4" />
-                        <span>Go back</span>
+                        <span>{t("misc.sea_command.go_back")}</span>
                     </CommandItem>
                 </CommandGroup>
             )}
@@ -217,14 +218,14 @@ export function SeaCommandNavigation() {
                         }}
                     >
                         <BiArrowBack className="mr-2 h-4 w-4 rotate-180" />
-                        <span>Go forward</span>
+                        <span>{t("misc.sea_command.go_forward")}</span>
                     </CommandItem>
                 </CommandGroup>
             )}
 
             {/*Typing `/library`, `/schedule`, etc. without args*/}
             {isCommand && filteredPages.length > 0 && args.length === 0 && (
-                <CommandGroup heading="Screens">
+                <CommandGroup heading={t("misc.sea_command.screens")}>
                     <>
                         {filteredPages.filter(page => page.show).map(page => (
                             <CommandItem
@@ -235,8 +236,8 @@ export function SeaCommandNavigation() {
                                     })
                                 }}
                             >
-                                <span className="text-sm tracking-wide font-bold text-[--muted]">Go to:&nbsp;</span>{" "}{page.name}
-                                {command === page.flag ? <CommandShortcut>Enter</CommandShortcut> : <CommandShortcut>/{page.flag}</CommandShortcut>}
+                                <span className="text-sm tracking-wide font-bold text-[--muted]">{t("misc.sea_command.go_to")}&nbsp;</span>{" "}{page.name}
+                                {command === page.flag ? <CommandShortcut>{t("misc.sea_command.enter")}</CommandShortcut> : <CommandShortcut>/{page.flag}</CommandShortcut>}
                             </CommandItem>
                         ))}
                     </>
@@ -254,7 +255,7 @@ export function SeaCommandNavigation() {
                             }}
                         >
                             <BiArrowBack className="mr-2 h-4 w-4" />
-                            <span>Go back</span>
+                            <span>{t("misc.sea_command.go_back")}</span>
                         </CommandItem>
                         <CommandItem
                             onSelect={() => {
@@ -264,7 +265,7 @@ export function SeaCommandNavigation() {
                             }}
                         >
                             <BiArrowBack className="mr-2 h-4 w-4 rotate-180" />
-                            <span>Go forward</span>
+                            <span>{t("misc.sea_command.go_forward")}</span>
                         </CommandItem>
                     </>
                     {/* )} */}

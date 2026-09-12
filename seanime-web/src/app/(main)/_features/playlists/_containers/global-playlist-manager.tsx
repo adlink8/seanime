@@ -5,6 +5,7 @@ import { useAutoPlaySelectedTorrent } from "@/app/(main)/_features/autoplay/auto
 import { getBatchSelectionParams } from "@/app/(main)/_features/autoplay/batches.ts"
 import { nativePlayer_stateAtom } from "@/app/(main)/_features/native-player/native-player.atoms"
 import { PlaylistManagerPopup } from "@/app/(main)/_features/playlists/_components/global-playlist-popup"
+import { t } from "@/lib/i18n"
 import { playlist_getEpisodeKey, playlist_isSameEpisode } from "@/app/(main)/_features/playlists/_components/playlist-editor"
 import { useWebsocketMessageListener, useWebsocketSender } from "@/app/(main)/_hooks/handle-websockets"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
@@ -248,7 +249,7 @@ export function GlobalPlaylistManager() {
                     const episode = payload2.playlistEpisode
                     setCurrentPlaylistEpisode(episode)
 
-                    toast.info(`Playing episode ${episode.episode?.aniDBEpisode} of ${episode.episode?.baseAnime?.title?.userPreferred}`)
+                    toast.info(t("misc.playlist.playing_episode", { anime: episode.episode?.baseAnime?.title?.userPreferred ?? "-", episode: episode.episode?.aniDBEpisode ?? "-" }))
 
                     switch (payload2.playlistEpisode.watchType) {
                         case "nakama":
@@ -355,18 +356,18 @@ export function GlobalPlaylistManager() {
                     setConfirmProgress(null)
                 }
             }}
-            title="Update progress?"
+            title={t("misc.playlist.update_progress_title")}
         >
             <p>
-                Do you want to update the progress of the current episode?
+                {t("misc.playlist.update_progress_desc")}
             </p>
 
             <div className="flex gap-2 mt-4 justify-end">
                 <Button intent="primary" disabled={playEpisodeRequestPending} onClick={() => onConfirmedProgress(true)}>
-                    Yes
+                    {t("common.action.yes")}
                 </Button>
                 <Button intent="white-subtle" disabled={playEpisodeRequestPending} onClick={() => onConfirmedProgress(false)}>
-                    No
+                    {t("misc.playlist.no")}
                 </Button>
             </div>
 
@@ -404,7 +405,7 @@ export function GlobalPlaylistManager() {
                         />
                     </span>}
                     >
-                        Reopen episode
+                        {t("misc.playlist.reopen_episode")}
                     </Tooltip>
                     <Tooltip
                         className="z-[99999]" trigger={<span>
@@ -416,7 +417,7 @@ export function GlobalPlaylistManager() {
                         />
                     </span>}
                     >
-                        Stop playlist
+                        {t("misc.playlist.stop_playlist")}
                     </Tooltip>
                     <div className="flex flex-1"></div>
                     <IconButton
@@ -462,12 +463,12 @@ function EpisodeItem({ episode }: { episode: Anime_PlaylistEpisode }) {
             </div>
             <div className="max-w-full space-y-1">
                 <p className="text-sm text-[--muted]">{episode.episode?.baseAnime?.title?.userPreferred}</p>
-                <p className="">{episode.episode?.baseAnime?.format !== "MOVIE" ? `Episode ${episode.episode!.episodeNumber}` : "Movie"}</p>
+                <p className="">{episode.episode?.baseAnime?.format !== "MOVIE" ? t("misc.playlist.episode_n", { count: episode.episode!.episodeNumber }) : t("misc.stats.format_movie")}</p>
 
                 <div>
                     <div className="text-xs text-[--muted] line-clamp-1 tracking-wide">
-                        {episode.watchType === "torrent" ? "Torrent streaming" : episode.watchType === "debrid" ? "Debrid streaming" :
-                            episode.watchType === "online" ? "Online streaming" :
+                        {episode.watchType === "torrent" ? t("entry.torrent_stream.view") : episode.watchType === "debrid" ? t("misc.playlist.debrid_streaming") :
+                            episode.watchType === "online" ? t("misc.changelog.online_streaming") :
                                 episode.episode?.localFile?.name}
                     </div>
                 </div>

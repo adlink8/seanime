@@ -8,6 +8,7 @@ import { cn } from "@/components/ui/core/styling"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { Switch } from "@/components/ui/switch"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { BiPencil, BiPlus, BiTrash } from "react-icons/bi"
 import { PiTargetBold } from "react-icons/pi"
@@ -24,7 +25,7 @@ export function AutoDownloaderProfiles() {
         <div className="pt-4">
             <Card className="p-4 space-y-3">
                 <p className="text-[--muted]">
-                    Profiles allow you to define a set of filters that can be applied to your rules.
+                    {t("autodownloader.profiles_desc")}
                 </p>
                 <div className="flex items-center">
                     <Button
@@ -33,7 +34,7 @@ export function AutoDownloaderProfiles() {
                         leftIcon={<BiPlus className="text-xl" />}
                         onClick={() => setIsCreateOpen(true)}
                     >
-                        New Profile
+                        {t("autodownloader.action.new_profile")}
                     </Button>
                 </div>
 
@@ -47,14 +48,14 @@ export function AutoDownloaderProfiles() {
                     ))}
                     {!profiles?.length && (
                         <div className="p-4 text-center text-[--muted]">
-                            No profiles created yet.
+                            {t("autodownloader.empty.no_profiles")}
                         </div>
                     )}
                 </div>
             </Card>
 
             <Modal
-                title="Create Profile"
+                title={t("autodownloader.action.new_profile")}
                 open={isCreateOpen}
                 onOpenChange={setIsCreateOpen}
                 contentClass="max-w-3xl"
@@ -65,7 +66,7 @@ export function AutoDownloaderProfiles() {
             </Modal>
 
             <Modal
-                title={`Edit Profile: ${selectedProfile?.name}`}
+                title={t("autodownloader.modal.edit_profile", { name: selectedProfile?.name ?? "" })}
                 open={!!selectedProfile}
                 onOpenChange={(v) => !v && setSelectedProfile(null)}
                 contentClass="max-w-3xl"
@@ -86,9 +87,9 @@ function ProfileItem({ profile, onEdit }: { profile: Anime_AutoDownloaderProfile
     const { mutate: updateProfile, isPending: updating } = useUpdateAutoDownloaderProfile()
 
     const confirmDialog = useConfirmationDialog({
-        title: "Delete profile",
-        description: `Are you sure you want to delete the profile "${profile.name}"? This action cannot be undone.`,
-        actionText: "Delete",
+        title: t("autodownloader.modal.delete_profile"),
+        description: t("autodownloader.confirm_delete_profile", { name: profile.name }),
+        actionText: t("library.common.delete"),
         actionIntent: "alert",
         onConfirm: async () => {
             deleteProfile()
@@ -110,21 +111,21 @@ function ProfileItem({ profile, onEdit }: { profile: Anime_AutoDownloaderProfile
                     <div className="w-full">
                         <h5 className="font-semibold flex items-center gap-2 line-clamp-1">
                             {profile.name}
-                            {profile.global && <span className="text-xs bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-md">Global</span>}
+                            {profile.global && <span className="text-xs bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-md">{t("autodownloader.field.global")}</span>}
                         </h5>
                         <div className="text-sm text-[--muted] line-clamp-1 gap-2 space-x-3">
                             {!!profile.resolutions?.length && <span className="!pl-0">{profile.resolutions.join(", ")}</span>}
                             {!!profile.conditions?.length &&
-                                <span>{profile.conditions?.length} condition{(profile.conditions?.length !== 1) ? "s" : ""}</span>}
+                                <span>{t("autodownloader.status.conditions", { count: profile.conditions?.length })}</span>}
                             {!!profile.minimumScore && <span>{`>=`} {profile.minimumScore}</span>}
-                            {!!profile.delayMinutes && <span>{profile.delayMinutes} min. delay</span>}
+                            {!!profile.delayMinutes && <span>{t("autodownloader.status.min_delay", { minutes: profile.delayMinutes })}</span>}
 
                         </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="items-center gap-2 mr-4 hidden lg:flex">
-                        <span className="text-sm text-[--muted]">Global</span>
+                        <span className="text-sm text-[--muted]">{t("autodownloader.field.global")}</span>
                         <Switch
                             value={profile.global}
                             onValueChange={(v) => updateProfile({ ...profile, global: v })}
@@ -138,7 +139,7 @@ function ProfileItem({ profile, onEdit }: { profile: Anime_AutoDownloaderProfile
                         leftIcon={<BiPencil />}
                         onClick={onEdit}
                     >
-                        Edit
+                        {t("autodownloader.action.edit")}
                     </Button>
                     <IconButton
                         intent="alert-basic"

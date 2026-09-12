@@ -22,6 +22,10 @@ export type DictionaryModule =
     | "discover"
     | "schedule"
     | "manga"
+    | "torrent"
+    | "autodownloader"
+    | "extensions"
+    | "misc"
     | "settings-media"
     | "entry"
     | "mpv"
@@ -41,6 +45,11 @@ export const DICTIONARY_MODULES: readonly DictionaryModule[] = [
     "settings-media",
     "entry",
     "mpv",
+    "manga",
+    "torrent",
+    "autodownloader",
+    "extensions",
+    "misc",
 ] as const
 
 /** t(key, params) 的插值参数，占位符写法为 {name} */

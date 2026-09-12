@@ -3,6 +3,7 @@ import { MediaEntryPageLoadingDisplay } from "@/app/(main)/_features/media/_comp
 import { OfflineMetaSection } from "@/app/(main)/_features/offline/entry/_components/offline-meta-section"
 import { OfflineChapterList } from "@/app/(main)/_features/offline/entry/manga/_components/offline-chapter-list"
 import { PageWrapper } from "@/components/shared/page-wrapper"
+import { t } from "@/lib/i18n"
 import { usePathname } from "@/lib/navigation"
 import { useRouter, useSearchParams } from "@/lib/navigation"
 import React from "react"
@@ -29,7 +30,7 @@ export default function Page() {
             <OfflineMetaSection type="manga" entry={mangaEntry} />
             <PageWrapper className="p-4 space-y-6">
 
-                <h2>Chapters</h2>
+                <h2>{t("manga.chapter_list.chapters")}</h2>
 
                 <OfflineChapterList entry={mangaEntry} />
             </PageWrapper>

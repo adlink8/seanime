@@ -19,6 +19,7 @@ import { cn } from "@/components/ui/core/styling"
 import { Modal } from "@/components/ui/modal"
 import { ProgressBar } from "@/components/ui/progress-bar"
 import { logger } from "@/lib/helpers/debug"
+import { t } from "@/lib/i18n"
 import { WSEvents } from "@/lib/server/ws-events"
 import { useQueryClient } from "@tanstack/react-query"
 import { atom, useAtomValue } from "jotai"
@@ -71,7 +72,7 @@ export function PlaybackManagerProgressTrackingButton({ asSidebarButton }: Props
                             leftIcon={<PiPopcornFill />}
                             onClick={() => setShowModal(true)}
                         >
-                            Currently watching
+                            {t("common.state.watching")}
                         </Button>)}
                 </>
             )}
@@ -212,7 +213,7 @@ export function PlaybackManagerProgressTracking() {
                 queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ANILIST.GetAnimeCollection.key] })
 
                 setState(data)
-                toast.success("Progress updated")
+                toast.success(t("misc.progress.progress_updated"))
             }
         },
     })
@@ -226,9 +227,9 @@ export function PlaybackManagerProgressTracking() {
 
 
     const confirmPlayNext = useConfirmationDialog({
-        title: "Play next episode",
-        description: "Are you sure you want to play the next episode?",
-        actionText: "Confirm",
+        title: t("misc.progress.play_next_episode"),
+        description: t("misc.progress.play_next_confirm_desc"),
+        actionText: t("misc.progress.confirm"),
         actionIntent: "success",
         onConfirm: () => {
             if (!submittedPlaylistNext) playlistNext()
@@ -262,9 +263,9 @@ export function PlaybackManagerProgressTracking() {
     }, [state?.completionPercentage && state?.completionPercentage > 0.7, state?.canPlayNext, !!playlistState?.next, cancelAutoplay])
 
     const confirmNextEpisode = useConfirmationDialog({
-        title: "Play next episode",
-        description: "Are you sure you want to play the next episode?",
-        actionText: "Confirm",
+        title: t("misc.progress.play_next_episode"),
+        description: t("misc.progress.play_next_confirm_desc"),
+        actionText: t("misc.progress.confirm"),
         actionIntent: "success",
         onConfirm: () => {
             if (!submittedNextEpisode) playNextEpisodeAction()
@@ -272,10 +273,10 @@ export function PlaybackManagerProgressTracking() {
     })
 
     const confirmStopPlaylist = useConfirmationDialog({
-        title: "Play next",
-        actionText: "Confirm",
+        title: t("misc.progress.play_next_episode"),
+        actionText: t("misc.progress.confirm"),
         actionIntent: "alert",
-        description: "Are you sure you want to stop the playlist? It will be deleted.",
+        description: t("misc.progress.stop_playlist_confirm_desc"),
         onConfirm: () => {
             if (!submittedStopPlaylist) stopPlaylist()
         },
@@ -320,23 +321,23 @@ export function PlaybackManagerProgressTracking() {
                 </div>}
                 {state && <div data-progress-tracking-main-content className="text-center relative overflow-hidden py-2 space-y-2">
                     {state.mediaCoverImage && <div className="size-16 rounded-full relative mx-auto overflow-hidden mb-3">
-                        <SeaImage src={state.mediaCoverImage} alt="cover image" fill className="object-cover object-center" />
+                        <SeaImage src={state.mediaCoverImage} alt={t("misc.anime.cover_image_alt")} fill className="object-cover object-center" />
                     </div>}
                     {/*<p className="text-[--muted]">Currently watching</p>*/}
                     <div data-progress-tracking-title>
                         <h3 className="text-lg font-medium line-clamp-1">{state?.mediaTitle}</h3>
-                        <p className="text-2xl font-bold">Episode {state?.episodeNumber}
+                        <p className="text-2xl font-bold">{t("misc.playlist.episode_n", { count: state?.episodeNumber })}
                             <span className="text-[--muted]">{" / "}{state?.mediaTotalEpisodes || "-"}</span>
                         </p>
                     </div>
                     {(serverStatus?.settings?.library?.autoUpdateProgress && !state?.progressUpdated) && (
                         <p data-progress-tracking-auto-update-progress className="text-[--muted] text-center text-sm">
-                            Your progress will be automatically updated
+                            {t("misc.progress.progress_auto_updated")}
                         </p>
                     )}
                     {(state?.progressUpdated) && (
                         <p data-progress-tracking-progress-updated className="text-green-300 text-center">
-                            Progress updated
+                            {t("misc.progress.progress_updated")}
                         </p>
                     )}
                 </div>}
@@ -353,7 +354,7 @@ export function PlaybackManagerProgressTracking() {
                         className="w-full animate-pulse"
                         loading={isPending}
                     >
-                        Update progress now
+                        {t("misc.progress.update_progress_now")}
                     </Button>
                 </div>}
 
@@ -374,20 +375,19 @@ export function PlaybackManagerProgressTracking() {
                         loading={submittingNextEpisode}
                         leftIcon={<BiSolidSkipNextCircle className="text-2xl" />}
                     >
-                        Play next episode
+                        {t("misc.progress.play_next_episode")}
                     </Button>
                 </div>}
                 {!!playlistState?.next && (
                     <div data-progress-tracking-playlist className="border rounded-[--radius-md] p-4 text-center relative overflow-hidden">
                         <div className="space-y-3">
                             <div>
-                                <h4 className="text-lg font-medium text-center text-[--muted] mb-2 uppercase tracking-wide">Playlist</h4>
+                                <h4 className="text-lg font-medium text-center text-[--muted] mb-2 uppercase tracking-wide">{t("common.action.playlists")}</h4>
                                 {!!playlistState.remaining &&
                                     <p
                                         data-progress-tracking-playlist-remaining
                                         className="text-[--muted]"
-                                    >{playlistState.remaining} episode{playlistState.remaining > 1 ? "s" : ""} after this
-                                                               one</p>}
+                                    >{t("misc.progress.playlist_remaining", { count: playlistState.remaining })}</p>}
                                 <p
                                     data-progress-tracking-playlist-next
                                     className="text-center truncate line-clamp-1"
@@ -421,7 +421,7 @@ export function PlaybackManagerProgressTracking() {
                                     className="inset-0 relative z-[2] bg-black border bg-opacity-70 hover:bg-opacity-80 transition flex flex-col gap-2 items-center justify-center p-4"
                                 >
                                     <p data-progress-tracking-playlist-next-episode-button-text className="flex gap-2 items-center">
-                                        <BiSolidSkipNextCircle className="block text-2xl" /> Play next</p>
+                                        <BiSolidSkipNextCircle className="block text-2xl" /> {t("misc.progress.play_next_episode")}</p>
                                 </div>
                             </div>
                             <div data-progress-tracking-playlist-next-episode-button-stop-button-container className="absolute -top-0.5 right-2">

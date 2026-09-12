@@ -16,16 +16,17 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TextInput } from "@/components/ui/text-input"
 import { Tooltip } from "@/components/ui/tooltip"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { FiEye, FiHeart, FiHelpCircle, FiPlus, FiSearch, FiSettings, FiShare2, FiTrash, FiX } from "react-icons/fi"
 import { toast } from "sonner"
 
 const SECTIONS = [
-    { id: "buttons", name: "Buttons & Action" },
-    { id: "forms", name: "Forms & Controls" },
-    { id: "dialogs", name: "Dialogs & Overlays" },
-    { id: "feedback", name: "Feedback & Tabs" },
-    { id: "layout", name: "Layout & Skeletons" },
+    { id: "buttons", name: t("misc.test.section_buttons") },
+    { id: "forms", name: t("misc.test.section_forms") },
+    { id: "dialogs", name: t("misc.test.section_dialogs") },
+    { id: "feedback", name: t("misc.test.section_feedback") },
+    { id: "layout", name: t("misc.test.section_layout") },
 ]
 
 export default function TestPage() {
@@ -56,19 +57,19 @@ export default function TestPage() {
                 <div className="relative z-10 space-y-4">
                     <div className="flex flex-wrap gap-6 items-center bg-black/20 p-4 rounded-xl border border-white/5 w-fit">
                         <Switch
-                            label="Loading"
+                            label={t("misc.test.loading")}
                             value={globalLoading}
                             onValueChange={setGlobalLoading}
                             size="sm"
                         />
                         <Switch
-                            label="Disable Buttons"
+                            label={t("misc.test.disable_buttons")}
                             value={globalDisabled}
                             onValueChange={setGlobalDisabled}
                             size="sm"
                         />
                         <Switch
-                            label="Rounded"
+                            label={t("misc.test.rounded")}
                             value={globalRounded}
                             onValueChange={setGlobalRounded}
                             size="sm"
@@ -81,7 +82,7 @@ export default function TestPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Side Navigation Anchor Links */}
                 <div className="lg:col-span-1 lg:sticky lg:top-20 h-fit space-y-2 bg-gray-900/30 dark:bg-gray-900/40 p-4 rounded-xl border border-white/5">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-3">Sections</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-3">{t("misc.test.sections")}</p>
                     <div className="flex flex-row lg:flex-col overflow-auto gap-1 pb-2 lg:pb-0">
                         {SECTIONS.map((sec) => (
                             <a
@@ -101,7 +102,7 @@ export default function TestPage() {
                     {/* BUTTONS SECTION */}
                     <section id="buttons" className="space-y-6 scroll-mt-24">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-xl md:text-2xl font-bold text-white">Buttons & Action</h2>
+                            <h2 className="text-xl md:text-2xl font-bold text-white">{t("misc.test.section_buttons")}</h2>
                             <Badge intent="gray-solid" size="sm">Lorem</Badge>
                         </div>
                         <Card className="border-white/5 bg-gray-900/20">
@@ -514,7 +515,7 @@ export default function TestPage() {
                     {/* FORMS SECTION */}
                     <section id="forms" className="space-y-6 scroll-mt-24">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-xl md:text-2xl font-bold text-white">Forms & Controls</h2>
+                            <h2 className="text-xl md:text-2xl font-bold text-white">{t("misc.test.section_forms")}</h2>
                             <Badge intent="gray-solid" size="sm">Lorem</Badge>
                         </div>
                         <Card className="border-white/5 bg-gray-900/20">
@@ -617,7 +618,7 @@ export default function TestPage() {
                     {/* DIALOGS SECTION */}
                     <section id="dialogs" className="space-y-6 scroll-mt-24">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-xl md:text-2xl font-bold text-white">Dialogs & Overlays</h2>
+                            <h2 className="text-xl md:text-2xl font-bold text-white">{t("misc.test.section_dialogs")}</h2>
                             <Badge intent="gray-solid" size="sm">Lorem</Badge>
                         </div>
                         <Card className="border-white/5 bg-gray-900/20">
@@ -787,7 +788,7 @@ export default function TestPage() {
                     {/* FEEDBACK & TABS SECTION */}
                     <section id="feedback" className="space-y-6 scroll-mt-24">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-xl md:text-2xl font-bold text-white">Feedback & Tabs</h2>
+                            <h2 className="text-xl md:text-2xl font-bold text-white">{t("misc.test.section_feedback")}</h2>
                             <Badge intent="gray-solid" size="sm">Lorem</Badge>
                         </div>
                         <Card className="border-white/5 bg-gray-900/20">
@@ -1008,7 +1009,7 @@ export default function TestPage() {
                     {/* LAYOUT & SKELETONS SECTION */}
                     <section id="layout" className="space-y-6 scroll-mt-24">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-xl md:text-2xl font-bold text-white">Layout & Skeletons</h2>
+                            <h2 className="text-xl md:text-2xl font-bold text-white">{t("misc.test.section_layout")}</h2>
                             <Badge intent="gray-solid" size="sm">Lorem</Badge>
                         </div>
                         <Card className="border-white/5 bg-gray-900/20">

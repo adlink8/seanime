@@ -1,5 +1,6 @@
 import { Anime_LibraryCollection, Anime_LibraryCollectionEntry, Anime_PlaylistEpisode, Anime_WatchType, Nullish } from "@/api/generated/types"
 import { useGetPlaylistEpisodes } from "@/api/hooks/playlist.hooks"
+import { t as ti } from "@/lib/i18n"
 import { usePlaylistEditorManager } from "@/app/(main)/_features/playlists/lib/playlist-editor-manager"
 import { useHasDebridService, useHasOnlineStreaming, useHasTorrentStreaming } from "@/app/(main)/_hooks/use-server-status"
 import { imageShimmer } from "@/components/shared/image-helpers"
@@ -111,14 +112,14 @@ export function PlaylistEditor(props: PlaylistEditorProps) {
 
             <div className="space-y-2">
                 <Modal
-                    title="Select an anime"
+                    title={ti("misc.sea_command.select_anime")}
                     contentClass="max-w-4xl"
                     trigger={<Button
                         leftIcon={<BiPlus className="text-2xl" />}
                         intent="white-subtle"
                         className="rounded-full"
                         disabled={episodes.length >= 10}
-                    >Add episodes</Button>}
+                    >{ti("misc.playlist.add_episodes")}</Button>}
                 >
 
                     <div className="grid grid-cols-[150px,1fr] gap-2">
@@ -126,16 +127,16 @@ export function PlaylistEditor(props: PlaylistEditorProps) {
                             value={selectedCategory}
                             onValueChange={v => setSelectedCategory(v)}
                             options={[
-                                { label: "Current", value: "CURRENT" },
-                                { label: "Paused", value: "PAUSED" },
-                                { label: "Planning", value: "PLANNING" },
-                                { label: "All", value: "-" },
+                                { label: ti("common.state.watching"), value: "CURRENT" },
+                                { label: ti("common.state.paused"), value: "PAUSED" },
+                                { label: ti("common.state.planning"), value: "PLANNING" },
+                                { label: ti("library.filter.all"), value: "-" },
                             ]}
                             disabled={searchInput.length !== 0}
                         />
 
                         <TextInput
-                            placeholder="Search"
+                            placeholder={ti("entry.torrent_search.search_placeholder")}
                             value={searchInput}
                             onChange={e => setSearchInput(e.target.value)}
                         />
@@ -285,13 +286,13 @@ function SortableItem({ id, episode, setEpisodes }: {
     const streamOptions = React.useMemo(() => {
         let options: { label: string, value: string }[] = []
         if (hasTorrentStreaming) {
-            options.push({ label: "Torrent streaming", value: "torrent" })
+            options.push({ label: ti("entry.torrent_stream.view"), value: "torrent" })
         }
         if (hasDebridService) {
-            options.push({ label: "Debrid streaming", value: "debrid" })
+            options.push({ label: ti("misc.playlist.debrid_streaming"), value: "debrid" })
         }
         if (hasOnlineStreaming) {
-            options.push({ label: "Online streaming", value: "online" })
+            options.push({ label: ti("misc.changelog.online_streaming"), value: "online" })
         }
         return options
     }, [hasDebridService, hasOnlineStreaming, hasTorrentStreaming])
@@ -359,7 +360,7 @@ function SortableItem({ id, episode, setEpisodes }: {
                 <div className="max-w-full space-y-1">
                     <p className="text-sm text-[--muted] font-medium">{episode.episode?.baseAnime?.title?.userPreferred}</p>
                     <p className="">{episode.episode?.baseAnime?.format !== "MOVIE"
-                        ? `Episode ${episode.episode!.episodeNumber}`
+                        ? ti("misc.playlist.episode_n", { count: episode.episode!.episodeNumber })
                         : "Movie"}{episode.isCompleted ? ` (Watched)` : ""}</p>
 
                     {(!episode.episode?.localFile && !episode.isNakama) && <div className="flex gap-1 flex-wrap">
@@ -503,7 +504,7 @@ function EntryEpisodeList(props: EntryEpisodeListProps) {
                 </Button>
             </div>
             {isLoading && <LoadingSpinner />}
-            {data?.length === 0 && <p className="text-center text-sm text-[--muted]">No episodes found</p>}
+            {data?.length === 0 && <p className="text-center text-sm text-[--muted]">{ti("misc.playlist.no_episodes")}</p>}
             {episodes?.map(ep => {
                 return (
                     <div
@@ -532,7 +533,7 @@ function EntryEpisodeList(props: EntryEpisodeListProps) {
                             />}
                         </div>
                         <div className="max-w-full">
-                            <p className="">{entry.media?.format !== "MOVIE" ? `Episode ${ep.episode!.episodeNumber}` : "Movie"}</p>
+                            <p className="">{entry.media?.format !== "MOVIE" ? ti("misc.playlist.episode_n", { count: ep.episode!.episodeNumber }) : ti("misc.stats.format_movie")}</p>
                             {ep.episode!.localFile &&
                                 <p className="text-xs text-[--muted] tracking-wide italic max-w-full line-clamp-2">{ep.episode!.localFile?.name}</p>}
 

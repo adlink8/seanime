@@ -3,6 +3,7 @@ import { LuffyError } from "@/components/shared/luffy-error"
 import { cn } from "@/components/ui/core/styling"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
+import { t } from "@/lib/i18n"
 import { __isElectronDesktop__ } from "@/types/constants"
 import React from "react"
 
@@ -50,7 +51,7 @@ export function Content(props: ContentProps) {
 
     const [loaded, setLoaded] = React.useState(true)
 
-    if (!trailerId) return <LuffyError title="No trailer found" />
+    if (!trailerId) return <LuffyError title={t("misc.anime.no_trailer")} />
 
     return (
         <>
@@ -65,7 +66,7 @@ export function Content(props: ContentProps) {
                 {!__isElectronDesktop__ && <iframe
                     {...({ credentialless: "true" } as any)}
                     src={`https://www.youtube.com/embed/${trailerId}`}
-                    title="YouTube Video"
+                    title={t("misc.anime.youtube_video")}
                     className="w-full aspect-video rounded-xl"
                     allowFullScreen
                     loading="lazy" // Lazy load the iframe

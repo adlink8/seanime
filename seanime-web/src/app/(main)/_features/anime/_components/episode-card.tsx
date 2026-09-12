@@ -10,6 +10,7 @@ import { imageShimmer } from "@/components/shared/image-helpers"
 import { SeaImage } from "@/components/shared/sea-image"
 import { ContextMenuGroup, ContextMenuItem, ContextMenuLabel, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { cn } from "@/components/ui/core/styling"
+import { t } from "@/lib/i18n"
 import { ProgressBar } from "@/components/ui/progress-bar"
 import { usePathname, useRouter } from "@/lib/navigation"
 import { getImageUrl } from "@/lib/server/assets"
@@ -176,7 +177,7 @@ export function EpisodeCard(props: EpisodeCardProps) {
                                 setPreviewModalMediaId(anime?.id || 0, "anime")
                             }}
                         >
-                            <LuEye /> Preview
+                            <LuEye /> {t("media.action.preview")}
                         </ContextMenuItem>}
                         <ContextMenuItem
                             onClick={() => {
@@ -187,7 +188,7 @@ export function EpisodeCard(props: EpisodeCardProps) {
                                 }
                             }}
                         >
-                            <LuDock /> Open page
+                            <LuDock /> {t("misc.anime.open_page")}
                         </ContextMenuItem>
                     </>}
                     {(props.episode && anime?.id && props.episode?.aniDBEpisode) && <ContextMenuItem
@@ -195,7 +196,7 @@ export function EpisodeCard(props: EpisodeCardProps) {
                             selectEpisodeToAddAndOpenEditor(anime.id!, props.episode?.aniDBEpisode!)
                         }}
                     >
-                        <BiAddToQueue /> Add to Playlist
+                        <BiAddToQueue /> {t("misc.anime.add_to_playlist")}
                     </ContextMenuItem>}
 
                     {additionalContextMenuItems}

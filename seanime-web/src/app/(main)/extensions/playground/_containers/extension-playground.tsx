@@ -12,6 +12,7 @@ import { TextInput } from "@/components/ui/text-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useDebounce } from "@/hooks/use-debounce"
 import { copyToClipboard } from "@/lib/helpers/browser"
+import { t } from "@/lib/i18n"
 import { autocompletion } from "@codemirror/autocomplete"
 import { javascript } from "@codemirror/lang-javascript"
 import { StreamLanguage } from "@codemirror/language"
@@ -268,7 +269,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                 server: inputs.onlineStreamingProvider.findEpisodeServer.server,
             }
         } else {
-            toast.error("Invalid function selected.")
+            toast.error(t("extensions.playground.toast_invalid_function"))
             return
         }
 
@@ -300,15 +301,15 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
 
                 <div className="flex items-center w-full">
                     <div className="w-full flex items-center gap-4">
-                        <h2 className="w-fit">Playground</h2>
+                        <h2 className="w-fit">{t("extensions.list.menu_playground")}</h2>
 
                         <Select
                             value={type as string}
                             intent="filled"
                             options={[
-                                { value: "anime-torrent-provider", label: "Anime Torrent Provider" },
-                                { value: "manga-provider", label: "Manga Provider" },
-                                { value: "onlinestream-provider", label: "Online Streaming Provider" },
+                                { value: "anime-torrent-provider", label: t("extensions.type.anime_torrent_provider") },
+                                { value: "manga-provider", label: t("extensions.type.manga_provider") },
+                                { value: "onlinestream-provider", label: t("extensions.type.onlinestream_provider") },
                             ]}
                             onValueChange={v => {
                                 onTypeChange?.(v as Extension_Type)
@@ -320,8 +321,8 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                         <Select
                             value={language as string}
                             options={[
-                                { value: "typescript", label: "Typescript" },
-                                { value: "javascript", label: "Javascript" },
+                                { value: "typescript", label: t("extensions.playground.lang_typescript") },
+                                { value: "javascript", label: t("extensions.playground.lang_javascript") },
                                 // { value: "go", label: "Go" },
                             ]}
                             onValueChange={v => {
@@ -334,15 +335,15 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                     <div className="flex items-center gap-2 lg:flex-none w-fit">
 
                         <Button intent="primary" loading={isRunning} onClick={() => handleRunCode()} leftIcon={<BiTerminal className="size-6" />}>
-                            {isRunning ? "Running..." : "Run"}
+                            {isRunning ? t("extensions.playground.running") : t("extensions.playground.run")}
                         </Button>
 
                     </div>
                 </div>
 
                 <div className="block lg:hidden">
-                    <LuffyError title="Oops!">
-                        Your screen size is too small.
+                    <LuffyError title={t("extensions.playground.oops")}>
+                        {t("extensions.playground.screen_too_small")}
                     </LuffyError>
                 </div>
 
@@ -448,7 +449,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                 {type === "anime-torrent-provider" && (
                                                     <>
                                                         <Select
-                                                            leftAddon="Method"
+                                                            leftAddon={t("extensions.playground.method")}
                                                             value={selectedFunction}
                                                             options={[
                                                                 { value: Functions.AnimeTorrentProviderSearch, label: "search" },
@@ -470,7 +471,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         />
 
                                                         <NumberInput
-                                                            leftAddon="Media ID"
+                                                            leftAddon={t("extensions.playground.media_id")}
                                                             min={0}
                                                             formatOptions={{ useGrouping: false }}
                                                             value={inputs.animeTorrentProvider.mediaId}
@@ -486,7 +487,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         {selectedFunction === Functions.AnimeTorrentProviderSmartSearch && (
                                                             <>
                                                                 <TextInput
-                                                                    leftAddon="Query"
+                                                                    leftAddon={t("extensions.playground.query")}
                                                                     type="text"
                                                                     value={inputs.animeTorrentProvider.smartSearch.query}
                                                                     onChange={e => {
@@ -499,7 +500,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                                 />
 
                                                                 <NumberInput
-                                                                    leftAddon="Episode Number"
+                                                                    leftAddon={t("extensions.playground.episode_number")}
                                                                     value={inputs.animeTorrentProvider.smartSearch.episodeNumber || 0}
                                                                     min={0}
                                                                     formatOptions={{ useGrouping: false }}
@@ -513,9 +514,9 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                                 />
 
                                                                 <Select
-                                                                    leftAddon="Resolution"
+                                                                    leftAddon={t("extensions.playground.resolution")}
                                                                     options={[
-                                                                        { value: "-", label: "Any" },
+                                                                        { value: "-", label: t("entry.torrent_search.resolution_any") },
                                                                         { value: "1080p", label: "1080" },
                                                                         { value: "720p", label: "720" },
                                                                         { value: "540p", label: "540" },
@@ -533,7 +534,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
 
                                                                 <Switch
                                                                     side="right"
-                                                                    label="Batch"
+                                                                    label={t("extensions.playground.batch")}
                                                                     value={inputs.animeTorrentProvider.smartSearch.batch}
                                                                     onValueChange={v => {
                                                                         setInputs(d => {
@@ -545,7 +546,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
 
                                                                 <Switch
                                                                     side="right"
-                                                                    label="Best Releases"
+                                                                    label={t("extensions.playground.best_releases")}
                                                                     value={inputs.animeTorrentProvider.smartSearch.bestReleases}
                                                                     onValueChange={v => {
                                                                         setInputs(d => {
@@ -560,7 +561,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         {selectedFunction === Functions.AnimeTorrentProviderSearch && (
                                                             <>
                                                                 <TextInput
-                                                                    leftAddon="Query"
+                                                                    leftAddon={t("extensions.playground.query")}
                                                                     type="text"
                                                                     value={inputs.animeTorrentProvider.search.query}
                                                                     onValueChange={v => {
@@ -577,7 +578,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         {selectedFunction === Functions.AnimeTorrentProviderGetTorrentInfoHash && (
                                                             <>
                                                                 <Textarea
-                                                                    leftAddon="Torrent JSON"
+                                                                    leftAddon={t("extensions.playground.torrent_json")}
                                                                     value={inputs.animeTorrentProvider.getTorrentInfoHash.torrent}
                                                                     onValueChange={v => {
                                                                         setInputs(d => {
@@ -593,7 +594,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         {selectedFunction === Functions.AnimeTorrentProviderGetTorrentMagnetLink && (
                                                             <>
                                                                 <Textarea
-                                                                    label="Torrent JSON"
+                                                                    label={t("extensions.playground.torrent_json")}
                                                                     value={inputs.animeTorrentProvider.getTorrentMagnetLink.torrent}
                                                                     onValueChange={v => {
                                                                         setInputs(d => {
@@ -613,7 +614,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                 {type === "manga-provider" && (
                                                     <>
                                                         <Select
-                                                            leftAddon="Method"
+                                                            leftAddon={t("extensions.playground.method")}
                                                             value={selectedFunction}
                                                             options={[
                                                                 { value: Functions.MangaProviderSearch, label: "search" },
@@ -627,7 +628,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         />
 
                                                         <NumberInput
-                                                            leftAddon="Media ID"
+                                                            leftAddon={t("extensions.playground.media_id")}
                                                             min={0}
                                                             formatOptions={{ useGrouping: false }}
                                                             value={inputs.mangaProvider.mediaId}
@@ -643,7 +644,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         {selectedFunction === Functions.MangaProviderSearch && (
                                                             <>
                                                                 <Alert intent="info">
-                                                                    Seanime will automatically select the best match based on the manga titles.
+                                                                    {t("extensions.playground.manga_match_hint")}
                                                                 </Alert>
                                                             </>
                                                         )}
@@ -651,7 +652,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         {selectedFunction === Functions.MangaProviderFindChapters && (
                                                             <>
                                                                 <TextInput
-                                                                    leftAddon="Manga ID"
+                                                                    leftAddon={t("extensions.playground.manga_id")}
                                                                     type="text"
                                                                     value={inputs.mangaProvider.findChapters.id}
                                                                     onValueChange={v => {
@@ -668,7 +669,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         {selectedFunction === Functions.MangaProviderFindChapterPages && (
                                                             <>
                                                                 <TextInput
-                                                                    leftAddon="Chapter ID"
+                                                                    leftAddon={t("extensions.playground.chapter_id")}
                                                                     type="text"
                                                                     value={inputs.mangaProvider.findChapterPages.id}
                                                                     onValueChange={v => {
@@ -689,7 +690,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                 {type === "onlinestream-provider" && (
                                                     <>
                                                         <Select
-                                                            leftAddon="Method"
+                                                            leftAddon={t("extensions.playground.method")}
                                                             value={selectedFunction}
                                                             options={[
                                                                 { value: Functions.OnlinestreamSearch, label: "search" },
@@ -703,7 +704,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         />
 
                                                         <NumberInput
-                                                            leftAddon="Media ID"
+                                                            leftAddon={t("extensions.playground.media_id")}
                                                             min={0}
                                                             formatOptions={{ useGrouping: false }}
                                                             value={inputs.onlineStreamingProvider.mediaId}
@@ -719,12 +720,12 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         {selectedFunction === Functions.OnlinestreamSearch && (
                                                             <>
                                                                 <Alert intent="info" className="text-sm">
-                                                                    Seanime will automatically select the best match based on the anime titles.
+                                                                    {t("extensions.playground.anime_match_hint")}
                                                                 </Alert>
 
                                                                 <Switch
                                                                     side="right"
-                                                                    label="Dubbed"
+                                                                    label={t("entry.torrent_filter.dubbed")}
                                                                     value={inputs.onlineStreamingProvider.search.dub}
                                                                     onValueChange={v => {
                                                                         setInputs(d => {
@@ -739,7 +740,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         {selectedFunction === Functions.OnlinestreamFindEpisodes && (
                                                             <>
                                                                 <TextInput
-                                                                    leftAddon="Episode ID"
+                                                                    leftAddon={t("extensions.playground.episode_id")}
                                                                     type="text"
                                                                     value={inputs.onlineStreamingProvider.findEpisodes.id}
                                                                     onValueChange={v => {
@@ -756,7 +757,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                         {selectedFunction === Functions.OnlinestreamFindEpisodeServer && (
                                                             <>
                                                                 <Textarea
-                                                                    leftAddon="Episode JSON"
+                                                                    leftAddon={t("extensions.playground.episode_json")}
                                                                     value={inputs.onlineStreamingProvider.findEpisodeServer.episode}
                                                                     onValueChange={v => {
                                                                         setInputs(d => {
@@ -769,7 +770,7 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                                                 />
 
                                                                 <TextInput
-                                                                    leftAddon="Server"
+                                                                    leftAddon={t("extensions.playground.server")}
                                                                     type="text"
                                                                     value={inputs.onlineStreamingProvider.findEpisodeServer.server}
                                                                     onValueChange={v => {
@@ -793,14 +794,14 @@ export function ExtensionPlayground(props: ExtensionPlaygroundProps) {
                                         <ResizablePanel defaultSize={70}>
                                             <div className="h-full w-full p-2">
                                                 <div className="flex items-center gap-2 justify-between mb-2">
-                                                    <p className="font-semibold">Output</p>
+                                                    <p className="font-semibold">{t("extensions.playground.output")}</p>
                                                     <IconButton
                                                         intent="gray-subtle" size="sm" onClick={() => {
                                                         if (response?.value) {
                                                             copyToClipboard(response?.value || "")
-                                                            toast.success("Copied to clipboard")
+                                                            toast.success(t("settings.toast.copied_to_clipboard"))
                                                         } else {
-                                                            toast.warning("No output to copy")
+                                                            toast.warning(t("extensions.playground.toast_no_output"))
                                                         }
                                                     }} icon={<BiCopy className="size-4" />}
                                                     />

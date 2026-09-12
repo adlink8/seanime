@@ -15,6 +15,7 @@ import React, { useState } from "react"
 import { BiSolidBinoculars } from "react-icons/bi"
 import { FiSearch } from "react-icons/fi"
 import { toast } from "sonner"
+import { t } from "@/lib/i18n"
 
 type LibraryWatcherProps = {
     children?: React.ReactNode
@@ -89,7 +90,7 @@ export function LibraryWatcher(props: LibraryWatcherProps) {
         type: WSEvents.AUTO_SCAN_COMPLETED,
         onMessage: _ => {
             autoScanning.off()
-            toast.success("Library scanned")
+            toast.success(t("misc.common.library_scanned"))
             qc.invalidateQueries({ queryKey: [API_ENDPOINTS.ANIME_COLLECTION.GetLibraryCollection.key] })
             qc.invalidateQueries({ queryKey: [API_ENDPOINTS.ANIME_ENTRIES.GetMissingEpisodes.key] })
             qc.invalidateQueries({ queryKey: [API_ENDPOINTS.AUTO_DOWNLOADER.GetAutoDownloaderItems.key] })
@@ -109,7 +110,7 @@ export function LibraryWatcher(props: LibraryWatcherProps) {
                     <Card className="w-fit max-w-[400px]">
                         <CardHeader>
                             <CardDescription className="flex items-center gap-2 text-base">
-                                <Spinner className="size-6" /> {progress}% Refreshing your library...
+                                <Spinner className="size-6" /> {progress}% {t("misc.common.library_refreshing")}
                             </CardDescription>
                         </CardHeader>
                     </Card>
@@ -124,10 +125,10 @@ export function LibraryWatcher(props: LibraryWatcherProps) {
                         <CardHeader>
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <BiSolidBinoculars className="text-brand-400" />
-                                Library watcher
+                                {t("misc.common.library_watcher")}
                             </CardTitle>
                             <CardDescription className="flex items-center gap-2 text-base">
-                                A change has been detected in your library, refresh your entries.
+                                {t("misc.common.library_watcher_desc")}
                             </CardDescription>
                         </CardHeader>
                         <CardFooter>
@@ -138,7 +139,7 @@ export function LibraryWatcher(props: LibraryWatcherProps) {
                                 onClick={() => setScannerModalOpen(true)}
                                 className="rounded-full"
                             >
-                                Scan your library
+                                {t("misc.common.scan_your_library")}
                             </Button>
                         </CardFooter>
                         <CloseButton className="absolute top-2 right-2" onClick={handleCancel} />

@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { TextInput } from "@/components/ui/text-input"
 import { useRouter } from "@/lib/navigation"
+import { t } from "@/lib/i18n"
 import { atom, useSetAtom } from "jotai"
 import orderBy from "lodash/orderBy"
 import React from "react"
@@ -33,11 +34,11 @@ type ExtensionListProps = {
 export const __extensions_currentPageAtom = atom<"installed" | "marketplace">("installed")
 
 export const EXTENSION_TYPE = {
-    "plugin": "Plugin",
-    "anime-torrent-provider": "Anime Torrent Provider",
-    "manga-provider": "Manga Provider",
-    "onlinestream-provider": "Online Streaming Provider",
-    "custom-source": "Custom Source",
+    "plugin": t("extensions.type.plugin"),
+    "anime-torrent-provider": t("extensions.type.anime_torrent_provider"),
+    "manga-provider": t("extensions.type.manga_provider"),
+    "onlinestream-provider": t("extensions.type.onlinestream_provider"),
+    "custom-source": t("extensions.type.custom_source"),
 }
 
 export function ExtensionList(props: ExtensionListProps) {
@@ -121,7 +122,7 @@ export function ExtensionList(props: ExtensionListProps) {
     if (isLoading) return <LoadingSpinner />
 
     if (!allExtensions) return <LuffyError>
-        Could not get extensions.
+        {t("extensions.list.fetch_error")}
     </LuffyError>
 
     return (
@@ -129,10 +130,10 @@ export function ExtensionList(props: ExtensionListProps) {
             <div className="flex items-center gap-2 flex-wrap">
                 <div>
                     <h2>
-                        扩展中心
+                        {t("extensions.list.title")}
                     </h2>
                     <p className="text-[--muted] text-sm">
-                        管理已安装的插件与第三方内容提供商。
+                        {t("extensions.list.subtitle")}
                     </p>
                 </div>
 
@@ -146,10 +147,10 @@ export function ExtensionList(props: ExtensionListProps) {
                             leftIcon={<LuDownload className="text-lg" />}
                             loading={isInstalling}
                             onClick={() => {
-                                toast.info("Installing updates...")
+                                toast.info(t("extensions.list.toast_installing_updates"))
                                 allExtensions?.hasUpdate?.forEach(update => {
                                     if (allExtensions.unsafeExtensions?.[update.extensionID]) {
-                                        toast.warning(`Skipped "${update.extensionID}" because it uses unsafe flags. Update it manually.`)
+                                        toast.warning(t("extensions.list.toast_skip_unsafe", { id: update.extensionID }))
                                         return
                                     }
                                     installExtension({
@@ -158,7 +159,7 @@ export function ExtensionList(props: ExtensionListProps) {
                                 })
                             }}
                         >
-                            全部更新
+                            {t("extensions.list.update_all")}
                         </Button>
                     )}
                     <Button
@@ -173,7 +174,7 @@ export function ExtensionList(props: ExtensionListProps) {
                             // })
                         }}
                     >
-                        检查更新
+                        {t("extensions.list.check_updates")}
                     </Button>
                     <AddExtensionModal extensions={installedExtensions}>
                         <Button
@@ -181,7 +182,7 @@ export function ExtensionList(props: ExtensionListProps) {
                             intent="white-subtle"
                             leftIcon={<GrInstallOption className="text-lg" />}
                         >
-                            添加扩展
+                            {t("extensions.list.add_extension")}
                         </Button>
                     </AddExtensionModal>
 
@@ -192,7 +193,7 @@ export function ExtensionList(props: ExtensionListProps) {
                                 router.push("/extensions/playground")
                             }}
                         >
-                            <span>调试沙箱</span>
+                            <span>{t("extensions.list.menu_playground")}</span>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
@@ -200,14 +201,14 @@ export function ExtensionList(props: ExtensionListProps) {
                                 setPage("marketplace")
                             }}
                         >
-                            <span>插件市场</span>
+                            <span>{t("extensions.list.menu_marketplace")}</span>
                         </DropdownMenuItem>
                     </DropdownMenu>
                 </div>
             </div>
 
             <TextInput
-                placeholder="搜索已安装扩展..."
+                placeholder={t("extensions.list.search_installed_placeholder")}
                 value={searchTerm}
                 onValueChange={setSearchTerm}
                 className="pl-10"
@@ -216,14 +217,14 @@ export function ExtensionList(props: ExtensionListProps) {
 
             {!!searchTerm && !hasVisibleResults && (
                 <Card className="p-8 text-center">
-                    <p className="text-[--muted]">No extensions found matching your search.</p>
+                    <p className="text-[--muted]">{t("extensions.list.no_results")}</p>
                 </Card>
             )}
 
 
             {!!pluginPermissionsNotGrantedExtensions?.length && (
                 <Card className="p-4 space-y-6">
-                    <h3 className="flex gap-3 items-center">需要授权权限</h3>
+                    <h3 className="flex gap-3 items-center">{t("extensions.list.section_permissions_required")}</h3>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {pluginPermissionsNotGrantedExtensions.map(extension => (
@@ -240,7 +241,7 @@ export function ExtensionList(props: ExtensionListProps) {
             {!!nonvalidExtensions?.length && (
                 <Card className="p-4 space-y-6 border-red-800">
 
-                    <h3 className="flex gap-3 items-center">无效扩展</h3>
+                    <h3 className="flex gap-3 items-center">{t("extensions.list.section_invalid")}</h3>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {nonvalidExtensions.map(extension => (
@@ -256,7 +257,7 @@ export function ExtensionList(props: ExtensionListProps) {
 
             {!!disabledExtensions?.length && (
                 <Card className="p-4 space-y-6">
-                    <h3 className="flex gap-3 items-center">已禁用</h3>
+                    <h3 className="flex gap-3 items-center">{t("extensions.list.section_disabled")}</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {disabledExtensions.map(extension => (
                             <ExtensionCard
@@ -276,7 +277,7 @@ export function ExtensionList(props: ExtensionListProps) {
 
             {!!pluginExtensions?.length && (
                 <Card className="p-4 space-y-6">
-                    <h3 className="flex gap-3 items-center"><LuBlocks /> 核心插件</h3>
+                    <h3 className="flex gap-3 items-center"><LuBlocks /> {t("extensions.list.section_plugins")}</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {pluginExtensions.map(extension => (
                             <ExtensionCard
@@ -296,9 +297,9 @@ export function ExtensionList(props: ExtensionListProps) {
             {!!customSourceExtensions?.length && (
                 <Card className="p-4 space-y-6">
                     <div className="flex items-center gap-4">
-                        <h3 className="flex gap-3 items-center"><MdDataSaverOn />自定义数据源</h3>
+                        <h3 className="flex gap-3 items-center"><MdDataSaverOn />{t("extensions.type.custom_source")}</h3>
                         <SeaLink href="/custom-sources" className="text-sm underline underline-offset-2 text-[--muted] hover:text-[--foreground]">
-                            浏览全部数据源
+                            {t("extensions.list.browse_all_sources")}
                         </SeaLink>
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
@@ -319,7 +320,7 @@ export function ExtensionList(props: ExtensionListProps) {
 
             {!!animeTorrentExtensions?.length && (
                 <Card className="p-4 space-y-6">
-                    <h3 className="flex gap-3 items-center"><RiFolderDownloadFill />动漫种子源</h3>
+                    <h3 className="flex gap-3 items-center"><RiFolderDownloadFill />{t("extensions.marketplace.anime_torrents_section")}</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {animeTorrentExtensions.map(extension => (
                             <ExtensionCard
@@ -339,7 +340,7 @@ export function ExtensionList(props: ExtensionListProps) {
 
             {!!mangaExtensions?.length && (
                 <Card className="p-4 space-y-6">
-                    <h3 className="flex gap-3 items-center"><PiBookFill />漫画源</h3>
+                    <h3 className="flex gap-3 items-center"><PiBookFill />{t("extensions.marketplace.manga_section")}</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {mangaExtensions.map(extension => (
                             <ExtensionCard
@@ -358,7 +359,7 @@ export function ExtensionList(props: ExtensionListProps) {
 
             {!!onlinestreamExtensions?.length && (
                 <Card className="p-4 space-y-6">
-                    <h3 className="flex gap-3 items-center"><CgMediaPodcast /> 在线流媒体源</h3>
+                    <h3 className="flex gap-3 items-center"><CgMediaPodcast /> {t("extensions.marketplace.online_streaming_section")}</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {onlinestreamExtensions.map(extension => (
                             <ExtensionCard

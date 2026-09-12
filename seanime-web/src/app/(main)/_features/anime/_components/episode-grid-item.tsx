@@ -4,6 +4,7 @@ import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { imageShimmer } from "@/components/shared/image-helpers"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/components/ui/core/styling"
+import { t } from "@/lib/i18n"
 import { ProgressBar } from "@/components/ui/progress-bar"
 import { getImageUrl } from "@/lib/server/assets"
 import { useEpisodeSpoilerState } from "@/lib/theme/anime-spoilers"
@@ -123,7 +124,7 @@ export const EpisodeGridItem = React.memo((props: EpisodeGridItemProps & React.C
                     )}
                     intent="gray"
                     size="lg"
-                >Filler</Badge>
+                >{t("misc.anime.filler")}</Badge>
             )}
 
             <div
@@ -184,7 +185,7 @@ export const EpisodeGridItem = React.memo((props: EpisodeGridItemProps & React.C
                     {(image || media.coverImage?.large) && <EpisodeCardImage
                         data-episode-grid-item-image
                         src={getImageUrl(image || media.coverImage?.large || "")}
-                        alt="episode image"
+                        alt={t("misc.anime.episode_image_alt")}
                         fill
                         quality={60}
                         placeholder={imageShimmer(700, 475)}
@@ -208,7 +209,7 @@ export const EpisodeGridItem = React.memo((props: EpisodeGridItemProps & React.C
                 <div data-episode-grid-item-content className="relative overflow-hidden">
                     {isInvalid && <p data-episode-grid-item-invalid-metadata className="flex gap-2 text-red-300 items-center"><AiFillWarning
                         className="text-lg text-red-500"
-                    /> Unidentified</p>}
+                    /> {t("misc.anime.unidentified")}</p>}
                     {/*{isInvalid &&*/}
                     {/*    <p data-episode-grid-item-invalid-metadata className="flex gap-2 text-red-200 text-sm items-center">No metadata found</p>}*/}
 

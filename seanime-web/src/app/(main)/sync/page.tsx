@@ -25,6 +25,7 @@ import { LoadingSpinner, Spinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { Separator } from "@/components/ui/separator"
 import { anilist_getListDataFromEntry } from "@/lib/helpers/media"
+import { t } from "@/lib/i18n"
 import { WSEvents } from "@/lib/server/ws-events"
 import { useAtomValue } from "jotai/react"
 import React from "react"
@@ -111,7 +112,7 @@ export default function Page() {
             updated: false,
         }, {
             onSuccess: () => {
-                toast.success("Local changes ignored.")
+                toast.success(t("misc.sync.local_changes_ignored"))
                 handleSyncLocal()
             },
         })
@@ -121,9 +122,9 @@ export default function Page() {
 
     if (serverStatus?.user?.isSimulated) {
         return <LuffyError
-            title="未登录账号"
+            title={t("misc.sync.not_logged_in")}
         >
-            该功能仅对已登录认证的用户开放。
+            {t("misc.sync.login_required")}
         </LuffyError>
     }
 
@@ -144,14 +145,14 @@ export default function Page() {
                     })
                 }}
             >
-                {serverStatus?.isOffline ? "Disable offline mode" : "Enable offline mode"}
+                {serverStatus?.isOffline ? t("misc.sync.disable_offline") : t("misc.sync.enable_offline")}
             </Button>
 
             <div className="flex flex-col lg:flex-row gap-2">
                 <div>
-                    <h2 className="">Offline media</h2>
+                    <h2 className="">{t("misc.sync.title")}</h2>
                     <p className="text-[--muted]">
-                        View the media you've saved locally for offline use.
+                        {t("misc.sync.description")}
                     </p>
                 </div>
 
@@ -159,7 +160,7 @@ export default function Page() {
 
                 <div className="contents">
                     <Modal
-                        title="Sync"
+                        title={t("misc.sync.modal_title")}
                         open={syncModalOpen}
                         onOpenChange={v => {
                             if (isSyncingLocal) return
@@ -171,9 +172,8 @@ export default function Page() {
                             leftIcon={<LuFolderSync className="text-2xl" />}
                             loading={isSyncingLocal}
                         >
-                            Sync now
-                        </Button>}
-                    >
+                            {t("misc.sync.sync_now")}
+                        </Button>}                    >
                         <div className="space-y-4">
 
                             <Button
@@ -185,11 +185,10 @@ export default function Page() {
                                 disabled={isSyncingAnilist}
                                 onClick={handleSyncLocal}
                             >
-                                Update local data
+                                {t("misc.sync.update_local")}
                             </Button>
                             <p className="text-sm">
-                                Update your local snapshots with the data from AniList.
-                                This will overwrite your offline changes. You can automate this in <kbd>Settings {`>`} App {`>`} Offline mode</kbd>.
+                                {t("misc.sync.update_local_desc_head")}<kbd>{t("misc.sync.settings_path")}</kbd>{t("misc.sync.update_local_desc_tail")}
                             </p>
                             <Separator />
                             <Button
@@ -201,16 +200,15 @@ export default function Page() {
                                 loading={isSyncingAnilist}
                                 onClick={handleSyncAnilist}
                             >
-                                Upload local changes to AniList
+                                {t("misc.sync.upload_to_anilist")}
                             </Button>
                             <p className="text-sm">
-                                Update your AniList lists with the data from your local snapshots.
-                                This should be done after you've made changes offline.
+                                {t("misc.sync.upload_desc")}
                             </p>
 
                             <Alert
                                 intent="warning"
-                                description="Changes are irreversible."
+                                description={t("misc.sync.irreversible")}
                             />
                         </div>
                     </Modal>
@@ -228,15 +226,16 @@ export default function Page() {
                     description={
                         <div className="space-y-2">
                             <p>
-                                <span>You have not saved {!!unsavedAnime?.length
-                                    ? `${unsavedAnime?.length} anime`
-                                    : ""}{(!!unsavedAnime?.length && !!unsavedManga?.length) ? " and " : ""}{!!unsavedManga?.length
-                                    ? `${unsavedManga?.length} manga`
-                                    : ""} that you're currently {!!unsavedAnime?.length
-                                    ? "watching"
-                                    : ""}{(!!unsavedAnime.length && !!unsavedManga.length) ? " and " : ""}{!!unsavedManga?.length
-                                    ? "reading"
-                                    : ""}.</span>
+                                <span>{t("misc.sync.unsaved_alert", {
+                                    items: [
+                                        !!unsavedAnime?.length && t("misc.sync.n_anime", { count: unsavedAnime.length }),
+                                        !!unsavedManga?.length && t("misc.sync.n_manga", { count: unsavedManga.length }),
+                                    ].filter(Boolean).join(t("misc.sync.and")),
+                                    status: [
+                                        !!unsavedAnime?.length && t("misc.sync.watching"),
+                                        !!unsavedManga?.length && t("misc.sync.reading"),
+                                    ].filter(Boolean).join(t("misc.sync.and")),
+                                })}</span>
                             </p>
                         </div>
                     }
@@ -244,7 +243,7 @@ export default function Page() {
             )}
 
             <p className="text-sm">
-                <span>Local storage size: </span>
+                <span>{t("misc.sync.local_storage_size")}</span>
                 <span>{localStorageSize}</span>
             </p>
 
@@ -253,9 +252,9 @@ export default function Page() {
                     intent="warning"
                     description={<div className="space-y-2">
                         <p>
-                            <span>You have local changes that have not been synced to AniList.</span>
+                            <span>{t("misc.sync.unsynced_warning")}</span>
                             {serverStatus?.settings?.library?.autoSyncOfflineLocalData &&
-                                <span> Automatic refreshing of offline data will be paused.</span>}
+                                <span> {t("misc.sync.autorefresh_paused")}</span>}
                         </p>
                         <div className="flex items-center gap-2 flex-wrap">
                             <Button
@@ -270,7 +269,7 @@ export default function Page() {
                                 loading={isSyncingAnilist}
                                 disabled={isChangingLocalChangeStatus}
                             >
-                                Upload local changes
+                                {t("misc.sync.upload_local_changes")}
                             </Button>
                             <Button
                                 intent="alert"
@@ -279,7 +278,7 @@ export default function Page() {
                                 loading={isChangingLocalChangeStatus}
                                 disabled={isSyncingAnilist}
                             >
-                                Delete local changes
+                                {t("misc.sync.delete_local_changes")}
                             </Button>
                         </div>
                     </div>}
@@ -295,11 +294,11 @@ export default function Page() {
             {/*    </div>}*/}
 
             {(!trackedAnimeItems?.length && !trackedMangaItems?.length) && <LuffyError
-                title="No tracked media"
+                title={t("misc.sync.no_tracked_media")}
             />}
 
             {!!trackedAnimeItems?.length && <div className="space-y-4">
-                <h3>Saved anime</h3>
+                <h3>{t("misc.sync.saved_anime")}</h3>
                 <MediaCardLazyGrid itemCount={trackedAnimeItems?.length}>
                     {trackedAnimeItems?.map((item) => (
                         <MediaEntryCard
@@ -315,7 +314,7 @@ export default function Page() {
             </div>}
 
             {!!trackedMangaItems?.length && <div className="space-y-4">
-                <h3>Saved manga</h3>
+                <h3>{t("misc.sync.saved_manga")}</h3>
                 <MediaCardLazyGrid itemCount={trackedMangaItems?.length}>
                     {trackedMangaItems?.map((item) => (
                         <MediaEntryCard
@@ -341,7 +340,7 @@ function SyncingBadge() {
         >
             <Spinner className="size-4 px-0" />
             <span>
-                Syncing
+                {t("misc.sync.syncing")}
             </span>
         </Badge>
     )

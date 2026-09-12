@@ -32,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { logger, useLatestFunction } from "@/lib/helpers/debug"
 import { usePathname, useRouter, useSearchParams } from "@/lib/navigation"
 import { WSEvents } from "@/lib/server/ws-events"
+import { t } from "@/lib/i18n"
 import { useAtom, useAtomValue } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import uniq from "lodash/uniq"
@@ -233,7 +234,7 @@ function MediastreamPage() {
         if (!mediaContainer?.mediaInfo?.subtitles) return undefined
         return mediaContainer.mediaInfo.subtitles.map((sub: any) => ({
             index: sub.index,
-            label: sub.title || sub.language || `Track ${sub.index}`,
+            label: sub.title || sub.language || t("misc.mediastream.track", { index: sub.index }),
             language: sub.language || "eng",
             src: `${getServerBaseUrl()}/api/v1/mediastream/subs` + sub.link + subsToken,
             content: undefined, // Content fetching handled by VideoCore if needed, but src is preferred
@@ -328,7 +329,7 @@ function MediastreamPage() {
                         intent={episodeViewMode === "list" ? "gray-basic" : "white-subtle"}
                         icon={<BsFillGrid3X3GapFill />}
                         onClick={() => setEpisodeViewMode(prev => prev === "list" ? "grid" : "list")}
-                        title={episodeViewMode === "list" ? "Switch to grid view" : "Switch to list view"}
+                        title={episodeViewMode === "list" ? t("misc.mediastream.switch_to_grid") : t("misc.mediastream.switch_to_list")}
                     />
                 </>}
                 mediaPlayer={
@@ -336,14 +337,14 @@ function MediastreamPage() {
                         <div className="w-full aspect-video mx-auto border rounded-lg overflow-hidden bg-black relative z-20">
                             {isMediaContainerError || playbackError ? (
                                 <div className="flex flex-col items-center justify-center h-full w-full">
-                                    <LuffyError title="Playback Error">
-                                        {playbackError || "Could not load media container."}
+                                    <LuffyError title={t("misc.mediastream.playback_error")}>
+                                        {playbackError || t("misc.mediastream.could_not_load")}
                                     </LuffyError>
                                     <button
                                         onClick={() => refetchMediaContainer()}
                                         className="mt-4 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700"
                                     >
-                                        Retry
+                                        {t("common.action.retry")}
                                     </button>
                                 </div>
                             ) : (
@@ -385,10 +386,10 @@ function MediastreamPage() {
                                                 if (episode.localFile?.path) {
                                                     setFilePath(episode.localFile.path)
                                                 } else {
-                                                    toast.error("File path not found for this episode")
+                                                    toast.error(t("misc.mediastream.file_path_missing"))
                                                 }
                                             }}
-                                            title={media?.format === "MOVIE" ? "Complete movie" : `Episode ${episode.episodeNumber}`}
+                                            title={media?.format === "MOVIE" ? t("misc.mediastream.complete_movie") : t("misc.mediastream.episode_n", { number: episode.episodeNumber })}
                                             episodeTitle={episode.episodeTitle}
                                             description={episode.episodeMetadata?.summary}
                                             image={episode.episodeMetadata?.image}
@@ -401,7 +402,7 @@ function MediastreamPage() {
                                             progressNumber={episode.episodeNumber}
                                             action={<>
                                                 <MediaEpisodeInfoModal
-                                                    title={media?.format === "MOVIE" ? "Complete movie" : `Episode ${episode.episodeNumber}`}
+                                                    title={media?.format === "MOVIE" ? t("misc.mediastream.complete_movie") : t("misc.mediastream.episode_n", { number: episode.episodeNumber })}
                                                     image={episode.episodeMetadata?.image}
                                                     episodeTitle={episode.episodeTitle}
                                                     summary={episode.episodeMetadata?.summary}
@@ -411,7 +412,7 @@ function MediastreamPage() {
                                         />
                                     )
                                 })}
-                                {!!episodes?.length && <p className="text-center text-[--muted] py-2">End</p>}
+                                {!!episodes?.length && <p className="text-center text-[--muted] py-2">{t("library.explorer.end")}</p>}
                             </motion.div>
                         ) : (
                             <EpisodePillsGrid
@@ -460,10 +461,10 @@ function MediastreamPlaybackInfo({
 
     return (
         <Modal
-            title="Playback"
+            title={t("misc.mediastream.playback")}
             trigger={
                 <Button leftIcon={<BiInfoCircle />} className="rounded-full" intent="gray-basic" size="sm">
-                    Playback info
+                    {t("misc.mediastream.playback_info")}
                 </Button>
             }
             contentClass="sm:rounded-3xl"
@@ -474,32 +475,32 @@ function MediastreamPlaybackInfo({
                 </p>
                 {isCodecSupported(mediaContainer.mediaInfo?.mimeCodec || "") ? <Alert
                     intent="success"
-                    description="File video and audio codecs are compatible with this client. Direct play is recommended."
+                    description={t("misc.mediastream.direct_play_ok")}
                 /> : <Alert
                     intent="warning"
-                    description="File video and audio codecs are not compatible with this client. Transcoding is needed."
+                    description={t("misc.mediastream.transcode_needed")}
                 />}
 
                 <div className="text-sm space-y-1">
                     <p>
-                        <span className="font-bold">Stream type: </span>
+                        <span className="font-bold">{t("misc.mediastream.stream_type")}</span>
                         <span className="uppercase">{streamType}</span>
                     </p>
                     <p>
-                        <span className="font-bold">Video codec: </span>
+                        <span className="font-bold">{t("misc.mediastream.video_codec")}</span>
                         <span>{mediaContainer.mediaInfo?.video?.mimeCodec}</span>
                     </p>
                     <p>
-                        <span className="font-bold">Audio codec: </span>
+                        <span className="font-bold">{t("misc.mediastream.audio_codec")}</span>
                         <span>{uniq(mediaContainer.mediaInfo?.audios?.map(n => n.mimeCodec)).join(", ")}</span>
                     </p>
                 </div>
 
                 <Modal
-                    title="Media Container Data"
+                    title={t("misc.mediastream.container_data")}
                     trigger={
                         <Button size="sm" className="rounded-full" intent="gray-outline">
-                            More data
+                            {t("misc.mediastream.more_data")}
                         </Button>
                     }
                     contentClass="max-w-3xl"
@@ -519,10 +520,10 @@ function MediastreamPlaybackInfo({
                             disabled={!mediastreamSettings?.disableAutoSwitchToDirectPlay}
                             className="w-full"
                         >
-                            Switch to transcoding
+                            {t("misc.mediastream.switch_to_transcoding")}
                         </Button>
                         {!mediastreamSettings?.disableAutoSwitchToDirectPlay && <p className="text-[--muted] text-sm italic opacity-50">
-                            Enable 'Prefer transcoding' in the media streaming settings if you want to switch to transcoding
+                            {t("misc.mediastream.switch_hint")}
                         </p>}
                     </div>}
 
@@ -531,7 +532,7 @@ function MediastreamPlaybackInfo({
                         intent="success-subtle" onClick={() => setStreamType("direct")}
                         className="w-full"
                     >
-                        Switch to direct play
+                        {t("misc.mediastream.switch_to_direct")}
                     </Button>}
             </div>
         </Modal>

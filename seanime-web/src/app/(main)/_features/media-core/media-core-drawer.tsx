@@ -7,6 +7,7 @@ import { cva, VariantProps } from "class-variance-authority"
 import * as React from "react"
 import { RemoveScrollBar } from "react-remove-scroll-bar"
 import { Drawer as VaulPrimitive } from "vaul"
+import { t } from "@/lib/i18n"
 
 /* -------------------------------------------------------------------------------------------------
  * Anatomy
@@ -513,7 +514,7 @@ export function MediaCoreDrawer(props: DrawerProps) {
                 >
                     {!title && !description ? (
                         <VisuallyHidden>
-                            <VaulPrimitive.Title>Drawer</VaulPrimitive.Title>
+                            <VaulPrimitive.Title>{t("misc.player.drawer_a11y_title")}</VaulPrimitive.Title>
                         </VisuallyHidden>
                     ) : (
                         <div className={cn(DrawerAnatomy.header(), headerClass)}>

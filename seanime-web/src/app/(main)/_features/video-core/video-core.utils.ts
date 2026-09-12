@@ -20,6 +20,7 @@ import { VideoCore_VideoPlaybackInfo } from "@/app/(main)/_features/video-core/v
 import { atom } from "jotai"
 import { useSetAtom } from "jotai/react"
 import React, { useEffect } from "react"
+import { t } from "@/lib/i18n"
 
 type VideoCoreAction = "seekTo" | "seek" | "togglePlay"
 
@@ -344,7 +345,7 @@ export function vc_createChaptersFromAniSkip(
             uid: 90,
             start: 0,
             end: openingStart,
-            text: "Prologue",
+            text: t("misc.player.prologue"),
         })
     }
 
@@ -352,7 +353,7 @@ export function vc_createChaptersFromAniSkip(
         uid: 91,
         start: openingStart,
         end: openingEnd,
-        text: "Opening",
+        text: t("misc.player.opening"),
     })
 
     const middleEnd = endingStart ?? duration
@@ -370,7 +371,7 @@ export function vc_createChaptersFromAniSkip(
             uid: 92,
             start: endingStart,
             end: endingEnd,
-            text: "Ending",
+            text: t("misc.player.ending"),
         })
     }
 
@@ -379,7 +380,7 @@ export function vc_createChaptersFromAniSkip(
             uid: 94,
             start: endingEnd,
             end: duration,
-            text: (duration - endingEnd) > 0.5 * 60 ? "Ending" : "Preview",
+            text: (duration - endingEnd) > 0.5 * 60 ? t("misc.player.ending") : t("media.action.preview"),
         })
     }
 

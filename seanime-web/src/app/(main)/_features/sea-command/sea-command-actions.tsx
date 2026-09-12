@@ -2,6 +2,7 @@ import { useTorrentstreamDropTorrent } from "@/api/hooks/torrentstream.hooks"
 import { __issueReport_overlayOpenAtom, __issueReport_recordingAtom } from "@/app/(main)/_features/issue-report/issue-report"
 import { useHandleCopyLatestLogs } from "@/app/(main)/_hooks/logs"
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command"
+import { t } from "@/lib/i18n"
 import { useSetAtom } from "jotai/react"
 import React from "react"
 import { useSeaCommandContext } from "./sea-command"
@@ -23,7 +24,7 @@ export function SeaCommandActions() {
     return (
         <>
             {command === "logs" && (
-                <CommandGroup heading="Actions">
+                <CommandGroup heading={t("misc.sea_command.actions")}>
                     <CommandItem
                         value="Logs"
                         onSelect={() => {
@@ -32,13 +33,13 @@ export function SeaCommandActions() {
                             })
                         }}
                     >
-                        Copy current server logs
-                        <CommandShortcut>Enter</CommandShortcut>
+                        {t("misc.sea_command.copy_server_logs")}
+                        <CommandShortcut>{t("misc.sea_command.enter")}</CommandShortcut>
                     </CommandItem>
                 </CommandGroup>
             )}
             {command === "issue" && (
-                <CommandGroup heading="Actions">
+                <CommandGroup heading={t("misc.sea_command.actions")}>
                     <CommandItem
                         value="Issue"
                         onSelect={() => {
@@ -53,13 +54,13 @@ export function SeaCommandActions() {
                             })
                         }}
                     >
-                        Record an issue
-                        <CommandShortcut>Enter</CommandShortcut>
+                        {t("misc.sea_command.record_issue")}
+                        <CommandShortcut>{t("misc.sea_command.enter")}</CommandShortcut>
                     </CommandItem>
                 </CommandGroup>
             )}
             {command === "droptorrent" && (
-                <CommandGroup heading="Actions">
+                <CommandGroup heading={t("misc.sea_command.actions")}>
                     <CommandItem
                         value="Drop Torrent"
                         onSelect={() => {
@@ -72,13 +73,13 @@ export function SeaCommandActions() {
                             })
                         }}
                     >
-                        Drop all torrents from the torrent streaming client
-                        <CommandShortcut>{droppingTorrent ? "Dropping..." : "Enter"}</CommandShortcut>
+                        {t("misc.sea_command.drop_all_torrents")}
+                        <CommandShortcut>{droppingTorrent ? t("misc.sea_command.dropping") : t("misc.sea_command.enter")}</CommandShortcut>
                     </CommandItem>
                 </CommandGroup>
             )}
             {command === "reload" && (
-                <CommandGroup heading="Actions">
+                <CommandGroup heading={t("misc.sea_command.actions")}>
                     <CommandItem
                         value="Reload Page"
                         onSelect={() => {
@@ -88,8 +89,8 @@ export function SeaCommandActions() {
                             })
                         }}
                     >
-                        Reload the page
-                        <CommandShortcut>Enter</CommandShortcut>
+                        {t("misc.sea_command.reload_page")}
+                        <CommandShortcut>{t("misc.sea_command.enter")}</CommandShortcut>
                     </CommandItem>
                 </CommandGroup>
             )}

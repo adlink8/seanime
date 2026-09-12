@@ -3,6 +3,7 @@ import { useMediaPreviewModal } from "@/app/(main)/_features/media/_containers/m
 import { imageShimmer } from "@/components/shared/image-helpers"
 import { SeaImage } from "@/components/shared/sea-image"
 import { Button } from "@/components/ui/button"
+import { t } from "@/lib/i18n"
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command"
 import { useSeaCommandContext } from "../sea-command"
 
@@ -14,7 +15,7 @@ export function CommandItemMedia({ media, type }: { media: AL_BaseAnime | AL_Bas
             <div className="size-12 flex-none rounded-[--radius-md] relative overflow-hidden">
                 <SeaImage
                     src={media.coverImage?.medium || ""}
-                    alt="episode image"
+                    alt={t("misc.anime.episode_image_alt")}
                     fill
                     className="object-center object-cover"
                     placeholder={imageShimmer(700, 475)}
@@ -30,7 +31,7 @@ export function CommandItemMedia({ media, type }: { media: AL_BaseAnime | AL_Bas
                 setPreviewModalMediaId(media.id, type)
             }} className="flex-shrink-0"
             >
-                Preview
+                {t("media.action.preview")}
             </Button>
         </div>
     )

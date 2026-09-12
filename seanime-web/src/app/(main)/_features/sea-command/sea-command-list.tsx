@@ -1,4 +1,5 @@
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command"
+import { t } from "@/lib/i18n"
 import { usePathname, useSearchParams } from "@/lib/navigation"
 import { useSeaCommandContext } from "./sea-command"
 
@@ -15,52 +16,52 @@ export function SeaCommandList() {
     const commands = [
         {
             command: "anime",
-            description: "Find in your collection",
+            description: t("misc.sea_command.find_in_collection"),
             show: true,
         },
         {
             command: "manga",
-            description: "Find in your collection",
+            description: t("misc.sea_command.find_in_collection"),
             show: true,
         },
         {
             command: "library",
-            description: "Find in your anime library",
+            description: t("misc.sea_command.find_in_library"),
             show: true,
         },
         {
             command: "search",
-            description: "Search on AniList",
+            description: t("misc.sea_command.search_anilist"),
             show: true,
         },
         {
             command: "magnet",
-            description: "Stream or download via magnet link",
+            description: t("misc.sea_command.stream_or_download"),
             show: true,
         },
         {
             command: "logs",
-            description: "Copy the current logs",
+            description: t("misc.sea_command.copy_logs_desc"),
             show: true,
         },
         {
             command: "issue",
-            description: "Record an issue",
+            description: t("misc.sea_command.record_issue"),
             show: true,
         },
         {
             command: "droptorrent",
-            description: "Drop current torrentstream torrent",
+            description: t("misc.sea_command.drop_torrent_desc"),
             show: input.startsWith("/d"),
         },
         {
             command: "reload",
-            description: "Reload the page",
+            description: t("misc.sea_command.reload_page"),
             show: input.startsWith("/r"),
         },
         {
             command: "spoilers",
-            description: "Toggle spoilers for this anime",
+            description: t("misc.sea_command.toggle_spoilers"),
             show: isAnimePage,
         },
     ]

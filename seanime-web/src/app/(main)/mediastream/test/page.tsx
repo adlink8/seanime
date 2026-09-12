@@ -1,4 +1,5 @@
 import React from "react"
+import { t } from "@/lib/i18n"
 
 export default function Page() {
 
@@ -112,7 +113,7 @@ export default function Page() {
 
     return (
         <>
-            Go away.
+            {t("misc.mediastream.test_go_away")}
         </>
     )
 }

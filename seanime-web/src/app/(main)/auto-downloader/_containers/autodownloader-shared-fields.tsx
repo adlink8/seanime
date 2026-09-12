@@ -3,6 +3,7 @@ import { useAnimeListTorrentProviderExtensions } from "@/api/hooks/extensions.ho
 import { Button, CloseButton, IconButton } from "@/components/ui/button"
 import { Field } from "@/components/ui/form"
 import { TextInput } from "@/components/ui/text-input"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { useFieldArray } from "react-hook-form"
 import { BiPlus } from "react-icons/bi"
@@ -102,17 +103,17 @@ export function ReleaseGroupsField(props: ReleaseGroupsFieldProps) {
 
     return (
         <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Release Groups</div>
+            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("autodownloader.section.release_groups")}</div>
             <p className="text-sm">
-                List of release groups to look for. If empty, any release group will be accepted.
+                {t("autodownloader.help.release_groups_short")}
             </p>
 
             <TextArrayField
                 name={props.name}
                 control={props.control}
                 type="text"
-                placeholder="e.g. SubsPlease"
-                separatorText="OR"
+                placeholder={t("autodownloader.placeholder.release_group")}
+                separatorText={t("settings.common.or")}
                 suggestions={suggestions}
             />
         </div>
@@ -129,17 +130,17 @@ export function ResolutionsField(props: ResolutionsFieldProps) {
 
     return (
         <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Resolutions</div>
+            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("entry.torrent_search.resolution")}</div>
             <p className="text-sm">
-                List of resolutions to look for. If empty, the highest resolution will be accepted.
+                {t("autodownloader.help.resolutions")}
             </p>
 
             <TextArrayField
                 name={props.name}
                 control={props.control}
                 type="text"
-                placeholder="e.g. 1080p"
-                separatorText="OR"
+                placeholder={t("autodownloader.placeholder.resolution")}
+                separatorText={t("settings.common.or")}
                 suggestions={suggestions}
             />
         </div>
@@ -155,15 +156,15 @@ type AdditionalTermsFieldProps = {
 export function AdditionalTermsField(props: AdditionalTermsFieldProps) {
     const suggestions = [
         // Video
-        { label: "HEVC / H.265", value: "H265,H.265,x265,HEVC" },
-        { label: "AVC / H.264", value: "H264,H.264,x264,AVC" },
+        { label: t("autodownloader.suggestion.hevc"), value: "H265,H.265,x265,HEVC" },
+        { label: t("autodownloader.suggestion.avc"), value: "H264,H.264,x264,AVC" },
         { label: "10-bit", value: "10bit,10-bit,10 bit" },
         { label: "HDR", value: "HDR,HDR10,HDR10+" },
-        { label: "Dolby Vision", value: "Dolby Vision,DolbyVision,DoVi" },
-        { label: "Remux", value: "Remux" },
+        { label: t("autodownloader.suggestion.dolby_vision"), value: "Dolby Vision,DolbyVision,DoVi" },
+        { label: t("autodownloader.suggestion.remux"), value: "Remux" },
         // Audio
         { label: "FLAC", value: "FLAC" },
-        { label: "Opus", value: "Opus" },
+        { label: t("autodownloader.suggestion.opus"), value: "Opus" },
         { label: "AAC", value: "AAC,AAC2.0" },
         { label: "E-AC3", value: "E-AC3,EAC3,EAC-3,E-AC-3" },
         { label: "TrueHD", value: "TrueHD,True-HD" },
@@ -173,29 +174,26 @@ export function AdditionalTermsField(props: AdditionalTermsFieldProps) {
         { label: "WEB-DL", value: "WEB-DL,WEBDL,WEB DL,WebRip,Web-Rip,WEB RIP" },
         { label: "DVD", value: "DVD,DVD-Rip,DVDRip" },
         // Anime
-        { label: "Dual Audio", value: "Dual Audio,Dual-Audio,DualAudio" },
-        { label: "Multi Audio", value: "Multi Audio,Multi-Audio,MultiAudio,Dual Audio,Dual-Audio,DualAudio" },
+        { label: t("autodownloader.suggestion.dual_audio"), value: "Dual Audio,Dual-Audio,DualAudio" },
+        { label: t("settings.autoselect.pref_multiple_audio"), value: "Multi Audio,Multi-Audio,MultiAudio,Dual Audio,Dual-Audio,DualAudio" },
         { label: "Multi-Sub", value: "Multi-Sub,Multi Sub,Multisub,Multisubs,Multi-subs,Multi subs" },
-        { label: "Dubbed", value: "Dubbed,Dub" },
+        { label: t("autodownloader.suggestion.dubbed"), value: "Dubbed,Dub" },
     ]
 
     return (
         <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Video, Audio, Source, Subs
-            </div>
+            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("autodownloader.section.terms")}</div>
             <div>
                 <p className="text-sm -top-2 relative"><span className="font-semibold">
-                    All options must be included for the torrent to be accepted.</span> Within each option, you can
-                                                                                        include variations separated by
-                                                                                        commas. (Case insensitive)</p>
+                    {t("autodownloader.help.additional_terms")}</span> {t("autodownloader.help.additional_terms_more")}</p>
             </div>
 
             <TextArrayField
                 name={props.name}
                 control={props.control}
                 type="text"
-                placeholder="e.g. H265,H.265,H 265,x265"
-                separatorText="AND"
+                placeholder={t("autodownloader.placeholder.terms")}
+                separatorText={t("autodownloader.separator.and")}
                 suggestions={suggestions.map(s => s.value)}
                 suggestionLabels={suggestions.map(s => s.label)}
             />
@@ -206,36 +204,34 @@ export function AdditionalTermsField(props: AdditionalTermsFieldProps) {
 export function ExcludeTermsField(props: AdditionalTermsFieldProps) {
     const suggestions = [
         // Video
-        { label: "HEVC / H.265", value: "H265,H.265,x265,HEVC" },
-        { label: "AVC / H.264", value: "H264,H.264,x264,AVC" },
+        { label: t("autodownloader.suggestion.hevc"), value: "H265,H.265,x265,HEVC" },
+        { label: t("autodownloader.suggestion.avc"), value: "H264,H.264,x264,AVC" },
         { label: "10-bit", value: "10bit,10-bit,10 bit" },
         { label: "HDR", value: "HDR,HDR10,HDR10+" },
-        { label: "Dolby Vision", value: "Dolby Vision,DolbyVision,DoVi" },
-        { label: "Remux", value: "Remux" },
+        { label: t("autodownloader.suggestion.dolby_vision"), value: "Dolby Vision,DolbyVision,DoVi" },
+        { label: t("autodownloader.suggestion.remux"), value: "Remux" },
         // Audio
         { label: "FLAC", value: "FLAC" },
         // Source
         { label: "BluRay", value: "BluRay,Blu-Ray,BDRip" },
         { label: "DVD", value: "DVD,DVD-Rip,DVDRip" },
-        { label: "Cam", value: "Cam,CamRip" },
+        { label: t("autodownloader.suggestion.cam"), value: "Cam,CamRip" },
         // Anime
-        { label: "Dubbed", value: "Dubbed,Dub" },
+        { label: t("autodownloader.suggestion.dubbed"), value: "Dubbed,Dub" },
     ]
 
     return (
         <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Exclude Terms</div>
+            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("settings.autoselect.exclude_terms")}</div>
             <p className="text-sm"><span className="font-semibold">
-                All options must be included for the torrent to be rejected.</span> Torrents containing any of these terms will be rejected. (Case
-                                                                                    insensitive)
-            </p>
+                {t("autodownloader.help.exclude_terms")}</span> {t("autodownloader.help.exclude_terms_more")}</p>
 
             <TextArrayField
                 name={props.name}
                 control={props.control}
                 type="text"
-                placeholder="e.g. H265,H.265,H 265,x265"
-                separatorText="AND"
+                placeholder={t("autodownloader.placeholder.terms")}
+                separatorText={t("autodownloader.separator.and")}
                 suggestions={suggestions.map(s => s.value)}
                 suggestionLabels={suggestions.map(s => s.label)}
             />
@@ -253,9 +249,9 @@ export function ProvidersField(props: ProvidersFieldProps) {
 
     return (
         <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Providers</div>
+            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("settings.debrid.provider")}</div>
             <p className="text-sm">
-                Select specific providers to look for. If empty, the default provider will be used.
+                {t("autodownloader.help.providers")}
             </p>
             <Field.Combobox
                 name={props.name}
@@ -265,8 +261,8 @@ export function ProvidersField(props: ProvidersFieldProps) {
                     value: ext.id,
                 })) ?? []}
                 multiple
-                label="Select providers"
-                emptyMessage="No providers found"
+                label={t("autodownloader.field.select_providers")}
+                emptyMessage={t("settings.autoselect.empty_providers")}
             />
         </div>
     )
@@ -281,9 +277,9 @@ export function ProfileSelectField(props: ProfileSelectFieldProps) {
 
     return (
         <div className="border rounded-[--radius] p-4 relative !mt-8 space-y-3">
-            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">Profile</div>
+            <div className="absolute -top-2.5 tracking-wide font-semibold uppercase text-sm left-4 bg-gray-950 px-2">{t("autodownloader.section.profile")}</div>
             <p className="text-sm">
-                Select a profile to apply shared filters. Local filters will override profile filters.
+                {t("autodownloader.help.profile")}
             </p>
             <Field.Combobox
                 name={props.name}
@@ -294,8 +290,8 @@ export function ProfileSelectField(props: ProfileSelectFieldProps) {
                         value: String(profile.dbId),
                     })) ?? []),
                 ]}
-                label="Select a profile"
-                emptyMessage="No profile found"
+                label={t("autodownloader.field.select_profile")}
+                emptyMessage={t("autodownloader.empty.no_profile")}
             />
         </div>
     )

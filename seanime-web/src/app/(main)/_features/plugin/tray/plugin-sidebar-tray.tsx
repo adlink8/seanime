@@ -19,6 +19,7 @@ import { cn } from "@/components/ui/core/styling"
 import { Popover } from "@/components/ui/popover"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePathname } from "@/lib/navigation"
+import { t } from "@/lib/i18n"
 import { WSEvents } from "@/lib/server/ws-events"
 import { useWindowSize } from "@uidotdev/usehooks"
 import { useAtom } from "jotai/react"
@@ -127,7 +128,7 @@ const ExtensionList = ({
                                 icon={<LuComponent className="size-5 text-[--muted]" />}
                                 className="rounded-full hover:rotate-360 transition-all duration-300"
                             />}
-                        >{unpinnedBadgeCount ? `插件托盘 (${unpinnedBadgeCount})` : "插件托盘"}</Tooltip>
+                        >{unpinnedBadgeCount ? t("extensions.plugin_tray.count", { n: unpinnedBadgeCount }) : t("extensions.plugin_tray.title")}</Tooltip>
                         {!!unpinnedBadgeCount && <Badge
                             intent="alert-solid"
                             size="sm"
@@ -220,13 +221,13 @@ const ExtensionList = ({
                                             />}
                                         </div>}
                                     >
-                                        {isPinned(trayIcon.extensionId) ? "取消固定" : "固定"}
+                                        {isPinned(trayIcon.extensionId) ? t("extensions.plugin_tray.unpin") : t("extensions.plugin_tray.pin")}
                                     </Tooltip>
                                 </div>
                             </div>
                         ))}
                         {!trayIcons.length && <p className="text-sm text-[--muted] py-1 text-center w-full">
-                            暂无托盘插件
+                            {t("extensions.plugin_tray.empty")}
                         </p>}
 
                         {/* {developmentModeExtensions?.map(extension => (
@@ -264,10 +265,10 @@ const ExtensionList = ({
                     <div className="space-y-1" data-plugin-sidebar-debug-popover-content>
                         <div className="text-sm space-y-1">
                             <p className="font-bold">
-                                调试
+                                {t("extensions.plugin_tray.debug")}
                             </p>
                             <p className="text-xs text-[--muted]">
-                                这些扩展以开发模式加载。
+                                {t("extensions.plugin_tray.dev_mode_notice")}
                             </p>
                         </div>
                         {developmentModeExtensions?.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })).map(extension => (
@@ -284,7 +285,7 @@ const ExtensionList = ({
                                                 onClick={() => openDebugWindow(extension.id)}
                                             />
                                         </div>}
-                                    >调试日志</Tooltip>
+                                    >{t("extensions.plugin_tray.debug_logs")}</Tooltip>
                                     <IconButton
                                         intent="warning-basic"
                                         size="sm"

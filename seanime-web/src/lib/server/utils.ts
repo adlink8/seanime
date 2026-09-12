@@ -1,19 +1,21 @@
+import { t } from "@/lib/i18n"
+
 import capitalize from "lodash/capitalize"
 
 export function getLibraryCollectionTitle(type?: string) {
     switch (type) {
         case "CURRENT":
-            return "正在观看"
+            return t("common.state.watching")
         case "COMPLETED":
-            return "已看完"
+            return t("common.state.completed")
         case "PLANNING":
-            return "计划观看"
+            return t("common.state.planning")
         case "PAUSED":
-            return "暂停搁置"
+            return t("common.state.paused")
         case "DROPPED":
-            return "已弃番"
+            return t("common.state.dropped")
         case "REPEATING":
-            return "二刷重温"
+            return t("common.state.rewatching")
         default:
             return capitalize(type ?? "")
     }
@@ -22,17 +24,17 @@ export function getLibraryCollectionTitle(type?: string) {
 export function getMangaCollectionTitle(type?: string) {
     switch (type) {
         case "CURRENT":
-            return "正在阅读"
+            return t("common.state.reading")
         case "COMPLETED":
-            return "已看完"
+            return t("common.state.completed")
         case "PLANNING":
-            return "计划阅读"
+            return t("common.state.plan_to_read")
         case "PAUSED":
-            return "暂停搁置"
+            return t("common.state.paused")
         case "DROPPED":
-            return "已弃坑"
+            return t("common.state.manga_dropped")
         case "REPEATING":
-            return "重温阅读"
+            return t("common.state.rereading")
         default:
             return capitalize(type ?? "")
     }

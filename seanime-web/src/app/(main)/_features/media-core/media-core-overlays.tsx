@@ -7,6 +7,7 @@ import { motion } from "motion/react"
 import React from "react"
 import { ImSpinner2 } from "react-icons/im"
 import { PiPauseDuotone, PiPlayDuotone, PiSpinnerDuotone } from "react-icons/pi"
+import { t } from "@/lib/i18n"
 
 export function MediaCoreBufferingOverlay(props: { buffering: boolean }) {
     if (!props.buffering) return null
@@ -37,22 +38,22 @@ export function MediaCoreErrorOverlay(props: {
         >
             <div className="text-white text-center" data-vc-element="playback-error-content">
                 {!isMiniPlayer ? (
-                    <LuffyError title="Playback Error" imageContainerClass="size-[3.5rem] lg:size-[8rem]" />
+                    <LuffyError title={t("misc.player.playback_error")} imageContainerClass="size-[3.5rem] lg:size-[8rem]" />
                 ) : (
                     <h1 data-vc-element="playback-error-title" className={cn("text-2xl font-bold", isMiniPlayer && "text-lg")}>
-                        Playback Error
+                        {t("misc.player.playback_error")}
                     </h1>
                 )}
                 <p
                     data-vc-element="playback-error-message"
                     className={cn("text-base text-white/50 max-w-xl mx-auto mt-2", isMiniPlayer && "text-sm max-w-lg")}
                 >
-                    {playbackError || "An error occurred while playing the stream. Please try again later."}
+                    {playbackError || t("misc.player.stream_error_fallback")}
                 </p>
                 {onClose && (
                     <div className="mt-6">
                         <Button intent="warning-subtle" size={isMiniPlayer ? "sm" : "md"} onClick={onClose}>
-                            Close Player
+                            {t("misc.player.close_player")}
                         </Button>
                     </div>
                 )}
@@ -79,7 +80,7 @@ export function MediaCoreLoadingOverlay(props: {
             {(!inline || fullscreen) && terminateButton}
             
             <LoadingSpinner
-                title={loadingState || "Loading..."}
+                title={loadingState || t("entry.torrent_stream.loading")}
                 spinner={<ImSpinner2 className="size-20 text-white animate-spin" />}
                 containerClass="z-[1]"
             />

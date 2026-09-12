@@ -3,6 +3,7 @@ import { Modal } from "@/components/ui/modal"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { TextInput } from "@/components/ui/text-input"
 import { useDebounce } from "@/hooks/use-debounce"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { BiFolderOpen } from "react-icons/bi"
 import { FaFolder } from "react-icons/fa"
@@ -134,7 +135,7 @@ function FileSelectorModal(props: FileSelectorProps & { isOpen: boolean, onOpenC
 
     return (
         <Modal
-            title="Select a file or directory"
+            title={t("common.file.select_file_or_directory")}
             open={isOpen}
             onOpenChange={onOpenChange}
             contentClass="max-w-3xl"

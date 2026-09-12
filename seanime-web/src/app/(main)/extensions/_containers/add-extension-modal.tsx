@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { Separator } from "@/components/ui/separator"
 import { TextInput } from "@/components/ui/text-input"
+import { t } from "@/lib/i18n"
 import React from "react"
 import { FiDownload } from "react-icons/fi"
 import { LuSearch } from "react-icons/lu"
@@ -52,7 +53,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
 
     function handleFetchExtensionData() {
         if (!manifestURL) {
-            toast.warning("Please provide a valid URL.")
+            toast.warning(t("extensions.add.toast_invalid_url"))
             return
         }
 
@@ -63,7 +64,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
 
     function handleInstallFromRepository(install: boolean) {
         if (!repositoryURL) {
-            toast.warning("Please provide a valid URL.")
+            toast.warning(t("extensions.add.toast_invalid_url"))
             return
         }
 
@@ -73,7 +74,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
         }, {
             onSuccess: () => {
                 if (install) {
-                    toast.success("Extensions installed successfully.")
+                    toast.success(t("extensions.add.toast_install_success"))
                     setOpen(false)
                     setRepositoryURL("")
                     resetRepo()
@@ -90,12 +91,12 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                 trigger={children}
                 contentClass="max-w-3xl"
                 titleClass="text-center pb-4"
-                title="添加扩展"
+                title={t("entry.torrent_search.add_extensions")}
             >
                 <div className="flex gap-4 flex-col lg:flex-row">
                     <div className="lg:w-1/3">
-                        <h3 className="text-2xl font-bold">通过 URL 安装</h3>
-                        <p className="text-[--muted]">输入扩展 manifest.json 链接进行安装。</p>
+                        <h3 className="text-2xl font-bold">{t("extensions.add.install_via_url")}</h3>
+                        <p className="text-[--muted]">{t("extensions.add.install_via_url_desc")}</p>
                     </div>
                     <div className="lg:w-2/3 gap-3 flex flex-col">
                         <TextInput
@@ -109,7 +110,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                             intent="white"
                             onClick={handleFetchExtensionData}
                             loading={isPending}
-                        >查找</Button>
+                        >{t("extensions.add.find")}</Button>
                     </div>
                 </div>
 
@@ -121,7 +122,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
 
                         {extensions?.find(n => n.id === extensionData.id) ? (
                             <p className="text-center">
-                                该扩展已经安装过。
+                                {t("extensions.add.already_installed")}
                             </p>
                         ) : (
                             <Button
@@ -132,7 +133,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                                         manifestUri: extensionData?.manifestURI,
                                     })
                                 }}
-                            >安装</Button>
+                            >{t("extensions.add.install")}</Button>
                         )}
                     </>
                 )}
@@ -142,17 +143,17 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                         <Separator />
 
                         <p className="text-center text-[--muted]">
-                            您也可以输入扩展源仓库地址，批量导入并一键安装多个扩展。
+                            {t("extensions.add.repo_hint")}
                         </p>
 
                         <div className="flex gap-4 flex-col lg:flex-row-reverse">
                             <div className="lg:w-1/3">
-                                <h3 className="text-xl font-bold">从软件源批量导入</h3>
-                                <p className="text-[--muted]">输入扩展仓库地址或 JSON 链接导入扩展。</p>
+                                <h3 className="text-xl font-bold">{t("extensions.add.import_from_repo")}</h3>
+                                <p className="text-[--muted]">{t("extensions.add.import_from_repo_desc")}</p>
                             </div>
                             <div className="lg:w-2/3 gap-3 flex flex-col">
                                 <TextInput
-                                    placeholder={"https://example.com/extensions.json 或 { \"urls\": [...] }"}
+                                    placeholder={t("extensions.add.repo_placeholder")}
                                     value={repositoryURL}
                                     onValueChange={setRepositoryURL}
                                     // label="URL"
@@ -162,7 +163,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                                     intent="gray-outline"
                                     onClick={() => handleInstallFromRepository(false)}
                                     loading={isInstallingFromRepo}
-                                >导入全部</Button>
+                                >{t("extensions.add.import_all")}</Button>
                             </div>
                         </div>
 
@@ -178,7 +179,7 @@ export function AddExtensionModal(props: AddExtensionModalProps) {
                                     intent="white"
                                     onClick={() => handleInstallFromRepository(true)}
                                     loading={isInstallingFromRepo}
-                                >全部安装</Button>
+                                >{t("extensions.add.install_all")}</Button>
                             </>
                         )}
                     </>

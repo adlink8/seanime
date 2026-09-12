@@ -16,6 +16,7 @@ import { useSetAtom } from "jotai/react"
 import React from "react"
 import { LuFolderDown } from "react-icons/lu"
 import { PluginSidebarTray } from "../plugin/tray/plugin-sidebar-tray"
+import { t } from "@/lib/i18n"
 
 type TopNavbarProps = {
     children?: React.ReactNode
@@ -113,7 +114,7 @@ export function SidebarNavbar(props: SidebarNavbarProps) {
                     ...(isMangaPage ? [
                         {
                             iconType: LuFolderDown,
-                            name: "Manga Downloads",
+                            name: t("misc.common.manga_downloads"),
                             onClick: () => {
                                 openDownloadQueue(true)
                             },

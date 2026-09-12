@@ -215,4 +215,5 @@ export const settingsMediaDictionary = {
     "settings.autoselect.pref_avoid": "规避", // autoselect-profile-form.tsx
     "settings.autoselect.pref_only": "仅限", // autoselect-profile-form.tsx
     "settings.autoselect.pref_never": "绝不", // autoselect-profile-form.tsx
+    "settings.mediaplayer.socket_label": "套接字（Socket）", // mediaplayer-settings.tsx Field.Text label（09-05 残留）
 } satisfies Dictionary
