@@ -60,6 +60,14 @@ type Config struct {
 		LocalDir string // 音声本地库扫描根目录（契约 §配置）
 		Name     string // asmr.one 账号（可选，留空=云同步关闭）
 		Password string // asmr.one 密码（可选）
+		Tracker  struct { // 新作跟踪自动拉取（契约 03.2c / D2）
+			Enabled         bool     `mapstructure:"enabled"`
+			IntervalMinutes int      `mapstructure:"interval_minutes"`
+			Circles         []string `mapstructure:"circles"`
+			MaxPerRun       int      `mapstructure:"max_per_run"`
+			MinFreeGB       int      `mapstructure:"min_free_gb"`
+			BackfillDays    int      `mapstructure:"backfill_days"` // 0 = 永远只记录不下载
+		} `mapstructure:"tracker"`
 	}
 	Data struct { // Hydrated after config is loaded
 		AppDataDir string
@@ -170,6 +178,13 @@ func NewConfig(options *ConfigOptions, logger *zerolog.Logger) (*Config, error) 
 	viper.SetDefault("manga.downloadDir", "$SEANIME_DATA_DIR/manga")
 	viper.SetDefault("manga.localDir", "$SEANIME_DATA_DIR/manga-local")
 	viper.SetDefault("asmr.localDir", "$SEANIME_DATA_DIR/asmr-local")
+	// asmr.tracker 新作跟踪（契约 03.2c / D2）：保守默认值
+	viper.SetDefault("asmr.tracker.enabled", false)
+	viper.SetDefault("asmr.tracker.interval_minutes", 120)
+	viper.SetDefault("asmr.tracker.circles", []string{})
+	viper.SetDefault("asmr.tracker.max_per_run", 2)
+	viper.SetDefault("asmr.tracker.min_free_gb", 10)
+	viper.SetDefault("asmr.tracker.backfill_days", 7)
 	viper.SetDefault("logs.dir", "$SEANIME_DATA_DIR/logs")
 	viper.SetDefault("offline.dir", "$SEANIME_DATA_DIR/offline")
 	viper.SetDefault("offline.assetDir", "$SEANIME_DATA_DIR/offline/assets")
@@ -501,6 +516,20 @@ func expandEnvironmentValues(cfg *Config) {
 	cfg.Manga.DownloadDir = filepath.FromSlash(os.ExpandEnv(cfg.Manga.DownloadDir))
 	cfg.Manga.LocalDir = filepath.FromSlash(os.ExpandEnv(cfg.Manga.LocalDir))
 	cfg.Asmr.LocalDir = filepath.FromSlash(os.ExpandEnv(cfg.Asmr.LocalDir))
+
+	// asmr.tracker 参数钳制（契约 03.2c / D2：钳制在加载层，tracker 模块假定已合法）
+	if cfg.Asmr.Tracker.IntervalMinutes < 30 {
+		cfg.Asmr.Tracker.IntervalMinutes = 30
+	}
+	if cfg.Asmr.Tracker.MaxPerRun < 1 {
+		cfg.Asmr.Tracker.MaxPerRun = 1
+	}
+	if cfg.Asmr.Tracker.MinFreeGB < 1 {
+		cfg.Asmr.Tracker.MinFreeGB = 1
+	}
+	if cfg.Asmr.Tracker.BackfillDays < 0 {
+		cfg.Asmr.Tracker.BackfillDays = 0
+	}
 	cfg.Offline.Dir = filepath.FromSlash(os.ExpandEnv(cfg.Offline.Dir))
 	cfg.Offline.AssetDir = filepath.FromSlash(os.ExpandEnv(cfg.Offline.AssetDir))
 	cfg.Extensions.Dir = filepath.FromSlash(os.ExpandEnv(cfg.Extensions.Dir))

@@ -60,3 +60,32 @@ func (db *Database) UpsertAsmrTrackState(rjID, trackPath string, completed bool)
 	}
 	return int(count), nil
 }
+
+// IsAsmrWorkSeen 查询新作跟踪器是否已评估过该作品（契约 03.2c / D3②）。
+func (db *Database) IsAsmrWorkSeen(rjID string) (bool, error) {
+	var count int64
+	err := db.gormdb.Model(&models.AsmrTrackerSeen{}).Where("rj_id = ?", rjID).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// MarkAsmrWorkSeen 标记作品已被跟踪器评估，幂等（已存在不新增行、不报错）。
+func (db *Database) MarkAsmrWorkSeen(rjID string) error {
+	var count int64
+	if err := db.gormdb.Model(&models.AsmrTrackerSeen{}).Where("rj_id = ?", rjID).Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+	return db.gormdb.Create(&models.AsmrTrackerSeen{RjID: rjID}).Error
+}
+
+// CountAsmrTrackerSeen 已评估记录总数（tracker 首跑观察窗判定，契约 03.2c / D5）。
+func (db *Database) CountAsmrTrackerSeen() (int64, error) {
+	var count int64
+	err := db.gormdb.Model(&models.AsmrTrackerSeen{}).Count(&count).Error
+	return count, err
+}

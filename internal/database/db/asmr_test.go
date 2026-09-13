@@ -3,6 +3,8 @@ package db
 import (
 	"testing"
 
+	"seanime/internal/database/models"
+
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
@@ -58,4 +60,24 @@ func TestAsmrTrackStateUpsertAndCount(t *testing.T) {
 	states, err := database.GetAsmrTrackStates("RJ12345")
 	require.NoError(t, err)
 	require.Len(t, states, 2)
+}
+
+// TestAsmrTrackerSeenSeen 表（契约 03.2c Wave B）：未记录→false、记录后→true、重复记录幂等。
+func TestAsmrTrackerSeen(t *testing.T) {
+	database := newTestDB(t)
+
+	seen, err := database.IsAsmrWorkSeen("RJ01234567")
+	require.NoError(t, err)
+	require.False(t, seen, "初始不应存在")
+
+	require.NoError(t, database.MarkAsmrWorkSeen("RJ01234567"))
+	seen, err = database.IsAsmrWorkSeen("RJ01234567")
+	require.NoError(t, err)
+	require.True(t, seen)
+
+	// 幂等：重复记录不报错、不新增行
+	require.NoError(t, database.MarkAsmrWorkSeen("RJ01234567"))
+	var count int64
+	require.NoError(t, database.gormdb.Model(&models.AsmrTrackerSeen{}).Where("rj_id = ?", "RJ01234567").Count(&count).Error)
+	require.Equal(t, int64(1), count, "重复记录不应新增行")
 }

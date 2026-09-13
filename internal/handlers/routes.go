@@ -152,6 +152,10 @@ func InitRoutes(app *core.App, e *echo.Echo) {
 	v1.GET("/asmr/cloud", h.HandleAsmrCloud)
 	v1.POST("/asmr/download", h.HandleAsmrDownload)
 
+	// ASMR 新作跟踪自动拉取（契约 03.2c / D8）
+	v1.GET("/asmr/tracker/status", h.HandleAsmrTrackerStatus)
+	v1.POST("/asmr/tracker/run", h.HandleAsmrTrackerRun)
+
 	// ASMR 音声播放内控制条（契约 §1 D2/D3/D4，Phase 3.1c Wave A，纯转发 Repository）
 	v1.GET("/asmr/playback/status", h.HandleAsmrPlaybackStatus)
 	v1.POST("/asmr/playback/pause", h.HandleAsmrPlaybackPause)

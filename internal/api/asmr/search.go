@@ -14,6 +14,9 @@ import (
 //     price、release、id；dd/dl/dc/publish_date/rate 等一律 400 {"error":"order: Invalid value"}。
 //   - subtitle 合法值：0（全部）、1（有字幕）；jp/2/3 等一律 400。API 不支持按字幕语言过滤。
 //   - pageSize 生效（默认 20），响应 pagination.pageSize 回显。
+//   - sort 参数（契约 03.2c / D9，2026-09-14 经代理实测）：合法；order=release 时服务端**默认即 desc**
+//     （最新在前），sort=desc 同默认，sort=asc 生效（最旧在前）。SearchParams 故不设 Sort 字段，
+//     tracker 依赖默认 desc 即可。
 //   - 响应形状：{"works":[...], "pagination":{"currentPage","pageSize","totalCount"}}。
 //   - popular：GET /api/popular 实测 401 {"error":"No authorization token was found"}（需登录态）；
 //     /api/search/popular/{page} 不存在（404）。Popular() 以无关键词默认搜索（page 1）近似替代，

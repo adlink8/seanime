@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strconv"
 	"sync"
 
@@ -22,6 +23,9 @@ var (
 
 	asmrDownloaderOnce sync.Once
 	asmrDownloader     *asmrlib.Downloader
+
+	asmrTrackerOnce sync.Once
+	asmrTracker     *asmrlib.Tracker
 )
 
 func (h *Handler) getAsmrClient() (*asmr.Client, error) {
@@ -416,4 +420,75 @@ func sortedKeys(m map[string]struct{}) []string {
 		}
 	}
 	return out
+}
+
+// getAsmrTracker tracker 进程级单例（契约 03.2c Wave C）。
+// 与 client/downloader 同源装配；Start 内部对 Enabled=false 为 no-op。
+// 装配偏离说明：契约原定 app.go 装配，实际沿 asmr client/downloader 的 handler 懒装配先例
+// （sync.Once），避免为创建 client 而在 core 引入第二条装配路径；首次访问任一 asmr 端点即启动调度。
+func (h *Handler) getAsmrTracker() (*asmrlib.Tracker, error) {
+	client, err := h.getAsmrClient()
+	if err != nil {
+		return nil, err
+	}
+	dl, err := h.getAsmrDownloader()
+	if err != nil {
+		return nil, err
+	}
+	asmrTrackerOnce.Do(func() {
+		ct := h.App.Config.Asmr.Tracker
+		cfg := asmrlib.TrackerConfig{
+			Enabled:         ct.Enabled,
+			IntervalMinutes: ct.IntervalMinutes,
+			Circles:         ct.Circles,
+			MaxPerRun:       ct.MaxPerRun,
+			MinFreeGB:       ct.MinFreeGB,
+			BackfillDays:    ct.BackfillDays,
+		}
+		asmrTracker = asmrlib.NewTracker(cfg, client, dl, h.App.Database, h.App.WSEventManager, h.App.Logger)
+		asmrTracker.Start(context.Background())
+	})
+	return asmrTracker, nil
+}
+
+// HandleAsmrTrackerRun
+//
+//	@summary manually triggers one tracker run (契约 03.2c / D8).
+//	@desc 手动触发一轮新作跟踪；进行中重复触发返回 202 + already-running。未 enabled 也允许触发（调试刚需）。
+//	@route /api/v1/asmr/tracker/run [POST]
+//	@returns asmr.TrackerRunResult | { status: "already-running" }
+func (h *Handler) HandleAsmrTrackerRun(c echo.Context) error {
+	tracker, err := h.getAsmrTracker()
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	res := tracker.Run(c.Request().Context())
+	if res == nil {
+		return c.JSON(http.StatusAccepted, map[string]string{"status": "already-running"})
+	}
+	return h.RespondWithData(c, res)
+}
+
+// HandleAsmrTrackerStatus
+//
+//	@summary returns tracker config and last run result (契约 03.2c / D8).
+//	@route /api/v1/asmr/tracker/status [GET]
+//	@returns { config, lastRun }
+func (h *Handler) HandleAsmrTrackerStatus(c echo.Context) error {
+	tracker, err := h.getAsmrTracker()
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	cfg := tracker.Config()
+	return h.RespondWithData(c, map[string]any{
+		"config": map[string]any{
+			"enabled":         cfg.Enabled,
+			"intervalMinutes": cfg.IntervalMinutes,
+			"circles":         cfg.Circles,
+			"maxPerRun":       cfg.MaxPerRun,
+			"minFreeGB":       cfg.MinFreeGB,
+			"backfillDays":    cfg.BackfillDays,
+		},
+		"lastRun": tracker.LastRun(),
+	})
 }

@@ -20,3 +20,12 @@ type AsmrWorkState struct {
 }
 
 func (AsmrWorkState) TableName() string { return "asmr_work_states" }
+
+// AsmrTrackerSeen 新作跟踪器已评估记录（契约 03.2c / D3）。
+// RjID 唯一索引：标记该 RJ 已被 tracker 评估过（含首轮观察窗只记录的情形），防重复通知/评估。
+type AsmrTrackerSeen struct {
+	BaseModel
+	RjID string `gorm:"uniqueIndex" json:"rjId"`
+}
+
+func (AsmrTrackerSeen) TableName() string { return "asmr_tracker_seen" }

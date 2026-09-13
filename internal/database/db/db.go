@@ -128,6 +128,7 @@ func migrateTables(db *gorm.DB) error {
 		//&models.MangaChapterContainer{},
 		&models.AsmrTrackState{},
 		&models.AsmrWorkState{},
+		&models.AsmrTrackerSeen{}, // 03.2c 新作跟踪器（契约 D3）
 	)
 	if err != nil {
 

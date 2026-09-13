@@ -119,4 +119,7 @@ const (
 	// Asmr download progress / completion events (契约 §7)
 	AsmrDownloadProgress = "asmr:download-progress"
 	AsmrDownloadDone     = "asmr:download-done"
+
+	// Asmr tracker run summary (契约 03.2c / D6)
+	AsmrTrackerEvent = "asmr:tracker"
 )
