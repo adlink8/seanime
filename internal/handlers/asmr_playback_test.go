@@ -78,6 +78,6 @@ func TestAsmrPlaybackValidatePosition(t *testing.T) {
 	assert.True(t, asmrPlaybackValidatePosition(100.5))
 	assert.True(t, asmrPlaybackValidatePosition(86400*7-1))
 	assert.False(t, asmrPlaybackValidatePosition(-1))
-	assert.False(t, asmrPlaybackValidatePosition(86400 * 7))
-	assert.False(t, asmrPlaybackValidatePosition(86400*7 + 1))
+	assert.False(t, asmrPlaybackValidatePosition(86400*7))
+	assert.False(t, asmrPlaybackValidatePosition(86400*7+1))
 }

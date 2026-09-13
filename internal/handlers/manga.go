@@ -634,7 +634,7 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 		pg, err := fetchLegacyBookPage(c.Request().Context(), client, strings.TrimSpace(keyword), page, perPage, legacyBookFilter{
 			novel:               false, // 漫画 tab：保留 platform ∉ {小说, WEB}（含空 platform，D4）
 			averageScoreGreater: p.AverageScoreGreater,
-			season:              nil,  // manga 请求体只有 year，无 season（契约 §2）
+			season:              nil, // manga 请求体只有 year，无 season（契约 §2）
 			seasonYear:          p.Year,
 			sorts:               p.Sort,
 		})

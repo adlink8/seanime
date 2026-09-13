@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"seanime/internal/core"
 	"seanime/internal/database/models"
 	"seanime/internal/security"
@@ -1190,14 +1191,28 @@ func TestResolveRequestClientId(t *testing.T) {
 func TestUsesPrivilegedCommandSettings(t *testing.T) {
 	t.Run("ignores default executable paths", func(t *testing.T) {
 		// default app paths should still behave like the built-in integration.
+		// 样本路径必须按 GOOS 取真实默认值：defaultVLCPaths/defaultQBittorrentPaths 是平台相关的，
+		// 固定 macOS样本在 Windows/Linux 上会被误判为 custom path（hasCustomExecutablePath 返回 true）。
+		var vlcDefault, qbitDefault string
+		switch runtime.GOOS {
+		case "windows":
+			vlcDefault = `C:\Program Files\VideoLAN\VLC\vlc.exe`
+			qbitDefault = `C:\Program Files\qBittorrent\qbittorrent.exe`
+		case "darwin":
+			vlcDefault = "/Applications/VLC.app/Contents/MacOS/VLC"
+			qbitDefault = "/Applications/qbittorrent.app/Contents/MacOS/qbittorrent"
+		default:
+			vlcDefault = "/usr/bin/vlc"
+			qbitDefault = "/usr/bin/qbittorrent"
+		}
 		settings := &models.Settings{
 			MediaPlayer: &models.MediaPlayerSettings{
 				Default: "vlc",
-				VlcPath: "/Applications/VLC.app/Contents/MacOS/VLC",
+				VlcPath: vlcDefault,
 			},
 			Torrent: &models.TorrentSettings{
 				Default:         "qbittorrent",
-				QBittorrentPath: "/Applications/qbittorrent.app/Contents/MacOS/qbittorrent",
+				QBittorrentPath: qbitDefault,
 			},
 		}
 		mediastreamSettings := &models.MediastreamSettings{

@@ -228,7 +228,7 @@ func (h *Handler) HandleAsmrTrackProgress(c echo.Context) error {
 	}
 
 	return h.RespondWithData(c, map[string]any{
-		"ok":           true,
+		"ok":            true,
 		"listenedCount": listenedCount,
 	})
 }
@@ -240,7 +240,7 @@ func (h *Handler) HandleAsmrTrackProgress(c echo.Context) error {
 //	@returns { ok, syncedToCloud }
 func (h *Handler) HandleAsmrLibraryFavorite(c echo.Context) error {
 	type body struct {
-		RjID    string `json:"rjId"`
+		RjID     string `json:"rjId"`
 		Favorite bool   `json:"favorite"`
 	}
 	p := new(body)
