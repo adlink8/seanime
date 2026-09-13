@@ -58,7 +58,7 @@ func TestUpsertCollectionPost(t *testing.T) {
 
 	require.Equal(t, "POST", rs.lastMethod)
 	require.Equal(t, "/v0/users/-/collections/94619", rs.lastPath)
-	require.Equal(t, "application/json; charset=utf-8", rs.lastHeader.Get("Content-Type"))
+	require.Equal(t, "application/json", rs.lastHeader.Get("Content-Type")) // Bangumi 严格匹配，不带 charset 后缀（415 实测）
 
 	var body map[string]any
 	require.NoError(t, json.Unmarshal(rs.lastBody, &body))
