@@ -1,6 +1,7 @@
 package playbackmanager
 
 import (
+	"runtime"
 	"seanime/internal/events"
 	"seanime/internal/library/anime"
 	medialib "seanime/internal/media"
@@ -29,10 +30,18 @@ func TestAsmrIsAsmrLocalFile(t *testing.T) {
 	// empty dir disables detection entirely
 	require.False(t, isAsmrLocalFile("", "/asmr-local/RJ/track.mp3"))
 
-	// ③ case + backslash normalization tolerance (Windows semantics: NormalizePath lowercases).
-	require.True(t, isAsmrLocalFile("C:\\ASMR-LOCAL", "c:/asmr-local/RJ/track.mp3"))
-	require.True(t, isAsmrLocalFile("/asmr-local", "/ASMR-LOCAL/RJ/track.mp3"))
-	require.True(t, isAsmrLocalFile("C:/AsmrLocal", "C:\\AsmrLocal\\RJ\\track.mp3"))
+	// ③ case + backslash normalization tolerance. util.NormalizePath lowercases and converts
+	// separators to slash ONLY on windows; on other platforms it is a no-op, so the Windows
+	// semantics samples are platform-gated (CI runs this package on ubuntu).
+	if runtime.GOOS == "windows" {
+		require.True(t, isAsmrLocalFile("C:\\ASMR-LOCAL", "c:/asmr-local/RJ/track.mp3"))
+		require.True(t, isAsmrLocalFile("/asmr-local", "/ASMR-LOCAL/RJ/track.mp3"))
+		require.True(t, isAsmrLocalFile("C:/AsmrLocal", "C:\\AsmrLocal\\RJ\\track.mp3"))
+	} else {
+		// non-windows: separators are already slashes and case is preserved
+		require.True(t, isAsmrLocalFile("/asmr-local", "/asmr-local/RJ/track.mp3"))
+		require.False(t, isAsmrLocalFile("/asmr-local", "/ASMR-LOCAL/RJ/track.mp3"))
+	}
 }
 
 // TestAsmrTrackingStartedDoesNotCancelAndKeepsOptionsNone drives the ASMR branch directly:
