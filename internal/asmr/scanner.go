@@ -267,7 +267,8 @@ func (s *Scanner) GetWork(ctx context.Context, rjID string) (*LibraryWork, bool)
 	// 合并：本地树优先，在线仅在本地没有对应音频时补充（契约 §2）
 	tracks := mergeTrackTrees(localTree, onlineTree, localBasenames)
 
-	// DB 状态
+	// DB 状态（聚合 ListenedCount + 逐轨 Completed 回填，契约 3.2a / D2-D4）
+	completedPaths := make(map[string]struct{})
 	if s.database != nil {
 		if ws, ok := s.database.GetAsmrWorkState(rjID); ok {
 			entry.IsFavorite = ws.Favorite
@@ -277,11 +278,16 @@ func (s *Scanner) GetWork(ctx context.Context, rjID string) (*LibraryWork, bool)
 			for _, st := range states {
 				if st.Completed {
 					n++
+					completedPaths[st.TrackPath] = struct{}{}
 				}
 			}
-			entry.ListenedCount = n
+			entry.ListenedCount = n // D4：聚合逻辑保留原样
 		}
 	}
+
+	// 逐轨完听回填：mergeTrackTrees 之后统一递归遍历，按节点 Path 精确匹配
+	// AsmrTrackState.TrackPath（D2/D3）。在线音轨无 Path → 天然不回填（§8 预期行为）。
+	markTracksCompleted(tracks, completedPaths)
 
 	if !hasLocal && len(onlineTree) == 0 {
 		// 既无本地也无在线：无法构造有效作品

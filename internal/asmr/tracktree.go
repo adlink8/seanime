@@ -64,6 +64,23 @@ func mergeTrackTrees(local, online []apiasmr.Asmr_Track, localBasenames map[stri
 	return result
 }
 
+// markTracksCompleted 递归回填逐轨完听状态（契约 3.2a / D2-D4）。
+// completedPaths 为 DB 中 completed=true 的 track_path 集合。按节点 Path 精确匹配
+// completedPaths（D3，不做 basename 近似）。仅本地音轨有 Path，故在线音轨 / 线上搜索路径
+// 天然不会被回填（Asmr_WorkDetail 永不回填，预期行为，非 bug，见 types.go §8）。
+func markTracksCompleted(nodes []apiasmr.Asmr_Track, completedPaths map[string]struct{}) {
+	for i := range nodes {
+		if nodes[i].Path != "" {
+			if _, ok := completedPaths[nodes[i].Path]; ok {
+				nodes[i].Completed = true
+			}
+		}
+		if len(nodes[i].Tracks) > 0 {
+			markTracksCompleted(nodes[i].Tracks, completedPaths)
+		}
+	}
+}
+
 // mergeOnlineInto 将在线树中"本地没有对应音频"的节点并入 target（保留 folder 嵌套）。
 func mergeOnlineInto(target *[]apiasmr.Asmr_Track, nodes []apiasmr.Asmr_Track, localBasenames map[string]struct{}) {
 	for _, n := range nodes {

@@ -283,7 +283,15 @@ func (h *Handler) syncCloudFavorite(ctx context.Context, rjID string, favorite b
 	if werr != nil {
 		return false, werr
 	}
-	if err := client.SaveReview(ctx, workID, favorite, false); err != nil {
+
+	// 取消收藏（favorite=false）：云端"清除标记"语义经三路调研均不可确认（见 cloud.go SaveReview 注释），
+	// 不编造端点/字段，显式放弃云端写同步。
+	// TODO(Wave C §5): 待用户账号在场实测确认取消收藏端点后对齐；当前 syncedToCloud=false。
+	if !favorite {
+		return false, nil
+	}
+
+	if err := client.SaveReview(ctx, workID, asmr.ProgressMarked); err != nil {
 		// 写失败：降级，syncedToCloud=false（不影响本地收藏）
 		return false, nil
 	}

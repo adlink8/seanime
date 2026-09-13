@@ -7,8 +7,23 @@ import (
 	"testing"
 
 	apiasmr "seanime/internal/api/asmr"
+	"seanime/internal/database/db"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
+
+// findTrackByPath 在音轨树中按精确 Path 递归查找节点（用于断言回填结果）。
+func findTrackByPath(tracks []apiasmr.Asmr_Track, path string) *apiasmr.Asmr_Track {
+	for i := range tracks {
+		if tracks[i].Path == path {
+			return &tracks[i]
+		}
+		if found := findTrackByPath(tracks[i].Tracks, path); found != nil {
+			return found
+		}
+	}
+	return nil
+}
 
 func TestNormalizeRJ(t *testing.T) {
 	cases := []struct {
@@ -151,4 +166,61 @@ func TestMergeTrackTrees(t *testing.T) {
 	}
 	require.True(t, found04, "在线独有音频应并入顶层")
 	require.True(t, foundFolder, "本地 folder 应保留")
+}
+
+// TestGetWorkBackfillsCompleted 验证 3.2a：GetWork 返回的音轨树按 DB 逐轨状态回填
+// Completed 字段（契约 §0.1/D1-D4）。使用真实临时 DB（不 mock），写入 completion 后调 GetWork 断言。
+func TestGetWorkBackfillsCompleted(t *testing.T) {
+	root := t.TempDir()
+	rjID := "RJ01234567"
+	rjDir := makeRJDir(t, root, rjID)
+
+	// 真实音频文件：扁平 + 单层 folder + 深层嵌套 folder（不能只测一层）
+	writeFile(t, filepath.Join(rjDir, "01.mp3"), "a")
+	writeFile(t, filepath.Join(rjDir, "04.mp3"), "d") // 完全无 DB 记录 → 应为 false
+	writeFile(t, filepath.Join(rjDir, "folderA", "02.wav"), "bb")
+	writeFile(t, filepath.Join(rjDir, "folderA", "sub", "03.ogg"), "ccc") // 深层叶子
+
+	// 真实临时 DB（不 mock）
+	logger := zerolog.Nop()
+	database, err := db.NewDatabase(t.TempDir(), "test", &logger)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = database.Close() })
+
+	// 写入完听状态：01.mp3 与 深层 folderA/sub/03.ogg 为 true；02.wav 显式记 false
+	_, err = database.UpsertAsmrTrackState(rjID, "01.mp3", true)
+	require.NoError(t, err)
+	_, err = database.UpsertAsmrTrackState(rjID, "folderA/sub/03.ogg", true)
+	require.NoError(t, err)
+	_, err = database.UpsertAsmrTrackState(rjID, "folderA/02.wav", false)
+	require.NoError(t, err)
+	// 04.mp3 不写任何记录
+
+	s := NewScanner(root, nil, database, &logger)
+	work, ok := s.GetWork(context.Background(), rjID)
+	require.True(t, ok, "本地目录存在应返回作品")
+	require.NotNil(t, work)
+
+	// ① 本地扁平音轨被正确回填为 true
+	got01 := findTrackByPath(work.Tracks, "01.mp3")
+	require.NotNil(t, got01, "应存在 01.mp3 叶子")
+	require.True(t, got01.Completed, "01.mp3 应为 completed=true")
+
+	// ③ 深层嵌套 folder 下的叶子也被回填
+	gotDeep := findTrackByPath(work.Tracks, "folderA/sub/03.ogg")
+	require.NotNil(t, gotDeep, "应存在 folderA/sub/03.ogg 叶子")
+	require.True(t, gotDeep.Completed, "深层叶子 folderA/sub/03.ogg 应为 completed=true")
+
+	// ② 完全未记录的音轨为 false
+	got04 := findTrackByPath(work.Tracks, "04.mp3")
+	require.NotNil(t, got04, "应存在 04.mp3 叶子")
+	require.False(t, got04.Completed, "无 DB 记录的 04.mp3 应为 false")
+
+	// ② 显式记录为 false 的也应为 false
+	got02 := findTrackByPath(work.Tracks, "folderA/02.wav")
+	require.NotNil(t, got02, "应存在 folderA/02.wav 叶子")
+	require.False(t, got02.Completed, "显式 completed=false 的 02.wav 应为 false")
+
+	// D4 回归：聚合 ListenedCount 仍正确（仅 2 条 completed=true）
+	require.Equal(t, 2, work.ListenedCount, "ListenedCount 应等于 completed=true 的轨数")
 }

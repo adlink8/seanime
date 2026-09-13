@@ -113,9 +113,16 @@ type Asmr_Track struct {
 	// 前端用于 POST /asmr/track/progress 的 trackPath。
 	Path      string       `json:"path,omitempty"`
 	Tracks    []Asmr_Track `json:"tracks,omitempty"` // folder 嵌套
+	// Completed 音声本地库扩展：单条音轨的逐轨完听状态（契约 3.2a / D1）。
+	// additive 新增可选字段，既有字段名一律不动；结束时省略（omitempty）表示未完成或本地库路径不回填。
+	// 注意：该字段仅由本地库路径 Scanner.GetWork 回填；线上搜索路径 Asmr_WorkDetail 永不回填
+	// （在线音轨无 Path，天然不会被匹配）——这是预期行为，非 bug（契约 §8）。
+	Completed bool `json:"completed,omitempty"`
 }
 
-// Asmr_WorkDetail 作品详情（Asmr_Work 全字段 + tracks）
+// Asmr_WorkDetail 作品详情（Asmr_Work 全字段 + tracks）。
+// 该结构被线上搜索详情复用：其 tracks 来自 convertTracks，节点无 Path，
+// 故 Completed 永为 omitted（契约 §8，预期行为，非 bug）。
 type Asmr_WorkDetail struct {
 	Asmr_Work
 	Tracks []Asmr_Track `json:"tracks"`

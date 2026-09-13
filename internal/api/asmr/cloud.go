@@ -16,7 +16,11 @@ import (
 // 地面真值（编排层实测，勿重复实测）：
 //   - 登录：POST /api/auth/me {name, password} → JWT（契约记为 token）
 //   - 读取：GET /api/review?order=updated_at&sort=desc&page=1&filter=marked|listening 实测 200
-//   - 写端点：第三方 works_review.py 佐证 fire-and-forget POST；Wave A 以实测为准（见 SaveReview）
+//   - 写端点：PUT /api/review，body 仅 {work_id, progress}（progress 为枚举字符串，非布尔）。
+//     第三方源码坐实（两路独立）：
+//       https://raw.githubusercontent.com/henntaidesu/asmr.one_download/master/src/asmr_api/works_review.py
+//       https://raw.githubusercontent.com/asmroneapp/Yuro/main/lib/data/services/api_service.dart （updateWorkMarkStatus / convertMarkStatusToApi）
+//     PUT 方法与路径本就没错，旧实现错在 body 形状（见 SaveReview 与 §0.3）。
 //
 // 凭据来源：调用方（handler）从 config 注入，本 client 不读文件/环境变量。
 // 严禁把凭据/JWT 写入日志、文件、测试或提交（契约硬约束）。
@@ -244,25 +248,39 @@ func normalizeReviewRJID(r rawReview) string {
 	return "RJ" + cand
 }
 
-// SaveReview 写云端收藏/收听状态（契约 §6）。
+// Progress* 云端收藏/收听状态枚举（asmr.one review.progress 取值，非布尔）。
+// 证据：
+//   - https://raw.githubusercontent.com/henntaidesu/asmr.one_download/master/src/asmr_api/works_review.py
+//   - https://raw.githubusercontent.com/asmroneapp/Yuro/main/lib/data/services/api_service.dart （updateWorkMarkStatus / convertMarkStatusToApi）
+// 禁止在调用处散落裸字符串（契约 D6）。
+const (
+	ProgressMarked    = "marked"    // 想听
+	ProgressListening = "listening" // 在听
+	ProgressListened  = "listened"  // 听过
+	ProgressReplay    = "replay"    // 重听
+	ProgressPostponed = "postponed" // 搁置
+)
+
+// SaveReview 写云端收藏/收听状态（契约 §0.3 / D5 / Wave C）。
 //
-// 端点实测（Wave A）：PUT /api/review（第三方 henntaidesu/asmr.one_download 佐证 review() 用 PUT /api/review）。
-// 该端点实测返回 200（body 含 work_id/marked/listening/review/rating 均被接受），
-// 但实测发现：以 marked:true 写入后，GET /api/review?filter=marked 列表并未包含该作品——
-// 即控制云端"已收藏"列表的字段并非 body 的 marked 布尔（progress 枚举也全部 400 拒绝）。
+// 端点是 PUT /api/review，HTTP 方法与路径均与旧实现一致（本就没错），错的是旧实现发出的 body 形状。
+// 正确 body 仅两个字段：{work_id:int, progress:string}，progress 为枚举字符串（见 Progress* 常量），
+// 绝不能用布尔 marked/listening 表示。
 //
-// 因此写同步是否真正生效需以 read-back 校验为准（见 handler.syncCloudFavorite）。
-// 本方法仅负责发出写请求；写失败（非 2xx）返回 error，调用方据此 syncedToCloud=false。
+// 证据（两路独立第三方源码，均发 PUT /api/review + body {work_id, progress}）：
+//   - https://raw.githubusercontent.com/henntaidesu/asmr.one_download/master/src/asmr_api/works_review.py
+//   - https://raw.githubusercontent.com/asmroneapp/Yuro/main/lib/data/services/api_service.dart （updateWorkMarkStatus / convertMarkStatusToApi）
 //
-// TODO(M3.1 编排裁决): 云端 marked/listening 列表的真实写入字段/端点未确认（疑似独立开关或 progress 特定枚举），
-// 待编排层确认后对齐 SaveReview body；写失败/未确认不影响本地收藏。
-func (c *Client) SaveReview(ctx context.Context, workID int, marked, listening bool) error {
+// 取消收藏（favorite=false）语义：经三路调研（asmr.one_download 脚本、asmr.one 官方前端 henntaidesu/asmr.one、
+// Yuro 客户端）均未找到"清除/取消"的 progress 值，也未找到 DELETE /api/review 之类端点。
+// progress 枚举仅 5 个值（marked/listening/listened/replay/postponed），无 "unmark"/"clear"。
+// 故 handler 在 favorite=false 时显式放弃云端写同步（syncedToCloud=false），见其内部 TODO。
+//
+// 写失败（非 2xx）返回 error，调用方据此 syncedToCloud=false。
+func (c *Client) SaveReview(ctx context.Context, workID int, progress string) error {
 	body := map[string]any{
 		"work_id":  workID,
-		"marked":   marked,
-		"listening": listening,
-		"review":   "",
-		"rating":   0,
+		"progress": progress,
 	}
 	return c.doPut(ctx, "/review", body, nil)
 }

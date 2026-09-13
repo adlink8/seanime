@@ -71,21 +71,35 @@ func TestCloudReviewsHTTP(t *testing.T) {
 }
 
 // TestSaveReviewHTTP 验证写端点请求体形状（离线 httptest，不触真实网络）。
-// 写端点为实测候选；此处仅确认请求可达且 body 含 work_id/marked/listening。
+// 契约 §0.3 / D5 / AC-04：body 恰好两字段 work_id(int) + progress(枚举字符串)，
+// 不含旧实现的 marked/listening/review/rating。服务端必须解析并断言请求体内容。
 func TestSaveReviewHTTP(t *testing.T) {
 	rs, ts := newRecordingServer(t)
 	var gotBody map[string]any
 	rs.handler = func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, "/review", r.URL.Path)
 		require.Equal(t, http.MethodPut, r.Method)
-		_ = json.NewDecoder(r.Body).Decode(&gotBody)
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&gotBody))
 		w.WriteHeader(http.StatusOK)
 	}
 	c := newTestClient(t, ts.URL)
 
-	err := c.SaveReview(context.Background(), 1657200, true, false)
+	// favorite=true → ProgressMarked（D7）
+	err := c.SaveReview(context.Background(), 1657200, ProgressMarked)
 	require.NoError(t, err)
+
+	// 恰好两个字段
+	require.Len(t, gotBody, 2)
+	// 仅含 work_id 与 progress
+	require.Contains(t, gotBody, "work_id")
+	require.Contains(t, gotBody, "progress")
+	// 绝不含旧实现的多余字段
+	require.NotContains(t, gotBody, "marked")
+	require.NotContains(t, gotBody, "listening")
+	require.NotContains(t, gotBody, "review")
+	require.NotContains(t, gotBody, "rating")
+	// 字段类型与值：progress 是枚举字符串（非布尔）
 	require.Equal(t, float64(1657200), gotBody["work_id"])
-	require.Equal(t, true, gotBody["marked"])
-	require.Equal(t, false, gotBody["listening"])
+	require.Equal(t, ProgressMarked, gotBody["progress"])
+	require.IsType(t, "", gotBody["progress"])
 }

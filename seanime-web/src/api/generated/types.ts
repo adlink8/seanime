@@ -6226,6 +6226,12 @@ export type Asmr_Track = {
      * 用于 POST /asmr/track/progress 的 trackPath 字段（后端给的相对路径字段）。
      */
     path?: string
+    /**
+     * (Phase 3.2 additive / D1) 逐轨完听状态（仅本地音轨且 DB 记为已完成时回填）。
+     * 后端用 `json:"completed,omitempty"`，未完成/未记录时字段缺失；在线搜索路径永远不出现该字段。
+     * 前端用它跨会话回显弹窗的「完听」勾选态（deriveCompletedPaths → effect 重置本地 Set）。
+     */
+    completed?: boolean
 }
 
 /**

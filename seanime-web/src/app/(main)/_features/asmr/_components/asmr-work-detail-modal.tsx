@@ -1,13 +1,14 @@
 import { useAsmrLocalWork, useAsmrDownload, useAsmrTrackProgress, useAsmrWork } from "@/api/hooks/asmr.hooks"
 import { usePlaybackPlayVideo } from "@/api/hooks/playback_manager.hooks"
 import { Asmr_Track, Asmr_Work } from "@/api/generated/types"
+import { deriveCompletedPaths } from "@/app/(main)/_features/asmr/_lib/asmr-completed-paths"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/components/ui/core/styling"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Modal } from "@/components/ui/modal"
 import { SeaImage } from "@/components/shared/sea-image"
 import { t } from "@/lib/i18n"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { LuChevronDown, LuCheck, LuDownload, LuFolder, LuMusic, LuPlay } from "react-icons/lu"
 
 // Phase 2.5：ASMR（音声）卡片与详情 modal，供搜索页与探索页共享（M3 前不做音频播放，音轨列表只读展示）
@@ -33,8 +34,17 @@ export function AsmrWorkDetailModal({ work, open, onOpenChange, localMode }: Asm
     const trackProgress = useAsmrTrackProgress()
     const download = useAsmrDownload()
 
-    // 本地已完听音轨集合（乐观状态；后端未回传逐轨 completed，待 3.2 补充）
+    // 本地已完听音轨集合。保留本地 Set 以支持 handleToggleCompleted 的乐观更新；
+    // 服务端真相由下方 effect 在 detail 变化时灌入（Phase 3.2 / D8）。
     const [completedPaths, setCompletedPaths] = useState<Set<string>>(() => new Set())
+
+    // Phase 3.2（D8）：detail 变化时用服务端逐轨 completed 重置本地集合，实现跨会话回显。
+    // ⚠ 依赖只放 detail 本身（react-query data 在结构不变时保持引用稳定）；
+    // 若把派生结果/新建对象放进依赖，会在每次渲染重置 → 刚勾上的乐观更新被立刻抹掉（勾选闪回）。
+    // 勾选路径：乐观 set → POST 成功 → invalidate → refetch 产生新 detail 引用 → 此处以服务端已落库的真相重置，值一致故不闪回。
+    useEffect(() => {
+        setCompletedPaths(deriveCompletedPaths(detail?.tracks))
+    }, [detail])
 
     const handlePlayLocal = React.useCallback((path: string) => {
         // 仅走 playback-manager（mpv），禁止 directstream/mediastream/nativeplayer
