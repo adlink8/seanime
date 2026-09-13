@@ -34,6 +34,19 @@ export const searchDictionary = {
     "search.list.load_more": "加载更多", // src/app/(main)/search/_components/advanced-search-list.tsx
     "search.type.anime": "动漫", // src/app/(main)/search/_lib/advanced-search-constants.ts
     "search.type.manga": "漫画", // src/app/(main)/search/_lib/advanced-search-constants.ts
+    "search.type.novel": "轻小说", // src/app/(main)/search/_lib/advanced-search-constants.ts
+    "search.type.asmr": "音声", // src/app/(main)/search/_lib/advanced-search-constants.ts
+    "search.filter.subtitle": "字幕", // src/app/(main)/search/_components/advanced-search-options.tsx（Phase 2.5）
+    "search.filter.subtitle_any": "不限字幕", // src/app/(main)/search/_components/advanced-search-options.tsx（Phase 2.5）
+    "search.asmr.circle": "社团", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx（Phase 2.5）
+    "search.asmr.cv": "声优", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx（Phase 2.5）
+    "search.asmr.rating": "评分", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx（Phase 2.5）
+    "search.asmr.release_date": "发布日期", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx（Phase 2.5）
+    "search.asmr.dl_count": "下载量", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx（Phase 2.5）
+    "search.asmr.tracks": "音轨", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx（Phase 2.5）
+    "search.asmr.tracks_empty": "暂无音轨信息", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx（Phase 2.5）
+    "search.asmr.r18": "R18", // src/app/(main)/_features/asmr/_components/asmr-work-card.tsx（Phase 2.5）
+    "search.asmr.subtitle_badge": "字幕", // src/app/(main)/_features/asmr/_components/asmr-work-card.tsx（Phase 2.5）
     "search.genre.action": "动作", // src/app/(main)/search/_lib/advanced-search-constants.ts
     "search.genre.adventure": "冒险", // src/app/(main)/search/_lib/advanced-search-constants.ts
     "search.genre.comedy": "喜剧", // src/app/(main)/search/_lib/advanced-search-constants.ts

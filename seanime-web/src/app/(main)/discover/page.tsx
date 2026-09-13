@@ -2,7 +2,9 @@ import { PluginWebviewSlot } from "@/app/(main)/_features/plugin/webview/plugin-
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { DiscoverPageHeader } from "@/app/(main)/discover/_components/discover-page-header"
 import { DiscoverAiringSchedule } from "@/app/(main)/discover/_containers/discover-airing-schedule"
+import { DiscoverLatestAsmr, DiscoverPopularAsmr } from "@/app/(main)/discover/_containers/discover-asmr"
 import { DiscoverMissedSequelsSection } from "@/app/(main)/discover/_containers/discover-missed-sequels"
+import { DiscoverPopularNovel, DiscoverThisSeasonNovel } from "@/app/(main)/discover/_containers/discover-novel"
 import { DiscoverPastSeason, DiscoverThisSeason } from "@/app/(main)/discover/_containers/discover-popular"
 import { DiscoverTrending } from "@/app/(main)/discover/_containers/discover-trending"
 import { DiscoverTrendingCountry } from "@/app/(main)/discover/_containers/discover-trending-country"
@@ -177,6 +179,23 @@ export default function Page() {
                         <div className="space-y-2 z-[5] relative" data-discover-page-manga-trending-manhua-container>
                             <h2>{t("discover.section.manga_trending_cn")}</h2>
                             <DiscoverTrendingCountry country="CN" />
+                        </div>
+                        {/* Phase 2.5：轻小说 + 音声（ASMR）区块 */}
+                        <div className="space-y-2 z-[5] relative" data-discover-page-novel-popular-container>
+                            <h2>{t("discover.section.popular_novel")}</h2>
+                            <DiscoverPopularNovel />
+                        </div>
+                        <div className="space-y-2 z-[5] relative" data-discover-page-novel-this-season-container>
+                            <h2>{t("discover.section.this_season_novel")}</h2>
+                            <DiscoverThisSeasonNovel />
+                        </div>
+                        <div className="space-y-2 z-[5] relative" data-discover-page-asmr-popular-container>
+                            <h2>{t("discover.section.popular_asmr")}</h2>
+                            <DiscoverPopularAsmr />
+                        </div>
+                        <div className="space-y-2 z-[5] relative" data-discover-page-asmr-latest-container>
+                            <h2>{t("discover.section.latest_asmr")}</h2>
+                            <DiscoverLatestAsmr />
                         </div>
                         {/*<div className="space-y-2 z-[5] relative">*/}
                         {/*    <DiscoverMangaSearchBar />*/}

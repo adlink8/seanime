@@ -50,7 +50,11 @@ export default function Page() {
                 minScore: null,
                 isAdult: false,
                 countryOfOrigin: null,
-                type: (formatUrlParam as AL_MediaFormat) === "MANGA" ? "manga" : (typeUrlParam as "anime" | "manga") || "anime",
+                // Phase 2.5：支持 novel / asmr 类型 URL 直达
+                type: (formatUrlParam as AL_MediaFormat) === "MANGA"
+                    ? "manga"
+                    : (["novel", "asmr"].includes(typeUrlParam || "") ? typeUrlParam as "novel" | "asmr" : (typeUrlParam as "anime" | "manga") || "anime"),
+                asmrSubtitle: null,
             })
         }
     })

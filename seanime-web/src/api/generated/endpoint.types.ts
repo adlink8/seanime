@@ -2207,3 +2207,61 @@ export type VideoCoreSaveScreenshot_Variables = {
 // websocket
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// novel (Phase 2.5 手写新增)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * - Endpoint: /api/v1/anilist/list-novel (Phase 2.5 新增)
+ * @description
+ * Route returns a list of light novels based on the search parameters.
+ * 请求形状与 AnilistListAnime_Variables 完全一致（契约第 3 节）。
+ */
+export type AnilistListNovel_Variables = {
+    page?: number
+    search?: string
+    perPage?: number
+    sort?: Array<AL_MediaSort>
+    status?: Array<AL_MediaStatus>
+    genres?: Array<string>
+    tags?: Array<string>
+    averageScore_greater?: number
+    season?: AL_MediaSeason
+    seasonYear?: number
+    format?: AL_MediaFormat
+    isAdult?: boolean
+    countryOfOrigin?: string
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// asmr (Phase 2.5 手写新增)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * - Endpoint: /api/v1/asmr/search (Phase 2.5 新增)
+ * @description
+ * Route searches ASMR works on asmr.one.
+ */
+export type AsmrSearch_Variables = {
+    keyword: string
+    /** "dd" | "dl" | "dc" | "publish_date" */
+    order?: string
+    /** 从 1 开始 */
+    page?: number
+    perPage?: number
+    /** "none" | "jp" | "zh" */
+    subtitle?: string
+}
+
+/**
+ * - Endpoint: /api/v1/asmr/work/{id} (Phase 2.5 新增)
+ * @description
+ * Route returns details about an ASMR work.
+ */
+export type AsmrWork_Variables = {
+    /**
+     *  asmr.one work id（字符串化）
+     */
+    id: string
+}

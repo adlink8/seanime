@@ -27,6 +27,12 @@ export const discoverDictionary = {
     "discover.section.manga_trending_kr": "热门韩漫", // src/app/(main)/discover/page.tsx
     "discover.section.manga_trending_cn": "热门国漫", // src/app/(main)/discover/page.tsx
 
+    // —— 探索发现页：轻小说 + 音声区块（Phase 2.5，discover/page.tsx）——
+    "discover.section.popular_novel": "热门轻小说", // src/app/(main)/discover/page.tsx
+    "discover.section.this_season_novel": "本季轻小说", // src/app/(main)/discover/page.tsx
+    "discover.section.popular_asmr": "热门音声", // src/app/(main)/discover/page.tsx
+    "discover.section.latest_asmr": "最新音声", // src/app/(main)/discover/page.tsx
+
     // —— 探索发现页：页头（_components/discover-page-header.tsx）——
     "discover.header.releasing_now": "正在放送", // src/app/(main)/discover/_components/discover-page-header.tsx
     "discover.header.episodes_released": "{count} 集已播出", // src/app/(main)/discover/_components/discover-page-header.tsx

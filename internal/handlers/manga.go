@@ -582,7 +582,8 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 	}
 
 	// Bangumi 锚点：原 AniList 复杂过滤搜索改为 SearchSubjects（type=1 书籍）。
-	// sort/status/genres/averageScore/year/format/countryOfOrigin 无对应过滤条件，忽略（TODO(M4)）。
+	// 已映射：关键词/标签(genres+tags)/成人内容/评分/年份/排序/分页；
+	// status、format、countryOfOrigin 无对应过滤条件，忽略（TODO(M4)）。
 	client := h.App.AnilistPlatformRef.Get().GetBangumiClient()
 	if client == nil {
 		return h.RespondWithError(c, errors.New("bangumi client not available"))
@@ -594,9 +595,18 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 			filter.Tag = append(filter.Tag, *t)
 		}
 	}
+	// genres 逐个并入 filter.tag
+	for _, g := range p.Genres {
+		if g != nil && *g != "" {
+			filter.Tag = append(filter.Tag, *g)
+		}
+	}
 	if isAdult != nil {
 		filter.Nsfw = isAdult
 	}
+	// manga 请求体的 Year 对应 AniList seasonYear 语义，映射为全年 air_date 区间
+	filter.AirDate = seasonAirDateRange(nil, p.Year)
+	filter.Rating = ratingFilterFromAverageScore(p.AverageScoreGreater)
 
 	page := 1
 	if p.Page != nil {
@@ -613,7 +623,7 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 
 	res, err := client.SearchSubjects(c.Request().Context(), bangumi.SearchSubjectsOpts{
 		Keyword: keyword,
-		Sort:    "match",
+		Sort:    resolveBangumiSort(p.Sort, keyword),
 		Filter:  filter,
 		Limit:   perPage,
 		Offset:  (page - 1) * perPage,

@@ -7,11 +7,14 @@ import {
     ADVANCED_SEARCH_MEDIA_TAGS,
     ADVANCED_SEARCH_SEASONS,
     ADVANCED_SEARCH_SORTING,
+    ADVANCED_SEARCH_SORTING_ASMR,
     ADVANCED_SEARCH_SORTING_MANGA,
     ADVANCED_SEARCH_STATUS,
+    ADVANCED_SEARCH_SUBTITLE_ASMR,
     ADVANCED_SEARCH_TYPE,
     GENRE_TRANSLATIONS,
     SEASON_TRANSLATIONS,
+    mapSortingToAsmrOrder,
 } from "@/app/(main)/search/_lib/advanced-search-constants"
 import { __advancedSearch_paramsAtom } from "@/app/(main)/search/_lib/advanced-search.atoms"
 import { AppLayoutStack } from "@/components/ui/app-layout"
@@ -60,27 +63,65 @@ export function AdvancedSearchOptions() {
                     options={ADVANCED_SEARCH_TYPE}
                     value={params.type}
                     onValueChange={v => setParams(draft => {
-                        draft.type = v as "anime" | "manga"
+                        draft.type = v as "anime" | "manga" | "novel" | "asmr"
                         return
                     })}
                 />
-                <Select
-                    // label="Sorting"
-                    leftAddon={
-                        <FaSortAmountDown className={cn((params.sorting !== null && params.sorting?.[0] !== "SCORE_DESC") && "text-indigo-300 font-bold text-xl")} />}
-                    className="w-full"
-                    options={params.type === "anime" ? ADVANCED_SEARCH_SORTING : ADVANCED_SEARCH_SORTING_MANGA}
-                    value={params.sorting?.[0] || "SCORE_DESC"}
-                    onValueChange={v => setParams(draft => {
-                        draft.sorting = [v] as any
-                        return
-                    })}
-                />
+                {params.type === "asmr"
+                    ? (
+                        // Phase 2.5：asmr 类型下复用排序控件，映射为 asmr.one 的 order 参数
+                        <Select
+                            leftAddon={
+                                <FaSortAmountDown className={cn((params.sorting !== null && params.sorting?.[0] !== "SCORE_DESC") && "text-indigo-300 font-bold text-xl")} />}
+                            className="w-full"
+                            options={ADVANCED_SEARCH_SORTING_ASMR}
+                            value={mapSortingToAsmrOrder(params.sorting?.[0])}
+                            onValueChange={v => setParams(draft => {
+                                // 将 asmr order 反查回 AL 排序值存储（dl→POPULARITY_DESC / dc→SCORE_DESC / dd / publish_date→START_DATE_DESC）
+                                const al = v === "dl" ? "POPULARITY_DESC" : v === "dd" ? "START_DATE_DESC" : v === "publish_date" ? "START_DATE_DESC" : "SCORE_DESC"
+                                draft.sorting = [al] as any
+                                return
+                            })}
+                        />
+                    )
+                    : (
+                        <Select
+                            // label="Sorting"
+                            leftAddon={
+                                <FaSortAmountDown className={cn((params.sorting !== null && params.sorting?.[0] !== "SCORE_DESC") && "text-indigo-300 font-bold text-xl")} />}
+                            className="w-full"
+                            options={params.type === "anime" ? ADVANCED_SEARCH_SORTING : params.type === "novel" ? ADVANCED_SEARCH_SORTING : ADVANCED_SEARCH_SORTING_MANGA}
+                            value={params.sorting?.[0] || "SCORE_DESC"}
+                            onValueChange={v => setParams(draft => {
+                                draft.sorting = [v] as any
+                                return
+                            })}
+                        />
+                    )}
             </div>
-            <div
-                data-advanced-search-options-content
-                className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-1 gap-4 lg:gap-3 items-end xl:items-start"
-            >
+            {/* Phase 2.5：asmr 类型下过滤器简化，仅保留标题关键词（上方常驻）+ 排序（上）+ 字幕可选 */}
+            {params.type === "asmr" ? (
+                <div
+                    data-advanced-search-options-content
+                    className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-1 gap-4 lg:gap-3 items-end xl:items-start"
+                >
+                    <Select
+                        leftAddon={<TbTagsFilled className={cn((params.asmrSubtitle !== null && !!params.asmrSubtitle) && "text-indigo-300 font-bold text-xl")} />}
+                        label={t("search.filter.subtitle")} placeholder={t("search.filter.subtitle_any")} className="w-full"
+                        options={ADVANCED_SEARCH_SUBTITLE_ASMR}
+                        value={params.asmrSubtitle || ""}
+                        onValueChange={v => setParams(draft => {
+                            draft.asmrSubtitle = v || null
+                            return
+                        })}
+                        fieldLabelClass="hidden"
+                    />
+                </div>
+            ) : (
+                <div
+                    data-advanced-search-options-content
+                    className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-1 gap-4 lg:gap-3 items-end xl:items-start"
+                >
                 <Combobox
                     multiple
                     leftAddon={<TbSwords className={cn((params.genre !== null && !!params.genre.length) && "text-indigo-300 font-bold text-xl")} />}
@@ -149,7 +190,7 @@ export function AdvancedSearchOptions() {
                     })}
                     fieldLabelClass="hidden"
                 />}
-                {params.type === "anime" && <Select
+                {(params.type === "anime" || params.type === "novel") && <Select
                     leftAddon={<LuLeaf className={cn((params.season !== null && !!params.season) && "text-indigo-300 font-bold text-xl")} />}
                     placeholder={t("search.filter.season_all")} className="w-full"
                     options={ADVANCED_SEARCH_SEASONS.map(season => ({ value: season.toUpperCase(), label: SEASON_TRANSLATIONS[season] || season }))}
@@ -228,7 +269,8 @@ export function AdvancedSearchOptions() {
                 }}
                     disabled={!highlightTrash}
                 />
-            </div>
+                </div>
+            )}
 
         </AppLayoutStack>
     )

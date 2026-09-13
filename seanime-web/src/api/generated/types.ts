@@ -6156,3 +6156,71 @@ export type Video = {
     colorPrimaries: string
 }
 
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// 以下为 Phase 2.5 手写新增类型（Wave F 前端，契约见 .planning/phases/02-library-reanchor/02.5-CONTRACT.md 第 4 节）
+// ////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * 轻小说列表查询响应（Phase 2.5 新增）
+ * 响应形状与 AL_ListAnime 完全一致（契约第 3 节：复用 media.ListAnime），直接类型别名复用。
+ */
+export type AL_ListNovel = AL_ListAnime
+
+/**
+ * ASMR（音声）作品（Phase 2.5 新增，asmr.one 域，契约第 4 节字段逐字对应）
+ */
+export type Asmr_Work = {
+    /** asmr.one work id（字符串化） */
+    id: string
+    /** "RJ01234567" */
+    rjId: string
+    title: string
+    /** 社团名 */
+    circle: string
+    /** 声优 */
+    cvs: Array<string>
+    /** 标签名 */
+    tags: Array<string>
+    nsfw: boolean
+    coverUrl: string
+    /** YYYY-MM-DD */
+    releaseDate: string
+    /** 0-5，可为 0 */
+    rating: number
+    dlCount: number
+    price: number
+    hasSubtitle: boolean
+}
+
+/**
+ * ASMR 搜索/热门结果（Phase 2.5 新增）
+ */
+export type Asmr_SearchResult = {
+    works: Array<Asmr_Work>
+    pageInfo: {
+        currentPage: number
+        perPage: number
+        hasNextPage: boolean
+        total: number
+    }
+}
+
+/**
+ * ASMR 音轨（Phase 2.5 新增）
+ * type: "audio" | "folder" | "text" | "image"，folder 类型可嵌套 tracks
+ */
+export type Asmr_Track = {
+    title: string
+    type: string
+    mediaStreamUrl?: string
+    mediaDownloadUrl?: string
+    tracks?: Array<Asmr_Track>
+}
+
+/**
+ * ASMR 作品详情（Phase 2.5 新增）
+ */
+export type Asmr_WorkDetail = Asmr_Work & {
+    tracks: Array<Asmr_Track>
+}

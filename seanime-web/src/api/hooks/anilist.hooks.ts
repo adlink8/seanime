@@ -1,6 +1,7 @@
 import { useServerMutation, useServerQuery } from "@/api/client/requests"
 import {
     AnilistListAnime_Variables,
+    AnilistListNovel_Variables,
     AnilistListRecentAiringAnime_Variables,
     DeleteAnilistListEntry_Variables,
     EditAnilistListEntry_Variables,
@@ -11,6 +12,7 @@ import {
     AL_AnimeDetailsById_Media,
     AL_BaseAnime,
     AL_ListAnime,
+    AL_ListNovel,
     AL_ListRecentAnime,
     AL_Stats,
     AL_StudioDetails,
@@ -138,6 +140,17 @@ export function useAnilistListAnime(variables: AnilistListAnime_Variables, enabl
         endpoint: API_ENDPOINTS.ANILIST.AnilistListAnime.endpoint,
         method: API_ENDPOINTS.ANILIST.AnilistListAnime.methods[0],
         queryKey: [API_ENDPOINTS.ANILIST.AnilistListAnime.key, variables],
+        data: variables,
+        enabled: enabled ?? true,
+    })
+}
+
+export function useAnilistListNovel(variables: AnilistListNovel_Variables, enabled?: boolean) {
+    // Phase 2.5：轻小说列表查询，请求/响应形状与 list-anime 完全一致（AL_ListNovel = AL_ListAnime）
+    return useServerQuery<AL_ListNovel, AnilistListNovel_Variables>({
+        endpoint: API_ENDPOINTS.NOVEL.AnilistListNovel.endpoint,
+        method: API_ENDPOINTS.NOVEL.AnilistListNovel.methods[0],
+        queryKey: [API_ENDPOINTS.NOVEL.AnilistListNovel.key, variables],
         data: variables,
         enabled: enabled ?? true,
     })

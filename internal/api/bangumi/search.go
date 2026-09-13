@@ -13,6 +13,15 @@ type SearchFilter struct {
 	Tag  []string `json:"tag,omitempty"`  // 标签过滤（如 "ASMR"）
 	// Nsfw 三态：nil 不过滤；true 只返回 R18（音声域依赖此项）；false 排除 R18
 	Nsfw *bool `json:"nsfw,omitempty"`
+	// AirDate 放送/发售日期区间过滤。
+	// 实测地面真值（2026-09-13，POST /v0/search/subjects）：
+	//   - 元素为字符串操作符+全日期，如 ">2026-07-01"、"<2026-10-01"；
+	//   - 必须是完整年月日：">2026-07" 会被服务端拒绝（400 Bad Request）；
+	//   - 服务端语义为闭/开区间由官方实验性端点定义，season 映射用 (首日, 末日) 开区间已验证可用。
+	AirDate []string `json:"air_date,omitempty"`
+	// Rating 评分过滤（0-10 制）。
+	// 实测地面真值（2026-09-13）：元素为字符串如 ">=8"，仅支持整数阈值。
+	Rating []string `json:"rating,omitempty"`
 }
 
 // SearchSubjectsOpts 搜索参数
@@ -45,7 +54,8 @@ func (c *Client) SearchSubjects(ctx context.Context, opts SearchSubjectsOpts) (*
 	}
 
 	var filter *SearchFilter
-	if len(opts.Filter.Type) > 0 || len(opts.Filter.Tag) > 0 || opts.Filter.Nsfw != nil {
+	if len(opts.Filter.Type) > 0 || len(opts.Filter.Tag) > 0 || opts.Filter.Nsfw != nil ||
+		len(opts.Filter.AirDate) > 0 || len(opts.Filter.Rating) > 0 {
 		filter = &opts.Filter
 	}
 

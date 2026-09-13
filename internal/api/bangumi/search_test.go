@@ -25,9 +25,11 @@ func TestSearchSubjects(t *testing.T) {
 	res, err := c.SearchSubjects(context.Background(), SearchSubjectsOpts{
 		Keyword: "RJ123456",
 		Filter: SearchFilter{
-			Type: []int{SubjectBook},
-			Tag:  []string{"ASMR"},
-			Nsfw: boolPtr(true),
+			Type:    []int{SubjectBook},
+			Tag:     []string{"ASMR"},
+			Nsfw:    boolPtr(true),
+			AirDate: []string{">2026-01-01", "<2026-04-01"},
+			Rating:  []string{">=8"},
 		},
 		Limit:  20,
 		Offset: 0,
@@ -44,9 +46,11 @@ func TestSearchSubjects(t *testing.T) {
 	var body struct {
 		Keyword string `json:"keyword"`
 		Filter  struct {
-			Type []int    `json:"type"`
-			Tag  []string `json:"tag"`
-			Nsfw *bool    `json:"nsfw"`
+			Type    []int    `json:"type"`
+			Tag     []string `json:"tag"`
+			Nsfw    *bool    `json:"nsfw"`
+			AirDate []string `json:"air_date"`
+			Rating  []string `json:"rating"`
 		} `json:"filter"`
 	}
 	require.NoError(t, json.Unmarshal(rs.lastBody, &body))
@@ -55,6 +59,9 @@ func TestSearchSubjects(t *testing.T) {
 	require.Equal(t, []string{"ASMR"}, body.Filter.Tag)
 	require.NotNil(t, body.Filter.Nsfw)
 	require.True(t, *body.Filter.Nsfw)
+	// air_date 必须是操作符+全日期字符串数组（实测 ">2026-07" 这类年月格式会被 400 拒绝）
+	require.Equal(t, []string{">2026-01-01", "<2026-04-01"}, body.Filter.AirDate)
+	require.Equal(t, []string{">=8"}, body.Filter.Rating)
 
 	// 响应解析断言
 	require.Equal(t, 1, res.Total)

@@ -139,6 +139,11 @@ func InitRoutes(app *core.App, e *echo.Echo) {
 	v1.GET("/status/home-items", h.HandleGetHomeItems)
 	v1.POST("/status/home-items", h.HandleUpdateHomeItems)
 
+	// ASMR 音声搜索域（asmr.one，Phase 2.5）
+	v1.POST("/asmr/search", h.HandleAsmrSearch)
+	v1.GET("/asmr/popular", h.HandleAsmrPopular)
+	v1.GET("/asmr/work/:id", h.HandleAsmrWork)
+
 	v1.GET("/log/*", h.HandleGetLogContent)
 	v1.GET("/logs/filenames", h.HandleGetLogFilenames)
 	v1.DELETE("/logs", h.HandleDeleteLogs)
@@ -214,6 +219,8 @@ func InitRoutes(app *core.App, e *echo.Echo) {
 	v1Anilist.DELETE("/list-entry", h.HandleDeleteAnilistListEntry)
 
 	v1Anilist.POST("/list-anime", h.HandleAnilistListAnime)
+
+	v1Anilist.POST("/list-novel", h.HandleAnilistListNovel)
 
 	v1Anilist.POST("/list-recent-anime", h.HandleAnilistListRecentAiringAnime)
 

@@ -109,7 +109,40 @@ export const ADVANCED_SEARCH_SORTING_MANGA = [
 export const ADVANCED_SEARCH_TYPE = [
     { value: "anime", label: "动漫" },
     { value: "manga", label: "漫画" },
+    // Phase 2.5：新增轻小说 / 音声搜索类型
+    { value: "novel", label: "轻小说" },
+    { value: "asmr", label: "音声" },
 ]
+
+// Phase 2.5：asmr.one 排序映射（SCORE_DESC→dc 评分、POPULARITY/TRENDING→dl 下载热度、START_DATE→dd 最新）
+export const ADVANCED_SEARCH_SORTING_ASMR = [
+    { value: "dl", label: "下载热度" },
+    { value: "dc", label: "评分最高" },
+    { value: "dd", label: "最新发布" },
+    { value: "publish_date", label: "发行日期" },
+]
+
+// Phase 2.5：asmr 字幕过滤选项（契约第 4 节 subtitle: "none" | "jp" | "zh"）
+export const ADVANCED_SEARCH_SUBTITLE_ASMR = [
+    { value: "zh", label: "中文字幕" },
+    { value: "jp", label: "日文字幕" },
+]
+
+/**
+ * Phase 2.5：将 AL 排序值映射为 asmr.one 的 order 参数
+ */
+export function mapSortingToAsmrOrder(sorting: string | null | undefined): string {
+    switch (sorting) {
+        case "POPULARITY_DESC":
+        case "TRENDING_DESC":
+            return "dl"
+        case "START_DATE_DESC":
+            return "dd"
+        case "SCORE_DESC":
+        default:
+            return "dc"
+    }
+}
 
 // Query used to get all tags:
 //  query Query {

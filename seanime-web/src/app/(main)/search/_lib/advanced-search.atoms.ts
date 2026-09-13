@@ -14,7 +14,10 @@ type Params = {
     minScore: string | null
     isAdult: boolean
     countryOfOrigin: string | null
-    type: "anime" | "manga"
+    // Phase 2.5：扩展轻小说 / 音声类型
+    type: "anime" | "manga" | "novel" | "asmr"
+    // Phase 2.5：asmr 类型下可选字幕过滤（"none" | "jp" | "zh"），null 表示不限
+    asmrSubtitle: string | null
 }
 
 export const __advancedSearch_paramsAtom = atomWithImmer<Params>({
@@ -31,6 +34,7 @@ export const __advancedSearch_paramsAtom = atomWithImmer<Params>({
     isAdult: false,
     countryOfOrigin: null,
     type: "anime",
+    asmrSubtitle: null,
 })
 
 export function __advancedSearch_getValue<T extends any>(value: T | ""): any {

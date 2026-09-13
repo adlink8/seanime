@@ -3,11 +3,11 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"seanime/internal/api/bangumi"
 	"seanime/internal/media"
 	"seanime/internal/platforms/bangumi_platform"
 	"seanime/internal/platforms/shared_platform"
 	"seanime/internal/util/result"
-	"seanime/internal/api/bangumi"
 	"strconv"
 	"time"
 
@@ -319,7 +319,74 @@ func (h *Handler) HandleDeleteAnilistListEntry(c echo.Context) error {
 var (
 	anilistListAnimeCache       = result.NewCache[string, *media.ListAnime]()
 	anilistListRecentAnimeCache = result.NewCache[string, *media.ListRecentAnime]() // holds 1 value
+	anilistListNovelCache       = result.NewCache[string, *media.ListAnime]()
 )
+
+// resolveBangumiSort 将 AniList MediaSort 映射为 Bangumi 搜索 sort 值。
+// sort 是数组，取第一个可映射值；有 search 词时优先 sort=match；
+// 无可映射值时返回空串，走 Bangumi 服务端默认排序（实测合法）。
+// 实测地面真值（2026-09-13）：sort ∈ {match, heat, rank, score} 均可用。
+func resolveBangumiSort(sorts []*media.MediaSort, keyword string) string {
+	if keyword != "" {
+		return "match"
+	}
+	for _, s := range sorts {
+		if s == nil {
+			continue
+		}
+		switch *s {
+		case media.MediaSortTrendingDesc:
+			return "heat"
+		case media.MediaSortPopularityDesc:
+			return "rank"
+		case media.MediaSortScoreDesc:
+			return "score"
+		}
+	}
+	return ""
+}
+
+// seasonAirDateRange 将 AniList season/seasonYear 映射为 Bangumi air_date 全日期区间。
+// 实测地面真值：air_date 元素必须是操作符+全日期（如 ">2026-01-01"），年月格式会被 400 拒绝。
+// 区间端点按契约：WINTER=01-01~03-31、SPRING=04-01~06-30、SUMMER=07-01~09-30、FALL=10-01~12-31。
+// 上界取下一节点首日（如 WINTER 上界 "<2026-04-01"，等效覆盖 03-31 全天）；
+// FALL 上界取下一年 01-01，避免漏掉 12-31 当天放送。仅 season 无 year 时忽略。
+func seasonAirDateRange(season *media.MediaSeason, year *int) []string {
+	if year == nil {
+		return nil
+	}
+	if season != nil && season.IsValid() {
+		var start, end string
+		switch *season {
+		case media.MediaSeasonWinter:
+			start, end = "01-01", fmt.Sprintf("%d-04-01", *year)
+		case media.MediaSeasonSpring:
+			start, end = "04-01", fmt.Sprintf("%d-07-01", *year)
+		case media.MediaSeasonSummer:
+			start, end = "07-01", fmt.Sprintf("%d-10-01", *year)
+		case media.MediaSeasonFall:
+			start, end = "10-01", fmt.Sprintf("%d-01-01", *year+1)
+		default:
+			return nil
+		}
+		return []string{fmt.Sprintf(">%d-%s", *year, start), "<" + end}
+	}
+	// 仅年份：全年区间（契约规定 ">YYYY-01-01","<YYYY-12-31"）
+	return []string{fmt.Sprintf(">%d-01-01", *year), fmt.Sprintf("<%d-12-31", *year)}
+}
+
+// ratingFilterFromAverageScore 将 AniList averageScore_greater（0-100）映射为
+// Bangumi rating 过滤（0-10 制），N=分数÷10 向下取整；0-10 保留 0。
+func ratingFilterFromAverageScore(score *int) []string {
+	if score == nil || *score < 0 {
+		return nil
+	}
+	n := *score / 10
+	if n > 10 {
+		n = 10
+	}
+	return []string{fmt.Sprintf(">=%d", n)}
+}
 
 // HandleAnilistListAnime
 //
@@ -382,8 +449,8 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 	}
 
 	// Bangumi 锚点：原 AniList 复杂过滤搜索改为 SearchSubjects。
-	// 可映射：关键词/标签/成人内容过滤/分页；sort、status、genres、averageScore、
-	// season、seasonYear、format、countryOfOrigin 无对应过滤条件，忽略（TODO(M4)：前端过滤选项同步裁剪）。
+	// 已映射：关键词/标签(genres+tags)/成人内容/评分/季度/排序/分页；
+	// status、format、countryOfOrigin 无对应过滤条件，忽略（TODO(M4)：前端过滤选项同步裁剪）。
 	client := h.App.AnilistPlatformRef.Get().GetBangumiClient()
 	if client == nil {
 		return h.RespondWithError(c, errors.New("bangumi client not available"))
@@ -395,9 +462,17 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 			filter.Tag = append(filter.Tag, *t)
 		}
 	}
+	// genres 逐个并入 filter.tag（Bangumi 无 genres 概念，标签是最接近的过滤维度）
+	for _, g := range p.Genres {
+		if g != nil && *g != "" {
+			filter.Tag = append(filter.Tag, *g)
+		}
+	}
 	if isAdult != nil {
 		filter.Nsfw = isAdult
 	}
+	filter.AirDate = seasonAirDateRange(p.Season, p.SeasonYear)
+	filter.Rating = ratingFilterFromAverageScore(p.AverageScoreGreater)
 
 	page := 1
 	if p.Page != nil {
@@ -414,7 +489,7 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 
 	res, err := client.SearchSubjects(c.Request().Context(), bangumi.SearchSubjectsOpts{
 		Keyword: keyword,
-		Sort:    "match",
+		Sort:    resolveBangumiSort(p.Sort, keyword),
 		Filter:  filter,
 		Limit:   perPage,
 		Offset:  (page - 1) * perPage,
@@ -440,6 +515,156 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 	if ret != nil {
 		anilistListAnimeCache.SetT(cacheKey, ret, time.Minute*10)
 	}
+
+	return h.RespondWithData(c, ret)
+}
+
+// HandleAnilistListNovel
+//
+//	@summary returns a list of novels (轻小说) based on the search parameters.
+//	@desc Bangumi 锚点下没有独立的轻小说分类：内部用 SearchSubjects type=1（书籍）搜索，
+//	@desc 再按条目 platform ∈ {"小说","WEB"} 过滤（platform 为空值的书籍条目会被丢弃）。
+//	@desc 分页采用 over-fetch 近似：每次请求 limit=perPage*3、offset=(page-1)*perPage*3，
+//	@desc 过滤后不足 perPage 如实返回，超出截断。平台过滤会使 total 偏大（total 为书籍总数），
+//	@desc hasNextPage 以「过滤后条目数 >= perPage」近似判断而非按 total 估算，分页边界略偏，属可接受近似。
+//	@desc 请求/响应形状与 list-anime 完全一致（复用 media.ListAnime）。
+//	@route /api/v1/anilist/list-novel [POST]
+//	@returns media.ListAnime
+func (h *Handler) HandleAnilistListNovel(c echo.Context) error {
+
+	type body struct {
+		Page                *int                 `json:"page,omitempty"`
+		Search              *string              `json:"search,omitempty"`
+		PerPage             *int                 `json:"perPage,omitempty"`
+		Sort                []*media.MediaSort   `json:"sort,omitempty"`
+		Status              []*media.MediaStatus `json:"status,omitempty"`
+		Genres              []*string            `json:"genres,omitempty"`
+		Tags                []*string            `json:"tags,omitempty"`
+		AverageScoreGreater *int                 `json:"averageScore_greater,omitempty"`
+		Season              *media.MediaSeason   `json:"season,omitempty"`
+		SeasonYear          *int                 `json:"seasonYear,omitempty"`
+		Format              *media.MediaFormat   `json:"format,omitempty"`
+		IsAdult             *bool                `json:"isAdult,omitempty"`
+		CountryOfOrigin     *string              `json:"countryOfOrigin,omitempty"`
+	}
+
+	p := new(body)
+	if err := c.Bind(p); err != nil {
+		return h.RespondWithError(c, err)
+	}
+
+	page := 1
+	if p.Page != nil && *p.Page > 0 {
+		page = *p.Page
+	}
+	perPage := 20
+	if p.PerPage != nil && *p.PerPage > 0 {
+		perPage = *p.PerPage
+	}
+	keyword := ""
+	if p.Search != nil {
+		keyword = *p.Search
+	}
+	isAdult := false
+	if p.IsAdult != nil {
+		isAdult = *p.IsAdult && h.App.Settings.GetAnilist().EnableAdultContent
+	}
+
+	cacheKey := fmt.Sprintf("novel:%d:%d:%s:%v:%v:%v:%d:%v:%v:%v", page, perPage, keyword, p.Sort, p.Tags, p.Genres, p.AverageScoreGreater, p.Season, p.SeasonYear, isAdult)
+	if cached, ok := anilistListNovelCache.Get(cacheKey); ok {
+		return h.RespondWithData(c, cached)
+	}
+
+	client := h.App.AnilistPlatformRef.Get().GetBangumiClient()
+	if client == nil {
+		return h.RespondWithError(c, errors.New("bangumi client not available"))
+	}
+
+	filter := bangumi.SearchFilter{Type: []int{1}} // 1=书籍
+	for _, t := range p.Tags {
+		if t != nil && *t != "" {
+			filter.Tag = append(filter.Tag, *t)
+		}
+	}
+	for _, g := range p.Genres {
+		if g != nil && *g != "" {
+			filter.Tag = append(filter.Tag, *g)
+		}
+	}
+	if p.IsAdult != nil {
+		v := *p.IsAdult && h.App.Settings.GetAnilist().EnableAdultContent
+		filter.Nsfw = &v
+	}
+	filter.AirDate = seasonAirDateRange(p.Season, p.SeasonYear)
+	filter.Rating = ratingFilterFromAverageScore(p.AverageScoreGreater)
+
+	// 无关键词（探索/浏览场景）时追加官方「轻小说」标签：
+	// 实测书籍分区搜索结果中轻小说占比极低（rank 前 20 几乎全为漫画），
+	// tag 过滤是唯一高召回手段（rank 9/10、heat 5/5 命中小说 platform），
+	// 且排序在轻小说子集内生效，语义正确。有关键词时不加（避免漏掉未打标签的条目）。
+	if keyword == "" {
+		hasNovelTag := false
+		for _, t := range filter.Tag {
+			if t == "轻小说" {
+				hasNovelTag = true
+				break
+			}
+		}
+		if !hasNovelTag {
+			filter.Tag = append(filter.Tag, "轻小说")
+		}
+	}
+
+	// over-fetch：书籍搜索结果中轻小说占比低（平台过滤会大量丢弃），且服务端
+	// limit 被钳制在 20（实测请求 50 仅返回 20），单次请求不够——改为多页循环
+	// 拉取（最多 5 页），凑够 perPage 条轻小说或拉完即停。
+	// 注意 limit/offset 上限是 20，先用 limit=20 探明服务端实际返回数再循环。
+	const serverPageLimit = 20
+	novelPlatforms := map[string]bool{"小说": true, "WEB": true}
+	mediaList := make([]*media.Anime, 0, perPage)
+	reachedEnd := false
+	for pageIdx := 0; pageIdx < 5 && len(mediaList) < perPage && !reachedEnd; pageIdx++ {
+		offset := (page - 1 + pageIdx) * serverPageLimit
+		res, err := client.SearchSubjects(c.Request().Context(), bangumi.SearchSubjectsOpts{
+			Keyword: keyword,
+			Sort:    resolveBangumiSort(p.Sort, keyword),
+			Filter:  filter,
+			Limit:   serverPageLimit,
+			Offset:  offset,
+		})
+		if err != nil {
+			if pageIdx == 0 {
+				return h.RespondWithError(c, err)
+			}
+			break // 后续页失败降级为返回已获取部分
+		}
+		for i := range res.Data {
+			if !novelPlatforms[res.Data[i].Platform] {
+				continue
+			}
+			if a := media.AnimeFromSubject(bangumi.SubjectToMedia(&res.Data[i])); a != nil {
+				mediaList = append(mediaList, a)
+			}
+		}
+		if len(res.Data) < serverPageLimit || offset+serverPageLimit >= res.Total {
+			reachedEnd = true
+		}
+	}
+	if len(mediaList) > perPage {
+		mediaList = mediaList[:perPage]
+	}
+
+	// hasNextPage 近似：过滤后条目数 >= perPage 视为还有下一页。
+	// 不用原始 total 除系数估算——轻小说占比未知，系数估算不可靠。
+	hasNextPage := len(mediaList) >= perPage && !reachedEnd
+	total := len(mediaList)
+	pi := perPage
+	ret := &media.ListAnime{Page: &media.ListAnime_Page{
+		Media:    mediaList,
+		PageInfo: &media.PageInfo{CurrentPage: &page, PerPage: &pi, Total: &total, HasNextPage: &hasNextPage},
+	}}
+
+	anilistListNovelCache.SetT(cacheKey, ret, time.Minute*10)
 
 	return h.RespondWithData(c, ret)
 }

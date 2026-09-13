@@ -145,6 +145,51 @@ export const API_ENDPOINTS = {
             endpoint: "/api/v1/anilist/cache-layer/status",
         },
     },
+    NOVEL: {
+        /**
+         *  @description
+         *  Route returns a list of light novels based on the search parameters. (Phase 2.5 新增)
+         *  Request/response shape mirrors AnilistListAnime.
+         *  This is used by the "Advanced Search" and "Discover" pages.
+         */
+        AnilistListNovel: {
+            key: "NOVEL-anilist-list-novel",
+            methods: ["POST"],
+            endpoint: "/api/v1/anilist/list-novel",
+        },
+    },
+    ASMR: {
+        /**
+         *  @description
+         *  Route searches ASMR works on asmr.one. (Phase 2.5 新增)
+         *  This is used by the "Advanced Search" page and the "Discover" page.
+         */
+        AsmrSearch: {
+            key: "ASMR-asmr-search",
+            methods: ["POST"],
+            endpoint: "/api/v1/asmr/search",
+        },
+        /**
+         *  @description
+         *  Route returns popular ASMR works on asmr.one. (Phase 2.5 新增)
+         *  This is used by the "Discover" page.
+         */
+        AsmrPopular: {
+            key: "ASMR-asmr-popular",
+            methods: ["GET"],
+            endpoint: "/api/v1/asmr/popular",
+        },
+        /**
+         *  @description
+         *  Route returns details (including the track tree) about an ASMR work. (Phase 2.5 新增)
+         *  This is used by the ASMR work detail modal.
+         */
+        AsmrWork: {
+            key: "ASMR-asmr-work",
+            methods: ["GET"],
+            endpoint: "/api/v1/asmr/work/{id}",
+        },
+    },
     ANIME: {
         /**
          *  @description
