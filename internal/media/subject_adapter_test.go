@@ -266,3 +266,102 @@ func TestAnimeFromSubject_JSONShape(t *testing.T) {
 		t.Errorf("format 序列化值应为 TV：%s", s)
 	}
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// D9 / Phase 3.6c：list-novel 书籍类型映射
+
+// bookSubject 构造书籍样本（type=1）。
+func bookSubject(platform string, tags ...string) *Subject {
+	s := tvSubject()
+	s.ID = 276764
+	s.Type = 1
+	s.Name = "無職転生"
+	s.NameCN = "无职转生"
+	s.Platform = platform
+	s.Tags = nil
+	for _, tg := range tags {
+		s.Tags = append(s.Tags, SubjectTag{Name: tg})
+	}
+	return s
+}
+
+// TestMangaSubjectAsListAnime_BookSemantics 是 D9 的核心断言：
+// 书籍条目在 list-novel 响应里必须 Type=MANGA、Format ∈ {NOVEL, BOOK} ——
+// 修复前用 AnimeFromSubject 会得到 type:"ANIME" + format:"TV"（契约 §0.5）。
+//
+// 期望值来自契约 §4 字面规定（platform=小说 → NOVEL，其余 → BOOK），
+// 不由实现推导得出。
+func TestMangaSubjectAsListAnime_BookSemantics(t *testing.T) {
+	cases := []struct {
+		name       string
+		platform   string
+		tags       []string
+		wantFormat MediaFormat
+	}{
+		{"platform=小说 → NOVEL", "小说", nil, MediaFormatNovel},
+		{"platform=轻小说 → NOVEL", "轻小说", nil, MediaFormatNovel},
+		{"tag=轻小说 → NOVEL", "", []string{"轻小说"}, MediaFormatNovel},
+		{"platform=WEB → BOOK", "WEB", nil, MediaFormatBook},
+		{"platform=漫画 → BOOK（list-novel 不产出 MANGA）", "漫画", nil, MediaFormatBook},
+		{"platform 空 → BOOK", "", nil, MediaFormatBook},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			a := MangaSubjectAsListAnime(bookSubject(tc.platform, tc.tags...))
+			if a == nil {
+				t.Fatal("转换结果为 nil")
+			}
+			if a.Type == nil || *a.Type != MediaTypeManga {
+				t.Errorf("Type 应为 MANGA，实际 %v", a.Type)
+			}
+			if a.Format == nil {
+				t.Fatal("Format 为 nil")
+			}
+			if *a.Format != tc.wantFormat {
+				t.Errorf("Format = %s, want %s", *a.Format, tc.wantFormat)
+			}
+			// 书籍语义下 Format 只能落在 {NOVEL, BOOK}
+			if *a.Format != MediaFormatNovel && *a.Format != MediaFormatBook {
+				t.Errorf("Format 必须 ∈ {NOVEL, BOOK}，实际 %s", *a.Format)
+			}
+		})
+	}
+
+	if MangaSubjectAsListAnime(nil) != nil {
+		t.Error("nil 输入应返回 nil")
+	}
+}
+
+// TestMangaSubjectAsListAnime_PreservesOtherFields 断言只改字段「值」不改字段「名」：
+// 书籍条目仍包装在 media.Anime 形状中（type/format/id/nameCN 等 JSON 字段名不变）。
+func TestMangaSubjectAsListAnime_PreservesOtherFields(t *testing.T) {
+	a := MangaSubjectAsListAnime(bookSubject("小说"))
+	if a == nil {
+		t.Fatal("转换结果为 nil")
+	}
+	if a.ID != 276764 {
+		t.Errorf("ID = %d, want 276764", a.ID)
+	}
+	if a.NameCN != "无职转生" {
+		t.Errorf("NameCN = %q", a.NameCN)
+	}
+	if a.MeanScore == nil || *a.MeanScore != 92 {
+		t.Errorf("MeanScore 应为 92（9.2 ×10），实际 %v", a.MeanScore)
+	}
+	if a.Episodes == nil || *a.Episodes != 28 {
+		t.Errorf("Episodes 应取 Eps，实际 %v", a.Episodes)
+	}
+
+	data, err := json.Marshal(a)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(data)
+	if !strings.Contains(s, `"type":"MANGA"`) {
+		t.Errorf("type 序列化值应为 MANGA：%s", s)
+	}
+	if !strings.Contains(s, `"format":"NOVEL"`) {
+		t.Errorf("format 序列化值应为 NOVEL：%s", s)
+	}
+}

@@ -3,12 +3,15 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"math"
 	"seanime/internal/api/bangumi"
 	"seanime/internal/media"
 	"seanime/internal/platforms/bangumi_platform"
 	"seanime/internal/platforms/shared_platform"
 	"seanime/internal/util/result"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -330,6 +333,12 @@ func resolveBangumiSort(sorts []*media.MediaSort, keyword string) string {
 	if keyword != "" {
 		return "match"
 	}
+	return mapAnilistSortToBangumiSort(sorts)
+}
+
+// mapAnilistSortToBangumiSort 仅做值映射，不掺入「有关键词就 match」的服务端语义。
+// legacy 通路需要它：legacy 无 sort 参数，本地排序要按用户真实选择（score/rank）而非 match。
+func mapAnilistSortToBangumiSort(sorts []*media.MediaSort) string {
 	for _, s := range sorts {
 		if s == nil {
 			continue
@@ -344,6 +353,194 @@ func resolveBangumiSort(sorts []*media.MediaSort, keyword string) string {
 		}
 	}
 	return ""
+}
+
+// useLegacySearch 关键词双通路判据（契约 §2 D1）：关键词 trim 后非空 → legacy 通路。
+//
+// 依据 03.6b-CONTRACT.md §0.1 实测地面真值：v0 `POST /v0/search/subjects` 对 CJK
+// 关键词恒 `total=0`（进击的巨人/火影/海贼王全覆盖），只有 legacy
+// `GET /search/subject/{kw}` 能返回中文标题结果。故非空关键词必须改走 legacy。
+func useLegacySearch(keyword string) bool {
+	return strings.TrimSpace(keyword) != ""
+}
+
+// serverPageLimit v0 分页硬钳（契约 §0.2 / D8）：服务端 `limit` 上限为 20，
+// 请求更大值会被静默钳到 20；若 offset 仍按前端 perPage(48) 步进就会漏条目。
+const serverPageLimit = 20
+
+// clampServerPageLimit 将请求的 perPage 收敛到服务端硬上限内。
+// 契约 D8：perPage 固定 20。
+func clampServerPageLimit(perPage int) int {
+	if perPage <= 0 || perPage > serverPageLimit {
+		return serverPageLimit
+	}
+	return perPage
+}
+
+// legacySubjectsToAnime 将 legacy 检索条目映射为 media.Anime。
+func legacySubjectsToAnime(list []bangumi.LegacySubject) []*media.Anime {
+	out := make([]*media.Anime, 0, len(list))
+	for i := range list {
+		if a := media.AnimeFromSubject(bangumi.LegacySubjectToMedia(&list[i])); a != nil {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+// legacySubjectsToManga 将 legacy 检索条目映射为 media.Manga。
+func legacySubjectsToManga(list []bangumi.LegacySubject) []*media.Manga {
+	out := make([]*media.Manga, 0, len(list))
+	for i := range list {
+		if m := media.MangaFromSubject(bangumi.LegacySubjectToMedia(&list[i])); m != nil {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
+// legacySubjectsToListAnime 将 legacy 书籍条目映射为「书籍语义」的 media.Anime，
+// 供 list-novel 响应使用（响应类型仍是 media.ListAnime，JSON 字段名不变，只改字段值）。
+//
+// 复用 MangaSubjectAsListAnime 保证 Type=MANGA + Format ∈ {NOVEL, BOOK}（契约 §4 / D9）。
+// 注意：legacy 条目**无 platform**（契约 §0.1），MangaSubjectAsListAnime 因此恒落 BOOK；
+// 这是上游能力缺口而非映射 bug（见 HandleAnilistListNovel 的降级注释）。
+func legacySubjectsToListAnime(list []bangumi.LegacySubject) []*media.Anime {
+	out := make([]*media.Anime, 0, len(list))
+	for i := range list {
+		if a := media.MangaSubjectAsListAnime(bangumi.LegacySubjectToMedia(&list[i])); a != nil {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+// animeMetaTagsFromFormat 将动画 format 映射为 Bangumi `filter.meta_tags`（契约 §1 D4）。
+//
+// 实测地面真值（03.6b-CONTRACT.md §0.2）：meta_tags 仅 type=2 生效，且仅
+// `TV` / `WEB` / `OVA` 三个值有结果；`Movie`/`剧场版`/`原创`/`漫画改` 全 0。
+// 故 `MOVIE` / `TV_SHORT` / `SPECIAL` 不再映射（前端已按 D4 移除这些选项），
+// 返回 nil 表示「不追加 meta_tags 过滤」——而不是发出一个恒 0 的无效值。
+func animeMetaTagsFromFormat(format *media.MediaFormat) []string {
+	if format == nil {
+		return nil
+	}
+	switch *format {
+	case media.MediaFormatTv:
+		return []string{"TV"}
+	case media.MediaFormatOna:
+		return []string{"WEB"} // AniList 的 ONA ↔ Bangumi 的 WEB
+	case media.MediaFormatOva:
+		return []string{"OVA"}
+	}
+	return nil
+}
+
+// legacySubjectScore 取 legacy 条目的评分（0–10）；无 rating 时按 0 处理。
+func legacySubjectScore(s bangumi.LegacySubject) float64 {
+	if s.Rating == nil {
+		return 0
+	}
+	return s.Rating.Score
+}
+
+// legacySubjectRank 取 legacy 条目的全局排名；rank<=0 表示上游未给出排名，
+// 排序时置于末位（避免「无排名」被当成「第 0 名」抢到最前）。
+func legacySubjectRank(s bangumi.LegacySubject) int {
+	if s.Rank <= 0 {
+		return math.MaxInt
+	}
+	return s.Rank
+}
+
+// legacyScoreMeetsMinimum 本地评分下限过滤（契约 §2 通路 1）。
+// 请求参数 averageScore_greater 为 0–100 刻度（D6），条目 rating.score 为 0–10；
+// 比较时把条目分数换算成「十分位整数」再比，与 media.AnimeFromSubject 的
+// meanScore = int(score*10+0.5) 换算保持一致，避免浮点边界抖动。
+func legacyScoreMeetsMinimum(score float64, averageScoreGreater *int) bool {
+	if averageScoreGreater == nil {
+		return true
+	}
+	return int(score*10+0.5) >= *averageScoreGreater
+}
+
+// legacyMonthsInSeason 季度 → 月份区间，与 seasonAirDateRange（v0 通路）的
+// 日历区间保持一致：WINTER 01–03、SPRING 04–06、SUMMER 07–09、FALL 10–12。
+func legacyMonthsInSeason(s media.MediaSeason) (int, int) {
+	switch s {
+	case media.MediaSeasonWinter:
+		return 1, 3
+	case media.MediaSeasonSpring:
+		return 4, 6
+	case media.MediaSeasonSummer:
+		return 7, 9
+	case media.MediaSeasonFall:
+		return 10, 12
+	}
+	return 0, 0
+}
+
+// legacyAirDateMatches 本地年份/季度过滤（契约 §2 通路 1）。
+// 无 seasonYear 时不过滤（无谓的丢弃比漏条目更糟）；条目日期缺失或不可解析时，
+// 在设置了年份筛选的前提下保守丢弃（无法证明命中）。
+func legacyAirDateMatches(airDate string, season *media.MediaSeason, seasonYear *int) bool {
+	if seasonYear == nil {
+		return true
+	}
+	if airDate == "" {
+		return false
+	}
+	d, err := time.Parse("2006-01-02", airDate)
+	if err != nil || d.Year() != *seasonYear {
+		return false
+	}
+	if season == nil || !season.IsValid() {
+		return true
+	}
+	lo, hi := legacyMonthsInSeason(*season)
+	if lo == 0 {
+		return true
+	}
+	return int(d.Month()) >= lo && int(d.Month()) <= hi
+}
+
+// filterLegacySubjects 对 legacy 结果集做本地过滤（契约 §2 通路 1）。
+//
+// 为什么需要本地过滤：legacy 端点不支持任何 filter（契约 §0.1），
+// 但条目自带 rating.score（0–10）与 air_date，故「评分下限」「年份/季度」可本地等价实现。
+func filterLegacySubjects(list []bangumi.LegacySubject, averageScoreGreater *int, season *media.MediaSeason, seasonYear *int) []bangumi.LegacySubject {
+	out := make([]bangumi.LegacySubject, 0, len(list))
+	for _, s := range list {
+		if !legacyScoreMeetsMinimum(legacySubjectScore(s), averageScoreGreater) {
+			continue
+		}
+		if !legacyAirDateMatches(s.AirDate, season, seasonYear) {
+			continue
+		}
+		out = append(out, s)
+	}
+	return out
+}
+
+// sortLegacySubjects 对 legacy 结果集做本地排序（契约 §2 通路 1）。
+//   - score → rating.score 降序
+//   - rank  → rank 升序（rank 小者优，未排名者置末）
+//   - heat / match / 无可映射值 → 保持上游返回顺序（legacy 默认按相关度）
+//
+// 用 SliceStable 保证同分条目维持上游相对顺序，结果可复现。
+func sortLegacySubjects(list []bangumi.LegacySubject, sorts []*media.MediaSort) {
+	switch mapAnilistSortToBangumiSort(sorts) {
+	case "score":
+		sort.SliceStable(list, func(i, j int) bool {
+			return legacySubjectScore(list[i]) > legacySubjectScore(list[j])
+		})
+	case "rank":
+		sort.SliceStable(list, func(i, j int) bool {
+			return legacySubjectRank(list[i]) < legacySubjectRank(list[j])
+		})
+	default:
+		// heat / match / 无 → 不排序，保持上游相关度顺序
+	}
 }
 
 // seasonAirDateRange 将 AniList season/seasonYear 映射为 Bangumi air_date 全日期区间。
@@ -397,19 +594,20 @@ func ratingFilterFromAverageScore(score *int) []string {
 func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 
 	type body struct {
-		Page                *int                 `json:"page,omitempty"`
-		Search              *string              `json:"search,omitempty"`
-		PerPage             *int                 `json:"perPage,omitempty"`
-		Sort                []*media.MediaSort   `json:"sort,omitempty"`
-		Status              []*media.MediaStatus `json:"status,omitempty"`
-		Genres              []*string            `json:"genres,omitempty"`
-		Tags                []*string            `json:"tags,omitempty"`
-		AverageScoreGreater *int                 `json:"averageScore_greater,omitempty"`
-		Season              *media.MediaSeason   `json:"season,omitempty"`
-		SeasonYear          *int                 `json:"seasonYear,omitempty"`
-		Format              *media.MediaFormat   `json:"format,omitempty"`
-		IsAdult             *bool                `json:"isAdult,omitempty"`
-		CountryOfOrigin     *string              `json:"countryOfOrigin,omitempty"`
+		Page                *int               `json:"page,omitempty"`
+		Search              *string            `json:"search,omitempty"`
+		PerPage             *int               `json:"perPage,omitempty"`
+		Sort                []*media.MediaSort `json:"sort,omitempty"`
+		Genres              []*string          `json:"genres,omitempty"`
+		Tags                []*string          `json:"tags,omitempty"`
+		AverageScoreGreater *int               `json:"averageScore_greater,omitempty"`
+		Season              *media.MediaSeason `json:"season,omitempty"`
+		SeasonYear          *int               `json:"seasonYear,omitempty"`
+		Format              *media.MediaFormat `json:"format,omitempty"`
+		IsAdult             *bool              `json:"isAdult,omitempty"`
+		// status / countryOfOrigin 已按契约 D2/D3 删除：
+		// 上游 Bangumi 无 status 与 country 维度（platform 过滤实测无效，见 §0.2），
+		// 此前「接收却不消费」（仅进 cacheKey）属于静默忽略，现从接收端一并移除。
 	}
 
 	p := new(body)
@@ -437,7 +635,6 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 		p.Search,
 		p.PerPage,
 		p.Sort,
-		p.Status,
 		p.Genres,
 		p.Tags,
 		p.AverageScoreGreater,
@@ -445,7 +642,6 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 		p.SeasonYear,
 		p.Format,
 		isAdult,
-		p.CountryOfOrigin,
 	)
 
 	cached, ok := anilistListAnimeCache.Get(cacheKey)
@@ -473,6 +669,8 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 			filter.Tag = append(filter.Tag, *g)
 		}
 	}
+	// 动画 format → filter.meta_tags（契约 D4：仅 TV / WEB / OVA 三值）
+	filter.MetaTags = animeMetaTagsFromFormat(p.Format)
 	if isAdult != nil {
 		filter.Nsfw = isAdult
 	}
@@ -483,13 +681,55 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 	if p.Page != nil {
 		page = *p.Page
 	}
-	perPage := 20
+	// 契约 D8：v0 `limit` 硬钳 20，offset 必须按 20 步进。
+	// 前端曾传 perPage=48：服务端把 limit 钳到 20、offset 仍按 48 递增 → 中间 28 条漏掉。
+	perPage := serverPageLimit
 	if p.PerPage != nil {
-		perPage = *p.PerPage
+		perPage = clampServerPageLimit(*p.PerPage)
 	}
 	keyword := ""
 	if p.Search != nil {
 		keyword = *p.Search
+	}
+
+	// 契约 §2 D1 双通路：关键词非空 → legacy（v0 对 CJK 关键词恒 total=0，见 §0.1）。
+	//
+	// ⚠ 明确降级（禁止静默忽略，契约 §2 通路 1 末条）：
+	// legacy 条目**不含 tag、也不含 platform/tags 字段**（契约 §0.1 实测地面真值），
+	// 故 `tags` 与 `format`(meta_tags) 这两项筛选在 legacy 通路**无法本地过滤，降级为忽略**。
+	// 这是能力缺口而非疏漏：上游 legacy 端点既不支持 filter 参数，返回体里也没有可判据的字段。
+	// 若后续需要，只能改为「v0 空关键词 + filter」通路另行实现，本阶段不做。
+	//
+	// 契约 §2 分页补偿：legacy `max_results` 非严格保证（请求 20 可能只回 17），
+	// 此处选择「照实返回并在响应中如实反映条数」（不 over-fetch），
+	// hasNextPage 按上游实际返回条数（过滤前）计算，保证翻页游标不因本地过滤而错位。
+	if useLegacySearch(keyword) {
+		start := (page - 1) * perPage
+		res, err := client.SearchSubjectsLegacy(
+			c.Request().Context(),
+			strings.TrimSpace(keyword),
+			bangumi.SubjectAnime, // 动画分区
+			start,
+			perPage,
+		)
+		if err != nil {
+			return h.RespondWithError(c, err)
+		}
+
+		// 本地过滤（评分下限按 rating.score 0–10；年份/季度按 air_date）+ 本地排序（§2 通路 1）
+		filtered := filterLegacySubjects(res.List, p.AverageScoreGreater, p.Season, p.SeasonYear)
+		sortLegacySubjects(filtered, p.Sort)
+		mediaList := legacySubjectsToAnime(filtered)
+
+		hasNextPage := start+len(res.List) < res.Results
+		total := res.Results
+		pi := perPage
+		ret := &media.ListAnime{Page: &media.ListAnime_Page{
+			Media:    mediaList,
+			PageInfo: &media.PageInfo{CurrentPage: &page, PerPage: &pi, Total: &total, HasNextPage: &hasNextPage},
+		}}
+		anilistListAnimeCache.SetT(cacheKey, ret, time.Minute*10)
+		return h.RespondWithData(c, ret)
 	}
 
 	res, err := client.SearchSubjects(c.Request().Context(), bangumi.SearchSubjectsOpts{
@@ -527,9 +767,11 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 // HandleAnilistListNovel
 //
 //	@summary returns a list of novels (轻小说) based on the search parameters.
-//	@desc Bangumi 锚点下没有独立的轻小说分类：内部用 SearchSubjects type=1（书籍）搜索，
-//	@desc 再按条目 platform ∈ {"小说","WEB"} 过滤（platform 为空值的书籍条目会被丢弃）。
-//	@desc 分页采用 over-fetch 近似：每次请求 limit=perPage*3、offset=(page-1)*perPage*3，
+//	@desc Bangumi 锚点下没有独立的轻小说分类，内部走契约 §2 双通路（type=1 书籍分区）：
+//	@desc 关键词非空 → legacy 检索（`GET /search/subject/{kw}?type=1`，CJK 唯一可行通路），
+//	@desc   本地过滤评分/年份并本地排序；legacy 无 platform 字段 → platform 过滤降级忽略（能力缺口）。
+//	@desc 关键词为空 → v0 `POST /v0/search/subjects`（type=1），再按条目 platform ∈ {"小说","WEB"} 过滤。
+//	@desc 分页采用 over-fetch 近似：v0 通路每次请求 limit=perPage*3、offset=(page-1)*perPage*3，
 //	@desc 过滤后不足 perPage 如实返回，超出截断。平台过滤会使 total 偏大（total 为书籍总数），
 //	@desc hasNextPage 以「过滤后条目数 >= perPage」近似判断而非按 total 估算，分页边界略偏，属可接受近似。
 //	@desc 请求/响应形状与 list-anime 完全一致（复用 media.ListAnime）。
@@ -538,19 +780,20 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 func (h *Handler) HandleAnilistListNovel(c echo.Context) error {
 
 	type body struct {
-		Page                *int                 `json:"page,omitempty"`
-		Search              *string              `json:"search,omitempty"`
-		PerPage             *int                 `json:"perPage,omitempty"`
-		Sort                []*media.MediaSort   `json:"sort,omitempty"`
-		Status              []*media.MediaStatus `json:"status,omitempty"`
-		Genres              []*string            `json:"genres,omitempty"`
-		Tags                []*string            `json:"tags,omitempty"`
-		AverageScoreGreater *int                 `json:"averageScore_greater,omitempty"`
-		Season              *media.MediaSeason   `json:"season,omitempty"`
-		SeasonYear          *int                 `json:"seasonYear,omitempty"`
-		Format              *media.MediaFormat   `json:"format,omitempty"`
-		IsAdult             *bool                `json:"isAdult,omitempty"`
-		CountryOfOrigin     *string              `json:"countryOfOrigin,omitempty"`
+		Page                *int               `json:"page,omitempty"`
+		Search              *string            `json:"search,omitempty"`
+		PerPage             *int               `json:"perPage,omitempty"`
+		Sort                []*media.MediaSort `json:"sort,omitempty"`
+		Genres              []*string          `json:"genres,omitempty"`
+		Tags                []*string          `json:"tags,omitempty"`
+		AverageScoreGreater *int               `json:"averageScore_greater,omitempty"`
+		Season              *media.MediaSeason `json:"season,omitempty"`
+		SeasonYear          *int               `json:"seasonYear,omitempty"`
+		Format              *media.MediaFormat `json:"format,omitempty"`
+		IsAdult             *bool              `json:"isAdult,omitempty"`
+		// status / countryOfOrigin 已按契约 D2/D3 删除：
+		// 上游 Bangumi 无 status 与 country 维度（platform 过滤实测无效，见 §0.2），
+		// 此前「接收却不消费」（仅进 cacheKey）属于静默忽略，现从接收端一并移除。
 	}
 
 	p := new(body)
@@ -585,17 +828,57 @@ func (h *Handler) HandleAnilistListNovel(c echo.Context) error {
 		return h.RespondWithError(c, errors.New("bangumi client not available"))
 	}
 
+	// 契约 §2 D1 双通路：关键词非空 → legacy（v0 对 CJK 关键词恒 total=0，见 §0.1）。
+	// 轻小说搜索框输入中文标题（如「龙族」）此前恒空，根因即缺这一分支。
+	//
+	// ⚠ 明确降级（禁止静默忽略，契约 §2 通路 1 末条）：
+	// legacy 检索条目**不含 platform 字段**（契约 §0.1 实测地面真值；编排层进一步实测
+	// `responseGroup=large` 也只多出 `vols_count` 等字段，**仍无 platform**）。
+	// 因此 v0 通路那道「platform ∈ {小说,WEB}」过滤在 legacy 通路**无法本地执行**：
+	// 上游既无 filter 参数，返回体里也没有可作判据的字段。这属于**上游能力缺口而非疏漏**，
+	// 处理方式为**降级忽略**——绝不因拿不到 platform 就丢弃条目（否则中文轻小说搜索照旧全空）。
+	// 本地过滤/排序仍按契约 §2 与 anime/manga 通路一致：评分下限(0–10) + 年份/季度
+	// 可按条目 rating.score / air_date 本地生效，tag 与 platform 则降级忽略。
+	//
+	// 契约 §2 分页补偿：legacy `max_results` 非严格保证（请求 20 可能只回 17），
+	// 此处「照实返回并在响应里如实反映条数」（不 over-fetch），
+	// hasNextPage 按过滤前实际返回条数计算，避免本地过滤使翻页游标错位。
+	if useLegacySearch(keyword) {
+		legacyPerPage := clampServerPageLimit(perPage)
+		start := (page - 1) * legacyPerPage
+		res, err := client.SearchSubjectsLegacy(
+			c.Request().Context(),
+			strings.TrimSpace(keyword),
+			bangumi.SubjectBook, // 书籍分区（轻小说/漫画同区，契约 §4）
+			start,
+			legacyPerPage,
+		)
+		if err != nil {
+			return h.RespondWithError(c, err)
+		}
+
+		// 本地过滤（评分下限 + 年份/季度）+ 本地排序（§2 通路 1）。
+		// platform 过滤在 legacy 通路降级忽略（见上方注释），故此处**不再**做 platform 判据。
+		filtered := filterLegacySubjects(res.List, p.AverageScoreGreater, p.Season, p.SeasonYear)
+		sortLegacySubjects(filtered, p.Sort)
+		mediaList := legacySubjectsToListAnime(filtered)
+
+		hasNextPage := start+len(res.List) < res.Results
+		total := res.Results
+		pi := legacyPerPage
+		ret := &media.ListAnime{Page: &media.ListAnime_Page{
+			Media:    mediaList,
+			PageInfo: &media.PageInfo{CurrentPage: &page, PerPage: &pi, Total: &total, HasNextPage: &hasNextPage},
+		}}
+		anilistListNovelCache.SetT(cacheKey, ret, time.Minute*10)
+		return h.RespondWithData(c, ret)
+	}
+
 	filter := bangumi.SearchFilter{Type: []int{1}} // 1=书籍
-	for _, t := range p.Tags {
-		if t != nil && *t != "" {
-			filter.Tag = append(filter.Tag, *t)
-		}
-	}
-	for _, g := range p.Genres {
-		if g != nil && *g != "" {
-			filter.Tag = append(filter.Tag, *g)
-		}
-	}
+	// ⚠ 禁止对书籍分区（type=1）追加 tag：实测 filter.tag 对 type=1 恒 total=0（契约 §0.2）。
+	// p.Tags / p.Genres 在此有意忽略（前端已移除书籍标签筛选），非遗漏。
+	// 另：此处**不得**为空关键词追加 Bangumi tag「轻小说」——一旦追加，
+	// 轻小说探索会从「有结果」直接变「全空」（03.6-DIAGNOSIS §四 高风险提示）。
 	if p.IsAdult != nil {
 		v := *p.IsAdult && h.App.Settings.GetAnilist().EnableAdultContent
 		filter.Nsfw = &v
@@ -635,7 +918,9 @@ func (h *Handler) HandleAnilistListNovel(c echo.Context) error {
 			if !novelPlatforms[res.Data[i].Platform] {
 				continue
 			}
-			if a := media.AnimeFromSubject(bangumi.SubjectToMedia(&res.Data[i])); a != nil {
+			// D9 / §4：书籍条目必须输出 type=MANGA + format ∈ {NOVEL, BOOK}
+			// （修复前误用 AnimeFromSubject → type:ANIME + format:TV，见 §0.5）。
+			if a := media.MangaSubjectAsListAnime(bangumi.SubjectToMedia(&res.Data[i])); a != nil {
 				mediaList = append(mediaList, a)
 			}
 		}

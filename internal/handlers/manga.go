@@ -531,18 +531,18 @@ var (
 func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 
 	type body struct {
-		Page                *int                 `json:"page,omitempty"`
-		Search              *string              `json:"search,omitempty"`
-		PerPage             *int                 `json:"perPage,omitempty"`
-		Sort                []*media.MediaSort   `json:"sort,omitempty"`
-		Status              []*media.MediaStatus `json:"status,omitempty"`
-		Genres              []*string            `json:"genres,omitempty"`
-		Tags                []*string            `json:"tags,omitempty"`
-		AverageScoreGreater *int                 `json:"averageScore_greater,omitempty"`
-		Year                *int                 `json:"year,omitempty"`
-		CountryOfOrigin     *string              `json:"countryOfOrigin,omitempty"`
-		IsAdult             *bool                `json:"isAdult,omitempty"`
-		Format              *media.MediaFormat   `json:"format,omitempty"`
+		Page                *int               `json:"page,omitempty"`
+		Search              *string            `json:"search,omitempty"`
+		PerPage             *int               `json:"perPage,omitempty"`
+		Sort                []*media.MediaSort `json:"sort,omitempty"`
+		Genres              []*string          `json:"genres,omitempty"`
+		Tags                []*string          `json:"tags,omitempty"`
+		AverageScoreGreater *int               `json:"averageScore_greater,omitempty"`
+		Year                *int               `json:"year,omitempty"`
+		IsAdult             *bool              `json:"isAdult,omitempty"`
+		Format              *media.MediaFormat `json:"format,omitempty"`
+		// status / countryOfOrigin 已按契约 D2/D3/D5 删除（上游无对应能力，
+		// 此前仅进 cacheKey = 静默忽略）。Format 字段保留但不再消费（D5：书籍 format 无有效 meta_tag）。
 	}
 
 	p := new(body)
@@ -550,8 +550,14 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 		return h.RespondWithError(c, err)
 	}
 
-	if p.Page == nil || p.PerPage == nil {
+	// 缺省补默认值：两个字段独立判空，nil 时先 new 出对象再赋值
+	// （与 anilist.go 同源的裸解引用 panic，见 03.6-DIAGNOSIS 故障 2）。
+	if p.Page == nil {
+		p.Page = new(int)
 		*p.Page = 1
+	}
+	if p.PerPage == nil {
+		p.PerPage = new(int)
 		*p.PerPage = 20
 	}
 
@@ -565,14 +571,12 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 		p.Search,
 		p.PerPage,
 		p.Sort,
-		p.Status,
 		p.Genres,
 		p.Tags,
 		p.AverageScoreGreater,
 		nil,
 		p.Year,
 		p.Format,
-		p.CountryOfOrigin,
 		isAdult,
 	)
 
@@ -590,17 +594,11 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 	}
 
 	filter := bangumi.SearchFilter{Type: []int{1}} // 1=书籍
-	for _, t := range p.Tags {
-		if t != nil && *t != "" {
-			filter.Tag = append(filter.Tag, *t)
-		}
-	}
-	// genres 逐个并入 filter.tag
-	for _, g := range p.Genres {
-		if g != nil && *g != "" {
-			filter.Tag = append(filter.Tag, *g)
-		}
-	}
+	// ⚠ 禁止对书籍分区（type=1）追加 tag / meta_tags：
+	// 实测（03.6b-CONTRACT.md §0.2）filter.tag 与 filter.meta_tags 对 type=1 **恒 total=0**
+	//（漫画/轻小说/小说全部如此）。一旦追加，漫画/轻小说搜索会从「有结果」直接变「全空」。
+	// 故 p.Tags / p.Genres 在此**有意忽略**（D5：前端已移除书籍 format/标签筛选），
+	// 不是遗漏——上游对该分区没有可用的标签过滤能力。
 	if isAdult != nil {
 		filter.Nsfw = isAdult
 	}
@@ -612,13 +610,53 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 	if p.Page != nil {
 		page = *p.Page
 	}
-	perPage := 20
+	// 契约 D8：v0 `limit` 硬钳 20，offset 必须按 20 步进。
+	perPage := serverPageLimit
 	if p.PerPage != nil {
-		perPage = *p.PerPage
+		perPage = clampServerPageLimit(*p.PerPage)
 	}
 	keyword := ""
 	if p.Search != nil {
 		keyword = *p.Search
+	}
+
+	// 契约 §2 D1 双通路：关键词非空 → legacy（v0 对 CJK 关键词恒 total=0，见 §0.1）。
+	//
+	// ⚠ 明确降级（禁止静默忽略，契约 §2 通路 1 末条）：
+	// legacy 条目**不含 tag 与 platform 字段**（契约 §0.1 实测地面真值），
+	// 故 `tags` / `genres`(并入 tag) 与书籍 `format` 在 legacy 通路**无法本地过滤，降级为忽略**。
+	// 这是上游能力缺口：legacy 端点既无 filter 参数，返回体也无 tags 字段。
+	//
+	// 契约 §2 分页补偿：legacy `max_results` 非严格保证，
+	// 此处「照实返回并在响应里如实反映条数」（不 over-fetch），
+	// hasNextPage 按过滤前实际返回条数计算，避免本地过滤使翻页游标错位。
+	if useLegacySearch(keyword) {
+		start := (page - 1) * perPage
+		res, err := client.SearchSubjectsLegacy(
+			c.Request().Context(),
+			strings.TrimSpace(keyword),
+			bangumi.SubjectBook, // 书籍分区（漫画/轻小说同区）
+			start,
+			perPage,
+		)
+		if err != nil {
+			return h.RespondWithError(c, err)
+		}
+
+		// 本地过滤（评分下限 + 年份）+ 本地排序（§2 通路 1）；manga 请求体只有 year，无 season
+		filtered := filterLegacySubjects(res.List, p.AverageScoreGreater, nil, p.Year)
+		sortLegacySubjects(filtered, p.Sort)
+		mediaList := legacySubjectsToManga(filtered)
+
+		hasNextPage := start+len(res.List) < res.Results
+		total := res.Results
+		pi := perPage
+		ret := &media.ListManga{Page: &media.ListManga_Page{
+			Media:    mediaList,
+			PageInfo: &media.PageInfo{CurrentPage: &page, PerPage: &pi, Total: &total, HasNextPage: &hasNextPage},
+		}}
+		anilistListMangaCache.SetT(cacheKey, ret, time.Minute*10)
+		return h.RespondWithData(c, ret)
 	}
 
 	res, err := client.SearchSubjects(c.Request().Context(), bangumi.SearchSubjectsOpts{

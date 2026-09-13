@@ -1,15 +1,12 @@
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import {
-    ADVANCED_SEARCH_COUNTRIES_MANGA,
-    ADVANCED_SEARCH_FORMATS,
-    ADVANCED_SEARCH_FORMATS_MANGA,
+    ADVANCED_SEARCH_FORMATS_ANIME,
     ADVANCED_SEARCH_MEDIA_GENRES,
     ADVANCED_SEARCH_MEDIA_TAGS,
     ADVANCED_SEARCH_SEASONS,
     ADVANCED_SEARCH_SORTING,
     ADVANCED_SEARCH_SORTING_ASMR,
     ADVANCED_SEARCH_SORTING_MANGA,
-    ADVANCED_SEARCH_STATUS,
     ADVANCED_SEARCH_SUBTITLE_ASMR,
     ADVANCED_SEARCH_TYPE,
     GENRE_TRANSLATIONS,
@@ -29,12 +26,11 @@ import { t } from "@/lib/i18n"
 import { getYear } from "date-fns"
 import { useAtom } from "jotai/react"
 import React, { useState } from "react"
-import { BiTrash, BiWorld } from "react-icons/bi"
+import { BiTrash } from "react-icons/bi"
 import { FaRegStar, FaSortAmountDown } from "react-icons/fa"
 import { FiSearch } from "react-icons/fi"
 import { LuCalendar, LuLeaf } from "react-icons/lu"
-import { MdOutlineBook, MdPersonalVideo } from "react-icons/md"
-import { RiSignalTowerLine } from "react-icons/ri"
+import { MdPersonalVideo } from "react-icons/md"
 import { TbSwords, TbTagsFilled } from "react-icons/tb"
 import { useMount } from "react-use"
 import { useUpdateEffect } from "react-use"
@@ -159,7 +155,8 @@ export function AdvancedSearchOptions() {
                 {params.type === "anime" && <Select
                     leftAddon={<MdPersonalVideo className={cn((params.format !== null && !!params.format) && "text-indigo-300 font-bold text-xl")} />}
                     label={t("search.filter.format")} placeholder={t("search.filter.format_all")} className="w-full"
-                    options={ADVANCED_SEARCH_FORMATS}
+                    // Phase 3.6b D4：上游 meta_tags 仅 TV / WEB(ONA) / OVA 有效，MOVIE / TV_SHORT / SPECIAL 已移除
+                    options={ADVANCED_SEARCH_FORMATS_ANIME}
                     value={params.format || ""}
                     onValueChange={v => setParams(draft => {
                         draft.format = v as any
@@ -167,29 +164,8 @@ export function AdvancedSearchOptions() {
                     })}
                     fieldLabelClass="hidden"
                 />}
-                {params.type === "manga" && <Select
-                    leftAddon={
-                        <BiWorld className={cn((params.countryOfOrigin !== null && !!params.countryOfOrigin) && "text-indigo-300 font-bold text-xl")} />}
-                    label={t("search.filter.country")} placeholder={t("search.filter.country_all")} className="w-full"
-                    options={ADVANCED_SEARCH_COUNTRIES_MANGA}
-                    value={params.countryOfOrigin || ""}
-                    onValueChange={v => setParams(draft => {
-                        draft.countryOfOrigin = v as any
-                        return
-                    })}
-                    fieldLabelClass="hidden"
-                />}
-                {params.type === "manga" && <Select
-                    leftAddon={<MdOutlineBook className={cn((params.format !== null && !!params.format) && "text-indigo-300 font-bold text-xl")} />}
-                    label={t("search.filter.format")} placeholder={t("search.filter.format_all")} className="w-full"
-                    options={ADVANCED_SEARCH_FORMATS_MANGA}
-                    value={params.format || ""}
-                    onValueChange={v => setParams(draft => {
-                        draft.format = v as any
-                        return
-                    })}
-                    fieldLabelClass="hidden"
-                />}
+                {/* Phase 3.6b D3：漫画的「国家/地区」筛选已移除（上游无 country 字段，platform 过滤被实测证伪） */}
+                {/* Phase 3.6b D5：漫画的「格式」筛选已移除（meta_tags 对书籍分区恒 0，上游无能力） */}
                 {(params.type === "anime" || params.type === "novel") && <Select
                     leftAddon={<LuLeaf className={cn((params.season !== null && !!params.season) && "text-indigo-300 font-bold text-xl")} />}
                     placeholder={t("search.filter.season_all")} className="w-full"
@@ -215,24 +191,14 @@ export function AdvancedSearchOptions() {
                     })}
                     fieldLabelClass="hidden"
                 />
-                <Select
-                    leftAddon={
-                        <RiSignalTowerLine className={cn((params.status !== null && !!params.status.length) && "text-indigo-300 font-bold text-xl")} />}
-                    label={t("search.filter.status")} placeholder={t("search.filter.status_all")} className="w-full"
-                    options={ADVANCED_SEARCH_STATUS}
-                    value={params.status?.[0] || ""}
-                    onValueChange={v => setParams(draft => {
-                        draft.status = [v] as any
-                        return
-                    })}
-                    fieldLabelClass="hidden"
-                />
+                {/* Phase 3.6b D2：status 筛选已移除（上游静默忽略该字段） */}
                 <Select
                     leftAddon={<FaRegStar className={cn((params.minScore !== null && !!params.minScore) && "text-indigo-300 font-bold text-xl")} />}
                     placeholder={t("search.filter.score_all")} className="w-full"
-                    options={[...Array(9)].map((v, idx) => 9 - idx).map(score => ({
+                    // Phase 3.6b D6：与后端一致按 0–100 下发（后端 ÷10 后拼 rating 过滤）
+                    options={[...Array(10)].map((v, idx) => (idx + 1) * 10).map(score => ({
                         value: String(score),
-                        label: String(score),
+                        label: `≥ ${score}`,
                     }))}
                     value={params.minScore || ""}
                     onValueChange={v => setParams(draft => {

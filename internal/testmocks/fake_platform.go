@@ -40,6 +40,7 @@ type FakePlatform struct {
 	viewerStatsCalls            int
 	updateEntryCalls            []FakeUpdateEntryCall
 	updateEntryProgressCalls    []FakeUpdateEntryProgressCall
+	bangumiClient               *bangumi.Client
 }
 
 type FakeUpdateEntryCall struct {
@@ -119,6 +120,13 @@ func (b *FakePlatformBuilder) WithViewerStats(stats *media.ViewerStats) *FakePla
 
 func (b *FakePlatformBuilder) WithUpdateEntryProgressError(err error) *FakePlatformBuilder {
 	b.platform.updateEntryProgressErr = err
+	return b
+}
+
+// WithBangumiClient 注入 Bangumi client，使 handler 测试可经 httptest 观察到
+// 真实的出站通路（legacy vs v0）。不注入时 GetBangumiClient() 返回 nil。
+func (b *FakePlatformBuilder) WithBangumiClient(client *bangumi.Client) *FakePlatformBuilder {
+	b.platform.bangumiClient = client
 	return b
 }
 
@@ -285,7 +293,7 @@ func (f *FakePlatform) GetStudioDetails(context.Context, int) (*media.StudioDeta
 
 // GetBangumiClient 返回 Bangumi client（FakePlatform 默认无 client，测试按需注入）。
 func (f *FakePlatform) GetBangumiClient() *bangumi.Client {
-	return nil
+	return f.bangumiClient
 }
 
 func (f *FakePlatform) RefreshAnimeCollection(context.Context) (*media.AnimeCollection, error) {

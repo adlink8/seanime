@@ -11,6 +11,10 @@ import (
 type SearchFilter struct {
 	Type []int    `json:"type,omitempty"` // 条目类型：1书籍 2动画 3音乐 4游戏 6三次元
 	Tag  []string `json:"tag,omitempty"`  // 标签过滤（如 "ASMR"）
+	// MetaTags 形式过滤。实测地面真值（2026-09-13，POST /v0/search/subjects）：
+	// 仅 type=2（动画）且仅 `TV` / `WEB` / `OVA` 三个值有效；
+	// `Movie`/`剧场版`/`原创`/`漫画改` 恒 total=0；type=1（书籍）恒 0。
+	MetaTags []string `json:"meta_tags,omitempty"`
 	// Nsfw 三态：nil 不过滤；true 只返回 R18（音声域依赖此项）；false 排除 R18
 	Nsfw *bool `json:"nsfw,omitempty"`
 	// AirDate 放送/发售日期区间过滤。
@@ -54,8 +58,8 @@ func (c *Client) SearchSubjects(ctx context.Context, opts SearchSubjectsOpts) (*
 	}
 
 	var filter *SearchFilter
-	if len(opts.Filter.Type) > 0 || len(opts.Filter.Tag) > 0 || opts.Filter.Nsfw != nil ||
-		len(opts.Filter.AirDate) > 0 || len(opts.Filter.Rating) > 0 {
+	if len(opts.Filter.Type) > 0 || len(opts.Filter.Tag) > 0 || len(opts.Filter.MetaTags) > 0 ||
+		opts.Filter.Nsfw != nil || len(opts.Filter.AirDate) > 0 || len(opts.Filter.Rating) > 0 {
 		filter = &opts.Filter
 	}
 

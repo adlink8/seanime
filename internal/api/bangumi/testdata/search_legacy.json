@@ -1,0 +1,57 @@
+{
+  "results": 127,
+  "list": [
+    {
+      "id": 486,
+      "type": 2,
+      "name": "進撃の巨人",
+      "name_cn": "进击的巨人",
+      "images": {
+        "large": "https://lain.bgm.tv/pic/cover/l/48/60/486_X6d1g.jpg",
+        "common": "https://lain.bgm.tv/pic/cover/c/48/60/486_X6d1g.jpg",
+        "medium": "https://lain.bgm.tv/pic/cover/m/48/60/486_X6d1g.jpg",
+        "small": "https://lain.bgm.tv/pic/cover/s/48/60/486_X6d1g.jpg",
+        "grid": "https://lain.bgm.tv/pic/cover/g/48/60/486_X6d1g.jpg"
+      },
+      "rating": {
+        "total": 12000,
+        "count": {
+          "8": 3000,
+          "9": 2500
+        },
+        "score": 8.2
+      },
+      "air_date": "2013-04-06",
+      "eps": 25,
+      "rank": 12,
+      "summary": "人类与巨人的战斗。",
+      "collection": {
+        "wish": 1000,
+        "collect": 8000
+      }
+    },
+    {
+      "id": 276764,
+      "type": 1,
+      "name": "進撃の巨人",
+      "name_cn": "进击的巨人",
+      "images": {
+        "large": "https://lain.bgm.tv/pic/cover/l/ab/cd/276764_abc.jpg",
+        "common": "https://lain.bgm.tv/pic/cover/c/ab/cd/276764_abc.jpg",
+        "medium": "https://lain.bgm.tv/pic/cover/m/ab/cd/276764_abc.jpg",
+        "small": "https://lain.bgm.tv/pic/cover/s/ab/cd/276764_abc.jpg",
+        "grid": "https://lain.bgm.tv/pic/cover/g/ab/cd/276764_abc.jpg"
+      },
+      "rating": {
+        "total": 300,
+        "count": {},
+        "score": 7.1
+      },
+      "air_date": "2015-09-09",
+      "eps": 4,
+      "rank": 0,
+      "summary": "",
+      "collection": {}
+    }
+  ]
+}

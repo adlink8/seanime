@@ -13,7 +13,7 @@ export const searchDictionary = {
     "search.filter.tags_empty": "未找到标签", // src/app/(main)/search/_components/advanced-search-options.tsx
     "search.filter.country": "国家/地区", // src/app/(main)/search/_components/advanced-search-options.tsx
     "search.filter.country_all": "全部国家/地区", // src/app/(main)/search/_components/advanced-search-options.tsx
-    "search.filter.score_all": "全部评分", // src/app/(main)/search/_components/advanced-search-options.tsx
+    "search.filter.score_all": "不限评分 (0–100)", // src/app/(main)/search/_components/advanced-search-options.tsx（Phase 3.6b D6：评分下限改 0–100 刻度）
     "search.filter.title_placeholder": "搜索标题...", // src/app/(main)/search/_components/advanced-search-options.tsx
     "search.filter.tags": "标签", // src/app/(main)/search/_components/advanced-search-options.tsx
     "search.filter.tags_all": "全部标签", // src/app/(main)/search/_components/advanced-search-options.tsx

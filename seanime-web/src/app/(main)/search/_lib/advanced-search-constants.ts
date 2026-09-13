@@ -1,4 +1,4 @@
-import { AL_MediaFormat } from "@/api/generated/types"
+import type { AL_MediaFormat } from "@/api/generated/types"
 
 export const ADVANCED_SEARCH_MEDIA_GENRES = [
     "Action",
@@ -69,6 +69,18 @@ export const ADVANCED_SEARCH_FORMATS: { value: AL_MediaFormat, label: string }[]
     { value: "SPECIAL", label: "特别篇 (Special)" },
 ]
 
+/**
+ * 高级搜索页的动画格式选项（契约 3.6b §1 D4 / §0.2）。
+ * 上游 `meta_tags` 仅有 TV / WEB / OVA 三个值有效（ONA → WEB），
+ * 故 MOVIE / TV_SHORT / SPECIAL 不再出现在搜索页。
+ * 注意：给本地媒体库用的 `ADVANCED_SEARCH_FORMATS`（含 MOVIE 等）保持不变。
+ */
+export const ADVANCED_SEARCH_FORMATS_ANIME: { value: AL_MediaFormat, label: string }[] = [
+    { value: "TV", label: "TV 动画" },
+    { value: "ONA", label: "网络动画 (ONA)" },
+    { value: "OVA", label: "原创录像 (OVA)" },
+]
+
 export const ADVANCED_SEARCH_FORMATS_MANGA: { value: AL_MediaFormat, label: string }[] = [
     { value: "MANGA", label: "连载漫画" },
     { value: "ONE_SHOT", label: "短篇单行本 (One Shot)" },
@@ -90,20 +102,18 @@ export const ADVANCED_SEARCH_STATUS = [
     { value: "CANCELLED", label: "已取消" },
 ]
 
+// 契约 3.6b §1 D7：上游仅支持 heat / rank / score（+ 关键词非空时的 match），
+// 故 START_DATE_DESC / EPISODES_DESC / CHAPTERS_DESC 不再作为选项。
 export const ADVANCED_SEARCH_SORTING = [
     { value: "TRENDING_DESC", label: "趋势热度" },
-    { value: "START_DATE_DESC", label: "播出日期" },
-    { value: "SCORE_DESC", label: "最高评分" },
     { value: "POPULARITY_DESC", label: "最受欢迎" },
-    { value: "EPISODES_DESC", label: "集数最多" },
+    { value: "SCORE_DESC", label: "最高评分" },
 ]
 
 export const ADVANCED_SEARCH_SORTING_MANGA = [
     { value: "TRENDING_DESC", label: "趋势热度" },
-    { value: "START_DATE_DESC", label: "发布日期" },
-    { value: "SCORE_DESC", label: "最高评分" },
     { value: "POPULARITY_DESC", label: "最受欢迎" },
-    { value: "CHAPTERS_DESC", label: "话数最多" },
+    { value: "SCORE_DESC", label: "最高评分" },
 ]
 
 export const ADVANCED_SEARCH_TYPE = [

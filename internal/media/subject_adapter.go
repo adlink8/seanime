@@ -122,6 +122,38 @@ func MangaFromSubject(s *Subject) *Manga {
 	return m
 }
 
+// MangaSubjectAsListAnime 将书籍条目（type=1）转换为「书籍语义」的 media.Anime，
+// 供 list-novel 响应使用（响应类型仍是 media.ListAnime，JSON 字段名不变，只改字段值）。
+//
+// 依据 03.6b-CONTRACT.md §4 / D9：书籍条目必须输出 `Type = MANGA`、
+// `Format ∈ {NOVEL, BOOK}`（platform=小说 → NOVEL，其余 → BOOK）。
+// 修复前 list-novel 误用 AnimeFromSubject（硬编码 Type=ANIME + 动画 format 推导），
+// 输出 `type:"ANIME"` + `format:"TV"`（契约 §0.5）。
+//
+// 推导复用 MangaFromSubject（其 mangaFormatFromSubject 已覆盖
+// platform=小说/轻小说/Novel/Light 与 tag=小说/轻小说 → NOVEL），
+// 但把非 NOVEL 的结果一律降级为 BOOK：list-novel 是书籍列表，
+// 语义上不应产出 MANGA（漫画条目不会经该端点返回）。
+func MangaSubjectAsListAnime(s *Subject) *Anime {
+	m := MangaFromSubject(s)
+	if m == nil {
+		return nil
+	}
+	a := AnimeFromSubject(s)
+	if a == nil {
+		return nil
+	}
+
+	a.Type = mediaTypePtrOf(MediaTypeManga)
+	format := MediaFormatBook
+	if m.Format != nil && *m.Format == MediaFormatNovel {
+		format = MediaFormatNovel
+	}
+	a.Format = &format
+
+	return a
+}
+
 // titleFromSubject 标题映射：
 //   - English  = subject.Name（Bangumi 无英文名字段，保证下游 GetTitleSafe 等逻辑可用）
 //   - Native   = subject.Name

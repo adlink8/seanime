@@ -2408,13 +2408,15 @@ func GetSeasonInfo(now time.Time, kind GetSeasonKind) (MediaSeason, int) {
 	return seasons[index], year
 }
 
-// ListAnimeCacheKey / ListMangaCacheKey 照搬 anilist/list.go（离线缓存键）
+// ListAnimeCacheKey / ListMangaCacheKey 照搬 anilist/list.go（离线缓存键）。
+//
+// 注意：契约 03.6b D2/D3 已从 handler 的请求体与消费路径中删除 `status` 与
+// `countryOfOrigin`（上游无对应能力），故本函数不再接收这两项。
 func ListAnimeCacheKey(
 	Page *int,
 	Search *string,
 	PerPage *int,
 	Sort []*MediaSort,
-	Status []*MediaStatus,
 	Genres []*string,
 	Tags []*string,
 	AverageScoreGreater *int,
@@ -2422,7 +2424,6 @@ func ListAnimeCacheKey(
 	SeasonYear *int,
 	Format *MediaFormat,
 	IsAdult *bool,
-	CountryOfOrigin *string,
 ) string {
 	key := "ListAnime"
 	if Page != nil {
@@ -2436,9 +2437,6 @@ func ListAnimeCacheKey(
 	}
 	if Sort != nil {
 		key += fmt.Sprintf("_%v", Sort)
-	}
-	if Status != nil {
-		key += fmt.Sprintf("_%v", Status)
 	}
 	if Genres != nil {
 		key += fmt.Sprintf("_%v", Genres)
@@ -2461,9 +2459,6 @@ func ListAnimeCacheKey(
 	if IsAdult != nil {
 		key += fmt.Sprintf("_%t", *IsAdult)
 	}
-	if CountryOfOrigin != nil {
-		key += fmt.Sprintf("_%s", *CountryOfOrigin)
-	}
 	return key
 }
 
@@ -2472,14 +2467,12 @@ func ListMangaCacheKey(
 	Search *string,
 	PerPage *int,
 	Sort []*MediaSort,
-	Status []*MediaStatus,
 	Genres []*string,
 	Tags []*string,
 	AverageScoreGreater *int,
 	Season *MediaSeason,
 	SeasonYear *int,
 	Format *MediaFormat,
-	CountryOfOrigin *string,
 	IsAdult *bool,
 ) string {
 	key := "ListManga"
@@ -2494,9 +2487,6 @@ func ListMangaCacheKey(
 	}
 	if Sort != nil {
 		key += fmt.Sprintf("_%v", Sort)
-	}
-	if Status != nil {
-		key += fmt.Sprintf("_%v", Status)
 	}
 	if Genres != nil {
 		key += fmt.Sprintf("_%v", Genres)
@@ -2515,9 +2505,6 @@ func ListMangaCacheKey(
 	}
 	if Format != nil {
 		key += fmt.Sprintf("_%s", *Format)
-	}
-	if CountryOfOrigin != nil {
-		key += fmt.Sprintf("_%s", *CountryOfOrigin)
 	}
 	if IsAdult != nil {
 		key += fmt.Sprintf("_%t", *IsAdult)

@@ -72,6 +72,51 @@ func SubjectToMedia(s *Subject) *media.Subject {
 	return out
 }
 
+// LegacySubjectToMedia 将 legacy 检索条目（GET /search/subject/{kw}）转换为 media.Subject 镜像结构。
+//
+// 与 SubjectToMedia 的差异来自契约 §0.1 的实测地面真值：
+//   - legacy 条目**没有 `platform` 字段** → Platform 恒为空
+//     （故走它推导的 format 只能落到动画 `TV` / 书籍 `BOOK` 兜底值）；
+//   - legacy 条目**没有 `tags` 字段** → Tags 恒为空
+//     （故 tag / meta_tags 筛选在 legacy 通路无法本地生效，见 handlers 侧降级注释）；
+//   - 日期字段名为 `air_date`（v0 为 `date`），映射进 media.Subject.Date。
+func LegacySubjectToMedia(s *LegacySubject) *media.Subject {
+	if s == nil {
+		return nil
+	}
+
+	out := &media.Subject{
+		ID:      s.ID,
+		Type:    s.Type,
+		Name:    s.Name,
+		NameCN:  s.NameCN,
+		Summary: s.Summary,
+		Date:    s.AirDate,
+		Eps:     s.Eps,
+		// Platform / Tags / NSFW：legacy 响应无对应字段，保持零值（不猜测）。
+	}
+
+	if s.Images != (SubjectImages{}) {
+		out.Images = &media.SubjectImages{
+			Large:  s.Images.Large,
+			Common: s.Images.Common,
+			Medium: s.Images.Medium,
+			Small:  s.Images.Small,
+			Grid:   s.Images.Grid,
+		}
+	}
+	if s.Rating != nil {
+		out.Rating = &media.SubjectRating{
+			Rank:  s.Rating.Rank,
+			Total: s.Rating.Total,
+			Score: s.Rating.Score,
+			Count: s.Rating.Count,
+		}
+	}
+
+	return out
+}
+
 // ListStatusFromBangumiType Bangumi 收藏状态枚举 → media.MediaListStatus。
 // 未知值返回 nil（保守：不猜测）。
 func ListStatusFromBangumiType(t int) *media.MediaListStatus {

@@ -3,6 +3,8 @@ logs/
 testdata/
 !internal/api/asmr/testdata/
 !internal/api/asmr/testdata/*
+!internal/api/bangumi/testdata/
+!internal/api/bangumi/testdata/*
 .DS_Store
 .git
 
