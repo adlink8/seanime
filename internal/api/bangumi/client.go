@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -50,6 +51,15 @@ type Client struct {
 	limiter        *tickerLimiter
 	retryBaseDelay time.Duration
 	maxRetries     int
+
+	// platformCache 是「条目 id → platform」的**进程内内存缓存**（Phase 3.7 A2-1）。
+	// 作用域为 Client 实例（随 Client 生命周期），不是包级全局变量——
+	// 测试里 new 一个 Client 即天然隔离，不会跨用例互相污染。
+	// platform 是不可变的上游属性（作品平台不会变），缓存代价与风险极低。
+	// 生产 client 未传 WithFileCache（见 internal/core/app.go），故必须有这层内存缓存，
+	// 否则每次搜索都要对同一批 id 重复补查。
+	platformMu    sync.Mutex
+	platformCache map[int]string
 }
 
 type options struct {
@@ -157,6 +167,8 @@ func New(token string, opts ...Option) *Client {
 		limiter:        newTickerLimiter(o.throttleInterval),
 		retryBaseDelay: o.retryBaseDelay,
 		maxRetries:     maxRetries,
+		// 预初始化，避免 GetSubjectPlatforms 对 nil map 写入 panic
+		platformCache: make(map[int]string),
 	}
 }
 
@@ -177,6 +189,13 @@ func (c *Client) GetMe(ctx context.Context) (*User, error) {
 
 // doGet 发送 GET 请求，带缓存层（命中则不触网）。
 func (c *Client) doGet(ctx context.Context, path string, query url.Values, out any) error {
+	return c.doGetWithThrottle(ctx, path, query, out, true)
+}
+
+// doGetWithThrottle 是 doGet 的「节流开关」内部版本。
+// throttle=false 仅供 platform 补查专用通路使用（见 subjects.go 的 fetchSubjectForPlatform），
+// 其余所有调用方一律 throttle=true，行为与既有 doGet 完全一致。
+func (c *Client) doGetWithThrottle(ctx context.Context, path string, query url.Values, out any, throttle bool) error {
 	key := c.cacheKey(http.MethodGet, path, query)
 	if c.cache != nil {
 		var cached string
@@ -186,7 +205,7 @@ func (c *Client) doGet(ctx context.Context, path string, query url.Values, out a
 		}
 	}
 
-	respBody, err := c.doRequest(ctx, http.MethodGet, path, query, nil)
+	respBody, err := c.doRequestWithThrottle(ctx, http.MethodGet, path, query, nil, throttle)
 	if err != nil {
 		return err
 	}
@@ -222,15 +241,30 @@ func (c *Client) doWrite(ctx context.Context, method, path string, query url.Val
 
 // doRequest 核心请求管道：节流 -> 发送 -> 429 退避重试（<=3 次）。
 func (c *Client) doRequest(ctx context.Context, method, path string, query url.Values, body []byte) ([]byte, error) {
+	return c.doRequestWithThrottle(ctx, method, path, query, body, true)
+}
+
+// doRequestWithThrottle 是 doRequest 的「节流开关」内部版本。
+//
+// throttle=false 的唯一使用者是 platform 补查（GetSubjectPlatforms → fetchSubjectForPlatform）。
+// 允许它不等待共享 ticker 的依据：.planning/codebase/BANGUMI-API-RECON.md:25 记录
+// 「OpenAPI 规范无任何 rate limit 头/说明」——500ms 是客户端保守自选值，不是上游硬要求；
+// 一次搜索要补查 20~60+ 个 id，串行经共享 ticker 需 10~30s，用户不可接受。
+// **注意**：绕过的只是「等待令牌」这一步；429 退避重试（Retry-After / 指数退避）
+// 与其余错误处理、并发上限（调用方 platformLookupConcurrency=4）一律保留。
+func (c *Client) doRequestWithThrottle(ctx context.Context, method, path string, query url.Values, body []byte, throttle bool) ([]byte, error) {
 	u := c.baseURL.JoinPath(path)
 	if len(query) > 0 {
 		u.RawQuery = query.Encode()
 	}
 
 	for attempt := 0; ; attempt++ {
-		// 节流：每个请求（含重试）都先等一个令牌
-		if err := c.limiter.wait(ctx); err != nil {
-			return nil, err
+		// 节流：每个请求（含重试）都先等一个令牌。
+		// platform 补查通路跳过此步（throttle=false），退避仍由下方 429 分支保证。
+		if throttle {
+			if err := c.limiter.wait(ctx); err != nil {
+				return nil, err
+			}
 		}
 
 		var req *http.Request

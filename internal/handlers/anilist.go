@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -368,6 +369,14 @@ func useLegacySearch(keyword string) bool {
 // 请求更大值会被静默钳到 20；若 offset 仍按前端 perPage(48) 步进就会漏条目。
 const serverPageLimit = 20
 
+// legacyBookUpstreamStep 书籍分区（type=1）legacy 检索的分页步长
+// （契约 03.7 §1 A3：上游 start 从 (page-1)*20 起，步长 20）。
+const legacyBookUpstreamStep = serverPageLimit
+
+// legacyBookMaxUpstreamCalls 单次前端请求允许的上游检索次数上限（契约 03.7 §1 A3：
+// 上限 10 次 ≈ 200 条上游条目，超出即停并把 hasNextPage 置真，避免深页打爆上游）。
+const legacyBookMaxUpstreamCalls = 10
+
 // clampServerPageLimit 将请求的 perPage 收敛到服务端硬上限内。
 // 契约 D8：perPage 固定 20。
 func clampServerPageLimit(perPage int) int {
@@ -375,6 +384,35 @@ func clampServerPageLimit(perPage int) int {
 		return serverPageLimit
 	}
 	return perPage
+}
+
+// isNovelPlatform 判定 platform 是否属于「轻小说」（契约 03.7 §1 A2 / D2）。
+// 比较去首尾空白且大小写不敏感：上游可能返回 `Web` / `web`（契约 §0.1 与
+// adapter.go 的 `Web` 写法），而规范值为 `WEB`。
+// 仅接受 {小说, WEB} 两个字面值——`轻小说` 不是 Bangumi 的 platform 取值，
+// 故不额外收编（避免把漫画分区的条目误判成小说）。
+func isNovelPlatform(platform string) bool {
+	switch strings.ToLower(strings.TrimSpace(platform)) {
+	case "小说", "web":
+		return true
+	}
+	return false
+}
+
+// keepPlatformFor 判定某条目是否属于目标通路（契约 03.7 §1 A2 / D2 双向分流）。
+//
+//	novel=true （轻小说 tab）：保留 platform ∈ {小说, WEB}
+//	novel=false（漫画 tab）  ：保留其余（含空 platform）
+//
+// D4：platform 缺失（空串 / 详情查询失败）归入**漫画**、不归入轻小说——
+// 宁可在漫画 tab 多留，也不要在轻小说 tab 误收非小说。
+// 故 novel=false 分支对空串返回 true（保留），novel=true 分支对空串返回 false（排除）。
+func keepPlatformFor(novel bool, platform string) bool {
+	isNovel := isNovelPlatform(platform)
+	if novel {
+		return isNovel
+	}
+	return !isNovel
 }
 
 // legacySubjectsToAnime 将 legacy 检索条目映射为 media.Anime。
@@ -388,12 +426,30 @@ func legacySubjectsToAnime(list []bangumi.LegacySubject) []*media.Anime {
 	return out
 }
 
+// legacySubjectIDs 提取 legacy 条目的 id 列表（供 A1 批量补查 platform）。
+func legacySubjectIDs(list []bangumi.LegacySubject) []int {
+	ids := make([]int, 0, len(list))
+	for i := range list {
+		ids = append(ids, list[i].ID)
+	}
+	return ids
+}
+
 // legacySubjectsToManga 将 legacy 检索条目映射为 media.Manga。
-func legacySubjectsToManga(list []bangumi.LegacySubject) []*media.Manga {
+//
+// platforms 为 A1 补查到的 id → platform（契约 03.7 §1 A1/A4）：legacy 条目本身
+// **没有 platform 字段**（契约 §0.1），这里只把补查结果**写回 media.Subject** 再交给
+// 既有适配函数，条目其余字段仍全部来自 legacy 映射（A4）。
+// 未解析到（空串）时 Format 落到 BOOK 兜底——该条目按 D4 仍留在漫画通路。
+func legacySubjectsToManga(list []bangumi.LegacySubject, platforms map[int]string) []*media.Manga {
 	out := make([]*media.Manga, 0, len(list))
 	for i := range list {
-		if m := media.MangaFromSubject(bangumi.LegacySubjectToMedia(&list[i])); m != nil {
-			out = append(out, m)
+		m := bangumi.LegacySubjectToMedia(&list[i])
+		if m != nil {
+			m.Platform = platforms[list[i].ID] // A4：写回 platform，驱动 Format 推导
+		}
+		if mm := media.MangaFromSubject(m); mm != nil {
+			out = append(out, mm)
 		}
 	}
 	return out
@@ -403,12 +459,19 @@ func legacySubjectsToManga(list []bangumi.LegacySubject) []*media.Manga {
 // 供 list-novel 响应使用（响应类型仍是 media.ListAnime，JSON 字段名不变，只改字段值）。
 //
 // 复用 MangaSubjectAsListAnime 保证 Type=MANGA + Format ∈ {NOVEL, BOOK}（契约 §4 / D9）。
-// 注意：legacy 条目**无 platform**（契约 §0.1），MangaSubjectAsListAnime 因此恒落 BOOK；
-// 这是上游能力缺口而非映射 bug（见 HandleAnilistListNovel 的降级注释）。
-func legacySubjectsToListAnime(list []bangumi.LegacySubject) []*media.Anime {
+// platforms 为 A1 补查到的 id → platform（契约 03.7 §1 A1/A4）：
+// legacy 条目本身**没有 platform 字段**（契约 §0.1），这里只把补查到的 platform
+// **写回 media.Subject** 再交给既有适配函数，条目其余字段仍全部来自 legacy 映射
+// （A4：不改成用 v0 Subject 数据替换条目内容）。
+// 未解析到（空串）时 Format 落到 BOOK 兜底——按 D4 该条目本就不会出现在 novel 通路。
+func legacySubjectsToListAnime(list []bangumi.LegacySubject, platforms map[int]string) []*media.Anime {
 	out := make([]*media.Anime, 0, len(list))
 	for i := range list {
-		if a := media.MangaSubjectAsListAnime(bangumi.LegacySubjectToMedia(&list[i])); a != nil {
+		m := bangumi.LegacySubjectToMedia(&list[i])
+		if m != nil {
+			m.Platform = platforms[list[i].ID] // A4：写回 platform，驱动 Format 推导
+		}
+		if a := media.MangaSubjectAsListAnime(m); a != nil {
 			out = append(out, a)
 		}
 	}
@@ -764,12 +827,119 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 	return h.RespondWithData(c, ret)
 }
 
+// legacyBookFilter 书籍分区（type=1）legacy 通路的 platform 分流参数（契约 03.7 §1 A2）。
+type legacyBookFilter struct {
+	// novel=true → 保留 platform ∈ {小说, WEB}（轻小说 tab）；
+	// novel=false → 保留其余（漫画 tab，含空 platform，见 D4）。
+	novel bool
+	// 本地过滤 / 本地排序沿用契约 §2 通路 1 的既有实现（legacy 无 filter / sort 参数）
+	averageScoreGreater *int
+	season              *media.MediaSeason
+	seasonYear          *int
+	sorts               []*media.MediaSort
+}
+
+// legacyBookPage legacy 书籍检索 + platform 分流后的分页结果。
+type legacyBookPage struct {
+	subjects    []bangumi.LegacySubject // 本页窗口内的条目（已 platform 分流、已本地排序）
+	platforms   map[int]string          // A1 补查结果（id → platform），供 A4 写回 media.Subject
+	hasNextPage bool
+	total       int
+	perPage     int // 实际生效的每页条数（供调用方回填 PageInfo.PerPage，响应形状不变）
+}
+
+// fetchLegacyBookPage 执行「legacy 检索 → 补查 platform → 双向分流 → over-fetch 补足」，
+// 返回第 page 页。契约 03.7 §1 A1/A2/A3 落地。
+//
+// A3 算法：上游 start 从 (page-1)*20 起、步长 20 逐页取；每页取回后补查 platform → 分流 → 累积；
+// 停止条件（任一）：累积数 >= page*perPage / 上游耗尽 / 上游请求次数达上限 10。
+//
+// 坐标说明（A3 步骤 4 的窗口换算）：累积序列从上游 start=(page-1)*20 开始，
+// 而 perPage 被钳到 20（== A3 的步长），故契约里的全局窗口
+// [(page-1)*perPage, page*perPage) 换算到该累积序列即 [0, perPage)；
+// 同理步骤 5 的 `累积数 > page*perPage` 在此坐标下即 `累积数 > perPage`。
+func fetchLegacyBookPage(ctx context.Context, client *bangumi.Client, keyword string, page, perPage int, f legacyBookFilter) (*legacyBookPage, error) {
+	if page < 1 {
+		// 非法页码（前端理论上不发送）：按第 1 页处理，避免负 start 触发上游异常语义
+		page = 1
+	}
+	// A3 的步长恒为 20，窗口/目标条数也只在此口径下自洽（契约 D8：perPage 固定 20）。
+	perPage = clampServerPageLimit(perPage)
+	firstStart := (page - 1) * legacyBookUpstreamStep
+	target := page * perPage // A3 停止条件 1
+
+	var (
+		accumulated = make([]bangumi.LegacySubject, 0, perPage)
+		platforms   = make(map[int]string)
+		total       = 0
+		exhausted   = false
+	)
+
+	for upstreamCalls := 0; len(accumulated) < target && !exhausted && upstreamCalls < legacyBookMaxUpstreamCalls; upstreamCalls++ {
+		start := firstStart + upstreamCalls*legacyBookUpstreamStep
+		res, err := client.SearchSubjectsLegacy(ctx, keyword, bangumi.SubjectBook, start, legacyBookUpstreamStep)
+		if err != nil {
+			if upstreamCalls == 0 {
+				return nil, err // 首页失败：无任何内容可返回，如实报错
+			}
+			// 后续页失败：降级为返回已累积部分（不静默忽略——此处即降级点）。
+			// 上游为 legacy 端点且 `max_results` 本非严格保证（契约 §0.1），
+			// 深层补页失败时宁可少给条目也不让整次检索失败。
+			break
+		}
+		total = res.Results
+
+		// 本地过滤（评分下限 + 年份/季度，契约 §2 通路 1）。
+		filtered := filterLegacySubjects(res.List, f.averageScoreGreater, f.season, f.seasonYear)
+
+		// A1：批量解析 platform（失败 → 空串，按 D4 归漫画，不中断整次检索）。
+		resolved := client.GetSubjectPlatforms(ctx, legacySubjectIDs(filtered))
+		for id, p := range resolved {
+			platforms[id] = p
+		}
+
+		// A2：按 platform 双向分流后累积。
+		for i := range filtered {
+			if keepPlatformFor(f.novel, resolved[filtered[i].ID]) {
+				accumulated = append(accumulated, filtered[i])
+			}
+		}
+
+		// A3 停止条件 2：上游耗尽（本页不足一页，或已越过命中总数）。
+		if len(res.List) < legacyBookUpstreamStep || start+legacyBookUpstreamStep >= res.Results {
+			exhausted = true
+		}
+	}
+
+	// A3 步骤 4：本页窗口（换算见函数头注释）。
+	windowEnd := perPage
+	if windowEnd > len(accumulated) {
+		windowEnd = len(accumulated)
+	}
+	window := accumulated[:windowEnd]
+
+	// 本地排序只作用于本页窗口（legacy 无 sort 参数，契约 §2 通路 1）。
+	sortLegacySubjects(window, f.sorts)
+
+	// A3 步骤 5：累积数超出本页窗口 → 还有下一页；或上游尚未耗尽。
+	hasNextPage := len(accumulated) > perPage || !exhausted
+
+	return &legacyBookPage{
+		subjects:    window,
+		platforms:   platforms,
+		hasNextPage: hasNextPage,
+		total:       total,
+		perPage:     perPage,
+	}, nil
+}
+
 // HandleAnilistListNovel
 //
 //	@summary returns a list of novels (轻小说) based on the search parameters.
-//	@desc Bangumi 锚点下没有独立的轻小说分类，内部走契约 §2 双通路（type=1 书籍分区）：
+//	@desc Bangumi 锚点下没有独立的轻小说分类，内部走契约 03.6b §2 双通路（type=1 书籍分区）：
 //	@desc 关键词非空 → legacy 检索（`GET /search/subject/{kw}?type=1`，CJK 唯一可行通路），
-//	@desc   本地过滤评分/年份并本地排序；legacy 无 platform 字段 → platform 过滤降级忽略（能力缺口）。
+//	@desc   对命中 id 补查 v0 详情拿 platform（03.7 §1 A1），再按 platform ∈ {"小说","WEB"} 分流（D2），
+//	@desc   并按 03.7 §1 A3 over-fetch 补足条数（platform 缺失者按 D4 归漫画，本通路排除）。
 //	@desc 关键词为空 → v0 `POST /v0/search/subjects`（type=1），再按条目 platform ∈ {"小说","WEB"} 过滤。
 //	@desc 分页采用 over-fetch 近似：v0 通路每次请求 limit=perPage*3、offset=(page-1)*perPage*3，
 //	@desc 过滤后不足 perPage 如实返回，超出截断。平台过滤会使 total 偏大（total 为书籍总数），
@@ -831,44 +1001,33 @@ func (h *Handler) HandleAnilistListNovel(c echo.Context) error {
 	// 契约 §2 D1 双通路：关键词非空 → legacy（v0 对 CJK 关键词恒 total=0，见 §0.1）。
 	// 轻小说搜索框输入中文标题（如「龙族」）此前恒空，根因即缺这一分支。
 	//
-	// ⚠ 明确降级（禁止静默忽略，契约 §2 通路 1 末条）：
-	// legacy 检索条目**不含 platform 字段**（契约 §0.1 实测地面真值；编排层进一步实测
-	// `responseGroup=large` 也只多出 `vols_count` 等字段，**仍无 platform**）。
-	// 因此 v0 通路那道「platform ∈ {小说,WEB}」过滤在 legacy 通路**无法本地执行**：
-	// 上游既无 filter 参数，返回体里也没有可作判据的字段。这属于**上游能力缺口而非疏漏**，
-	// 处理方式为**降级忽略**——绝不因拿不到 platform 就丢弃条目（否则中文轻小说搜索照旧全空）。
-	// 本地过滤/排序仍按契约 §2 与 anime/manga 通路一致：评分下限(0–10) + 年份/季度
-	// 可按条目 rating.score / air_date 本地生效，tag 与 platform 则降级忽略。
+	// 契约 03.7 §1 A1/A2（D2/D4）：legacy 条目**不含 platform 字段**（§0.1 实测地面真值），
+	// 故对命中 id 补查 v0 详情读 platform，再按 platform ∈ {"小说","WEB"} 过滤；
+	// 解析失败/空 platform 按 D4 归入漫画（即本通路排除），绝不丢弃整次检索。
+	// 明确降级（禁止静默忽略）：tag 在 legacy 通路仍无法本地过滤（legacy 返回体无 tags
+	// 字段，契约 §0.1），故 p.Tags / p.Genres 在此降级为忽略——上游能力缺口，非遗漏。
 	//
 	// 契约 §2 分页补偿：legacy `max_results` 非严格保证（请求 20 可能只回 17），
-	// 此处「照实返回并在响应里如实反映条数」（不 over-fetch），
-	// hasNextPage 按过滤前实际返回条数计算，避免本地过滤使翻页游标错位。
+	// 且 platform 过滤会进一步削减条数，故按 03.7 §1 A3 做 over-fetch 补足（见 fetchLegacyBookPage）。
 	if useLegacySearch(keyword) {
-		legacyPerPage := clampServerPageLimit(perPage)
-		start := (page - 1) * legacyPerPage
-		res, err := client.SearchSubjectsLegacy(
-			c.Request().Context(),
-			strings.TrimSpace(keyword),
-			bangumi.SubjectBook, // 书籍分区（轻小说/漫画同区，契约 §4）
-			start,
-			legacyPerPage,
-		)
+		pg, err := fetchLegacyBookPage(c.Request().Context(), client, strings.TrimSpace(keyword), page, perPage, legacyBookFilter{
+			novel:               true,
+			averageScoreGreater: p.AverageScoreGreater,
+			season:              p.Season,
+			seasonYear:          p.SeasonYear,
+			sorts:               p.Sort,
+		})
 		if err != nil {
 			return h.RespondWithError(c, err)
 		}
 
-		// 本地过滤（评分下限 + 年份/季度）+ 本地排序（§2 通路 1）。
-		// platform 过滤在 legacy 通路降级忽略（见上方注释），故此处**不再**做 platform 判据。
-		filtered := filterLegacySubjects(res.List, p.AverageScoreGreater, p.Season, p.SeasonYear)
-		sortLegacySubjects(filtered, p.Sort)
-		mediaList := legacySubjectsToListAnime(filtered)
+		mediaList := legacySubjectsToListAnime(pg.subjects, pg.platforms)
 
-		hasNextPage := start+len(res.List) < res.Results
-		total := res.Results
-		pi := legacyPerPage
+		total := pg.total
+		pi := pg.perPage
 		ret := &media.ListAnime{Page: &media.ListAnime_Page{
 			Media:    mediaList,
-			PageInfo: &media.PageInfo{CurrentPage: &page, PerPage: &pi, Total: &total, HasNextPage: &hasNextPage},
+			PageInfo: &media.PageInfo{CurrentPage: &page, PerPage: &pi, Total: &total, HasNextPage: &pg.hasNextPage},
 		}}
 		anilistListNovelCache.SetT(cacheKey, ret, time.Minute*10)
 		return h.RespondWithData(c, ret)

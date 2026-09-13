@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -94,6 +95,14 @@ type requestRecorder struct {
 	query  url.Values
 	body   []byte
 	calls  int
+	// paths 记录全部请求路径（按到达顺序）。A3 的收敛性断言需要知道
+	// 上游被打了多少次 legacy 检索，只靠 last-request 快照无法区分。
+	paths []string
+	// legacyPath / legacyQuery 记录**首次** legacy 检索请求的快照。
+	// 3.7 起 legacy 通路会追加 v0 详情补查（platform），last-request 快照不再指向检索请求，
+	// 故单列一份 legacy 快照供「路由到 legacy」类断言使用。
+	legacyPath  string
+	legacyQuery url.Values
 }
 
 func (rr *requestRecorder) record(r *http.Request) {
@@ -108,6 +117,18 @@ func (rr *requestRecorder) record(r *http.Request) {
 	rr.query = r.URL.Query()
 	rr.body = body
 	rr.calls++
+	rr.paths = append(rr.paths, r.URL.Path)
+	if strings.HasPrefix(r.URL.Path, "/search/subject/") && rr.legacyPath == "" {
+		rr.legacyPath = r.URL.Path
+		rr.legacyQuery = r.URL.Query()
+	}
+}
+
+// legacySnapshot 返回首次 legacy 检索请求的路径与 query（无则空）。
+func (rr *requestRecorder) legacySnapshot() (path string, query url.Values) {
+	rr.mu.Lock()
+	defer rr.mu.Unlock()
+	return rr.legacyPath, rr.legacyQuery
 }
 
 func (rr *requestRecorder) snapshot() (method, path string, query url.Values) {
@@ -120,6 +141,19 @@ func (rr *requestRecorder) callCount() int {
 	rr.mu.Lock()
 	defer rr.mu.Unlock()
 	return rr.calls
+}
+
+// legacyCalls 返回打到 legacy 检索端点的请求次数（契约 A3 的收敛性断言用）。
+func (rr *requestRecorder) legacyCalls() int {
+	rr.mu.Lock()
+	defer rr.mu.Unlock()
+	n := 0
+	for _, p := range rr.paths {
+		if strings.HasPrefix(p, "/search/subject/") {
+			n++
+		}
+	}
+	return n
 }
 
 // lastV0Filter 解析最近一次 v0 请求体里的 filter 字段（不含时返回空 map）。
@@ -370,17 +404,22 @@ func postListManga(t *testing.T, client *bangumi.Client, body string) *httptest.
 }
 
 // TestHandleAnilistListManga_KeywordRoutesToLegacy 断言漫画分区（type=1）关键词非空 → legacy。
+//
+// 注：3.7 起 legacy 通路会追加 v0 详情补查 platform（§1 A1），故这里断言的是
+// **首次 legacy 检索请求**（rr.legacySnapshot）而非 last-request。
 func TestHandleAnilistListManga_KeywordRoutesToLegacy(t *testing.T) {
-	client, rr := newBangumiMockClient(t, func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte(`{"results":448,"list":[
-		  {"id":276764,"type":1,"name":"進撃の巨人","name_cn":"进击的巨人","air_date":"2015-09-09","eps":4,
-		   "rating":{"total":300,"count":{},"score":7.1}}
-		]}`))
-	})
+	// 21 条：第 1 页（前 20 条）为填充条目，目标条目落在第 2 页（start=20），
+	// 以便同时验证 start 分页公式。
+	items := make([]bookFixtureItem, 0, 21)
+	for i := 1; i <= 20; i++ {
+		items = append(items, bookFixtureItem{ID: i, NameCN: "填充", Platform: "小说"})
+	}
+	items = append(items, bookFixtureItem{ID: 276764, NameCN: "进击的巨人", Platform: "漫画", AirDate: "2015-09-09", Score: 7.1})
+	client, rr := newBookMockClient(t, items)
 
 	rec := postListManga(t, client, `{"search":"进击的巨人","page":2,"perPage":20}`)
 
-	_, path, query := rr.snapshot()
+	path, query := rr.legacySnapshot()
 	require.Equal(t, "/search/subject/进击的巨人", path, "漫画分区关键词非空必须走 legacy（契约 §2 通路 1）")
 	require.Equal(t, "1", query.Get("type"), "书籍分区 type=1")
 	require.Equal(t, "20", query.Get("start"), "page=2 → start=20（契约 §2）")
@@ -417,14 +456,14 @@ func TestHandleAnilistListManga_NoKeywordRoutesToV0(t *testing.T) {
 
 // TestHandleAnilistListManga_LegacyLocalYearAndRatingFilter 断言漫画 legacy 通路的本地过滤与排序。
 // 候选：(2015, 7.1) / (2015, 8.4) / (2016, 9.0)；阈值 80 保留后两条的年份 2015 里 8.4；
-// year=2015 丢弃 2016 条；SCORE_DESC → 8.4 在前。期望 [12, 11]。
+// year=2015 丢弃 2016 条；SCORE_DESC → 8.4 在前。期望 [12]。
+//
+// 注：3.7 起 platform 需经 v0 详情补查（§1 A1），故三条均标注 platform=漫画 以留在漫画通路。
 func TestHandleAnilistListManga_LegacyLocalYearAndRatingFilter(t *testing.T) {
-	client, _ := newBangumiMockClient(t, func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte(`{"results":3,"list":[
-		  {"id":11,"type":1,"name":"a","air_date":"2015-01-05","rating":{"total":10,"count":{},"score":7.1}},
-		  {"id":12,"type":1,"name":"b","air_date":"2015-06-05","rating":{"total":10,"count":{},"score":8.4}},
-		  {"id":13,"type":1,"name":"c","air_date":"2016-06-05","rating":{"total":10,"count":{},"score":9.0}}
-		]}`))
+	client, _ := newBookMockClient(t, []bookFixtureItem{
+		{ID: 11, NameCN: "a", Platform: "漫画", AirDate: "2015-01-05", Score: 7.1},
+		{ID: 12, NameCN: "b", Platform: "漫画", AirDate: "2015-06-05", Score: 8.4},
+		{ID: 13, NameCN: "c", Platform: "漫画", AirDate: "2016-06-05", Score: 9.0},
 	})
 
 	rec := postListManga(t, client, `{"search":"a","averageScore_greater":80,"year":2015,"sort":["SCORE_DESC"],"page":1,"perPage":20}`)
@@ -588,18 +627,22 @@ func postListNovel(t *testing.T, client *bangumi.Client, body string) *httptest.
 // TestHandleAnilistListNovel_KeywordRoutesToLegacy 断言轻小说分区关键词非空 → legacy
 // （契约 §2 D1）。v0 对 CJK 关键词恒 total=0，是「中文轻小说搜不到」的根因。
 // 若仍打 v0（本用例会看到 POST /v0/search/subjects），中文搜索必空。
+//
+// 注：3.7 起 legacy 通路会追加 v0 详情补查 platform（§1 A1），故这里断言的是
+// **首次 legacy 检索请求**（rr.legacySnapshot）而非 last-request。
 func TestHandleAnilistListNovel_KeywordRoutesToLegacy(t *testing.T) {
-	client, rr := newBangumiMockClient(t, func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte(`{"results":448,"list":[
-		  {"id":331401,"type":1,"name":"龍族","name_cn":"龙族","air_date":"2010-04-01","eps":10,
-		   "rating":{"total":120,"count":{},"score":8.0}}
-		]}`))
-	})
+	// 21 条：第 1 页（前 20 条）为填充条目，目标条目落在第 2 页（start=20），
+	// 以便同时验证 start 分页公式。
+	items := make([]bookFixtureItem, 0, 21)
+	for i := 1; i <= 20; i++ {
+		items = append(items, bookFixtureItem{ID: i, NameCN: "填充", Platform: "漫画"})
+	}
+	items = append(items, bookFixtureItem{ID: 331401, NameCN: "龙族", Platform: "小说", AirDate: "2010-04-01", Score: 8.0})
+	client, rr := newBookMockClient(t, items)
 
 	rec := postListNovel(t, client, `{"search":"龙族","page":2,"perPage":20}`)
 
-	method, path, query := rr.snapshot()
-	require.Equal(t, http.MethodGet, method, "非空关键词必须走 legacy GET（契约 §2 通路 1）")
+	path, query := rr.legacySnapshot()
 	require.Equal(t, "/search/subject/龙族", path, "必须打到 legacy 端点，而不是 /v0/search/subjects")
 	require.Equal(t, "1", query.Get("type"), "轻小说属书籍分区 type=1（契约 §4）")
 	require.Equal(t, "20", query.Get("start"), "page=2 → start=20（契约 §2）")
@@ -632,36 +675,27 @@ func TestHandleAnilistListNovel_NoKeywordRoutesToV0(t *testing.T) {
 	require.False(t, hasTag, "书籍分区禁止 tag（契约 §0.2）")
 }
 
-// TestHandleAnilistListNovel_LegacyNoPlatformFilter 固化 legacy 通路的「明确降级」：
-// legacy 条目**没有 `platform` 字段**（契约 §0.1 实测地面真值，`responseGroup=large` 亦然），
-// 故轻小说的 platform ∈ {小说,WEB} 过滤在 legacy 通路**无法本地执行，降级为忽略**。
-// 这是上游能力缺口而非疏漏——**不得**因为拿不到 platform 就把条目全部丢弃（结果全空）。
-func TestHandleAnilistListNovel_LegacyNoPlatformFilter(t *testing.T) {
-	// 两条书目均无 platform 字段（与 legacy 上游返回体一致）。
-	client, rr := newBangumiMockClient(t, func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte(`{"results":2,"list":[
-		  {"id":1,"type":1,"name":"a","name_cn":"甲","air_date":"2010-04-01","rating":{"total":10,"count":{},"score":7.0}},
-		  {"id":2,"type":1,"name":"b","name_cn":"乙","air_date":"2011-04-01","rating":{"total":10,"count":{},"score":8.0}}
-		]}`))
-	})
-
-	rec := postListNovel(t, client, `{"search":"幻想","page":1,"perPage":20}`)
-
-	_, path, _ := rr.snapshot()
-	require.Equal(t, "/search/subject/幻想", path)
-	require.Equal(t, []int{1, 2}, legacyMockIDs(t, rec),
-		"legacy 无 platform 字段 → platform 过滤降级为忽略，不得据此清空条目")
-
-	// 书籍语义仍须保持（D9）：type=MANGA、format ∈ {NOVEL, BOOK}。
-	var env listAnimeEnvelope
-	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &env))
-	require.Len(t, env.Data.Page.Media, 2)
-	for _, m := range env.Data.Page.Media {
-		require.NotNil(t, m.Type)
-		require.Equal(t, "MANGA", *m.Type, "书籍条目必须输出 type=MANGA（D9）")
-		require.NotNil(t, m.Format)
-		require.Contains(t, []string{"NOVEL", "BOOK"}, *m.Format, "format 必须 ∈ {NOVEL, BOOK}（D9）")
+// TestHandleAnilistListNovel_LegacyUnresolvedPlatformRoutedNotDropped 固化 3.6b → 3.7 的语义变更：
+// 3.6b 曾规定「legacy 条目无 platform → platform 过滤在 legacy 通路降级为忽略、条目全量返回」；
+// 3.7 §0 D2/D4 取代该降级——platform 改为对命中 id 补查 v0 详情取得（§1 A1），
+// 解析失败的条目**归入漫画**（D4），不再全量保留在轻小说 tab。
+//
+// 本用例保留原用例的核心不变量「**不得因为拿不到 platform 就丢弃条目**」，
+// 改为断言 D4 的路由结果：条目既不双现（novel 排除），也不消失（manga 保留）。
+func TestHandleAnilistListNovel_LegacyUnresolvedPlatformRoutedNotDropped(t *testing.T) {
+	items := []bookFixtureItem{
+		{ID: 21, NameCN: "详情失败甲", Platform: "小说", FailDetail: true},
+		{ID: 22, NameCN: "详情失败乙", Platform: "漫画", FailDetail: true},
 	}
+	client, _ := newBookMockClient(t, items)
+
+	novelRec := postListNovel(t, client, `{"search":"分流己","page":1,"perPage":20}`)
+	require.Empty(t, legacyMockIDs(t, novelRec),
+		"D4：platform 不可解析的条目不得归入轻小说 tab")
+
+	mangaRec := postListManga(t, client, `{"search":"分流己","page":1,"perPage":20}`)
+	require.Equal(t, []int{21, 22}, legacyMockIDs(t, mangaRec),
+		"D4：platform 不可解析的条目必须保留在漫画 tab（不得丢弃）")
 }
 
 // TestHandleAnilistListNovel_LegacyLocalRatingAndYearFilter 断言 novel legacy 通路确实接上了
@@ -670,20 +704,20 @@ func TestHandleAnilistListNovel_LegacyNoPlatformFilter(t *testing.T) {
 //
 // 候选 (2014, 7.0) / (2014, 8.6) / (2016, 9.0)；阈值 80 → 丢弃 7.0；seasonYear=2014 → 丢弃 2016 条；
 // SCORE_DESC → 8.6 在前。期望 [12] 由字面量手工推导，与实现无关。
+//
+// 注：3.7 起 platform 需经 v0 详情补查（§1 A1），故三条均标注 platform=小说 以留在轻小说通路；
+// 本用例只断言本地过滤/排序，platform 分流由 LegacyPlatform* 用例覆盖。
 func TestHandleAnilistListNovel_LegacyLocalRatingAndYearFilter(t *testing.T) {
-	client, rr := newBangumiMockClient(t, func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte(`{"results":3,"list":[
-		  {"id":11,"type":1,"name":"a","air_date":"2014-01-05","rating":{"total":10,"count":{},"score":7.0}},
-		  {"id":12,"type":1,"name":"b","air_date":"2014-06-05","rating":{"total":10,"count":{},"score":8.6}},
-		  {"id":13,"type":1,"name":"c","air_date":"2016-06-05","rating":{"total":10,"count":{},"score":9.0}}
-		]}`))
+	client, rr := newBookMockClient(t, []bookFixtureItem{
+		{ID: 11, NameCN: "a", Platform: "小说", AirDate: "2014-01-05", Score: 7.0},
+		{ID: 12, NameCN: "b", Platform: "小说", AirDate: "2014-06-05", Score: 8.6},
+		{ID: 13, NameCN: "c", Platform: "小说", AirDate: "2016-06-05", Score: 9.0},
 	})
 
 	rec := postListNovel(t, client,
 		`{"search":"幻想","averageScore_greater":80,"seasonYear":2014,"sort":["SCORE_DESC"],"page":1,"perPage":20}`)
 
-	_, path, _ := rr.snapshot()
-	require.Equal(t, "/search/subject/幻想", path)
+	require.Equal(t, 1, rr.legacyCalls())
 	require.Equal(t, []int{12}, legacyMockIDs(t, rec))
 }
 
@@ -694,8 +728,8 @@ func TestHandleAnilistListNovel_LegacyLocalRatingAndYearFilter(t *testing.T) {
 // TestHandleAnilistListNovel_BookTypeMapping 断言 list-novel 返回的书籍条目为书籍语义：
 // type=MANGA、format ∈ {NOVEL, BOOK}。修复前用 AnimeFromSubject → type=ANIME + format=TV（§0.5）。
 //
-// 注意：platform→format 的推导只存在于 v0 通路（legacy 条目**无 platform 字段**，契约 §0.1），
-// 故本用例必须以**空关键词**发出请求，走 §2 通路 2 的 v0 分支（非空关键词现已改走 legacy）。
+// 注意：本用例走 §2 通路 2 的 v0 分支（响应体自带 platform，直出 format 推导）；
+// legacy 分支的等价推导（补查 platform → 写回 → NOVEL）由 LegacyPlatform* 用例覆盖。
 // 各子用例用不同 seasonYear 隔离 handler 级缓存（缓存键含 seasonYear）。
 func TestHandleAnilistListNovel_BookTypeMapping(t *testing.T) {
 	cases := []struct {
@@ -740,4 +774,228 @@ func TestHandleAnilistListNovel_BookTypeMapping(t *testing.T) {
 			require.Equal(t, "无职转生", m.NameCN)
 		})
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// 契约 §1 A1–A4：书籍分区（type=1）platform 双向分流（Phase 3.7 / D2 / D4）
+//
+// 根因：漫画与轻小说共用 Bangumi `type=1` 书籍分区，而 legacy 检索条目**没有
+// `platform` 字段**（契约 §0.1 实测地面真值），故两个 tab 此前返回完全相同的条目。
+// 以下用例固化「对 legacy 命中的 id 补查 v0 详情拿 platform → 双向分流 → 补足条数」。
+///////////////////////////////////////////////////////////////////////////////
+
+// bookFixtureItem 测试用书籍条目。
+// Platform 是「v0 详情端点 (GET /v0/subjects/{id}) 返回的 platform」；
+// FailDetail=true 表示详情端点返回 500，用于固化 D4（解析失败 → 归漫画，不归轻小说）。
+// AirDate / Score 供 legacy 条目本体输出（本地年份/评分过滤用）。
+type bookFixtureItem struct {
+	ID         int
+	NameCN     string
+	Platform   string
+	AirDate    string
+	Score      float64
+	FailDetail bool
+}
+
+// newBookMockClient 起一个 mock Bangumi 上游，同时提供两条真实通路（系统边界观测点）：
+//   - GET /search/subject/{kw}?type=1&start&max_results：按 items 分页返回 legacy 条目，
+//     响应体**刻意不含 platform 字段**（与上游 legacy 返回体一致，契约 §0.1）；
+//   - GET /v0/subjects/{id}：返回该条目的 platform（FailDetail 时返回 500）。
+//
+// 测试全程离线（httptest loopback），不发真实网络请求。
+func newBookMockClient(t *testing.T, items []bookFixtureItem) (*bangumi.Client, *requestRecorder) {
+	t.Helper()
+	rr := &requestRecorder{}
+	byID := make(map[int]bookFixtureItem, len(items))
+	for _, it := range items {
+		byID[it.ID] = it
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rr.record(r)
+		w.Header().Set("Content-Type", "application/json")
+
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/search/subject/"):
+			start, _ := strconv.Atoi(r.URL.Query().Get("start"))
+			max, _ := strconv.Atoi(r.URL.Query().Get("max_results"))
+			if max <= 0 {
+				max = 20
+			}
+			if start > len(items) {
+				start = len(items)
+			}
+			end := start + max
+			if end > len(items) {
+				end = len(items)
+			}
+			list := make([]map[string]any, 0, end-start)
+			for _, it := range items[start:end] {
+				list = append(list, map[string]any{
+					"id": it.ID, "type": 1, "name": it.NameCN, "name_cn": it.NameCN,
+					"air_date": it.AirDate,
+					"rating":   map[string]any{"total": 10, "count": map[string]int{}, "score": it.Score},
+				})
+			}
+			_ = json.NewEncoder(w).Encode(map[string]any{"results": len(items), "list": list})
+
+		case strings.HasPrefix(r.URL.Path, "/v0/subjects/"):
+			id, _ := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/v0/subjects/"))
+			it, ok := byID[id]
+			if !ok || it.FailDetail {
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"detail unavailable"}`))
+				return
+			}
+			_ = json.NewEncoder(w).Encode(map[string]any{"id": it.ID, "platform": it.Platform})
+
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	t.Cleanup(ts.Close)
+
+	client := bangumi.New("",
+		bangumi.WithBaseURL(ts.URL),
+		bangumi.WithThrottleInterval(time.Millisecond),
+	)
+	t.Cleanup(client.Close)
+	return client, rr
+}
+
+// mixedBookFixture 四条混合书籍：小说 / 漫画 / WEB / 画集。
+// 期望值的独立来源是契约 D2 的字面规则（novel 保留 {小说, WEB}，manga 保留其余），
+// 不是由实现反推。
+func mixedBookFixture() []bookFixtureItem {
+	return []bookFixtureItem{
+		{ID: 1, NameCN: "小说甲", Platform: "小说"},
+		{ID: 2, NameCN: "漫画乙", Platform: "漫画"},
+		{ID: 3, NameCN: "网文丙", Platform: "WEB"},
+		{ID: 4, NameCN: "画集丁", Platform: "画集"},
+	}
+}
+
+// TestHandleAnilistListNovel_LegacyPlatformFiltersNonNovels 是 RED 1（契约 A6）：
+// mock 上游返回混合书籍，断言 novel 通路**只返回 platform ∈ {小说, WEB}** 的条目。
+// 实现前 legacy 通路无 platform 判据 → 四条全部返回，本用例失败（留下 RED 证据）。
+func TestHandleAnilistListNovel_LegacyPlatformFiltersNonNovels(t *testing.T) {
+	client, rr := newBookMockClient(t, mixedBookFixture())
+
+	rec := postListNovel(t, client, `{"search":"分流甲","page":1,"perPage":20}`)
+
+	require.Equal(t, 1, rr.legacyCalls(), "非空关键词应走 legacy 检索（契约 §2 通路 1）")
+	require.Equal(t, []int{1, 3}, legacyMockIDs(t, rec),
+		"novel 通路只保留 platform ∈ {小说, WEB}（契约 D2）")
+
+	var env listAnimeEnvelope
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &env))
+	require.Len(t, env.Data.Page.Media, 2)
+	require.NotNil(t, env.Data.Page.Media[0].Format)
+	require.Equal(t, "NOVEL", *env.Data.Page.Media[0].Format,
+		"A4：platform=小说 写回 media.Subject 后 Format 应为 NOVEL（此前恒为 BOOK）")
+}
+
+// TestHandleAnilistListNovel_LegacyPlatformLookupFailureGoesToManga 是 RED 3 的轻小说侧（契约 A6 / D4）：
+// platform 解析失败（详情端点 500）的条目**归入漫画、不得出现在轻小说 tab**。
+func TestHandleAnilistListNovel_LegacyPlatformLookupFailureGoesToManga(t *testing.T) {
+	items := []bookFixtureItem{
+		{ID: 11, NameCN: "小说甲", Platform: "小说"},
+		{ID: 12, NameCN: "详情失败乙", Platform: "漫画", FailDetail: true},
+		{ID: 13, NameCN: "漫画丙", Platform: "漫画"},
+	}
+	client, _ := newBookMockClient(t, items)
+
+	rec := postListNovel(t, client, `{"search":"分流丙","page":1,"perPage":20}`)
+
+	require.Equal(t, []int{11}, legacyMockIDs(t, rec),
+		"D4：platform 解析失败的条目不得出现在轻小说 tab（宁可漫画多留）")
+}
+
+// TestHandleAnilistListManga_LegacyPlatformExcludesNovels 是 RED 2（契约 A6）：
+// 同一份混合书籍输入，断言 manga 通路**不含 platform ∈ {小说, WEB}** 的条目。
+// 实现前 manga legacy 通路无 platform 判据 → 四条全部返回，本用例失败（RED 证据）。
+func TestHandleAnilistListManga_LegacyPlatformExcludesNovels(t *testing.T) {
+	client, rr := newBookMockClient(t, mixedBookFixture())
+
+	rec := postListManga(t, client, `{"search":"分流乙","page":1,"perPage":20}`)
+
+	require.Equal(t, 1, rr.legacyCalls(), "非空关键词应走 legacy 检索（契约 §2 通路 1）")
+	require.Equal(t, []int{2, 4}, legacyMockIDs(t, rec),
+		"manga 通路保留 platform ∉ {小说, WEB}（契约 D2）")
+
+	var env listAnimeEnvelope
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &env))
+	require.Len(t, env.Data.Page.Media, 2)
+	require.NotNil(t, env.Data.Page.Media[0].Format)
+	require.Equal(t, "MANGA", *env.Data.Page.Media[0].Format,
+		"A4：platform=漫画 写回 media.Subject 后 Format 应为 MANGA")
+}
+
+// TestHandleAnilistListManga_LegacyPlatformLookupFailureStaysManga 是 RED 3 的漫画侧（契约 A6 / D4）：
+// platform 解析失败的条目归入漫画（保留），且不因解析失败而中断整次检索。
+func TestHandleAnilistListManga_LegacyPlatformLookupFailureStaysManga(t *testing.T) {
+	items := []bookFixtureItem{
+		{ID: 11, NameCN: "小说甲", Platform: "小说"},
+		{ID: 12, NameCN: "详情失败乙", Platform: "漫画", FailDetail: true},
+		{ID: 13, NameCN: "漫画丙", Platform: "漫画"},
+	}
+	client, _ := newBookMockClient(t, items)
+
+	rec := postListManga(t, client, `{"search":"分流庚","page":1,"perPage":20}`)
+
+	require.Equal(t, []int{12, 13}, legacyMockIDs(t, rec),
+		"D4：platform 解析失败的条目归入漫画（保留），不因单条失败中断整次检索")
+}
+
+// TestHandleAnilistListNovel_LegacyPlatformCompareIsTrimmedAndCaseInsensitive 固化契约 §1 A2 的
+// 比较规则：platform 比较须**去首尾空白 + 大小写不敏感**——上游规范值是 `WEB`，
+// 但契约 §0.1 注释中出现过 `Web` 写法（adapter.go 亦然），故 `web` / `  WEB  ` 都应视为轻小说。
+func TestHandleAnilistListNovel_LegacyPlatformCompareIsTrimmedAndCaseInsensitive(t *testing.T) {
+	client, _ := newBookMockClient(t, []bookFixtureItem{
+		{ID: 31, NameCN: "小写 web", Platform: "web"},
+		{ID: 32, NameCN: "首尾空白", Platform: "  WEB  "},
+		{ID: 33, NameCN: "漫画", Platform: "漫画"},
+	})
+
+	rec := postListNovel(t, client, `{"search":"分流辛","page":1,"perPage":20}`)
+
+	require.Equal(t, []int{31, 32}, legacyMockIDs(t, rec),
+		"A2：platform `web` / `  WEB  ` 必须按 WEB 处理（去空白 + 大小写不敏感）")
+}
+
+// TestHandleAnilistListNovel_LegacyOverFetchFillsPage 是 RED 4（契约 A6 / A3）：
+// 上游 40 条书籍中小说占一半（20 条），上游每页 20 条 → 第 1 页只能筛出 10 条小说。
+// 断言 novel 通路仍返回**满 perPage(20) 条**小说——即必须按实际过滤结果继续取下一页。
+//
+// 实现前（单页 + 过滤）只能返回 10 条，本用例失败。
+// 同时断言上游检索请求次数恰为 2：契约 A3 的停止条件是「累积数 >= page*perPage」等，
+// **禁止固定倍率硬编码**（固定多取 3 页会得到 3 次请求，本断言可区分）。
+func TestHandleAnilistListNovel_LegacyOverFetchFillsPage(t *testing.T) {
+	items := make([]bookFixtureItem, 0, 40)
+	for i := 1; i <= 40; i++ {
+		// 奇数 id = 小说（20 条），偶数 id = 漫画（20 条）
+		platform := "漫画"
+		if i%2 == 1 {
+			platform = "小说"
+		}
+		items = append(items, bookFixtureItem{ID: i, NameCN: fmt.Sprintf("书%d", i), Platform: platform})
+	}
+	client, rr := newBookMockClient(t, items)
+
+	rec := postListNovel(t, client, `{"search":"补足戊","page":1,"perPage":20}`)
+
+	want := make([]int, 0, 20)
+	for i := 1; i <= 40; i += 2 {
+		want = append(want, i)
+	}
+	require.Equal(t, want, legacyMockIDs(t, rec),
+		"A3：平台过滤掉一半后仍须补足满 perPage 条（上游顺序）")
+	require.Equal(t, 2, rr.legacyCalls(),
+		"A3：上游检索请求数必须按实际过滤结果收敛（2 页刚好 20 条小说），禁止固定倍率多取")
+
+	var env listAnimeEnvelope
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &env))
+	require.NotNil(t, env.Data.Page.PageInfo.HasNextPage)
+	require.False(t, *env.Data.Page.PageInfo.HasNextPage,
+		"上游 40 条已耗尽且累积恰为 perPage → 无下一页（契约 A3 步骤 5）")
 }

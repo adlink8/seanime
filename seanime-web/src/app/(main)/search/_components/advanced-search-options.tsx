@@ -56,6 +56,9 @@ export function AdvancedSearchOptions() {
                 <TitleInput />
                 <Select
                     className="w-full"
+                    // Phase 3.7 D1：类型控件此前既无 label 也无 placeholder，补可见标签以消除歧义
+                    // （相邻控件用 placeholder 提示、label 则以 fieldLabelClass="hidden" 隐藏，本控件两者皆无，故保留标签可见）
+                    label={t("search.filter.type")}
                     options={ADVANCED_SEARCH_TYPE}
                     value={params.type}
                     onValueChange={v => setParams(draft => {

@@ -622,38 +622,33 @@ func (h *Handler) HandleAnilistListManga(c echo.Context) error {
 
 	// 契约 §2 D1 双通路：关键词非空 → legacy（v0 对 CJK 关键词恒 total=0，见 §0.1）。
 	//
-	// ⚠ 明确降级（禁止静默忽略，契约 §2 通路 1 末条）：
-	// legacy 条目**不含 tag 与 platform 字段**（契约 §0.1 实测地面真值），
-	// 故 `tags` / `genres`(并入 tag) 与书籍 `format` 在 legacy 通路**无法本地过滤，降级为忽略**。
-	// 这是上游能力缺口：legacy 端点既无 filter 参数，返回体也无 tags 字段。
+	// 契约 03.7 §1 A1/A2（D2/D4）：legacy 条目**不含 platform 字段**（§0.1 实测地面真值），
+	// 故对命中 id 补查 v0 详情读 platform，再按 platform ∉ {"小说","WEB"} 分流；
+	// 解析失败 / 空 platform 按 D4 归入漫画（即本通路保留），绝不丢弃整次检索。
+	// 明确降级（禁止静默忽略）：tags / genres / 书籍 format 在 legacy 通路仍无法本地过滤
+	//（legacy 返回体无 tags 字段，§0.1），故在此降级为忽略——上游能力缺口，非遗漏。
 	//
-	// 契约 §2 分页补偿：legacy `max_results` 非严格保证，
-	// 此处「照实返回并在响应里如实反映条数」（不 over-fetch），
-	// hasNextPage 按过滤前实际返回条数计算，避免本地过滤使翻页游标错位。
+	// 契约 §2 分页补偿：legacy `max_results` 非严格保证，且 platform 分流会进一步削减条数，
+	// 故按 03.7 §1 A3 做 over-fetch 补足（见 fetchLegacyBookPage）。
 	if useLegacySearch(keyword) {
-		start := (page - 1) * perPage
-		res, err := client.SearchSubjectsLegacy(
-			c.Request().Context(),
-			strings.TrimSpace(keyword),
-			bangumi.SubjectBook, // 书籍分区（漫画/轻小说同区）
-			start,
-			perPage,
-		)
+		pg, err := fetchLegacyBookPage(c.Request().Context(), client, strings.TrimSpace(keyword), page, perPage, legacyBookFilter{
+			novel:               false, // 漫画 tab：保留 platform ∉ {小说, WEB}（含空 platform，D4）
+			averageScoreGreater: p.AverageScoreGreater,
+			season:              nil,  // manga 请求体只有 year，无 season（契约 §2）
+			seasonYear:          p.Year,
+			sorts:               p.Sort,
+		})
 		if err != nil {
 			return h.RespondWithError(c, err)
 		}
 
-		// 本地过滤（评分下限 + 年份）+ 本地排序（§2 通路 1）；manga 请求体只有 year，无 season
-		filtered := filterLegacySubjects(res.List, p.AverageScoreGreater, nil, p.Year)
-		sortLegacySubjects(filtered, p.Sort)
-		mediaList := legacySubjectsToManga(filtered)
+		mediaList := legacySubjectsToManga(pg.subjects, pg.platforms)
 
-		hasNextPage := start+len(res.List) < res.Results
-		total := res.Results
-		pi := perPage
+		total := pg.total
+		pi := pg.perPage
 		ret := &media.ListManga{Page: &media.ListManga_Page{
 			Media:    mediaList,
-			PageInfo: &media.PageInfo{CurrentPage: &page, PerPage: &pi, Total: &total, HasNextPage: &hasNextPage},
+			PageInfo: &media.PageInfo{CurrentPage: &page, PerPage: &pi, Total: &total, HasNextPage: &pg.hasNextPage},
 		}}
 		anilistListMangaCache.SetT(cacheKey, ret, time.Minute*10)
 		return h.RespondWithData(c, ret)

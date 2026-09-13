@@ -7,6 +7,7 @@ import type { Dictionary } from "../../types"
 export const searchDictionary = {
     "search.page.title": "探索发现", // src/app/(main)/search/page.tsx
     "search.page.custom_source": "自定义源", // src/app/(main)/search/page.tsx
+    "search.filter.type": "类型", // src/app/(main)/search/_components/advanced-search-options.tsx（Phase 3.7 D1）
     "search.filter.genre": "流派", // src/app/(main)/search/_components/advanced-search-options.tsx
     "search.filter.genre_all": "全部流派", // src/app/(main)/search/_components/advanced-search-options.tsx
     "search.filter.genre_empty": "未找到流派", // src/app/(main)/search/_components/advanced-search-options.tsx
