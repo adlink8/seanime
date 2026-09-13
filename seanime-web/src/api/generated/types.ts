@@ -6207,7 +6207,7 @@ export type Asmr_SearchResult = {
 }
 
 /**
- * ASMR 音轨（Phase 2.5 新增）
+ * ASMR 音轨（Phase 2.5 新增，Phase 3.1 additive 扩展 localPath/path）
  * type: "audio" | "folder" | "text" | "image"，folder 类型可嵌套 tracks
  */
 export type Asmr_Track = {
@@ -6216,6 +6216,16 @@ export type Asmr_Track = {
     mediaStreamUrl?: string
     mediaDownloadUrl?: string
     tracks?: Array<Asmr_Track>
+    /**
+     * (Phase 3.1 additive) 本地音频绝对路径（仅本地库扫描命中时存在）。
+     * 前端对非空音轨直接调播放链路 playVideo({ path: localPath })。
+     */
+    localPath?: string
+    /**
+     * (Phase 3.1 additive) 相对 RJ 目录的 '/' 分隔路径（仅本地音轨）。
+     * 用于 POST /asmr/track/progress 的 trackPath 字段（后端给的相对路径字段）。
+     */
+    path?: string
 }
 
 /**
@@ -6223,4 +6233,88 @@ export type Asmr_Track = {
  */
 export type Asmr_WorkDetail = Asmr_Work & {
     tracks: Array<Asmr_Track>
+}
+
+/**
+ * ASMR 本地库条目（Phase 3.1 新增，GET /api/v1/asmr/library 响应元素）
+ * 字段逐字对应契约 §1 Asmr_LibraryEntry。
+ */
+export type Asmr_LibraryEntry = {
+    /** "RJ01234567"（保留原始数字，不补零） */
+    rjId: string
+    title: string
+    /** 社团名 */
+    circle: string
+    coverUrl: string
+    nsfw: boolean
+    /** 0-5 */
+    rating: number
+    /** YYYY-MM-DD */
+    releaseDate: string
+    /** 声优 */
+    cvs: Array<string>
+    /** 标签名 */
+    tags: Array<string>
+    /** 音轨数（本地文件树统计） */
+    trackCount: number
+    /** 本地总大小（字节） */
+    totalSizeBytes: number
+    /** 是否收藏（本地状态） */
+    isFavorite: boolean
+    /** 已完听音轨数（本地状态） */
+    listenedCount: number
+}
+
+/**
+ * ASMR 本地库响应（Phase 3.1 新增，GET /api/v1/asmr/library）
+ */
+export type Asmr_Library = {
+    /** 扫描根目录 */
+    localDir: string
+    entries: Array<Asmr_LibraryEntry>
+}
+
+/**
+ * ASMR 本地作品详情（Phase 3.1 新增，GET /api/v1/asmr/library/work/{rjId}）
+ * = Asmr_LibraryEntry + 音轨树（tracks 沿用 Asmr_Track，含 localPath/path）
+ */
+export type Asmr_LocalWorkDetail = Asmr_LibraryEntry & {
+    tracks: Array<Asmr_Track>
+}
+
+/**
+ * ASMR 音轨完听进度响应（Phase 3.1 新增，POST /api/v1/asmr/track/progress）
+ */
+export type Asmr_TrackProgressResponse = {
+    ok: boolean
+    /** 该作品已完听音轨数 */
+    listenedCount: number
+}
+
+/**
+ * ASMR 收藏响应（Phase 3.1 新增，POST /api/v1/asmr/library/favorite）
+ */
+export type Asmr_FavoriteResponse = {
+    ok: boolean
+    /** 云写失败/未配置账号时为 false，本地状态照常生效 */
+    syncedToCloud: boolean
+}
+
+/**
+ * ASMR 下载响应（Phase 3.1 新增，POST /api/v1/asmr/download，202 语义立即返回）
+ */
+export type Asmr_DownloadResponse = {
+    ok: boolean
+}
+
+/**
+ * ASMR 云端同步状态响应（Phase 3.1 新增，GET /api/v1/asmr/cloud，可选）
+ */
+export type Asmr_CloudResponse = {
+    /** 是否配置了 asmr.one 账号 */
+    configured: boolean
+    /** 已收藏 rjId 列表 */
+    favorites: Array<string>
+    /** 收听中 rjId 列表 */
+    listening: Array<string>
 }

@@ -115,4 +115,8 @@ const (
 	NakamaWatchPartyChatMessage                           = "nakama-watch-party-chat-message"
 
 	SettingsChanged = "settings-changed"
+
+	// Asmr download progress / completion events (契约 §7)
+	AsmrDownloadProgress = "asmr:download-progress"
+	AsmrDownloadDone     = "asmr:download-done"
 )

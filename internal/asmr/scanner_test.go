@@ -1,0 +1,154 @@
+package asmr
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"testing"
+
+	apiasmr "seanime/internal/api/asmr"
+	"github.com/stretchr/testify/require"
+)
+
+func TestNormalizeRJ(t *testing.T) {
+	cases := []struct {
+		in     string
+		want   string
+		wantOK bool
+	}{
+		{"RJ01234567", "RJ01234567", true},
+		{"rj289543", "RJ289543", true},
+		{"RJ12345", "RJ12345", true},
+		{"RJ1234", "", false},      // 4 位数字，不匹配
+		{"RJ123456789", "", false}, // 9 位数字，不匹配
+		{"notrj", "", false},
+		{"RJ12345 标题 with spaces", "RJ12345", true},
+		{"rj00012345", "RJ00012345", true},
+		{"rj+12345", "", false}, // 数字前非数字
+	}
+	for _, c := range cases {
+		got, ok := NormalizeRJ(c.in)
+		require.Equal(t, c.wantOK, ok, "in=%q", c.in)
+		if c.wantOK {
+			require.Equal(t, c.want, got, "in=%q", c.in)
+		}
+	}
+}
+
+func makeRJDir(t *testing.T, root, name string) string {
+	t.Helper()
+	dir := filepath.Join(root, name)
+	require.NoError(t, os.MkdirAll(dir, 0o755))
+	return dir
+}
+
+func writeFile(t *testing.T, path, content string) {
+	t.Helper()
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
+	require.NoError(t, os.WriteFile(path, []byte(content), 0o644))
+}
+
+func TestScanDegradationAndCounts(t *testing.T) {
+	root := t.TempDir()
+	rjDir := makeRJDir(t, root, "RJ01234567 某作品")
+	writeFile(t, filepath.Join(rjDir, "01.mp3"), "a")
+	writeFile(t, filepath.Join(rjDir, "sub", "02.wav"), "bb")
+	writeFile(t, filepath.Join(rjDir, "cover.jpg"), "img") // 非音频，忽略
+	makeRJDir(t, root, "random-folder")                    // 不匹配
+	require.NoError(t, os.WriteFile(filepath.Join(root, "note.txt"), []byte("x"), 0o644))
+
+	s := NewScanner(root, nil, nil, nil)
+	entries, err := s.Scan(context.Background())
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+
+	e := entries[0]
+	require.Equal(t, "RJ01234567", e.RjID)
+	require.Equal(t, "RJ01234567 某作品", e.Title, "降级：title=目录名（无 client）")
+	require.Equal(t, 2, e.TrackCount, "应统计 .mp3 + .wav（jpg 忽略）")
+	require.Equal(t, int64(3), e.TotalSizeBytes, "a(1)+bb(2)")
+}
+
+func TestBuildLocalTrackTree(t *testing.T) {
+	root := t.TempDir()
+	rjDir := makeRJDir(t, root, "RJ01234567")
+	writeFile(t, filepath.Join(rjDir, "01.mp3"), "a")
+	writeFile(t, filepath.Join(rjDir, "folderA", "02.flac"), "bb")
+	writeFile(t, filepath.Join(rjDir, "folderA", "sub", "03.ogg"), "ccc")
+
+	files, err := collectAudioFiles(rjDir)
+	require.NoError(t, err)
+	require.Len(t, files, 3)
+
+	tree, basenames := buildLocalTrackTree(rjDir, files)
+	require.Len(t, tree, 2) // 顶层：01.mp3 + folderA
+
+	var audio01, folderA *apiasmr.Asmr_Track
+	for i := range tree {
+		if tree[i].Type == "audio" {
+			audio01 = &tree[i]
+		} else if tree[i].Type == "folder" {
+			folderA = &tree[i]
+		}
+	}
+	require.NotNil(t, audio01)
+	require.Equal(t, "01", audio01.Title, "title=去扩展")
+	require.FileExists(t, audio01.LocalPath)
+	require.Equal(t, "01.mp3", audio01.Path, "Path=相对 RJ 目录的 '/' 分隔路径（前端完听上报用）")
+	require.NotNil(t, folderA)
+	require.Len(t, folderA.Tracks, 2) // folderA 顶层：02.flac + sub
+	// 嵌套叶子的 Path 含目录层级
+	var nested *apiasmr.Asmr_Track
+	for i := range folderA.Tracks {
+		if folderA.Tracks[i].Type == "folder" && len(folderA.Tracks[i].Tracks) > 0 {
+			nested = &folderA.Tracks[i].Tracks[0]
+		}
+	}
+	require.NotNil(t, nested)
+	require.Equal(t, "folderA/sub/03.ogg", nested.Path)
+
+	_, hasOgg := basenames["03.ogg"]
+	require.True(t, hasOgg, "basename 集合应含小写含扩展名")
+	_, hasJpg := basenames["cover.jpg"]
+	require.False(t, hasJpg, "非音频不应计入")
+}
+
+func TestMergeTrackTrees(t *testing.T) {
+	local := []apiasmr.Asmr_Track{
+		{Title: "01", Type: "audio", LocalPath: "/x/01.mp3"},
+		{Title: "folder", Type: "folder", Tracks: []apiasmr.Asmr_Track{
+			{Title: "02", Type: "audio", LocalPath: "/x/folder/02.wav"},
+		}},
+	}
+	localBasenames := map[string]struct{}{
+		"01.mp3": {},
+		"02.wav": {},
+		"03.ogg": {},
+	}
+	online := []apiasmr.Asmr_Track{
+		{Title: "01.mp3", Type: "audio", MediaDownloadURL: "http://d/01.mp3"}, // 本地已有 → 跳过
+		{Title: "04.opus", Type: "audio", MediaDownloadURL: "http://d/04.opus"}, // 在线独有 → 并入
+		{Title: "folder", Type: "folder", Tracks: []apiasmr.Asmr_Track{
+			{Title: "02.wav", Type: "audio", MediaDownloadURL: "http://d/02.wav"}, // 本地已有 → 跳过
+			{Title: "05.m4a", Type: "audio", MediaDownloadURL: "http://d/05.m4a"}, // 在线独有 → 并入子目录
+		}},
+	}
+
+	merged := mergeTrackTrees(local, online, localBasenames)
+
+	require.Len(t, merged, 3) // 顶层：01(本地), folder(本地), 04.opus(在线)
+	var found04, foundFolder bool
+	for i := range merged {
+		if merged[i].Title == "04.opus" {
+			found04 = true
+			require.Equal(t, "http://d/04.opus", merged[i].MediaDownloadURL)
+			require.Empty(t, merged[i].LocalPath, "在线节点无 localPath")
+		}
+		if merged[i].Type == "folder" {
+			foundFolder = true
+			require.Len(t, merged[i].Tracks, 2)
+		}
+	}
+	require.True(t, found04, "在线独有音频应并入顶层")
+	require.True(t, foundFolder, "本地 folder 应保留")
+}

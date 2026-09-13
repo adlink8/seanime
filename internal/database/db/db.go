@@ -126,6 +126,8 @@ func migrateTables(db *gorm.DB) error {
 		&models.MediaMetadataParent{},
 		&models.LocalTorrent{},
 		//&models.MangaChapterContainer{},
+		&models.AsmrTrackState{},
+		&models.AsmrWorkState{},
 	)
 	if err != nil {
 

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"seanime/internal/util/filecache"
 )
 
 const (
@@ -33,6 +34,10 @@ const (
 
 	defaultTimeout          = 15 * time.Second
 	defaultThrottleInterval = 300 * time.Millisecond
+
+	// cacheBucketName / cacheTTL 照抄 bangumi：GET 响应落 filecache 24h（契约 §1 client GET filecache 24h）
+	cacheBucketName = "asmr_api"
+	cacheTTL        = 24 * time.Hour
 )
 
 type Client struct {
@@ -41,11 +46,14 @@ type Client struct {
 	httpClient *http.Client
 	logger     *zerolog.Logger
 	limiter    *tickerLimiter
+	cache      *filecache.Cacher // 为 nil 时禁用缓存
+	jwt        jwtCache          // 登录态内存缓存
 }
 
 type options struct {
 	httpClient       *http.Client
 	logger           *zerolog.Logger
+	cache            *filecache.Cacher
 	baseURL          string
 	throttleInterval time.Duration
 	proxyURL         string
@@ -77,6 +85,11 @@ func WithThrottleInterval(d time.Duration) Option {
 // api.asmr.one 直连被墙，代理配置必须随 config.toml 显式下发。
 func WithProxyURL(raw string) Option {
 	return func(o *options) { o.proxyURL = raw }
+}
+
+// WithFileCache 启用 GET 响应缓存（TTL 24h，键含 URL）。照抄 bangumi client 模式。
+func WithFileCache(c *filecache.Cacher) Option {
+	return func(o *options) { o.cache = c }
 }
 
 // New 创建 Client。token 可为空串（搜索域无需鉴权）；非空时请求带 Authorization 头。
@@ -126,6 +139,7 @@ func New(token string, opts ...Option) *Client {
 		httpClient: httpClient,
 		logger:     &logger,
 		limiter:    newTickerLimiter(o.throttleInterval),
+		cache:      o.cache,
 	}
 }
 
@@ -134,11 +148,21 @@ func (c *Client) Close() {
 	c.limiter.stop()
 }
 
-// doGet 发送 GET 请求并解析 JSON 响应。
+// doGet 发送 GET 请求并解析 JSON 响应。带 filecache 层（命中则不触网，照抄 bangumi）。
 func (c *Client) doGet(ctx context.Context, path string, query url.Values, out any) error {
 	u := c.baseURL.JoinPath(path)
 	if len(query) > 0 {
 		u.RawQuery = query.Encode()
+	}
+
+	key := c.cacheKey(http.MethodGet, u.String())
+
+	if c.cache != nil {
+		var cached string
+		if ok, err := c.cache.Get(filecache.NewBucket(cacheBucketName, cacheTTL), key, &cached); err == nil && ok {
+			c.logger.Debug().Str("key", key).Msg("asmr: 缓存命中")
+			return json.Unmarshal([]byte(cached), out)
+		}
 	}
 
 	if err := c.limiter.wait(ctx); err != nil {
@@ -177,10 +201,21 @@ func (c *Client) doGet(ctx context.Context, path string, query url.Values, out a
 	if len(data) == 0 {
 		return fmt.Errorf("asmr: %s 返回空响应", u.String())
 	}
+
+	// 仅成功响应写缓存
+	if c.cache != nil {
+		_ = c.cache.Set(filecache.NewBucket(cacheBucketName, cacheTTL), key, string(data))
+	}
+
 	if err := json.Unmarshal(data, out); err != nil {
 		return fmt.Errorf("asmr: 解析 %s 响应失败: %w", u.String(), err)
 	}
 	return nil
+}
+
+// cacheKey 生成缓存键（方法 + 完整 URL，含 query）。
+func (c *Client) cacheKey(method, fullURL string) string {
+	return method + " " + fullURL
 }
 
 // APIError asmr.one 非 2xx 响应错误

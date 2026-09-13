@@ -15,6 +15,7 @@ import { extensionsDictionary } from "./extensions"
 import { miscDictionary } from "./misc"
 import { searchDictionary } from "./search"
 import { entryDictionary } from "./entry"
+import { asmrDictionary } from "./asmr"
 import { mpvDictionary } from "./mpv"
 import { settingsDictionary } from "./settings"
 import { settingsMediaDictionary } from "./settings-media"
@@ -25,6 +26,7 @@ const moduleDictionaries: readonly [string, Dictionary][] = [
     ["navigation", navigationDictionary],
     ["library", libraryDictionary],
     ["search", searchDictionary],
+    ["asmr", asmrDictionary],
     ["settings", settingsDictionary],
     ["player", playerDictionary],
     ["home", homeDictionary],
@@ -47,6 +49,7 @@ export const zhCN = {
     ...navigationDictionary,
     ...libraryDictionary,
     ...searchDictionary,
+    ...asmrDictionary,
     ...settingsDictionary,
     ...playerDictionary,
     ...homeDictionary,

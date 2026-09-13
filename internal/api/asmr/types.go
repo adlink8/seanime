@@ -106,7 +106,13 @@ type Asmr_Track struct {
 	Type             string       `json:"type"` // "audio"|"folder"|"text"|"image"
 	MediaStreamURL   string       `json:"mediaStreamUrl,omitempty"`
 	MediaDownloadURL string       `json:"mediaDownloadUrl,omitempty"`
-	Tracks           []Asmr_Track `json:"tracks,omitempty"` // folder 嵌套
+	// LocalPath 音声本地库扩展：本地存在的音频文件绝对路径（契约 §2 合并规则）。
+	// additive 新增可选字段，既有字段名一律不动。
+	LocalPath string `json:"localPath,omitempty"`
+	// Path 音声本地库扩展：相对 RJ 目录的 '/' 分隔路径（仅本地音轨），
+	// 前端用于 POST /asmr/track/progress 的 trackPath。
+	Path      string       `json:"path,omitempty"`
+	Tracks    []Asmr_Track `json:"tracks,omitempty"` // folder 嵌套
 }
 
 // Asmr_WorkDetail 作品详情（Asmr_Work 全字段 + tracks）

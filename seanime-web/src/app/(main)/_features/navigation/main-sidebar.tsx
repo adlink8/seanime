@@ -38,7 +38,7 @@ import { BiChevronRight, BiExtension, BiLogIn, BiLogOut } from "react-icons/bi"
 import { FiLogIn, FiSearch } from "react-icons/fi"
 import { HiOutlineServerStack } from "react-icons/hi2"
 import { IoCloudOfflineOutline, IoHomeOutline } from "react-icons/io5"
-import { LuBookMarked, LuBookOpen, LuCalendar, LuCompass, LuRefreshCw, LuRss, LuSettings } from "react-icons/lu"
+import { LuBookMarked, LuBookOpen, LuCalendar, LuCompass, LuHeadphones, LuRefreshCw, LuRss, LuSettings } from "react-icons/lu"
 import { MdArrowForward } from "react-icons/md"
 import { MdArrowBack } from "react-icons/md"
 import { MdOutlineConnectWithoutContact } from "react-icons/md"
@@ -228,6 +228,14 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
             href: "/lightnovel",
             isCurrent: pathname.startsWith("/lightnovel"),
         }] : [],
+        {
+            // 本地音声库（Phase 3.1：/asmr 路由，扫描 $SEANIME_DATA_DIR/asmr-local）
+            id: "asmr",
+            iconType: LuHeadphones,
+            name: t("navigation.item.asmr"),
+            href: "/asmr",
+            isCurrent: pathname.startsWith("/asmr"),
+        },
         {
             id: "lists",
             iconType: RiListCheck3,

@@ -56,6 +56,11 @@ type Config struct {
 		DownloadDir string
 		LocalDir    string
 	}
+	Asmr struct {
+		LocalDir string // 音声本地库扫描根目录（契约 §配置）
+		Name     string // asmr.one 账号（可选，留空=云同步关闭）
+		Password string // asmr.one 密码（可选）
+	}
 	Data struct { // Hydrated after config is loaded
 		AppDataDir string
 		WorkingDir string
@@ -164,6 +169,7 @@ func NewConfig(options *ConfigOptions, logger *zerolog.Logger) (*Config, error) 
 	viper.SetDefault("cache.transcodeDir", "$SEANIME_DATA_DIR/cache/transcode")
 	viper.SetDefault("manga.downloadDir", "$SEANIME_DATA_DIR/manga")
 	viper.SetDefault("manga.localDir", "$SEANIME_DATA_DIR/manga-local")
+	viper.SetDefault("asmr.localDir", "$SEANIME_DATA_DIR/asmr-local")
 	viper.SetDefault("logs.dir", "$SEANIME_DATA_DIR/logs")
 	viper.SetDefault("offline.dir", "$SEANIME_DATA_DIR/offline")
 	viper.SetDefault("offline.assetDir", "$SEANIME_DATA_DIR/offline/assets")
@@ -413,6 +419,15 @@ func validateConfig(cfg *Config, logger *zerolog.Logger) error {
 		return wrapInvalidConfigValue("manga.localDir", err)
 	}
 
+	// asmr.localDir 允许不存在（首扫自动 MkdirAll），但必须是合法绝对路径。
+	// name/password 任一为空 → 云同步整体禁用，无需校验。
+	if cfg.Asmr.LocalDir == "" {
+		return errInvalidConfigValue("asmr.localDir", "cannot be empty")
+	}
+	if err := checkIsValidPath(cfg.Asmr.LocalDir); err != nil {
+		return wrapInvalidConfigValue("asmr.localDir", err)
+	}
+
 	if cfg.Extensions.Dir == "" {
 		return errInvalidConfigValue("extensions.dir", "cannot be empty")
 	}
@@ -485,6 +500,7 @@ func expandEnvironmentValues(cfg *Config) {
 	cfg.Logs.Dir = filepath.FromSlash(os.ExpandEnv(cfg.Logs.Dir))
 	cfg.Manga.DownloadDir = filepath.FromSlash(os.ExpandEnv(cfg.Manga.DownloadDir))
 	cfg.Manga.LocalDir = filepath.FromSlash(os.ExpandEnv(cfg.Manga.LocalDir))
+	cfg.Asmr.LocalDir = filepath.FromSlash(os.ExpandEnv(cfg.Asmr.LocalDir))
 	cfg.Offline.Dir = filepath.FromSlash(os.ExpandEnv(cfg.Offline.Dir))
 	cfg.Offline.AssetDir = filepath.FromSlash(os.ExpandEnv(cfg.Offline.AssetDir))
 	cfg.Extensions.Dir = filepath.FromSlash(os.ExpandEnv(cfg.Extensions.Dir))

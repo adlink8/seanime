@@ -49,13 +49,20 @@ export const TopMenu: React.FC<TopMenuProps> = (props) => {
                 icon: null,
                 isCurrent: pathname.startsWith("/lightnovel"),
                 name: t("navigation.item.lightnovel"),
-            }].filter(Boolean) as NavigationMenuProps["items"],
-            {
-                href: "/lists",
-                icon: null,
-                isCurrent: pathname.startsWith("/lists"),
-                name: t("navigation.item.lists"),
-            },
+        }].filter(Boolean) as NavigationMenuProps["items"],
+        {
+            // 本地音声库（Phase 3.1：/asmr 路由）
+            href: "/asmr",
+            icon: null,
+            isCurrent: pathname.startsWith("/asmr"),
+            name: t("navigation.item.asmr"),
+        },
+        {
+            href: "/lists",
+            icon: null,
+            isCurrent: pathname.startsWith("/lists"),
+            name: t("navigation.item.lists"),
+        },
             {
                 href: "/discover",
                 icon: null,

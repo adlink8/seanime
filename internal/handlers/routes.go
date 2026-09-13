@@ -144,6 +144,14 @@ func InitRoutes(app *core.App, e *echo.Echo) {
 	v1.GET("/asmr/popular", h.HandleAsmrPopular)
 	v1.GET("/asmr/work/:id", h.HandleAsmrWork)
 
+	// ASMR 音声本地库（契约 §1-§7，Phase 3.1）
+	v1.GET("/asmr/library", h.HandleAsmrLibrary)
+	v1.GET("/asmr/library/work/:rjId", h.HandleAsmrLibraryWork)
+	v1.POST("/asmr/track/progress", h.HandleAsmrTrackProgress)
+	v1.POST("/asmr/library/favorite", h.HandleAsmrLibraryFavorite)
+	v1.GET("/asmr/cloud", h.HandleAsmrCloud)
+	v1.POST("/asmr/download", h.HandleAsmrDownload)
+
 	v1.GET("/log/*", h.HandleGetLogContent)
 	v1.GET("/logs/filenames", h.HandleGetLogFilenames)
 	v1.DELETE("/logs", h.HandleDeleteLogs)

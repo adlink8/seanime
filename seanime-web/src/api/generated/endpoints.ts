@@ -189,6 +189,62 @@ export const API_ENDPOINTS = {
             methods: ["GET"],
             endpoint: "/api/v1/asmr/work/{id}",
         },
+        /**
+         *  @description
+         *  Route returns the local ASMR library (scanned RJ folders). (Phase 3.1 新增)
+         *  This is used by the /asmr local library page.
+         */
+        AsmrLibrary: {
+            key: "ASMR-asmr-library",
+            methods: ["GET"],
+            endpoint: "/api/v1/asmr/library",
+        },
+        /**
+         *  @description
+         *  Route returns a local ASMR work's details including the track tree. (Phase 3.1 新增)
+         *  This is used by the ASMR work detail modal in local mode.
+         */
+        AsmrLibraryWork: {
+            key: "ASMR-asmr-library-work",
+            methods: ["GET"],
+            endpoint: "/api/v1/asmr/library/work/{rjId}",
+        },
+        /**
+         *  @description
+         *  Route records track listen completion progress. (Phase 3.1 新增)
+         */
+        AsmrTrackProgress: {
+            key: "ASMR-asmr-track-progress",
+            methods: ["POST"],
+            endpoint: "/api/v1/asmr/track/progress",
+        },
+        /**
+         *  @description
+         *  Route toggles favorite state for a local ASMR work. (Phase 3.1 新增)
+         */
+        AsmrLibraryFavorite: {
+            key: "ASMR-asmr-library-favorite",
+            methods: ["POST"],
+            endpoint: "/api/v1/asmr/library/favorite",
+        },
+        /**
+         *  @description
+         *  Route starts an async download of an ASMR work's audio tracks. (Phase 3.1 新增)
+         */
+        AsmrDownload: {
+            key: "ASMR-asmr-download",
+            methods: ["POST"],
+            endpoint: "/api/v1/asmr/download",
+        },
+        /**
+         *  @description
+         *  Route returns asmr.one cloud sync state (favorites/listening). (Phase 3.1 新增, 可选)
+         */
+        AsmrCloud: {
+            key: "ASMR-asmr-cloud",
+            methods: ["GET"],
+            endpoint: "/api/v1/asmr/cloud",
+        },
     },
     ANIME: {
         /**

@@ -1,4 +1,5 @@
-import { useAsmrWork } from "@/api/hooks/asmr.hooks"
+import { useAsmrLocalWork, useAsmrDownload, useAsmrTrackProgress, useAsmrWork } from "@/api/hooks/asmr.hooks"
+import { usePlaybackPlayVideo } from "@/api/hooks/playback_manager.hooks"
 import { Asmr_Track, Asmr_Work } from "@/api/generated/types"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/components/ui/core/styling"
@@ -7,19 +8,54 @@ import { Modal } from "@/components/ui/modal"
 import { SeaImage } from "@/components/shared/sea-image"
 import { t } from "@/lib/i18n"
 import React, { useState } from "react"
-import { LuChevronDown, LuFolder, LuMusic } from "react-icons/lu"
+import { LuChevronDown, LuCheck, LuDownload, LuFolder, LuMusic, LuPlay } from "react-icons/lu"
 
 // Phase 2.5：ASMR（音声）卡片与详情 modal，供搜索页与探索页共享（M3 前不做音频播放，音轨列表只读展示）
+// Phase 3.1：本地库模式复用同一 modal（localMode），叶子音轨加播放/完听；顶部下载按钮（在线作品）。
 
 type AsmrWorkDetailModalProps = {
     work: Asmr_Work
     open: boolean
     onOpenChange: (open: boolean) => void
+    /** 本地库模式：拉取 /asmr/library/work/{rjId} 而非在线 /asmr/work/{id} */
+    localMode?: boolean
 }
 
-export function AsmrWorkDetailModal({ work, open, onOpenChange }: AsmrWorkDetailModalProps) {
-    // 仅在 modal 打开时拉取详情（含音轨树）
-    const { data: detail, isLoading } = useAsmrWork(open ? work.id : undefined, open)
+export function AsmrWorkDetailModal({ work, open, onOpenChange, localMode }: AsmrWorkDetailModalProps) {
+    // 仅在 modal 打开时拉取详情（含音轨树）；本地模式用 rjId 拉本地作品
+    const { data: onlineDetail, isLoading: onlineLoading } = useAsmrWork(open && !localMode ? work.id : undefined, open)
+    const { data: localDetail, isLoading: localLoading } = useAsmrLocalWork(open && localMode ? work.rjId : undefined, open)
+
+    const detail = localMode ? localDetail : onlineDetail
+    const isLoading = localMode ? localLoading : onlineLoading
+
+    const playVideo = usePlaybackPlayVideo()
+    const trackProgress = useAsmrTrackProgress()
+    const download = useAsmrDownload()
+
+    // 本地已完听音轨集合（乐观状态；后端未回传逐轨 completed，待 3.2 补充）
+    const [completedPaths, setCompletedPaths] = useState<Set<string>>(() => new Set())
+
+    const handlePlayLocal = React.useCallback((path: string) => {
+        // 仅走 playback-manager（mpv），禁止 directstream/mediastream/nativeplayer
+        playVideo.mutate({ path })
+    }, [playVideo])
+
+    const handleToggleCompleted = React.useCallback((trackPath: string, completed: boolean) => {
+        if (!work.rjId) return
+        setCompletedPaths(prev => {
+            const next = new Set(prev)
+            if (completed) next.add(trackPath)
+            else next.delete(trackPath)
+            return next
+        })
+        trackProgress.mutate({ rjId: work.rjId, trackPath, completed })
+    }, [work.rjId, trackProgress])
+
+    const handleDownloadWork = React.useCallback(() => {
+        if (!work.rjId) return
+        download.mutate({ workId: work.id, rjId: work.rjId })
+    }, [work.id, work.rjId, download])
 
     return (
         <Modal
@@ -90,16 +126,38 @@ export function AsmrWorkDetailModal({ work, open, onOpenChange }: AsmrWorkDetail
                                 ))}
                             </div>
                         )}
+                        {/* 下载到本地（在线作品场景；本地库已存在则隐藏） */}
+                        {!localMode && (
+                            <div className="pt-1" data-asmr-work-detail-download-container>
+                                <button
+                                    type="button"
+                                    onClick={handleDownloadWork}
+                                    disabled={download.isPending}
+                                    data-asmr-work-detail-download-button
+                                    className="inline-flex items-center gap-1.5 rounded-[--radius-md] border border-[--border-color] px-2.5 py-1 text-sm hover:text-[--brand] disabled:opacity-50"
+                                >
+                                    <LuDownload className="flex-none" />
+                                    {t("asmr.detail.download_to_local")}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* 音轨树（只读展示，M3 前不做播放） */}
+                {/* 音轨树（Phase 3.1：本地音轨加播放/完听） */}
                 <div className="space-y-2" data-asmr-work-detail-tracks-container>
                     <h4 className="font-semibold text-sm">{t("search.asmr.tracks")}</h4>
                     {isLoading && <LoadingSpinner />}
                     {!isLoading && !!detail?.tracks?.length && (
                         <div className="max-h-72 overflow-y-auto rounded-[--radius-md] border border-[--border-color] p-2">
-                            <AsmrTrackList tracks={detail.tracks} />
+                            <AsmrTrackList
+                                tracks={detail.tracks}
+                                rjId={work.rjId}
+                                completedPaths={completedPaths}
+                                onToggleCompleted={handleToggleCompleted}
+                                onPlayLocal={handlePlayLocal}
+                                onDownloadWork={handleDownloadWork}
+                            />
                         </div>
                     )}
                     {!isLoading && !detail?.tracks?.length && (
@@ -111,11 +169,38 @@ export function AsmrWorkDetailModal({ work, open, onOpenChange }: AsmrWorkDetail
     )
 }
 
-function AsmrTrackList({ tracks, depth = 0 }: { tracks: Array<Asmr_Track>, depth?: number }) {
+type AsmrTrackListProps = {
+    tracks: Array<Asmr_Track>
+    depth?: number
+    rjId: string
+    completedPaths: Set<string>
+    onToggleCompleted: (trackPath: string, completed: boolean) => void
+    onPlayLocal: (path: string) => void
+    onDownloadWork: () => void
+}
+
+function AsmrTrackList({
+    tracks,
+    depth = 0,
+    rjId,
+    completedPaths,
+    onToggleCompleted,
+    onPlayLocal,
+    onDownloadWork,
+}: AsmrTrackListProps) {
     return (
         <>
             {tracks.map((track, idx) => track.type === "folder"
-                ? <AsmrTrackFolder key={`${depth}-${idx}-${track.title}`} track={track} depth={depth} />
+                ? <AsmrTrackFolder
+                    key={`${depth}-${idx}-${track.title}`}
+                    track={track}
+                    depth={depth}
+                    rjId={rjId}
+                    completedPaths={completedPaths}
+                    onToggleCompleted={onToggleCompleted}
+                    onPlayLocal={onPlayLocal}
+                    onDownloadWork={onDownloadWork}
+                />
                 : (
                     <div
                         key={`${depth}-${idx}-${track.title}`}
@@ -125,13 +210,75 @@ function AsmrTrackList({ tracks, depth = 0 }: { tracks: Array<Asmr_Track>, depth
                     >
                         <LuMusic className="flex-none text-[--muted]" />
                         <span className="truncate">{track.title}</span>
+
+                        {/* 本地音轨：播放按钮（localPath 非空时显示） */}
+                        {!!track.localPath && (
+                            <button
+                                type="button"
+                                onClick={() => onPlayLocal(track.localPath as string)}
+                                title={t("asmr.track.play")}
+                                data-asmr-track-play-button
+                                className="ml-auto flex-none inline-flex items-center justify-center rounded-[--radius-md] px-1.5 py-0.5 text-[--brand] hover:bg-[--background]"
+                            >
+                                <LuPlay />
+                            </button>
+                        )}
+
+                        {/* 本地音轨：完听勾选框（path 相对路径存在时显示） */}
+                        {!!track.path && (
+                            <label
+                                className="ml-auto flex-none inline-flex items-center gap-1 cursor-pointer text-xs text-[--muted]"
+                                data-asmr-track-completed-label
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={completedPaths.has(track.path)}
+                                    onChange={e => onToggleCompleted(track.path as string, e.target.checked)}
+                                    data-asmr-track-completed-checkbox
+                                    className="accent-[--brand]"
+                                />
+                                <LuCheck className={cn("flex-none", completedPaths.has(track.path) && "text-[--brand]")} />
+                            </label>
+                        )}
+
+                        {/* 在线音轨（无 localPath）：显示「下载到本地」 */}
+                        {!track.localPath && (
+                            <button
+                                type="button"
+                                onClick={onDownloadWork}
+                                title={t("asmr.detail.download_to_local")}
+                                data-asmr-track-download-button
+                                className="ml-auto flex-none inline-flex items-center gap-1 rounded-[--radius-md] border border-[--border-color] px-1.5 py-0.5 text-xs hover:text-[--brand]"
+                            >
+                                <LuDownload className="flex-none" />
+                                {t("asmr.detail.download_to_local_short")}
+                            </button>
+                        )}
                     </div>
                 ))}
         </>
     )
 }
 
-function AsmrTrackFolder({ track, depth }: { track: Asmr_Track, depth: number }) {
+type AsmrTrackFolderProps = {
+    track: Asmr_Track
+    depth: number
+    rjId: string
+    completedPaths: Set<string>
+    onToggleCompleted: (trackPath: string, completed: boolean) => void
+    onPlayLocal: (path: string) => void
+    onDownloadWork: () => void
+}
+
+function AsmrTrackFolder({
+    track,
+    depth,
+    rjId,
+    completedPaths,
+    onToggleCompleted,
+    onPlayLocal,
+    onDownloadWork,
+}: AsmrTrackFolderProps) {
     const [expanded, setExpanded] = useState(depth === 0)
 
     return (
@@ -148,7 +295,15 @@ function AsmrTrackFolder({ track, depth }: { track: Asmr_Track, depth: number })
             </button>
             {expanded && !!track.tracks?.length && (
                 <div data-asmr-track-folder-content>
-                    <AsmrTrackList tracks={track.tracks} depth={depth + 1} />
+                    <AsmrTrackList
+                        tracks={track.tracks}
+                        depth={depth + 1}
+                        rjId={rjId}
+                        completedPaths={completedPaths}
+                        onToggleCompleted={onToggleCompleted}
+                        onPlayLocal={onPlayLocal}
+                        onDownloadWork={onDownloadWork}
+                    />
                 </div>
             )}
         </div>
