@@ -1,6 +1,8 @@
 logs/
 *.db
 testdata/
+!internal/api/asmr/testdata/
+!internal/api/asmr/testdata/*
 .DS_Store
 .git
 

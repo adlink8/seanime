@@ -613,9 +613,18 @@ func (pm *PlaybackManager) PullStreamState() (PlaybackState, bool) {
 }
 
 // Cancel stops the current media player playback and publishes a "normal" event.
+// MediaPlayerRepository 是在后台 goroutine 中由 SetMediaPlayerRepository 赋值的，
+// 这里必须持锁读取并做 nil 守卫，否则在 repo 尚未挂载时调用会空指针 panic。
 func (pm *PlaybackManager) Cancel() error {
 	pm.Logger.Debug().Msg("playback manager: Cancel called, stopping media player")
-	pm.MediaPlayerRepository.Stop()
+	pm.mu.Lock()
+	repo := pm.MediaPlayerRepository
+	pm.mu.Unlock()
+	if repo == nil {
+		pm.Logger.Warn().Msg("playback manager: media player repository not mounted, skipping cancel")
+		return nil
+	}
+	repo.Stop()
 	return nil
 }
 

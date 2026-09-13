@@ -1,0 +1,56 @@
+[
+  {
+    "type": "folder",
+    "title": "02英語",
+    "children": [
+      {
+        "type": "folder",
+        "title": "01：mp3",
+        "children": [
+          {
+            "type": "audio",
+            "hash": "1657200/1937305",
+            "title": "TrackEX_Shiki Asagi's special free talk.mp3",
+            "work": { "id": 1657200, "source_id": "RJ01657200", "source_type": "DLSITE" },
+            "workTitle": "巨乳ギャルJKとだらだらしつつ元気を取り戻していくお話",
+            "mediaStreamUrl": "https://raw.kiko-play-niptan.one/media/stream/daily/2026-08-07/RJ01657200/01.mp3",
+            "mediaDownloadUrl": "https://raw.kiko-play-niptan.one/media/download/daily/2026-08-07/RJ01657200/01.mp3",
+            "streamLowQualityUrl": "",
+            "duration": 291.4832,
+            "size": 11718770
+          },
+          {
+            "type": "text",
+            "hash": "1657200/1937306",
+            "title": "TrackEX_Shiki Asagi's special free talk.mp3.vtt",
+            "work": { "id": 1657200, "source_id": "RJ01657200", "source_type": "DLSITE" },
+            "mediaStreamUrl": "https://api.asmr.one/api/media/stream/1657200/1937306",
+            "mediaDownloadUrl": "https://raw.kiko-play-niptan.one/media/download/daily/2026-08-07/RJ01657200/01.mp3.vtt",
+            "duration": 285.5,
+            "size": 5956
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "hash": "1657200/1937307",
+        "title": "TrackEX_Shiki Asagi's special free talk.lrc",
+        "work": { "id": 1657200, "source_id": "RJ01657200", "source_type": "DLSITE" },
+        "mediaStreamUrl": "https://api.asmr.one/api/media/stream/1657200/1937307",
+        "mediaDownloadUrl": "https://raw.kiko-play-niptan.one/media/download/daily/2026-08-07/RJ01657200/01.lrc",
+        "duration": 282.5,
+        "size": 4262
+      }
+    ]
+  },
+  {
+    "type": "audio",
+    "hash": "1657200/1937300",
+    "title": "01トラック.mp3",
+    "work": { "id": 1657200, "source_id": "RJ01657200", "source_type": "DLSITE" },
+    "mediaStreamUrl": "https://api.asmr.one/api/media/stream/1657200/1937300",
+    "mediaDownloadUrl": "https://raw.kiko-play-niptan.one/media/download/daily/2026-08-07/RJ01657200/01トラック.mp3",
+    "duration": 120.5,
+    "size": 1930000
+  }
+]
