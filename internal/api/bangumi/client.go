@@ -59,6 +59,7 @@ type options struct {
 	baseURL          string
 	throttleInterval time.Duration
 	retryBaseDelay   time.Duration
+	proxyURL         string
 }
 
 type Option func(*options)
@@ -93,6 +94,13 @@ func WithRetryBaseDelay(d time.Duration) Option {
 	return func(o *options) { o.retryBaseDelay = d }
 }
 
+// WithProxyURL 显式设置出站代理（如 Clash "http://127.0.0.1:7897"）。
+// 优先级高于环境变量：实测桌面端启动环境不可靠传递 HTTPS_PROXY（沙箱/系统代理覆盖），
+// 直连 api.bgm.tv 又被墙，故代理配置必须随 config.toml 显式下发。
+func WithProxyURL(raw string) Option {
+	return func(o *options) { o.proxyURL = raw }
+}
+
 // New 创建 Client。token 由调用方注入（个人令牌，scope: write:collection），
 // token 为空时请求不带 Authorization 头（公开端点仍可用，NSFW 内容会被 404）。
 func New(token string, opts ...Option) *Client {
@@ -121,9 +129,23 @@ func New(token string, opts ...Option) *Client {
 
 	httpClient := o.httpClient
 	if httpClient == nil {
-		// 不设置自定义 Transport：http.DefaultTransport 默认走 ProxyFromEnvironment，
-		// 与契约"代理交给用户环境（Clash）"一致
-		httpClient = &http.Client{Timeout: defaultTimeout}
+		if o.proxyURL != "" {
+			// 显式代理：config.toml 下发的 server.proxyURL
+			if pu, perr := url.Parse(o.proxyURL); perr == nil && pu.Scheme != "" && pu.Host != "" {
+				httpClient = &http.Client{
+					Timeout:   defaultTimeout,
+					Transport: &http.Transport{Proxy: http.ProxyURL(pu)},
+				}
+			} else {
+				// 非法代理地址：回退默认传输层并记警告
+				logger.Warn().Str("proxyURL", o.proxyURL).Msg("bangumi: 非法代理地址，忽略并直连")
+				httpClient = &http.Client{Timeout: defaultTimeout}
+			}
+		} else {
+			// 不设置自定义 Transport：http.DefaultTransport 默认走 ProxyFromEnvironment，
+			// 与契约"代理交给用户环境（Clash）"一致
+			httpClient = &http.Client{Timeout: defaultTimeout}
+		}
 	}
 
 	return &Client{

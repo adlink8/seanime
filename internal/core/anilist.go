@@ -61,8 +61,9 @@ func (a *App) UpdatePlatform(platform platform.Platform) {
 // UpdateAnilistClientToken will update the Bangumi client token.
 // This function should be called when a user logs in.
 // Bangumi 锚点：token 沿用 account 表存储，函数名保留（Phase 4 统一清理命名）。
+// 代理配置沿用启动时读取的 server.proxyURL。
 func (a *App) UpdateAnilistClientToken(token string) {
-	a.BangumiClientRef.Set(bangumi.New(token))
+	a.BangumiClientRef.Set(bangumi.New(token, bangumi.WithProxyURL(a.Config.Server.ProxyURL)))
 }
 
 // UseOfficialAnilistClient Bangumi 锚点下 AniList client 运行时切换已停用。

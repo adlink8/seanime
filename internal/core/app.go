@@ -272,7 +272,8 @@ func NewApp(configOpts *ConfigOptions, selfupdater *updater.SelfUpdater) *App {
 
 	// Initialize Bangumi API client with the token
 	// If the token is empty, the client will not be authenticated
-	bangumiClient := bangumi.New(bangumiToken)
+	// 出站代理显式走 config.toml（api.bgm.tv 直连被墙；环境变量在桌面端启动链路不可靠）
+	bangumiClient := bangumi.New(bangumiToken, bangumi.WithProxyURL(cfg.Server.ProxyURL))
 	bangumiClientRef := util.NewRef[*bangumi.Client](bangumiClient)
 
 	// Initialize WebSocket event manager for real-time communication

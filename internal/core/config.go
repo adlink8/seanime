@@ -24,6 +24,7 @@ type Config struct {
 		Systray         bool
 		DoHUrl          string
 		Password        string
+		ProxyURL        string // 出站 API 代理（Bangumi/asmr.one 走 Clash 等）；空 = 不设代理（Go 默认走环境变量）
 		SecureMode      string   // empty = current baseline defaults, "hardened" opts into a stricter passwordless boundary, "lax" disables baseline request-boundary restrictions, "strict" includes hardened plus extra restrictions
 		AccessAllowlist []string // Additional remote hosts/origins allowed through the passwordless API/events boundary
 		TrustedProxies  []string // Explicit reverse proxies allowed to supply forwarded client IP/host/proto headers
@@ -155,6 +156,7 @@ func NewConfig(options *ConfigOptions, logger *zerolog.Logger) (*Config, error) 
 	//viper.SetDefault("server.externalURL", "")
 	// Use the binary's directory as the working directory environment variable on macOS
 	viper.SetDefault("server.useBinaryPath", true)
+	viper.SetDefault("server.proxyURL", "")
 	// viper.SetDefault("server.systray", true)
 	viper.SetDefault("database.name", "seanime")
 	viper.SetDefault("web.assetDir", "$SEANIME_DATA_DIR/assets")

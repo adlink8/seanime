@@ -36,6 +36,9 @@ type (
 	BangumiPlatform struct {
 		logger     *zerolog.Logger
 		username   mo.Option[string]
+		// selfUsername 经 GetMe 解析的本人 username 句柄（懒加载缓存）。
+		// Bangumi 的 username 句柄 ≠ 昵称，GET /v0/users/{句柄}/collections 必须用句柄。
+		selfUsername mo.Option[string]
 		client     *bangumi.Client
 		cacheLayer *shared_platform.CacheLayer
 
@@ -107,23 +110,27 @@ func (bp *BangumiPlatform) GetReverseIDIndex() *media.ReverseIDIndex {
 }
 
 func (bp *BangumiPlatform) SetUsername(username string) {
-	// Bangumi 约定：username 传 "-" 表示当前 token 用户本人。
-	// username 仅用于 GetUserCollectionsByUser 的路径参数，存而不用场景见 getUsername。
-	if username == "" {
-		bp.username = mo.Some[string]("-")
-		return
-	}
-
+	// 存储的仅是展示用昵称（前端 username 语义），不作 API 路径参数；
+	// API 路径参数由 getUsername(ctx) 经 GetMe 解析的真实句柄提供。
 	bp.username = mo.Some(username)
 }
 
-func (bp *BangumiPlatform) getUsername() (string, bool) {
-	if bp.username.IsPresent() {
-		return bp.username.MustGet(), true
+func (bp *BangumiPlatform) getUsername(ctx context.Context) (string, bool) {
+	if bp.selfUsername.IsPresent() {
+		return bp.selfUsername.MustGet(), true
+	}
+	if bp.client == nil {
+		return "", false
 	}
 
-	// 未设置时默认查本人（Bangumi 的 "-" 语义）
-	return "-", true
+	// 首次调用经 GetMe 解析本人句柄并缓存（进程内有效）
+	me, err := bp.client.GetMe(ctx)
+	if err != nil {
+		bp.logger.Warn().Err(err).Msg("bangumi platform: GetMe 解析 username 失败")
+		return "", false
+	}
+	bp.selfUsername = mo.Some(me.Username)
+	return me.Username, true
 }
 
 func (bp *BangumiPlatform) UpdateEntry(ctx context.Context, mediaID int, status *media.MediaListStatus, scoreRaw *int, progress *int, startedAt *media.FuzzyDateInput, completedAt *media.FuzzyDateInput) error {
@@ -434,7 +441,7 @@ func (bp *BangumiPlatform) GetAnimeCollection(ctx context.Context, bypassCache b
 		return event.AnimeCollection, nil
 	}
 
-	if _, ok := bp.getUsername(); !ok {
+	if _, ok := bp.getUsername(ctx); !ok {
 		return nil, nil
 	}
 
@@ -468,7 +475,7 @@ func (bp *BangumiPlatform) GetRawAnimeCollection(ctx context.Context, bypassCach
 		return event.AnimeCollection, nil
 	}
 
-	if _, ok := bp.getUsername(); !ok {
+	if _, ok := bp.getUsername(ctx); !ok {
 		return nil, nil
 	}
 
@@ -489,7 +496,7 @@ func (bp *BangumiPlatform) GetRawAnimeCollection(ctx context.Context, bypassCach
 }
 
 func (bp *BangumiPlatform) RefreshAnimeCollection(ctx context.Context) (*media.AnimeCollection, error) {
-	if _, ok := bp.getUsername(); !ok {
+	if _, ok := bp.getUsername(ctx); !ok {
 		return nil, nil
 	}
 
@@ -518,7 +525,7 @@ func (bp *BangumiPlatform) RefreshAnimeCollection(ctx context.Context) (*media.A
 }
 
 func (bp *BangumiPlatform) refreshAnimeCollection(ctx context.Context) error {
-	username, ok := bp.getUsername()
+	username, ok := bp.getUsername(ctx)
 	if !ok {
 		return errors.New("bangumi: Username is not set")
 	}
@@ -566,7 +573,7 @@ func (bp *BangumiPlatform) GetMangaCollection(ctx context.Context, bypassCache b
 		return event.MangaCollection, nil
 	}
 
-	if _, ok := bp.getUsername(); !ok {
+	if _, ok := bp.getUsername(ctx); !ok {
 		return nil, nil
 	}
 
@@ -602,7 +609,7 @@ func (bp *BangumiPlatform) GetRawMangaCollection(ctx context.Context, bypassCach
 		return event.MangaCollection, nil
 	}
 
-	if _, ok := bp.getUsername(); !ok {
+	if _, ok := bp.getUsername(ctx); !ok {
 		return nil, nil
 	}
 
@@ -623,7 +630,7 @@ func (bp *BangumiPlatform) GetRawMangaCollection(ctx context.Context, bypassCach
 }
 
 func (bp *BangumiPlatform) RefreshMangaCollection(ctx context.Context) (*media.MangaCollection, error) {
-	if _, ok := bp.getUsername(); !ok {
+	if _, ok := bp.getUsername(ctx); !ok {
 		return nil, nil
 	}
 
@@ -652,7 +659,7 @@ func (bp *BangumiPlatform) RefreshMangaCollection(ctx context.Context) (*media.M
 }
 
 func (bp *BangumiPlatform) refreshMangaCollection(ctx context.Context) error {
-	username, ok := bp.getUsername()
+	username, ok := bp.getUsername(ctx)
 	if !ok {
 		return errors.New("bangumi: Username is not set")
 	}
