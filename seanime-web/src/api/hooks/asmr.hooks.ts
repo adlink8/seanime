@@ -1,5 +1,11 @@
 import { useServerMutation, useServerQuery } from "@/api/client/requests"
-import { AsmrSearch_Variables, AsmrWork_Variables } from "@/api/generated/endpoint.types"
+import {
+    AsmrPlaybackPause_Variables,
+    AsmrPlaybackSeek_Variables,
+    AsmrPlaybackStatus,
+    AsmrSearch_Variables,
+    AsmrWork_Variables,
+} from "@/api/generated/endpoint.types"
 import { API_ENDPOINTS } from "@/api/generated/endpoints"
 import {
     Asmr_CloudResponse,
@@ -144,5 +150,50 @@ export function useAsmrCloud(enabled?: boolean) {
         method: API_ENDPOINTS.ASMR.AsmrCloud.methods[0],
         queryKey: [API_ENDPOINTS.ASMR.AsmrCloud.key],
         enabled: enabled ?? true,
+    })
+}
+
+/**
+ * ASMR 播放控制条状态轮询（GET /api/v1/asmr/playback/status，Phase 3.1c 新增）
+ * 仅弹窗打开（组件挂载）时 enabled，refetchInterval 1000ms（契约 D5）。
+ * 无播放/非 mpv 时后端返回 running:false + 零值，前端据此不渲染控制条（契约 D3/D6）。
+ */
+export function useAsmrPlaybackStatus(enabled?: boolean) {
+    return useServerQuery<AsmrPlaybackStatus>({
+        endpoint: API_ENDPOINTS.ASMR.AsmrPlaybackStatus.endpoint,
+        method: API_ENDPOINTS.ASMR.AsmrPlaybackStatus.methods[0],
+        queryKey: [API_ENDPOINTS.ASMR.AsmrPlaybackStatus.key],
+        refetchInterval: 1000,
+        enabled: enabled ?? true,
+    })
+}
+
+/**
+ * ASMR 播放暂停/继续（POST /api/v1/asmr/playback/pause，Phase 3.1c 新增）
+ * body { paused: bool }。无活跃播放时后端返 409，onError 静默吞掉（契约 D4）。
+ */
+export function useAsmrPlaybackPause() {
+    return useServerMutation<boolean, AsmrPlaybackPause_Variables>({
+        endpoint: API_ENDPOINTS.ASMR.AsmrPlaybackPause.endpoint,
+        method: API_ENDPOINTS.ASMR.AsmrPlaybackPause.methods[0],
+        mutationKey: [API_ENDPOINTS.ASMR.AsmrPlaybackPause.key],
+        onError: () => {
+            // 静默：无活跃播放（409）等错误不提示
+        },
+    })
+}
+
+/**
+ * ASMR 播放跳转（POST /api/v1/asmr/playback/seek，Phase 3.1c 新增）
+ * body { position: number }（绝对秒）。无活跃播放时后端返 409，onError 静默吞掉（契约 D4）。
+ */
+export function useAsmrPlaybackSeek() {
+    return useServerMutation<boolean, AsmrPlaybackSeek_Variables>({
+        endpoint: API_ENDPOINTS.ASMR.AsmrPlaybackSeek.endpoint,
+        method: API_ENDPOINTS.ASMR.AsmrPlaybackSeek.methods[0],
+        mutationKey: [API_ENDPOINTS.ASMR.AsmrPlaybackSeek.key],
+        onError: () => {
+            // 静默：无活跃播放（409）等错误不提示
+        },
     })
 }

@@ -2265,3 +2265,43 @@ export type AsmrWork_Variables = {
      */
     id: string
 }
+
+/**
+ * - Endpoint: /api/v1/asmr/playback/status (Phase 3.1c 新增)
+ * @description
+ * Route returns the current mpv playback status.
+ */
+export type AsmrPlaybackStatus = {
+    /** 是否有活跃播放（mpv 进程存在且 Repository 可取到 status 时） */
+    running: boolean
+    /** 是否正在播放（false=已暂停） */
+    playing: boolean
+    /** 当前播放位置（秒） */
+    currentTime: number
+    /** 总时长（秒） */
+    duration: number
+    /** 播放文件绝对路径（无播放时为空） */
+    filepath: string
+    /** 文件名 */
+    filename: string
+}
+
+/**
+ * - Endpoint: /api/v1/asmr/playback/pause (Phase 3.1c 新增)
+ * @description
+ * Route pauses or resumes the current mpv playback.
+ */
+export type AsmrPlaybackPause_Variables = {
+    /** true=暂停, false=继续 */
+    paused: boolean
+}
+
+/**
+ * - Endpoint: /api/v1/asmr/playback/seek (Phase 3.1c 新增)
+ * @description
+ * Route seeks the current mpv playback to an absolute position in seconds.
+ */
+export type AsmrPlaybackSeek_Variables = {
+    /** 绝对秒 */
+    position: number
+}

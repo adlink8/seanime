@@ -152,6 +152,11 @@ func InitRoutes(app *core.App, e *echo.Echo) {
 	v1.GET("/asmr/cloud", h.HandleAsmrCloud)
 	v1.POST("/asmr/download", h.HandleAsmrDownload)
 
+	// ASMR 音声播放内控制条（契约 §1 D2/D3/D4，Phase 3.1c Wave A，纯转发 Repository）
+	v1.GET("/asmr/playback/status", h.HandleAsmrPlaybackStatus)
+	v1.POST("/asmr/playback/pause", h.HandleAsmrPlaybackPause)
+	v1.POST("/asmr/playback/seek", h.HandleAsmrPlaybackSeek)
+
 	v1.GET("/log/*", h.HandleGetLogContent)
 	v1.GET("/logs/filenames", h.HandleGetLogFilenames)
 	v1.DELETE("/logs", h.HandleDeleteLogs)

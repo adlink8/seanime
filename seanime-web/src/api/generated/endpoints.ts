@@ -245,6 +245,36 @@ export const API_ENDPOINTS = {
             methods: ["GET"],
             endpoint: "/api/v1/asmr/cloud",
         },
+        /**
+         *  @description
+         *  Route returns the current mpv playback status (running/playing/position). (Phase 3.1c 新增)
+         *  无活跃播放时返回 running:false + 其余零值（不返 4xx，前端轮询无感降级，契约 D3）。
+         */
+        AsmrPlaybackStatus: {
+            key: "ASMR-asmr-playback-status",
+            methods: ["GET"],
+            endpoint: "/api/v1/asmr/playback/status",
+        },
+        /**
+         *  @description
+         *  Route pauses or resumes the current mpv playback. (Phase 3.1c 新增)
+         *  body { "paused": bool }；无活跃播放时返回 409（前端静默吞掉，契约 D4）。
+         */
+        AsmrPlaybackPause: {
+            key: "ASMR-asmr-playback-pause",
+            methods: ["POST"],
+            endpoint: "/api/v1/asmr/playback/pause",
+        },
+        /**
+         *  @description
+         *  Route seeks the current mpv playback to an absolute position in seconds. (Phase 3.1c 新增)
+         *  body { "position": float64 }；无活跃播放时返回 409（前端静默吞掉，契约 D4）。
+         */
+        AsmrPlaybackSeek: {
+            key: "ASMR-asmr-playback-seek",
+            methods: ["POST"],
+            endpoint: "/api/v1/asmr/playback/seek",
+        },
     },
     ANIME: {
         /**

@@ -2,6 +2,7 @@ import { useAsmrLocalWork, useAsmrDownload, useAsmrTrackProgress, useAsmrWork } 
 import { usePlaybackPlayVideo } from "@/api/hooks/playback_manager.hooks"
 import { Asmr_Track, Asmr_Work } from "@/api/generated/types"
 import { deriveCompletedPaths } from "@/app/(main)/_features/asmr/_lib/asmr-completed-paths"
+import { AsmrPlaybackBar } from "@/app/(main)/_features/asmr/_components/asmr-playback-bar"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/components/ui/core/styling"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -153,6 +154,15 @@ export function AsmrWorkDetailModal({ work, open, onOpenChange, localMode }: Asm
                         )}
                     </div>
                 </div>
+
+                {/* 播放控制条（Phase 3.1c / D5–D8）：渲染在音轨树上方，仅本地模式播放时匹配 localPath 才显示 */}
+                {!!detail?.tracks?.length && (
+                    <AsmrPlaybackBar
+                        tracks={detail.tracks}
+                        completedPaths={completedPaths}
+                        onToggleCompleted={handleToggleCompleted}
+                    />
+                )}
 
                 {/* 音轨树（Phase 3.1：本地音轨加播放/完听） */}
                 <div className="space-y-2" data-asmr-work-detail-tracks-container>

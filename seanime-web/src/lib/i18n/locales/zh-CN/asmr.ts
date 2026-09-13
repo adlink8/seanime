@@ -21,4 +21,7 @@ export const asmrDictionary = {
     "asmr.detail.download_to_local_short": "下载", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx
 
     "asmr.track.play": "播放", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx
+
+    "asmr.playback.pause": "暂停", // src/app/(main)/_features/asmr/_components/asmr-playback-bar.tsx
+    "asmr.playback.resume": "继续", // src/app/(main)/_features/asmr/_components/asmr-playback-bar.tsx
 }
