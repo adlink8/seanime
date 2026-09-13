@@ -7,6 +7,7 @@ import { atomWithImmer } from "jotai-immer"
 import { useAtom } from "jotai/react"
 import React from "react"
 import { useDebounce } from "use-debounce"
+import { filterNovelCollection } from "./novel-collection-filter"
 
 export const MYLISTS_DEFAULT_PARAMS: CollectionParams<"anime"> | CollectionParams<"manga"> = {
     ...DEFAULT_COLLECTION_PARAMS,
@@ -19,7 +20,7 @@ export const __myListsSearch_paramsAtom = atomWithImmer<CollectionParams<"anime"
 
 export const __myListsSearch_paramsInputAtom = atomWithImmer<CollectionParams<"anime"> | CollectionParams<"manga">>(MYLISTS_DEFAULT_PARAMS)
 
-export const __myLists_selectedTypeAtom = atomWithImmer<"anime" | "manga" | "stats">("anime")
+export const __myLists_selectedTypeAtom = atomWithImmer<"anime" | "manga" | "novel" | "asmr" | "stats">("anime")
 
 export function useHandleUserAnilistLists(debouncedSearchInput: string, type?: "anime" | "manga") {
 
@@ -37,7 +38,13 @@ export function useHandleUserAnilistLists(debouncedSearchInput: string, type?: "
         return selectedType === "anime" ? animeData : mangaData
     }, [selectedType, animeData, mangaData, type])
 
-    const lists = React.useMemo(() => data?.MediaListCollection?.lists, [data])
+    const lists = React.useMemo(() => {
+        // Novel is the NOVEL-format subset of the manga collection.
+        if (selectedType === "novel") {
+            return filterNovelCollection(mangaData?.MediaListCollection?.lists)
+        }
+        return data?.MediaListCollection?.lists
+    }, [data, mangaData, selectedType])
     const mediaTagMap = React.useMemo(() => {
         if (type) {
             return type === "anime" ? animeTagMap : mangaTagMap
@@ -49,7 +56,7 @@ export function useHandleUserAnilistLists(debouncedSearchInput: string, type?: "
     const [debouncedParams] = useDebounce(params, 500)
 
     React.useLayoutEffect(() => {
-        if (selectedType === "manga" && !serverStatus?.settings?.library?.enableManga) {
+        if ((selectedType === "manga" || selectedType === "novel") && !serverStatus?.settings?.library?.enableManga) {
             setSelectedType("anime")
         }
     }, [serverStatus?.settings?.library?.enableManga])
@@ -59,10 +66,15 @@ export function useHandleUserAnilistLists(debouncedSearchInput: string, type?: "
     }, [selectedType])
 
     const _filteredLists: AL_AnimeCollection_MediaListCollection_Lists[] = React.useMemo(() => {
+        // asmr / stats do not use the collection pipeline — skip early.
+        if (selectedType === "asmr" || selectedType === "stats") return []
+        // Explicit narrowing: novel is sourced from the manga collection, so it
+        // must be passed as "manga". No `as CollectionType` cast on asmr/stats.
+        const collectionType: CollectionType = selectedType === "novel" ? "manga" : selectedType
         return lists?.map(obj => {
             if (!obj) return undefined
             const arr = filterListEntries(
-                selectedType as CollectionType,
+                collectionType,
                 obj?.entries,
                 params,
                 serverStatus?.settings?.anilist?.enableAdultContent,

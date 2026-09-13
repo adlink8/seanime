@@ -64,6 +64,16 @@ export default function Page() {
                                     isCurrent: pageType === "manga",
                                     onClick: () => setPageType("manga"),
                                 }] : []),
+                                ...(serverStatus?.settings?.library?.enableManga ? [{
+                                    name: t("discover.tab.novel"),
+                                    isCurrent: pageType === "novel",
+                                    onClick: () => setPageType("novel"),
+                                }] : []),
+                                {
+                                    name: t("discover.tab.asmr"),
+                                    isCurrent: pageType === "asmr",
+                                    onClick: () => setPageType("asmr"),
+                                },
                             ]}
                         />
                     </div>
@@ -180,7 +190,24 @@ export default function Page() {
                             <h2>{t("discover.section.manga_trending_cn")}</h2>
                             <DiscoverTrendingCountry country="CN" />
                         </div>
-                        {/* Phase 2.5：轻小说 + 音声（ASMR）区块 */}
+                        {/*<div className="space-y-2 z-[5] relative">*/}
+                        {/*    <DiscoverMangaSearchBar />*/}
+                        {/*</div>*/}
+                    </PageWrapper>}
+                    {/* Phase 3.1：轻小说升为顶层分类 */}
+                    {pageType === "novel" && <PageWrapper
+                        key="novel"
+                        className="relative 2xl:order-first pb-10 pt-4"
+                        data-discover-page-novel-container
+                        {...{
+                            initial: { opacity: 0, y: 60 },
+                            animate: { opacity: 1, y: 0 },
+                            exit: { opacity: 0, scale: 0.99 },
+                            transition: {
+                                duration: 0.35,
+                            },
+                        }}
+                    >
                         <div className="space-y-2 z-[5] relative" data-discover-page-novel-popular-container>
                             <h2>{t("discover.section.popular_novel")}</h2>
                             <DiscoverPopularNovel />
@@ -189,6 +216,21 @@ export default function Page() {
                             <h2>{t("discover.section.this_season_novel")}</h2>
                             <DiscoverThisSeasonNovel />
                         </div>
+                    </PageWrapper>}
+                    {/* Phase 3.1：音声升为顶层分类 */}
+                    {pageType === "asmr" && <PageWrapper
+                        key="asmr"
+                        className="relative 2xl:order-first pb-10 pt-4"
+                        data-discover-page-asmr-container
+                        {...{
+                            initial: { opacity: 0, y: 60 },
+                            animate: { opacity: 1, y: 0 },
+                            exit: { opacity: 0, scale: 0.99 },
+                            transition: {
+                                duration: 0.35,
+                            },
+                        }}
+                    >
                         <div className="space-y-2 z-[5] relative" data-discover-page-asmr-popular-container>
                             <h2>{t("discover.section.popular_asmr")}</h2>
                             <DiscoverPopularAsmr />
@@ -197,9 +239,6 @@ export default function Page() {
                             <h2>{t("discover.section.latest_asmr")}</h2>
                             <DiscoverLatestAsmr />
                         </div>
-                        {/*<div className="space-y-2 z-[5] relative">*/}
-                        {/*    <DiscoverMangaSearchBar />*/}
-                        {/*</div>*/}
                     </PageWrapper>}
                 </AnimatePresence>
 

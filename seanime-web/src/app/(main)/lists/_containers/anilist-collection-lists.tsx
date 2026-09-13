@@ -3,6 +3,7 @@ import { useGetAniListStats } from "@/api/hooks/anilist.hooks"
 import { AnilistAnimeEntryList } from "@/app/(main)/_features/anime/_components/anilist-media-entry-list"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { AnilistStats } from "@/app/(main)/lists/_containers/anilist-stats"
+import { AsmrLibraryView } from "@/app/(main)/asmr/_components/asmr-library-view"
 import {
     __myLists_selectedTypeAtom,
     __myListsSearch_paramsAtom,
@@ -96,6 +97,16 @@ export function AnilistCollectionLists() {
                             isCurrent: pageType === "manga",
                             onClick: () => setPageType("manga"),
                         }],
+                        ...[serverStatus?.settings?.library?.enableManga && {
+                            name: t("misc.lists.tab_novel"),
+                            isCurrent: pageType === "novel",
+                            onClick: () => setPageType("novel"),
+                        }],
+                        ...[{
+                            name: t("misc.lists.tab_asmr"),
+                            isCurrent: pageType === "asmr",
+                            onClick: () => setPageType("asmr"),
+                        }],
                         ...[!serverStatus?.user?.isSimulated && {
                             name: t("misc.lists.tab_stats"),
                             isCurrent: pageType === "stats",
@@ -107,7 +118,7 @@ export function AnilistCollectionLists() {
 
 
             <AnimatePresence mode="wait" initial={false} data-anilist-collection-lists-content>
-                {pageType !== "stats" && <PageWrapper
+                {pageType !== "stats" && pageType !== "asmr" && <PageWrapper
                     key="lists"
                     className="space-y-6"
                     {...{
@@ -124,27 +135,27 @@ export function AnilistCollectionLists() {
                     <div className="py-6 space-y-6" data-anilist-collection-lists-stack>
                         {(!!currentList?.entries?.length && ["-", "CURRENT"].includes(selectedIndex)) && <>
                             <h2>{t("common.state.watching")} <span className="text-[--muted] font-medium ml-3">{currentList?.entries?.length}</span></h2>
-                            <AnilistAnimeEntryList type={pageType} list={currentList} />
+                            <AnilistAnimeEntryList type={pageType === "novel" ? "manga" : pageType} list={currentList} />
                         </>}
                         {(!!repeatingList?.entries?.length && ["-", "REPEATING"].includes(selectedIndex)) && <>
                             <h2>{t("common.state.rewatching")} <span className="text-[--muted] font-medium ml-3">{repeatingList?.entries?.length}</span></h2>
-                            <AnilistAnimeEntryList type={pageType} list={repeatingList} />
+                            <AnilistAnimeEntryList type={pageType === "novel" ? "manga" : pageType} list={repeatingList} />
                         </>}
                         {(!!planningList?.entries?.length && ["-", "PLANNING"].includes(selectedIndex)) && <>
                             <h2>{t("common.state.planning")} <span className="text-[--muted] font-medium ml-3">{planningList?.entries?.length}</span></h2>
-                            <AnilistAnimeEntryList type={pageType} list={planningList} />
+                            <AnilistAnimeEntryList type={pageType === "novel" ? "manga" : pageType} list={planningList} />
                         </>}
                         {(!!pausedList?.entries?.length && ["-", "PAUSED"].includes(selectedIndex)) && <>
                             <h2>{t("common.state.paused")} <span className="text-[--muted] font-medium ml-3">{pausedList?.entries?.length}</span></h2>
-                            <AnilistAnimeEntryList type={pageType} list={pausedList} />
+                            <AnilistAnimeEntryList type={pageType === "novel" ? "manga" : pageType} list={pausedList} />
                         </>}
                         {(!!completedList?.entries?.length && ["-", "COMPLETED"].includes(selectedIndex)) && <>
                             <h2>{t("common.state.completed")} <span className="text-[--muted] font-medium ml-3">{completedList?.entries?.length}</span></h2>
-                            <AnilistAnimeEntryList type={pageType} list={completedList} />
+                            <AnilistAnimeEntryList type={pageType === "novel" ? "manga" : pageType} list={completedList} />
                         </>}
                         {(!!droppedList?.entries?.length && ["-", "DROPPED"].includes(selectedIndex)) && <>
                             <h2>{t("common.state.dropped")} <span className="text-[--muted] font-medium ml-3">{droppedList?.entries?.length}</span></h2>
-                            <AnilistAnimeEntryList type={pageType} list={droppedList} />
+                            <AnilistAnimeEntryList type={pageType === "novel" ? "manga" : pageType} list={droppedList} />
                         </>}
                         {customLists?.map(list => {
                             return (!!list.entries?.length && ["-", list.name || "N/A"].includes(selectedIndex)) ? <div
@@ -152,10 +163,26 @@ export function AnilistCollectionLists() {
                                 className="space-y-6"
                             >
                                 <h2>{list.name}</h2>
-                                <AnilistAnimeEntryList type={pageType} list={list} />
+                                <AnilistAnimeEntryList type={pageType === "novel" ? "manga" : pageType} list={list} />
                             </div> : null
                         })}
                     </div>
+                </PageWrapper>}
+
+                {pageType === "asmr" && <PageWrapper
+                    key="asmr"
+                    className="space-y-6"
+                    {...{
+                        initial: { opacity: 0 },
+                        animate: { opacity: 1 },
+                        exit: { opacity: 0 },
+                        transition: {
+                            duration: 0.35,
+                        },
+                    }}
+                    data-anilist-collection-lists-asmr-wrapper
+                >
+                    <AsmrLibraryView />
                 </PageWrapper>}
 
                 {pageType === "stats" && !serverStatus?.user?.isSimulated && <PageWrapper

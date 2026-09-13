@@ -18,6 +18,8 @@ export const miscDictionary = {
     // ===== lists（anilist-collection-lists.tsx）=====
     "misc.lists.tab_stats": "数据统计", // anilist-collection-lists.tsx StaticTabs
     "misc.lists.all_lists": "全部列表", // anilist-collection-lists.tsx Select label
+    "misc.lists.tab_novel": "轻小说", // anilist-collection-lists.tsx StaticTabs（Phase 3.1 顶层分类）
+    "misc.lists.tab_asmr": "音声", // anilist-collection-lists.tsx StaticTabs（Phase 3.1 顶层分类）
 
     // ===== lists（anilist-stats.tsx）=====
     "misc.stats.format_tv_short": "TV 短篇", // anilist-stats.tsx formatName

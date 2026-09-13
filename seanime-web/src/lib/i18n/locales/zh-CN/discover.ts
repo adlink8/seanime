@@ -17,6 +17,8 @@ export const discoverDictionary = {
     // —— 探索发现页：顶部页签（discover/page.tsx）——
     "discover.tab.anime": "动漫", // src/app/(main)/discover/page.tsx
     "discover.tab.manga": "漫画", // src/app/(main)/discover/page.tsx
+    "discover.tab.novel": "轻小说", // src/app/(main)/discover/page.tsx（Phase 3.1 顶层分类）
+    "discover.tab.asmr": "音声", // src/app/(main)/discover/page.tsx（Phase 3.1 顶层分类）
 
     // —— 探索发现页：板块标题（discover/page.tsx）——
     "discover.section.this_season": "本季霸权精选", // src/app/(main)/discover/page.tsx

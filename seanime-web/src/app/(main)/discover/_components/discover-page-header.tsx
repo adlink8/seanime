@@ -58,7 +58,7 @@ interface BannerImageProps {
 
 interface MediaMetadataProps {
     media: AL_BaseAnime | null
-    pageType: "anime" | "manga" | "schedule"
+    pageType: "anime" | "manga" | "schedule" | "novel" | "asmr"
     isTransitioning: boolean
     onHoverChange: (hovering: boolean) => void
 }
