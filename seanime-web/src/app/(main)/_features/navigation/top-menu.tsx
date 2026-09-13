@@ -41,8 +41,14 @@ export const TopMenu: React.FC<TopMenuProps> = (props) => {
             ...[serverStatus?.settings?.library?.enableManga && {
                 href: "/manga",
                 icon: null,
-                isCurrent: pathname.startsWith("/manga"),
+                isCurrent: pathname.startsWith("/manga") && !pathname.startsWith("/lightnovel"),
                 name: t("navigation.item.manga"),
+            }, serverStatus?.settings?.library?.enableManga && {
+                // 轻小说栏：复用 manga 收藏管道，按 Format=NOVEL 过滤展示（见 /lightnovel 页）
+                href: "/lightnovel",
+                icon: null,
+                isCurrent: pathname.startsWith("/lightnovel"),
+                name: t("navigation.item.lightnovel"),
             }].filter(Boolean) as NavigationMenuProps["items"],
             {
                 href: "/lists",

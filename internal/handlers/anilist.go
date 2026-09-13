@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"seanime/internal/media"
+	"seanime/internal/platforms/bangumi_platform"
 	"seanime/internal/platforms/shared_platform"
 	"seanime/internal/util/result"
 	"seanime/internal/api/bangumi"
@@ -82,14 +83,24 @@ func (h *Handler) HandleGetRawAnimeCollectionTags(c echo.Context) error {
 		return h.RespondWithData(c, *tagsCache)
 	}
 
-	userName := h.App.GetUsername()
-	if userName == "" || h.App.GetUser().IsSimulated {
+	if h.App.GetUser().IsSimulated {
 		return h.RespondWithData(c, media.MediaTagMap{})
 	}
 
 	// Bangumi 锚点：无用户标签聚合查询，改为分页拉取收藏并聚合各条目的用户标签。
+	// 注意：GET 收藏接口的路径参数是 username 句柄（GetMe 解析），不是昵称；
+	// App.GetUsername() 返回的是展示昵称，直接传会导致 404。
 	client := h.App.AnilistPlatformRef.Get().GetBangumiClient()
 	if client == nil {
+		return h.RespondWithData(c, media.MediaTagMap{})
+	}
+	bp, ok := h.App.AnilistPlatformRef.Get().(*bangumi_platform.BangumiPlatform)
+	if !ok {
+		// 非 Bangumi 平台（offline/simulated）：无标签可聚合
+		return h.RespondWithData(c, media.MediaTagMap{})
+	}
+	userName := bp.Username(c.Request().Context())
+	if userName == "" {
 		return h.RespondWithData(c, media.MediaTagMap{})
 	}
 

@@ -34,6 +34,7 @@ export const navigationDictionary = {
     "navigation.item.home": "首页", // src/app/(main)/_features/navigation/main-sidebar.tsx, src/app/(main)/_features/navigation/top-menu.tsx
     "navigation.item.schedule": "放送日历", // src/app/(main)/_features/navigation/main-sidebar.tsx, src/app/(main)/_features/navigation/top-menu.tsx
     "navigation.item.manga": "漫画", // src/app/(main)/_features/navigation/main-sidebar.tsx, src/app/(main)/_features/navigation/top-menu.tsx, src/app/(main)/_features/navigation/offline-sidebar.tsx
+    "navigation.item.lightnovel": "轻小说", // src/app/(main)/_features/navigation/main-sidebar.tsx, src/app/(main)/_features/navigation/top-menu.tsx
     "navigation.item.lists": "我的片单", // src/app/(main)/_features/navigation/main-sidebar.tsx, src/app/(main)/_features/navigation/top-menu.tsx
     "navigation.item.discover": "探索发现", // src/app/(main)/_features/navigation/main-sidebar.tsx, src/app/(main)/_features/navigation/top-menu.tsx
     "navigation.item.search": "搜索", // src/app/(main)/_features/navigation/main-sidebar.tsx

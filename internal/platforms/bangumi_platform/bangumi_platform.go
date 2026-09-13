@@ -115,6 +115,16 @@ func (bp *BangumiPlatform) SetUsername(username string) {
 	bp.username = mo.Some(username)
 }
 
+// Username 返回本人 username 句柄（GetMe 懒解析 + 进程内缓存），解析失败返回空串。
+// 供 handlers 等直接调 client 的方使用：Bangumi 的 username 句柄 ≠ 昵称，
+// GET /v0/users/{句柄}/collections 必须用此句柄，不能用 App.GetUsername()（昵称，404）。
+func (bp *BangumiPlatform) Username(ctx context.Context) string {
+	if u, ok := bp.getUsername(ctx); ok {
+		return u
+	}
+	return ""
+}
+
 func (bp *BangumiPlatform) getUsername(ctx context.Context) (string, bool) {
 	if bp.selfUsername.IsPresent() {
 		return bp.selfUsername.MustGet(), true

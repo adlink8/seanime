@@ -38,7 +38,7 @@ import { BiChevronRight, BiExtension, BiLogIn, BiLogOut } from "react-icons/bi"
 import { FiLogIn, FiSearch } from "react-icons/fi"
 import { HiOutlineServerStack } from "react-icons/hi2"
 import { IoCloudOfflineOutline, IoHomeOutline } from "react-icons/io5"
-import { LuBookOpen, LuCalendar, LuCompass, LuRefreshCw, LuRss, LuSettings } from "react-icons/lu"
+import { LuBookMarked, LuBookOpen, LuCalendar, LuCompass, LuRefreshCw, LuRss, LuSettings } from "react-icons/lu"
 import { MdArrowForward } from "react-icons/md"
 import { MdArrowBack } from "react-icons/md"
 import { MdOutlineConnectWithoutContact } from "react-icons/md"
@@ -219,7 +219,14 @@ function SidebarNavigation({ isCollapsed, containerRef }: { isCollapsed: boolean
             iconType: LuBookOpen,
             name: t("navigation.item.manga"),
             href: "/manga",
-            isCurrent: pathname.startsWith("/manga"),
+            isCurrent: pathname.startsWith("/manga") && !pathname.startsWith("/lightnovel"),
+        }, {
+            // 轻小说栏：复用 manga 收藏管道，按 Format=NOVEL 过滤展示（见 /lightnovel 页）
+            id: "lightnovel",
+            iconType: LuBookMarked,
+            name: t("navigation.item.lightnovel"),
+            href: "/lightnovel",
+            isCurrent: pathname.startsWith("/lightnovel"),
         }] : [],
         {
             id: "lists",

@@ -250,7 +250,9 @@ func (c *Client) doRequest(ctx context.Context, method, path string, query url.V
 			req.Header.Set("Authorization", "Bearer "+c.token)
 		}
 		if body != nil {
-			req.Header.Set("Content-Type", "application/json; charset=utf-8")
+			// Bangumi 服务端对 Content-Type 做严格匹配，"application/json; charset=utf-8"
+			// 会被拒（415 Unsupported Media Type），必须用纯 "application/json"
+			req.Header.Set("Content-Type", "application/json")
 		}
 
 		resp, err := c.httpClient.Do(req)
