@@ -80,17 +80,19 @@ export function AsmrPlaybackBar({ tracks, completedPaths, onToggleCompleted }: A
         return flatTracks.find(tr => !!tr.localPath && normalizeFilepath(tr.localPath) === norm)
     }, [status.data, flatTracks])
 
+    // 进度条：拖动用本地 state 跟随，松手才提交 seek（避免 IPC 刷屏，契约 D7）。
+    // ⚠ 这些 hooks 必须在下面的提前 return 之前调用——违反 rules-of-hooks会在
+    // status 从无到有时抛 "Rendered more hooks than during the previous render"。
+    const [dragging, setDragging] = useState(false)
+    const [localTime, setLocalTime] = useState(0)
+    useEffect(() => {
+        if (!dragging && status.data) setLocalTime(status.data.currentTime)
+    }, [status.data?.currentTime, dragging])
+
     // 无匹配（无播放 / 非 mpv / 不匹配）则不渲染（契约 AC-06）
     if (!status.data || !matchedTrack) return null
 
     const { playing, currentTime, duration, filename } = status.data
-
-    // 进度条：拖动用本地 state 跟随，松手才提交 seek（避免 IPC 刷屏，契约 D7）
-    const [dragging, setDragging] = useState(false)
-    const [localTime, setLocalTime] = useState(currentTime)
-    useEffect(() => {
-        if (!dragging) setLocalTime(currentTime)
-    }, [currentTime, dragging])
 
     const displayTime = dragging ? localTime : currentTime
     const pct = duration > 0 ? (displayTime / duration) * 100 : 0
