@@ -23,6 +23,7 @@ import { Route as MainSearchIndexRouteImport } from './routes/_main/search/index
 import { Route as MainOfflineIndexRouteImport } from './routes/_main/offline/index'
 import { Route as MainMediastreamIndexRouteImport } from './routes/_main/mediastream/index'
 import { Route as MainMedialinksIndexRouteImport } from './routes/_main/medialinks/index'
+import { Route as MainLightnovelIndexRouteImport } from './routes/_main/lightnovel/index'
 import { Route as MainExtensionsIndexRouteImport } from './routes/_main/extensions/index'
 import { Route as MainEntryIndexRouteImport } from './routes/_main/entry/index'
 import { Route as MainDiscoverIndexRouteImport } from './routes/_main/discover/index'
@@ -239,6 +240,13 @@ const MainMedialinksIndexRoute = MainMedialinksIndexRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_main/medialinks/index.lazy').then((d) => d.Route),
 )
+const MainLightnovelIndexRoute = MainLightnovelIndexRouteImport.update({
+  id: '/lightnovel/',
+  path: '/lightnovel/',
+  getParentRoute: () => MainRoute,
+} as any).lazy(() =>
+  import('./routes/_main/lightnovel/index.lazy').then((d) => d.Route),
+)
 const MainExtensionsIndexRoute = MainExtensionsIndexRouteImport.update({
   id: '/extensions/',
   path: '/extensions/',
@@ -330,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/discover/': typeof MainDiscoverIndexRoute
   '/entry/': typeof MainEntryIndexRoute
   '/extensions/': typeof MainExtensionsIndexRoute
+  '/lightnovel/': typeof MainLightnovelIndexRoute
   '/medialinks/': typeof MainMedialinksIndexRoute
   '/mediastream/': typeof MainMediastreamIndexRoute
   '/offline/': typeof MainOfflineIndexRoute
@@ -368,6 +377,7 @@ export interface FileRoutesByTo {
   '/discover': typeof MainDiscoverIndexRoute
   '/entry': typeof MainEntryIndexRoute
   '/extensions': typeof MainExtensionsIndexRoute
+  '/lightnovel': typeof MainLightnovelIndexRoute
   '/medialinks': typeof MainMedialinksIndexRoute
   '/mediastream': typeof MainMediastreamIndexRoute
   '/offline': typeof MainOfflineIndexRoute
@@ -408,6 +418,7 @@ export interface FileRoutesById {
   '/_main/discover/': typeof MainDiscoverIndexRoute
   '/_main/entry/': typeof MainEntryIndexRoute
   '/_main/extensions/': typeof MainExtensionsIndexRoute
+  '/_main/lightnovel/': typeof MainLightnovelIndexRoute
   '/_main/medialinks/': typeof MainMedialinksIndexRoute
   '/_main/mediastream/': typeof MainMediastreamIndexRoute
   '/_main/offline/': typeof MainOfflineIndexRoute
@@ -448,6 +459,7 @@ export interface FileRouteTypes {
     | '/discover/'
     | '/entry/'
     | '/extensions/'
+    | '/lightnovel/'
     | '/medialinks/'
     | '/mediastream/'
     | '/offline/'
@@ -486,6 +498,7 @@ export interface FileRouteTypes {
     | '/discover'
     | '/entry'
     | '/extensions'
+    | '/lightnovel'
     | '/medialinks'
     | '/mediastream'
     | '/offline'
@@ -525,6 +538,7 @@ export interface FileRouteTypes {
     | '/_main/discover/'
     | '/_main/entry/'
     | '/_main/extensions/'
+    | '/_main/lightnovel/'
     | '/_main/medialinks/'
     | '/_main/mediastream/'
     | '/_main/offline/'
@@ -753,6 +767,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainMedialinksIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/lightnovel/': {
+      id: '/_main/lightnovel/'
+      path: '/lightnovel'
+      fullPath: '/lightnovel/'
+      preLoaderRoute: typeof MainLightnovelIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/extensions/': {
       id: '/_main/extensions/'
       path: '/extensions'
@@ -834,6 +855,7 @@ interface MainRouteChildren {
   MainDiscoverIndexRoute: typeof MainDiscoverIndexRoute
   MainEntryIndexRoute: typeof MainEntryIndexRoute
   MainExtensionsIndexRoute: typeof MainExtensionsIndexRoute
+  MainLightnovelIndexRoute: typeof MainLightnovelIndexRoute
   MainMedialinksIndexRoute: typeof MainMedialinksIndexRoute
   MainMediastreamIndexRoute: typeof MainMediastreamIndexRoute
   MainOfflineIndexRoute: typeof MainOfflineIndexRoute
@@ -867,6 +889,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainDiscoverIndexRoute: MainDiscoverIndexRoute,
   MainEntryIndexRoute: MainEntryIndexRoute,
   MainExtensionsIndexRoute: MainExtensionsIndexRoute,
+  MainLightnovelIndexRoute: MainLightnovelIndexRoute,
   MainMedialinksIndexRoute: MainMedialinksIndexRoute,
   MainMediastreamIndexRoute: MainMediastreamIndexRoute,
   MainOfflineIndexRoute: MainOfflineIndexRoute,

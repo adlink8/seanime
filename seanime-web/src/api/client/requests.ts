@@ -7,6 +7,7 @@ import axios, { AxiosError } from "axios"
 import { useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { toast } from "sonner"
+import { handleSeaError } from "./sea-error-message"
 
 type SeaError = AxiosError<{ error: string }>
 
@@ -200,7 +201,7 @@ export function useServerMutation<R = void, V = void>(
                 return
             }
             console.log("Mutation error", error)
-            const errorMsg = _handleSeaError(error.response?.data)
+            const errorMsg = handleSeaError(error.response?.data, error.response?.status)
             if (errorMsg.includes("feature disabled")) {
                 toast.warning("This feature is disabled")
                 return
@@ -265,7 +266,7 @@ export function useServerQuery<R, V = any>(
                 return
             }
             console.log("Server error", props.error)
-            const errorMsg = _handleSeaError(props.error?.response?.data)
+            const errorMsg = handleSeaError(props.error?.response?.data, props.error?.response?.status)
             if (errorMsg.includes("feature disabled")) {
                 return
             }
@@ -279,32 +280,6 @@ export function useServerQuery<R, V = any>(
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-
-function _handleSeaError(data: any): string {
-    if (typeof data === "string") return "Server Error: " + data
-
-    const err = data?.error as string
-
-    if (!err) return "Unknown error"
-
-    if (err.includes("Too many requests"))
-        return "AniList: Too many requests, please wait a moment and try again."
-
-    try {
-        const graphqlErr = JSON.parse(err) as any
-        console.log("AniList error", graphqlErr)
-        if (graphqlErr.graphqlErrors && graphqlErr.graphqlErrors.length > 0 && !!graphqlErr.graphqlErrors[0]?.message) {
-            return "AniList error: " + graphqlErr.graphqlErrors[0]?.message
-        }
-        return "AniList error"
-    }
-    catch (e) {
-        if (err.includes("no cached data") || err.includes("cache lookup failed")) {
-            return ""
-        }
-        return "Error: " + err
-    }
-}
 
 function _handleSeaResponse<T>(res: unknown): { data: T | undefined, error: string | undefined } {
 

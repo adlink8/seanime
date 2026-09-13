@@ -417,8 +417,13 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 		return h.RespondWithError(c, err)
 	}
 
-	if p.Page == nil || p.PerPage == nil {
+	// 缺省补默认值：两个字段独立判空，nil 时先 new 出对象再赋值（见 03.6-DIAGNOSIS 故障 2）。
+	if p.Page == nil {
+		p.Page = new(int)
 		*p.Page = 1
+	}
+	if p.PerPage == nil {
+		p.PerPage = new(int)
 		*p.PerPage = 20
 	}
 
@@ -598,22 +603,10 @@ func (h *Handler) HandleAnilistListNovel(c echo.Context) error {
 	filter.AirDate = seasonAirDateRange(p.Season, p.SeasonYear)
 	filter.Rating = ratingFilterFromAverageScore(p.AverageScoreGreater)
 
-	// 无关键词（探索/浏览场景）时追加官方「轻小说」标签：
-	// 实测书籍分区搜索结果中轻小说占比极低（rank 前 20 几乎全为漫画），
-	// tag 过滤是唯一高召回手段（rank 9/10、heat 5/5 命中小说 platform），
-	// 且排序在轻小说子集内生效，语义正确。有关键词时不加（避免漏掉未打标签的条目）。
-	if keyword == "" {
-		hasNovelTag := false
-		for _, t := range filter.Tag {
-			if t == "轻小说" {
-				hasNovelTag = true
-				break
-			}
-		}
-		if !hasNovelTag {
-			filter.Tag = append(filter.Tag, "轻小说")
-		}
-	}
+	// 注意：此处**不得**为空关键词再追加 Bangumi tag「轻小说」。
+	// 实测 filter.tag 对 type=1（书籍分区）恒返 total=0（漫画/轻小说/小说均如此），
+	// 一旦追加，轻小说探索会从「有结果」直接变「全空」。轻小说子集只靠下方
+	// platform ∈ {小说, WEB} 过滤（实测有效：books 分区前 100 条中 29 条 platform=小说）。
 
 	// over-fetch：书籍搜索结果中轻小说占比低（平台过滤会大量丢弃），且服务端
 	// limit 被钳制在 20（实测请求 50 仅返回 20），单次请求不够——改为多页循环
@@ -692,8 +685,13 @@ func (h *Handler) HandleAnilistListRecentAiringAnime(c echo.Context) error {
 		return h.RespondWithError(c, err)
 	}
 
-	if p.Page == nil || p.PerPage == nil {
+	// 缺省补默认值：两个字段独立判空，nil 时先 new 出对象再赋值（见 03.6-DIAGNOSIS 故障 2）。
+	if p.Page == nil {
+		p.Page = new(int)
 		*p.Page = 1
+	}
+	if p.PerPage == nil {
+		p.PerPage = new(int)
 		*p.PerPage = 50
 	}
 

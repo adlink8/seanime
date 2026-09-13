@@ -81,8 +81,10 @@ func NewCollection(opts *NewCollectionOptions) (collection *Collection, err erro
 						Media:   entry.GetMedia(),
 						MediaId: entry.GetMedia().GetID(),
 						EntryListData: &EntryListData{
-							Progress:    *entry.Progress,
-							Score:       *entry.Score,
+							// Bangumi 适配器对「未评分 / 无进度」条目返回 nil（见 03.6-DIAGNOSIS 故障 1），
+							// 此处用 lo.FromPtr 安全取值：nil 指针转为对应值类型的零值，避免裸解引用 panic。
+							Progress:    lo.FromPtr(entry.Progress),
+							Score:       lo.FromPtr(entry.Score),
 							Status:      entry.Status,
 							Repeat:      entry.GetRepeatSafe(),
 							StartedAt:   media.FuzzyDateToString(entry.StartedAt),

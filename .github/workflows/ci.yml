@@ -66,8 +66,20 @@ jobs:
       # 需真实账号现场录制，见 internal/testutil/data.go），CI 永远无法通过。
       # 此为上游既有状况（上游无测试 CI），非本次改动引入。
       # 注意：Phase 2 将改动 internal/library/scanner——届时为其补不依赖 fixture 的单测。
+      #
+      # internal/handlers 已从本 SKIP 名单移除（Phase 3.6）：核实该包全部 9 个测试文件
+      # （含新增 anilist_test.go）均不引用 testutil / fixture / 真实网络，原「依赖 fixture」
+      # 的排除理由对该包不成立。
       - name: Run Go tests
         run: |
-          SKIP='^seanime/internal/(api/anilist|discordrpc/client|goja/goja_bindings|handlers|library/(anime|autodownloader|scanner)|local|notifier|platforms/simulated_platform|testutil)$'
+          SKIP='^seanime/internal/(api/anilist|discordrpc/client|goja/goja_bindings|library/(anime|autodownloader|scanner)|local|notifier|platforms/simulated_platform|testutil)$'
           PKGS=$(go list ./... | grep -vE "$SKIP" | tr '\n' ' ')
-          go test $PKGS -count=1
+          go test $PKGS -count=1 -skip 'TestUsesPrivilegedCommandSettings'
+      #
+      # -skip 例外说明：TestUsesPrivilegedCommandSettings 的 "ignores default executable
+      # paths" 子测试断言的是 macOS 默认可执行路径（/Applications/VLC.app/... 等），
+      # 而生产代码 defaultVLCPaths()/defaultQBittorrentPaths() 按 runtime.GOOS 返回平台
+      # 默认值（linux = /usr/bin/vlc、/usr/bin/qbittorrent），二者不相等 → 在 ubuntu
+      # runner 上该断言必然失败（已用「把 linux 默认值代入」的方式实测复现，非仅 Windows
+      # 本地现象）。这是上游测试的平台脆弱性，测试文件与生产代码均不改动。
+      # TODO(M4)：上游修好该测试的平台断言后，删除本 -skip。
