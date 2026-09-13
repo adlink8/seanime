@@ -4,10 +4,13 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"strings"
+
 	"seanime/internal/continuity"
 	discordrpc_presence "seanime/internal/discordrpc/presence"
 	"seanime/internal/events"
 	"seanime/internal/library/anime"
+	"seanime/internal/media"
 	"seanime/internal/mediaplayers/mediaplayer"
 	"seanime/internal/util"
 
@@ -58,7 +61,38 @@ func (pm *PlaybackManager) listenToMediaPlayerEvents(ctx context.Context) {
 	}()
 }
 
+// isAsmrLocalFile reports whether path is located inside the ASMR local library root.
+// Both arguments are normalized via util.NormalizePath (lowercase + forward slashes on
+// Windows) before comparison. The match requires a path-prefix AND a boundary check so
+// that a sibling directory like "asmr-local-evil" cannot be falsely matched.
+// An empty asmrLocalDir disables detection and always returns false.
+func isAsmrLocalFile(asmrLocalDir, path string) bool {
+	if asmrLocalDir == "" {
+		return false
+	}
+	dir := util.NormalizePath(asmrLocalDir)
+	p := util.NormalizePath(path)
+	if !strings.HasPrefix(p, dir) {
+		return false
+	}
+	rest := p[len(dir):]
+	return rest == "" || strings.HasPrefix(rest, "/")
+}
+
+// isAsmrLocalFile is the PlaybackManager method form that uses the injected AsmrLocalDir.
+func (pm *PlaybackManager) isAsmrLocalFile(path string) bool {
+	return isAsmrLocalFile(pm.AsmrLocalDir, path)
+}
+
 func (pm *PlaybackManager) handleTrackingStarted(status *mediaplayer.PlaybackStatus) {
+	// ASMR local files are not part of the anime local library, so routing them through
+	// getLocalFilePlaybackDetails would fail the lookup and cancel playback. Short-circuit to
+	// the ASMR branch instead. This check runs before acquiring eventMu so the branch can lock it.
+	if pm.isAsmrLocalFile(status.Filepath) {
+		pm.handleAsmrTrackingStarted(status)
+		return
+	}
+
 	pm.eventMu.Lock()
 	defer pm.eventMu.Unlock()
 
@@ -133,6 +167,51 @@ func (pm *PlaybackManager) handleTrackingStarted(status *mediaplayer.PlaybackSta
 			int(pm.currentMediaPlaybackStatus.DurationInSeconds),
 		))
 	}
+}
+
+// handleAsmrTrackingStarted handles tracking start for ASMR local files, which are intentionally
+// NOT looked up against the anime local library. It avoids the anime local-file lookup failure
+// path entirely so playback is never cancelled, and explicitly resets the three anime-local
+// Options to None to prevent stale state from a previous anime session. It never calls Cancel()
+// and never sends an error toast. getLocalFilePlaybackState returns an empty PlaybackState when
+// those Options are absent, so the dispatched event is safe.
+func (pm *PlaybackManager) handleAsmrTrackingStarted(status *mediaplayer.PlaybackStatus) {
+	pm.eventMu.Lock()
+	defer pm.eventMu.Unlock()
+
+	// Set the playback type
+	pm.currentPlaybackType = LocalFilePlayback
+
+	// Reset the history map
+	pm.historyMap = make(map[string]PlaybackState)
+
+	// Set the current media playback status
+	pm.currentMediaPlaybackStatus = status
+
+	// Explicitly clear any leftover anime-local-file state from a previous session.
+	pm.currentMediaListEntry = mo.None[*media.AnimeListEntry]()
+	pm.currentLocalFile = mo.None[*anime.LocalFile]()
+	pm.currentLocalFileWrapperEntry = mo.None[*anime.LocalFileWrapperEntry]()
+
+	// Get the playback state (returns an empty PlaybackState because the Options are None).
+	_ps := pm.getLocalFilePlaybackState(status)
+
+	// Log
+	pm.Logger.Debug().Msg("playback manager: ASMR local tracking started")
+	// Send event to the client
+	pm.wsEventManager.SendEvent(events.PlaybackManagerProgressTrackingStarted, _ps)
+
+	// Notify subscribers
+	go func() {
+		pm.playbackStatusSubscribers.Range(func(key string, value *PlaybackStatusSubscriber) bool {
+			if value.Canceled.Load() {
+				return true
+			}
+			value.EventCh <- PlaybackStatusChangedEvent{Status: *status, State: _ps}
+			value.EventCh <- VideoStartedEvent{Filename: status.Filename, Filepath: status.Filepath}
+			return true
+		})
+	}()
 }
 
 func (pm *PlaybackManager) handleVideoCompleted(status *mediaplayer.PlaybackStatus) {

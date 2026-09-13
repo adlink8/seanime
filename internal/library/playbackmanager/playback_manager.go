@@ -57,7 +57,9 @@ type (
 		platformRef                *util.Ref[platform.Platform]
 		metadataProviderRef        *util.Ref[metadata_provider.Provider]
 		refreshAnimeCollectionFunc func() // This function is called to refresh the AniList collection
-		mu                         sync.Mutex
+		AsmrLocalDir              string // AsmrLocalDir is the root directory of the ASMR local library. It routes ASMR local files away from the anime local-file tracking (which would otherwise fail the lookup and cancel playback). Empty = detection disabled.
+
+		mu sync.Mutex
 		eventMu                    sync.RWMutex
 		cancel                     context.CancelFunc
 
@@ -188,6 +190,7 @@ type (
 		DiscordPresence            *discordrpc_presence.Presence
 		IsOfflineRef               *util.Ref[bool]
 		ContinuityManager          *continuity.Manager
+		AsmrLocalDir               string
 	}
 
 	Settings struct {
@@ -231,6 +234,7 @@ func New(opts *NewPlaybackManagerOptions) *PlaybackManager {
 		currentLocalFileWrapperEntry: mo.None[*anime.LocalFileWrapperEntry](),
 		currentMediaListEntry:        mo.None[*media.AnimeListEntry](),
 		continuityManager:            opts.ContinuityManager,
+		AsmrLocalDir:                 opts.AsmrLocalDir,
 		playbackStatusSubscribers:    result.NewMap[string, *PlaybackStatusSubscriber](),
 	}
 

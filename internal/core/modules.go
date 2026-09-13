@@ -121,6 +121,7 @@ func (a *App) initModulesOnce() {
 		DiscordPresence:     a.DiscordPresence,
 		IsOfflineRef:        a.IsOfflineRef(),
 		ContinuityManager:   a.ContinuityManager,
+		AsmrLocalDir:        a.Config.Asmr.LocalDir,
 		RefreshAnimeCollectionFunc: func() {
 			_, _ = a.RefreshAnimeCollection()
 		},
