@@ -11,7 +11,9 @@ import (
 //   - 搜索：GET /api/search/{page}?keyword=...&order=...&subtitle=...&pageSize=...（无需鉴权）
 //     注意 order/subtitle 是 query 参数，不是路径段：/api/search/dd/1 返回 404 "Cannot GET"。
 //   - order 合法枚举（express-validator 白名单实测）：空（服务端默认）、create_date、dl_count、
-//     price、release、id；dd/dl/dc/publish_date/rate 等一律 400 {"error":"order: Invalid value"}。
+//     price、release、id、rating；dc/publish_date/rate 等一律 400 {"error":"order: Invalid value"}。
+//     Phase 3.9b D9：order=rating 实测 200 且默认降序（评分最高在前）；order=dc 实测 400，故前端
+//     SORTING_ASMR 的「评分最高」值由 dc 改为 rating（见 mapOrder）。
 //   - subtitle 合法值：0（全部）、1（有字幕）；jp/2/3 等一律 400。API 不支持按字幕语言过滤。
 //   - pageSize 生效（默认 20），响应 pagination.pageSize 回显。
 //   - sort 参数（契约 03.2c / D9，2026-09-14 经代理实测）：合法；order=release 时服务端**默认即 desc**
@@ -28,8 +30,8 @@ import (
 // SearchParams 搜索参数（契约第 4 节 POST /api/v1/asmr/search 请求体的后端视角）
 type SearchParams struct {
 	Keyword string
-	// Order 契约前端枚举："dd"|"dl"|"dc"|"publish_date"，空走默认。
-	// 映射到实测合法枚举（见 mapOrder）。
+	// Order 契约前端枚举："dd"|"dl"|"rating"|"publish_date"，空走默认。
+	// 映射到实测合法枚举（见 mapOrder）。注意 "dc" 为历史别名，同映射为 rating。
 	Order string
 	// Page 从 1 开始
 	Page int
@@ -42,14 +44,18 @@ type SearchParams struct {
 }
 
 // mapOrder 契约 order 枚举 → asmr.one 实测合法枚举。
-// dd（日期降序）→ create_date（最新入库在前）；dl/dc（下载量）→ dl_count；
-// publish_date → release；其余/空 → 不传（服务端默认）。
+// dd（日期降序）→ create_date（最新入库在前）；dl（下载量）→ dl_count；
+// dc（历史别名，前端已改名为 rating）→ rating（评分最高，服务端默认降序）；
+// rating → rating（评分最高）；publish_date → release；其余/空 → 不传（服务端默认）。
+// 注意：asmr.one search/works 端点 order=dc 实测 400（契约 03.9b D9），故 dc 不再映射为 dl_count。
 func mapOrder(o string) string {
 	switch o {
 	case "dd":
 		return "create_date"
-	case "dl", "dc":
+	case "dl":
 		return "dl_count"
+	case "dc", "rating":
+		return "rating"
 	case "publish_date":
 		return "release"
 	default:

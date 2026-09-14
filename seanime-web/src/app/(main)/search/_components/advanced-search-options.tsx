@@ -2,7 +2,6 @@ import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import {
     ADVANCED_SEARCH_FORMATS_ANIME,
     ADVANCED_SEARCH_MEDIA_GENRES,
-    ADVANCED_SEARCH_MEDIA_TAGS,
     ADVANCED_SEARCH_SEASONS,
     ADVANCED_SEARCH_SORTING,
     ADVANCED_SEARCH_SORTING_ASMR,
@@ -76,7 +75,7 @@ export function AdvancedSearchOptions() {
                             options={ADVANCED_SEARCH_SORTING_ASMR}
                             value={mapSortingToAsmrOrder(params.sorting?.[0])}
                             onValueChange={v => setParams(draft => {
-                                // 将 asmr order 反查回 AL 排序值存储（dl→POPULARITY_DESC / dc→SCORE_DESC / dd / publish_date→START_DATE_DESC）
+                                // 将 asmr order 反查回 AL 排序值存储（dl→POPULARITY_DESC / rating→SCORE_DESC / dd / publish_date→START_DATE_DESC）
                                 const al = v === "dl" ? "POPULARITY_DESC" : v === "dd" ? "START_DATE_DESC" : v === "publish_date" ? "START_DATE_DESC" : "SCORE_DESC"
                                 draft.sorting = [al] as any
                                 return
@@ -133,27 +132,6 @@ export function AdvancedSearchOptions() {
                         return
                     })}
                     fieldLabelClass="hidden"
-                />
-                <Combobox
-                    multiple
-                    leftAddon={<TbTagsFilled className={cn((params.tags !== null && !!params.tags.length) && "text-indigo-300 font-bold text-xl")} />}
-                    emptyMessage={t("search.filter.tags_empty")}
-                    label={t("search.filter.tags")} placeholder={t("search.filter.tags_all")} className="w-full"
-                    options={ADVANCED_SEARCH_MEDIA_TAGS
-                        .filter(tag => {
-                            if (params.isAdult && serverStatus?.settings?.anilist?.enableAdultContent) {
-                                return true
-                            }
-                            return tag.isAdult === false
-                        })
-                        .map(tag => ({ value: tag.name, label: tag.name, textValue: tag.name }))}
-                    value={params.tags ? params.tags : []}
-                    onValueChange={v => setParams(draft => {
-                        draft.tags = v
-                        return
-                    })}
-                    fieldLabelClass="hidden"
-                    data-advanced-search-options-tags
                 />
                 {params.type === "anime" && <Select
                     leftAddon={<MdPersonalVideo className={cn((params.format !== null && !!params.format) && "text-indigo-300 font-bold text-xl")} />}

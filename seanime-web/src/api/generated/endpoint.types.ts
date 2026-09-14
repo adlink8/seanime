@@ -2245,7 +2245,7 @@ export type AnilistListNovel_Variables = {
  */
 export type AsmrSearch_Variables = {
     keyword: string
-    /** "dd" | "dl" | "dc" | "publish_date" */
+    /** "dd" | "dl" | "rating" | "publish_date" */
     order?: string
     /** 从 1 开始 */
     page?: number

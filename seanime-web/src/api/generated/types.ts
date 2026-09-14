@@ -6191,6 +6191,10 @@ export type Asmr_Work = {
     dlCount: number
     price: number
     hasSubtitle: boolean
+    /** 时长（分钟，Phase 3.9b P0 徽章） */
+    duration?: number
+    /** 评分人数（Phase 3.9b P0 徽章，rate_count<10 时评分角标不可信） */
+    rateCount?: number
 }
 
 /**

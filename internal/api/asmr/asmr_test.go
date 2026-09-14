@@ -118,7 +118,8 @@ func TestSearchOrderMapping(t *testing.T) {
 	cases := map[string]string{
 		"dd":           "create_date",
 		"dl":           "dl_count",
-		"dc":           "dl_count",
+		"dc":           "rating",
+		"rating":       "rating",
 		"publish_date": "release",
 		"":             "", // 默认：不传 order
 		"unknown":      "",

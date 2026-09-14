@@ -37,6 +37,9 @@ type rawWork struct {
 	DlCount       int        `json:"dl_count"`
 	Price         int        `json:"price"`
 	RateAverage2D float64    `json:"rate_average_2dp"` // 0-5
+	// Phase 3.9b P0 徽章字段（additive，上游原始字段名保持）
+	Duration  int `json:"duration"`   // 时长（分钟）
+	RateCount int `json:"rate_count"` // 评分人数
 	HasSubtitle   bool       `json:"has_subtitle"`
 	SourceID      string     `json:"source_id"` // "RJ01657200"
 	Vas           []rawVAS   `json:"vas"`
@@ -84,6 +87,9 @@ type Asmr_Work struct {
 	DlCount     int      `json:"dlCount"`
 	Price       int      `json:"price"`
 	HasSubtitle bool     `json:"hasSubtitle"`
+	// Phase 3.9b P0 徽章字段（additive）
+	Duration  int `json:"duration,omitempty"`  // 时长（分钟）
+	RateCount int `json:"rateCount,omitempty"` // 评分人数
 }
 
 // Asmr_PageInfo 分页信息
@@ -142,6 +148,8 @@ func convertWork(w rawWork) Asmr_Work {
 		DlCount:     w.DlCount,
 		Price:       w.Price,
 		HasSubtitle: w.HasSubtitle,
+		Duration:    w.Duration,
+		RateCount:   w.RateCount,
 	}
 	if w.Circle != nil && w.Circle.Name != "" {
 		// 顶层 name 缺失时回退 circle.name

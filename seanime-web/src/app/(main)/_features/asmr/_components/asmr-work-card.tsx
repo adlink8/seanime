@@ -9,6 +9,13 @@ import React, { useState } from "react"
 // Phase 2.5：ASMR（音声）结果卡片，供搜索页与探索页共享
 // NSFW 封面复用项目的模糊遮罩思路：blur + hover 揭示（参照 MediaEntryCardAdultVeil 行为）
 
+// Phase 3.9b P0：时长格式化（分钟 → "Xh Ym" / "Ym"；缺省或 ≤0 返回 null 不显示）
+function formatDuration(min?: number): string | null {
+    if (!min || min <= 0) return null
+    if (min >= 60) return `${Math.floor(min / 60)}h ${min % 60}m`
+    return `${min}m`
+}
+
 type AsmrWorkCardProps = {
     work: Asmr_Work
     containerClassName?: string
@@ -59,9 +66,21 @@ export function AsmrWorkCard({ work, containerClassName, onClick }: AsmrWorkCard
                             <Badge intent="primary-solid" size="sm">{t("search.asmr.subtitle_badge")}</Badge>
                         </div>
                     )}
+                    {formatDuration(work.duration) && (
+                        <div data-asmr-work-card-duration-badge className="absolute top-1 left-1 z-[5]">
+                            <Badge intent="gray-solid" size="sm" className="!bg-gray-950 !bg-opacity-90">
+                                {formatDuration(work.duration)}
+                            </Badge>
+                        </div>
+                    )}
                     {work.rating > 0 && (
                         <div data-asmr-work-card-rating-badge className="absolute bottom-1 right-1 z-[5]">
-                            <Badge intent="gray-solid" size="sm" className="!bg-gray-950 !bg-opacity-90">
+                            {/* Phase 3.9b P0：rate_count<10 时灰显防误导 */}
+                            <Badge
+                                intent="gray-solid"
+                                size="sm"
+                                className={cn("!bg-gray-950 !bg-opacity-90", work.rateCount != null && work.rateCount < 10 && "opacity-50")}
+                            >
                                 ★ {work.rating.toFixed(1)}
                             </Badge>
                         </div>
