@@ -6221,6 +6221,8 @@ export type Asmr_Work = {
     duration?: number
     /** 评分人数（Phase 3.9b P0 徽章，rate_count<10 时评分角标不可信） */
     rateCount?: number
+    /** 社团 DLsite source_id（如 "RG51931"，Phase 3.9e 降级外链用） */
+    circleSourceId?: string
 }
 
 /**

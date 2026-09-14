@@ -90,6 +90,9 @@ type Asmr_Work struct {
 	// Phase 3.9b P0 徽章字段（additive）
 	Duration  int `json:"duration,omitempty"`  // 时长（分钟）
 	RateCount int `json:"rateCount,omitempty"` // 评分人数
+	// Phase 3.9e 降级方案（additive）：社团 DLsite source_id（如 "RG51931"），
+	// 详情页社团名外链 asmr.one 社团页 /circle/{source_id}；聚合端点 D9 证伪后无站内聚合能力。
+	CircleSourceID string `json:"circleSourceId,omitempty"`
 }
 
 // Asmr_PageInfo 分页信息
@@ -154,6 +157,7 @@ func convertWork(w rawWork) Asmr_Work {
 	if w.Circle != nil && w.Circle.Name != "" {
 		// 顶层 name 缺失时回退 circle.name
 		out.Circle = w.Circle.Name
+		out.CircleSourceID = w.Circle.SourceID
 	}
 	out.Cvs = make([]string, 0, len(w.Vas))
 	for _, v := range w.Vas {

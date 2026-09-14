@@ -111,12 +111,31 @@ export function AsmrWorkDetailModal({ work, open, onOpenChange, localMode }: Asm
                         <p className="text-sm text-[--muted]" data-asmr-work-detail-rj>{work.rjId}</p>
                         {work.circle && (
                             <p className="text-sm" data-asmr-work-detail-circle>
-                                <span className="text-[--muted]">{t("search.asmr.circle")}：</span>{work.circle}
+                                <span className="text-[--muted]">{t("search.asmr.circle")}：</span>
+                                {work.circleSourceId ? (
+                                    <a
+                                        href={`https://www.asmr.one/circle/${work.circleSourceId}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="hover:text-[--brand] underline decoration-dotted underline-offset-2"
+                                    >{work.circle}</a>
+                                ) : work.circle}
                             </p>
                         )}
                         {!!work.cvs.length && (
                             <p className="text-sm" data-asmr-work-detail-cvs>
-                                <span className="text-[--muted]">{t("search.asmr.cv")}：</span>{work.cvs.join("、")}
+                                <span className="text-[--muted]">{t("search.asmr.cv")}：</span>
+                                {work.cvs.map((cv, i) => (
+                                    <React.Fragment key={cv}>
+                                        {i > 0 && "、"}
+                                        <a
+                                            href={`https://www.asmr.one/search/${encodeURIComponent(cv)}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="hover:text-[--brand] underline decoration-dotted underline-offset-2"
+                                        >{cv}</a>
+                                    </React.Fragment>
+                                ))}
                             </p>
                         )}
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
