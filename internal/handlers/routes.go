@@ -156,6 +156,14 @@ func InitRoutes(app *core.App, e *echo.Echo) {
 	v1.GET("/asmr/tracker/status", h.HandleAsmrTrackerStatus)
 	v1.POST("/asmr/tracker/run", h.HandleAsmrTrackerRun)
 
+	// ASMR 播放列表 + 推荐域 + 全量浏览（契约 03.8 Wave B）
+	v1.GET("/asmr/playlist/list", h.HandleAsmrPlaylistList)
+	v1.GET("/asmr/playlist/works", h.HandleAsmrPlaylistWorks)
+	v1.POST("/asmr/playlist/add", h.HandleAsmrPlaylistAdd)
+	v1.POST("/asmr/playlist/remove", h.HandleAsmrPlaylistRemove)
+	v1.GET("/asmr/similar", h.HandleAsmrSimilar)
+	v1.GET("/asmr/works", h.HandleAsmrWorks)
+
 	// ASMR 音声播放内控制条（契约 §1 D2/D3/D4，Phase 3.1c Wave A，纯转发 Repository）
 	v1.GET("/asmr/playback/status", h.HandleAsmrPlaybackStatus)
 	v1.POST("/asmr/playback/pause", h.HandleAsmrPlaybackPause)

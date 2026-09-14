@@ -1,0 +1,35 @@
+{
+  "works": [
+    {
+      "id": 1168990,
+      "source_id": "RJ01168990",
+      "title": "義理あね。2",
+      "name": "whirlpool",
+      "nsfw": true,
+      "has_subtitle": true,
+      "release": "2024-05-31",
+      "dl_count": 100,
+      "price": 0,
+      "rate_average_2dp": 4.1,
+      "mainCoverUrl": "https://example.com/w1.jpg?type=main",
+      "vas": [],
+      "tags": []
+    },
+    {
+      "id": 1064816,
+      "source_id": "RJ01064816",
+      "title": "義理あね。",
+      "name": "whirlpool",
+      "nsfw": true,
+      "has_subtitle": false,
+      "release": "2023-01-01",
+      "dl_count": 50,
+      "price": 0,
+      "rate_average_2dp": 4.0,
+      "mainCoverUrl": "https://example.com/w2.jpg?type=main",
+      "vas": [],
+      "tags": []
+    }
+  ],
+  "pagination": {"currentPage": 1, "pageSize": 12, "totalCount": 2}
+}

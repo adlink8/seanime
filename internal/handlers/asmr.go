@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/labstack/echo/v4"
@@ -118,8 +119,18 @@ func (h *Handler) HandleAsmrPopular(c echo.Context) error {
 	if err != nil {
 		return h.RespondWithError(c, err)
 	}
+	// 有凭据则登录（popular 匿名可用，但统一走已登录 client 保持一致）
+	if h.App.Config.Asmr.Name != "" && h.App.Config.Asmr.Password != "" {
+		if _, lerr := client.Login(c.Request().Context(), h.App.Config.Asmr.Name, h.App.Config.Asmr.Password); lerr != nil {
+			return h.RespondWithError(c, lerr)
+		}
+	}
 
-	res, err := client.Popular(c.Request().Context(), 20)
+	page, perr := strconv.Atoi(c.QueryParam("page"))
+	if perr != nil || page < 1 {
+		page = 1
+	}
+	res, err := client.GetPopularWorks(c.Request().Context(), page, false)
 	if err != nil {
 		return h.RespondWithError(c, err)
 	}
@@ -403,6 +414,212 @@ func (h *Handler) HandleAsmrDownload(c echo.Context) error {
 	}()
 
 	return h.RespondWithData(c, map[string]any{"ok": true})
+}
+
+// asmrLoginIfNeeded 共用：已配置凭据时登录 client（契约 03.8 D6）。
+func (h *Handler) asmrLoginIfNeeded(ctx context.Context, client *asmr.Client) error {
+	if h.App.Config.Asmr.Name == "" || h.App.Config.Asmr.Password == "" {
+		return nil
+	}
+	_, err := client.Login(ctx, h.App.Config.Asmr.Name, h.App.Config.Asmr.Password)
+	return err
+}
+
+// HandleAsmrPlaylistList
+//
+//	@summary lists the user's asmr.one playlists (system lists filtered, 契约 03.8 §2).
+//	@route /api/v1/asmr/playlist/list?page= [GET]
+//	@returns { configured, playlists: Asmr_Playlist[] }
+func (h *Handler) HandleAsmrPlaylistList(c echo.Context) error {
+	page, perr := strconv.Atoi(c.QueryParam("page"))
+	if perr != nil || page < 1 {
+		page = 1
+	}
+	if h.App.Config.Asmr.Name == "" || h.App.Config.Asmr.Password == "" {
+		return h.RespondWithData(c, map[string]any{
+			"configured": false,
+			"playlists":  []asmr.Asmr_Playlist{},
+		})
+	}
+
+	client, err := h.getAsmrClient()
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	if lerr := h.asmrLoginIfNeeded(c.Request().Context(), client); lerr != nil {
+		return h.RespondWithError(c, lerr)
+	}
+	lists, err := client.GetPlaylists(c.Request().Context(), page)
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	return h.RespondWithData(c, map[string]any{"configured": true, "playlists": lists})
+}
+
+// HandleAsmrPlaylistWorks
+//
+//	@summary lists works inside one asmr.one playlist.
+//	@route /api/v1/asmr/playlist/works?id=&page=&pageSize= [GET]
+//	@returns asmr.Asmr_SearchResult
+func (h *Handler) HandleAsmrPlaylistWorks(c echo.Context) error {
+	id := c.QueryParam("id")
+	if id == "" {
+		return h.RespondWithError(c, errors.New("id is required"))
+	}
+	page, perr := strconv.Atoi(c.QueryParam("page"))
+	if perr != nil || page < 1 {
+		page = 1
+	}
+	pageSize, perr2 := strconv.Atoi(c.QueryParam("pageSize"))
+	if perr2 != nil || pageSize < 1 {
+		pageSize = 12
+	}
+
+	client, err := h.getAsmrClient()
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	if lerr := h.asmrLoginIfNeeded(c.Request().Context(), client); lerr != nil {
+		return h.RespondWithError(c, lerr)
+	}
+	res, err := client.GetPlaylistWorks(c.Request().Context(), id, page, pageSize)
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	return h.RespondWithData(c, res)
+}
+
+// asmrPlaylistMutate add/remove 共用主体（契约 03.8 D4：rjId → resolveWorkID → 写，失败降级不 panic）。
+func (h *Handler) asmrPlaylistMutate(c echo.Context, add bool) error {
+	type body struct {
+		PlaylistID string `json:"playlistId"`
+		RjID       string `json:"rjId"`
+	}
+	p := new(body)
+	if err := c.Bind(p); err != nil {
+		return h.RespondWithError(c, err)
+	}
+	if p.PlaylistID == "" || p.RjID == "" {
+		return h.RespondWithError(c, errors.New("playlistId and rjId are required"))
+	}
+
+	client, err := h.getAsmrClient()
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	ctx := c.Request().Context()
+	if lerr := h.asmrLoginIfNeeded(ctx, client); lerr != nil {
+		return h.RespondWithError(c, lerr)
+	}
+	workID, werr := h.resolveWorkID(ctx, client, p.RjID)
+	if werr != nil {
+		return h.RespondWithError(c, werr)
+	}
+
+	var merr error
+	if add {
+		merr = client.AddWorksToPlaylist(ctx, p.PlaylistID, []int{workID})
+	} else {
+		merr = client.RemoveWorksFromPlaylist(ctx, p.PlaylistID, []int{workID})
+	}
+	if merr != nil {
+		// 写失败降级：ok=false + 错误文案，不 500（前端可提示重试）
+		return h.RespondWithData(c, map[string]any{"ok": false, "error": merr.Error()})
+	}
+	return h.RespondWithData(c, map[string]any{"ok": true})
+}
+
+// HandleAsmrPlaylistAdd
+//
+//	@summary adds a work (by rjId) to an asmr.one playlist.
+//	@route /api/v1/asmr/playlist/add [POST] { playlistId, rjId }
+//	@returns { ok, error? }
+func (h *Handler) HandleAsmrPlaylistAdd(c echo.Context) error {
+	return h.asmrPlaylistMutate(c, true)
+}
+
+// HandleAsmrPlaylistRemove
+//
+//	@summary removes a work (by rjId) from an asmr.one playlist.
+//	@route /api/v1/asmr/playlist/remove [POST] { playlistId, rjId }
+//	@returns { ok, error? }
+func (h *Handler) HandleAsmrPlaylistRemove(c echo.Context) error {
+	return h.asmrPlaylistMutate(c, false)
+}
+
+// HandleAsmrSimilar
+//
+//	@summary returns similar-work recommendations for one work (契约 03.8 §2 D5).
+//	@route /api/v1/asmr/similar?workId=&page= [GET]，workId 接受数字串或 RJ 号
+//	@returns asmr.Asmr_SearchResult（works 可能为空——部分作品无推荐数据，属预期）
+func (h *Handler) HandleAsmrSimilar(c echo.Context) error {
+	wid := c.QueryParam("workId")
+	if wid == "" {
+		return h.RespondWithError(c, errors.New("workId is required"))
+	}
+	page, perr := strconv.Atoi(c.QueryParam("page"))
+	if perr != nil || page < 1 {
+		page = 1
+	}
+
+	client, err := h.getAsmrClient()
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	ctx := c.Request().Context()
+	if lerr := h.asmrLoginIfNeeded(ctx, client); lerr != nil {
+		return h.RespondWithError(c, lerr)
+	}
+
+	var itemID int
+	if strings.HasPrefix(strings.ToUpper(wid), "RJ") {
+		itemID, err = h.resolveWorkID(ctx, client, wid)
+	} else {
+		itemID, err = strconv.Atoi(wid)
+	}
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+
+	res, err := client.GetItemNeighbors(ctx, itemID, page, false)
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	return h.RespondWithData(c, res)
+}
+
+// HandleAsmrWorks
+//
+//	@summary browses the full asmr.one work catalog with order/sort (契约 03.8 §2).
+//	@route /api/v1/asmr/works?order=&sort=&page=&subtitle= [GET]
+//	@returns asmr.Asmr_SearchResult
+func (h *Handler) HandleAsmrWorks(c echo.Context) error {
+	order := c.QueryParam("order")
+	if order == "" {
+		order = "create_date"
+	}
+	sort := c.QueryParam("sort")
+	if sort == "" {
+		sort = "desc"
+	}
+	page, perr := strconv.Atoi(c.QueryParam("page"))
+	if perr != nil || page < 1 {
+		page = 1
+	}
+	subtitle := c.QueryParam("subtitle") == "1" || c.QueryParam("subtitle") == "true"
+
+	client, err := h.getAsmrClient()
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	if lerr := h.asmrLoginIfNeeded(c.Request().Context(), client); lerr != nil {
+		return h.RespondWithError(c, lerr)
+	}
+	res, err := client.ListWorks(c.Request().Context(), order, sort, page, subtitle)
+	if err != nil {
+		return h.RespondWithError(c, err)
+	}
+	return h.RespondWithData(c, res)
 }
 
 // sortedKeys 将 map[rjId]struct{} 转为排序后的字符串切片（稳定响应）。

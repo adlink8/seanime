@@ -1,0 +1,37 @@
+{
+  "playlists": [
+    {
+      "id": "6cc9d2ea-3662-45c4-b84d-163dc3336060",
+      "user_name": "2448366060",
+      "name": "__SYS_PLAYLIST_MARKED",
+      "privacy": 0,
+      "playback_count": 0,
+      "works_count": 1,
+      "latestWorkID": 402961,
+      "mainCoverUrl": "https://example.com/sys.jpg?type=main",
+      "updated_at": "2025-06-07 16:07:21"
+    },
+    {
+      "id": "a2ceeaaa-27c7-41ff-9855-6c929dceca1c",
+      "user_name": "2448366060",
+      "name": "姐系",
+      "privacy": 0,
+      "playback_count": 0,
+      "works_count": 4,
+      "latestWorkID": 1168990,
+      "mainCoverUrl": "https://example.com/cover.jpg?type=main",
+      "updated_at": "2025-03-08 00:25:23"
+    },
+    {
+      "id": "4136e4cc-1197-46d7-b564-57e2b5791a9f",
+      "user_name": "2448366060",
+      "name": "触手",
+      "privacy": 0,
+      "playback_count": 0,
+      "works_count": 11,
+      "latestWorkID": 987654,
+      "mainCoverUrl": "https://example.com/cover2.jpg?type=main",
+      "updated_at": "2025-01-02 03:04:05"
+    }
+  ]
+}
