@@ -2575,5 +2575,20 @@ export const API_ENDPOINTS = {
             endpoint: "/api/v1/videocore/screenshot",
         },
     },
+    DISCOVER: {
+        /**
+         *  @description
+         *  Route returns daily recommendations for the discover page. (Phase 3.9c added)
+         *  Library sampling -> related aggregation (Bangumi GetRelatedSubjects / asmr item-neighbors)
+         *  -> filter in-library -> date-seed shuffle (stable within the day, changes across days) -> take 12 entries.
+         *  query: ?domain=anime|manga|novel|asmr; returns media.ListAnime / media.ListManga / asmr.Asmr_SearchResult depending on domain.
+         *  Degradation: returns an empty list on failure, never raises an error.
+         */
+        DiscoverDaily: {
+            key: "DISCOVER-discover-daily",
+            methods: ["GET"],
+            endpoint: "/api/v1/discover/daily",
+        },
+    },
 } satisfies ApiEndpoints
 

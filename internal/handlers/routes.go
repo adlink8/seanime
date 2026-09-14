@@ -139,6 +139,9 @@ func InitRoutes(app *core.App, e *echo.Echo) {
 	v1.GET("/status/home-items", h.HandleGetHomeItems)
 	v1.POST("/status/home-items", h.HandleUpdateHomeItems)
 
+	// 探索页「每日推荐」（契约 03.9c）
+	v1.GET("/discover/daily", h.HandleDiscoverDaily)
+
 	// ASMR 音声搜索域（asmr.one，Phase 2.5）
 	v1.POST("/asmr/search", h.HandleAsmrSearch)
 	v1.GET("/asmr/popular", h.HandleAsmrPopular)

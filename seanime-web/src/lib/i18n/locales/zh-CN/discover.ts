@@ -35,6 +35,9 @@ export const discoverDictionary = {
     "discover.section.popular_asmr": "热门音声", // src/app/(main)/discover/page.tsx
     "discover.section.latest_asmr": "最新音声", // src/app/(main)/discover/page.tsx
 
+    // —— 探索发现页：每日推荐区块（Phase 3.9c，discover/page.tsx）——
+    "discover.section.daily": "每日推荐", // src/app/(main)/discover/page.tsx（当前 tab 域，空数据隐藏）
+
     // —— 探索发现页：页头（_components/discover-page-header.tsx）——
     "discover.header.releasing_now": "正在放送", // src/app/(main)/discover/_components/discover-page-header.tsx
     "discover.header.episodes_released": "{count} 集已播出", // src/app/(main)/discover/_components/discover-page-header.tsx

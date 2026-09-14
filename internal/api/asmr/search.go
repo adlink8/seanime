@@ -75,6 +75,17 @@ func mapSubtitle(s string) string {
 
 // Search 搜索音声作品（GET /api/search/{page}）
 func (c *Client) Search(ctx context.Context, p SearchParams) (*Asmr_SearchResult, error) {
+	return c.doSearch(ctx, p, true)
+}
+
+// SearchLatest 搜索音声作品（直连，绕过 GET filecache）。
+// 契约 03.9c：探索页「最新音声」区块专用——最新入库条目不能落 24h 缓存，
+// 其他搜索路径（关键词检索等）仍走 Search 的缓存行为，不受影响。
+func (c *Client) SearchLatest(ctx context.Context, p SearchParams) (*Asmr_SearchResult, error) {
+	return c.doSearch(ctx, p, false)
+}
+
+func (c *Client) doSearch(ctx context.Context, p SearchParams, useCache bool) (*Asmr_SearchResult, error) {
 	page := p.Page
 	if page < 1 {
 		page = 1
@@ -94,7 +105,13 @@ func (c *Client) Search(ctx context.Context, p SearchParams) (*Asmr_SearchResult
 	}
 
 	var raw rawSearchResult
-	if err := c.doGet(ctx, "/search/"+strconv.Itoa(page), q, &raw); err != nil {
+	var err error
+	if useCache {
+		err = c.doGet(ctx, "/search/"+strconv.Itoa(page), q, &raw)
+	} else {
+		err = c.doGetNoCache(ctx, "/search/"+strconv.Itoa(page), q, &raw)
+	}
+	if err != nil {
 		return nil, err
 	}
 	out := convertSearchResult(raw)

@@ -150,6 +150,16 @@ func (c *Client) Close() {
 
 // doGet 发送 GET 请求并解析 JSON 响应。带 filecache 层（命中则不触网，照抄 bangumi）。
 func (c *Client) doGet(ctx context.Context, path string, query url.Values, out any) error {
+	return c.doGetWithCache(ctx, path, query, out, true)
+}
+
+// doGetNoCache 直连请求，读写均绕过 filecache。
+// 契约 03.9c：探索页「最新音声」时效性强，24h 缓存会让最新入库长时间不刷新，该路径直连。
+func (c *Client) doGetNoCache(ctx context.Context, path string, query url.Values, out any) error {
+	return c.doGetWithCache(ctx, path, query, out, false)
+}
+
+func (c *Client) doGetWithCache(ctx context.Context, path string, query url.Values, out any, useCache bool) error {
 	u := c.baseURL.JoinPath(path)
 	if len(query) > 0 {
 		u.RawQuery = query.Encode()
@@ -157,7 +167,7 @@ func (c *Client) doGet(ctx context.Context, path string, query url.Values, out a
 
 	key := c.cacheKey(http.MethodGet, u.String())
 
-	if c.cache != nil {
+	if useCache && c.cache != nil {
 		var cached string
 		if ok, err := c.cache.Get(filecache.NewBucket(cacheBucketName, cacheTTL), key, &cached); err == nil && ok {
 			c.logger.Debug().Str("key", key).Msg("asmr: 缓存命中")
@@ -203,7 +213,7 @@ func (c *Client) doGet(ctx context.Context, path string, query url.Values, out a
 	}
 
 	// 仅成功响应写缓存
-	if c.cache != nil {
+	if useCache && c.cache != nil {
 		_ = c.cache.Set(filecache.NewBucket(cacheBucketName, cacheTTL), key, string(data))
 	}
 

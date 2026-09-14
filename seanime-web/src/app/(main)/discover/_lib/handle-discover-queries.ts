@@ -2,6 +2,7 @@ import { AL_MediaSeason } from "@/api/generated/types"
 import { useAnilistListNovel } from "@/api/hooks/anilist.hooks"
 import { useAsmrPopular, useAsmrSearch } from "@/api/hooks/asmr.hooks"
 import { useAnilistListAnime } from "@/api/hooks/anilist.hooks"
+import { __discover_isAdultAtom } from "@/app/(main)/discover/_lib/discover.atoms"
 import { atom } from "jotai"
 import { useAtomValue } from "jotai/react"
 import { useInView } from "motion/react"
@@ -10,20 +11,28 @@ export const __discover_trendingGenresAtom = atom<string[]>([])
 export const __discover_currentSeasonGenresAtom = atom<string[]>([])
 export const __discover_pastSeasonGenresAtom = atom<string[]>([])
 
+// 契约 03.9c：探索页 18+ 开关——开启时各域列表请求透传 isAdult: true（后端按 EnableAdultContent 门控）
+export function useDiscoverIsAdult(): boolean {
+    return useAtomValue(__discover_isAdultAtom)
+}
+
 export function useDiscoverTrendingAnime() {
     const genres = useAtomValue(__discover_trendingGenresAtom)
+    const isAdult = useDiscoverIsAdult()
 
     return useAnilistListAnime({
         page: 1,
         perPage: 20,
         sort: ["TRENDING_DESC"],
         genres: genres.length > 0 ? genres : undefined,
+        isAdult: isAdult || undefined,
     }, true)
 
 }
 
 export function useDiscoverCurrentSeasonAnime(ref: any) {
     const genres = useAtomValue(__discover_currentSeasonGenresAtom)
+    const isAdult = useDiscoverIsAdult()
     const isInView = useInView(ref, { once: true })
     const currentMonth = new Date().getMonth() + 1
     let currentYear = new Date().getFullYear()
@@ -59,11 +68,13 @@ export function useDiscoverCurrentSeasonAnime(ref: any) {
         season: season,
         seasonYear: currentYear,
         genres: genres.length > 0 ? genres : undefined,
+        isAdult: isAdult || undefined,
     }, isInView)
 }
 
 export function useDiscoverPastSeasonAnime(ref: any) {
     const genres = useAtomValue(__discover_pastSeasonGenresAtom)
+    const isAdult = useDiscoverIsAdult()
     const isInView = useInView(ref, { once: true })
     const currentMonth = new Date().getMonth() + 1
     const currentYear = new Date().getFullYear()
@@ -100,6 +111,7 @@ export function useDiscoverPastSeasonAnime(ref: any) {
         season: pastSeason,
         seasonYear: pastYear,
         genres: genres.length > 0 ? genres : undefined,
+        isAdult: isAdult || undefined,
     }, isInView)
 }
 

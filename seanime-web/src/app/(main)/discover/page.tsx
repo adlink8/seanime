@@ -2,6 +2,7 @@ import { PluginWebviewSlot } from "@/app/(main)/_features/plugin/webview/plugin-
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import { DiscoverPageHeader } from "@/app/(main)/discover/_components/discover-page-header"
 import { DiscoverAiringSchedule } from "@/app/(main)/discover/_containers/discover-airing-schedule"
+import { DiscoverDaily } from "@/app/(main)/discover/_containers/discover-daily"
 import { DiscoverLatestAsmr, DiscoverPopularAsmr } from "@/app/(main)/discover/_containers/discover-asmr"
 import { DiscoverMissedSequelsSection } from "@/app/(main)/discover/_containers/discover-missed-sequels"
 import { DiscoverPopularNovel, DiscoverThisSeasonNovel } from "@/app/(main)/discover/_containers/discover-novel"
@@ -10,10 +11,11 @@ import { DiscoverTrending } from "@/app/(main)/discover/_containers/discover-tre
 import { DiscoverTrendingCountry } from "@/app/(main)/discover/_containers/discover-trending-country"
 import { DiscoverTrendingMovies } from "@/app/(main)/discover/_containers/discover-trending-movies"
 import { DiscoverUpcoming } from "@/app/(main)/discover/_containers/discover-upcoming"
-import { __discord_pageTypeAtom } from "@/app/(main)/discover/_lib/discover.atoms"
+import { __discord_pageTypeAtom, __discover_isAdultAtom } from "@/app/(main)/discover/_lib/discover.atoms"
 import { RecentReleases } from "@/app/(main)/schedule/_containers/recent-releases"
 import { PageWrapper } from "@/components/shared/page-wrapper"
 import { StaticTabs } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
 import { t } from "@/lib/i18n"
 import { useRouter, useSearchParams } from "@/lib/navigation"
 import { useAtom } from "jotai/react"
@@ -26,6 +28,7 @@ export default function Page() {
     const serverStatus = useServerStatus()
     const router = useRouter()
     const [pageType, setPageType] = useAtom(__discord_pageTypeAtom)
+    const [isAdult, setIsAdult] = useAtom(__discover_isAdultAtom)
     const searchParams = useSearchParams()
     const searchType = searchParams.get("type")
 
@@ -77,6 +80,17 @@ export default function Page() {
                             ]}
                         />
                     </div>
+                    {/* 契约 03.9c：18+ 开关——仅在设置开启 EnableAdultContent 时可见（复用 library.filter.adult 文案） */}
+                    {serverStatus?.settings?.anilist?.enableAdultContent && (
+                        <div className="max-w-fit border rounded-full px-4 py-2 flex items-center" data-discover-page-adult-toggle>
+                            <Switch
+                                label={t("library.filter.adult")}
+                                value={isAdult}
+                                onValueChange={setIsAdult}
+                                fieldLabelClass="hidden"
+                            />
+                        </div>
+                    )}
                     {/*{!!customSources?.length && <div data-discover-page-header-custom-source-container>*/}
                     {/*    <SeaLink href="/custom-sources">*/}
                     {/*        <Button*/}
@@ -119,6 +133,11 @@ export default function Page() {
                         }}
                         data-discover-page-anime-container
                     >
+                        {/* Phase 3.9c：每日推荐（当前 tab 域，空数据隐藏） */}
+                        <div className="space-y-2 z-[5] relative" data-discover-page-anime-daily-container>
+                            <h2>{t("discover.section.daily")}</h2>
+                            <DiscoverDaily domain="anime" />
+                        </div>
                         <div className="space-y-2 z-[5] relative" data-discover-page-anime-trending-container>
                             <h2>{t("common.home.trending")}</h2>
                             <DiscoverTrending />
@@ -178,6 +197,11 @@ export default function Page() {
                         {/*    <h2>Trending right now</h2>*/}
                         {/*    <DiscoverTrendingMangaAll />*/}
                         {/*</div>*/}
+                        {/* Phase 3.9c：每日推荐（当前 tab 域，空数据隐藏） */}
+                        <div className="space-y-2 z-[5] relative" data-discover-page-manga-daily-container>
+                            <h2>{t("discover.section.daily")}</h2>
+                            <DiscoverDaily domain="manga" />
+                        </div>
                         <div className="space-y-2 z-[5] relative" data-discover-page-manga-trending-container>
                             <h2>{t("discover.section.manga_trending_jp")}</h2>
                             <DiscoverTrendingCountry country="JP" forDiscoverHeader />
@@ -208,6 +232,11 @@ export default function Page() {
                             },
                         }}
                     >
+                        {/* Phase 3.9c：每日推荐（当前 tab 域，空数据隐藏） */}
+                        <div className="space-y-2 z-[5] relative" data-discover-page-novel-daily-container>
+                            <h2>{t("discover.section.daily")}</h2>
+                            <DiscoverDaily domain="novel" />
+                        </div>
                         <div className="space-y-2 z-[5] relative" data-discover-page-novel-popular-container>
                             <h2>{t("discover.section.popular_novel")}</h2>
                             <DiscoverPopularNovel />

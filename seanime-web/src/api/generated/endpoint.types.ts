@@ -2305,3 +2305,15 @@ export type AsmrPlaybackSeek_Variables = {
     /** 绝对秒 */
     position: number
 }
+
+/**
+ * - Filepath: internal/handlers/discover.go
+ * - Filename: discover.go
+ * - Endpoint: /api/v1/discover/daily (Phase 3.9c 新增)
+ * @description
+ * Route returns daily recommendations for the discover page.
+ * 响应按 domain 复用各域现有条目 DTO：anime/novel → AL_ListAnime，manga → AL_ListManga，asmr → Asmr_SearchResult。
+ */
+export type DiscoverDaily_Variables = {
+    domain: "anime" | "manga" | "novel" | "asmr"
+}

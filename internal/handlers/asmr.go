@@ -93,13 +93,26 @@ func (h *Handler) HandleAsmrSearch(c echo.Context) error {
 		return h.RespondWithError(c, err)
 	}
 
-	res, err := client.Search(c.Request().Context(), asmr.SearchParams{
-		Keyword:  p.Keyword,
-		Order:    p.Order,
-		Page:     page,
-		PerPage:  perPage,
-		Subtitle: p.Subtitle,
-	})
+	// 契约 03.9c：探索页「最新音声」区块（关键词为空 + order=dd 最新入库）时效性强，
+	// 走直连路径绕过 client GET filecache 的 24h 缓存；其余搜索路径缓存行为不变。
+	var res *asmr.Asmr_SearchResult
+	if p.Keyword == "" && p.Order == "dd" {
+		res, err = client.SearchLatest(c.Request().Context(), asmr.SearchParams{
+			Keyword:  p.Keyword,
+			Order:    p.Order,
+			Page:     page,
+			PerPage:  perPage,
+			Subtitle: p.Subtitle,
+		})
+	} else {
+		res, err = client.Search(c.Request().Context(), asmr.SearchParams{
+			Keyword:  p.Keyword,
+			Order:    p.Order,
+			Page:     page,
+			PerPage:  perPage,
+			Subtitle: p.Subtitle,
+		})
+	}
 	if err != nil {
 		return h.RespondWithError(c, err)
 	}

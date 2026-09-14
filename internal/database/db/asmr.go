@@ -89,3 +89,42 @@ func (db *Database) CountAsmrTrackerSeen() (int64, error) {
 	err := db.gormdb.Model(&models.AsmrTrackerSeen{}).Count(&count).Error
 	return count, err
 }
+
+// GetAsmrFavoriteRjIDs 全部收藏中的作品 RJ 号（契约 03.9c 每日推荐库抽样用）。
+func (db *Database) GetAsmrFavoriteRjIDs() ([]string, error) {
+	var res []string
+	err := db.gormdb.Model(&models.AsmrWorkState{}).
+		Where("favorite = ?", true).
+		Order("rj_id ASC").
+		Pluck("rj_id", &res).Error
+	return res, err
+}
+
+// asmrPlayedRjRow 最近播放查询的扫描目标（RJ 号 + 最近音轨更新时间）。
+type asmrPlayedRjRow struct {
+	RjID     string `gorm:"column:rj_id"`
+	LastPlay string `gorm:"column:last_play"`
+}
+
+// GetAsmrRecentlyPlayedRjIDs 最近播放过的作品 RJ 号（按最近音轨更新时间降序，limit ≤0 时返回空）。
+// 契约 03.9c 每日推荐库抽样用；完听与未完听的音轨均算「播放过」。
+func (db *Database) GetAsmrRecentlyPlayedRjIDs(limit int) ([]string, error) {
+	if limit <= 0 {
+		return []string{}, nil
+	}
+	var rows []asmrPlayedRjRow
+	err := db.gormdb.Model(&models.AsmrTrackState{}).
+		Select("rj_id, MAX(updated_at) as last_play").
+		Group("rj_id").
+		Order("last_play DESC").
+		Limit(limit).
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, r.RjID)
+	}
+	return out, nil
+}

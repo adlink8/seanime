@@ -4,6 +4,7 @@ import { MediaEntryCardSkeleton } from "@/app/(main)/_features/media/_components
 import { MediaGenreSelector } from "@/app/(main)/_features/media/_components/media-genre-selector"
 import { t } from "@/lib/i18n"
 import { __discover_hoveringHeaderAtom } from "@/app/(main)/discover/_components/discover-page-header"
+import { useDiscoverIsAdult } from "@/app/(main)/discover/_lib/handle-discover-queries"
 import { __discover_headerIsTransitioningAtom, __discover_randomTrendingAtom } from "@/app/(main)/discover/_containers/discover-trending"
 import { ADVANCED_SEARCH_MEDIA_GENRES, GENRE_TRANSLATIONS } from "@/app/(main)/search/_lib/advanced-search-constants"
 import { Carousel, CarouselContent, CarouselDotButtons } from "@/components/ui/carousel"
@@ -24,12 +25,14 @@ export const __discover_setMangaRandomNumberAtom = atom(
 
 export function DiscoverTrendingCountry({ country, forDiscoverHeader }: { country: string | undefined, forDiscoverHeader?: boolean }) {
     const genres = useAtomValue(trendingGenresAtom)
+    const isAdult = useDiscoverIsAdult()
     const { data, isLoading } = useAnilistListManga({
         page: 1,
         perPage: 20,
         sort: ["TRENDING_DESC"],
         countryOfOrigin: country || undefined,
         genres: genres.length > 0 ? genres : undefined,
+        isAdult: isAdult || undefined,
     })
 
     const setRandomTrendingAtom = useSetAtom(__discover_randomTrendingAtom)
