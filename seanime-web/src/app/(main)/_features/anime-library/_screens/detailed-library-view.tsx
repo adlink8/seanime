@@ -14,9 +14,7 @@ import { useNakamaStatus } from "@/app/(main)/_features/nakama/nakama-manager"
 import { useServerStatus } from "@/app/(main)/_hooks/use-server-status"
 import {
     ADVANCED_SEARCH_FORMATS,
-    ADVANCED_SEARCH_MEDIA_TAGS,
     ADVANCED_SEARCH_SEASONS,
-    ADVANCED_SEARCH_STATUS,
     GENRE_TRANSLATIONS,
     SEASON_TRANSLATIONS,
 } from "@/app/(main)/search/_lib/advanced-search-constants"
@@ -44,9 +42,8 @@ import { AiOutlineArrowLeft } from "react-icons/ai"
 import { BiTrash } from "react-icons/bi"
 import { FaSortAmountDown } from "react-icons/fa"
 import { FiSearch } from "react-icons/fi"
-import { LuCalendar, LuLeaf, LuTags } from "react-icons/lu"
+import { LuCalendar, LuLeaf } from "react-icons/lu"
 import { MdPersonalVideo } from "react-icons/md"
-import { RiSignalTowerLine } from "react-icons/ri"
 
 type LibraryViewProps = {
     collectionList: Anime_LibraryCollectionList[]
@@ -342,46 +339,6 @@ export function SearchOptions() {
                     value={params.format || ""}
                     onValueChange={v => setParams(draft => {
                         draft.format = v as any
-                        return
-                    })}
-                    fieldLabelClass="hidden"
-                />
-                <Select
-                    leftAddon={
-                        <RiSignalTowerLine className={cn((params.status as any) !== null && (params.status as any) !== "" && "text-indigo-300 font-bold text-xl")} />}
-                    label={t("library.filter.status")} placeholder={t("library.filter.status_all")}
-                    className="w-full"
-                    fieldClass="w-full"
-                    options={[
-                        ...ADVANCED_SEARCH_STATUS,
-                    ]}
-                    value={params.status || ""}
-                    onValueChange={v => setParams(draft => {
-                        draft.status = v as any
-                        return
-                    })}
-                    fieldLabelClass="hidden"
-                />
-                <Combobox
-                    multiple
-                    leftAddon={!params.tags &&
-                        <LuTags />}
-                    emptyMessage={t("library.filter.tags_empty")}
-                    label={t("library.filter.tags")}
-                    placeholder={t("library.filter.tags_all")}
-                    className="w-full"
-                    fieldClass="w-full"
-                    options={ADVANCED_SEARCH_MEDIA_TAGS
-                        .filter(tag => {
-                            if (params.isAdult && serverStatus?.settings?.anilist?.enableAdultContent) {
-                                return true
-                            }
-                            return tag.isAdult === false
-                        })
-                        .map(tag => ({ value: tag.name, label: tag.name, textValue: tag.name }))}
-                    value={params.tags ? params.tags : []}
-                    onValueChange={v => setParams(draft => {
-                        draft.tags = v
                         return
                     })}
                     fieldLabelClass="hidden"

@@ -726,11 +726,17 @@ func (h *Handler) HandleAnilistListAnime(c echo.Context) error {
 			filter.Tag = append(filter.Tag, *t)
 		}
 	}
-	// genres 逐个并入 filter.tag（Bangumi 无 genres 概念，标签是最接近的过滤维度）
+	// genres 经 AniList→Bangumi tag 词表映射后并入 filter.tag（03.9a）。
+	// Bangumi 无 genres 概念，且英文 genre 直接作 tag 仅欧美条目偶然携带、命中极低，
+	// 故先过 mapGenresToBangumiTags 翻译为中文 tag（未命中词表的 genre 丢弃，绝不透传英文值）。
+	genreStrs := make([]string, 0, len(p.Genres))
 	for _, g := range p.Genres {
 		if g != nil && *g != "" {
-			filter.Tag = append(filter.Tag, *g)
+			genreStrs = append(genreStrs, *g)
 		}
+	}
+	for _, tag := range mapGenresToBangumiTags(genreStrs) {
+		filter.Tag = append(filter.Tag, tag)
 	}
 	// 动画 format → filter.meta_tags（契约 D4：仅 TV / WEB / OVA 三值）
 	filter.MetaTags = animeMetaTagsFromFormat(p.Format)

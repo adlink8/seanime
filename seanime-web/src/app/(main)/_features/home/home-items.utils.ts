@@ -1,5 +1,5 @@
 import { Models_HomeItem, Nullish } from "@/api/generated/types"
-import { ADVANCED_SEARCH_COUNTRIES_MANGA, ADVANCED_SEARCH_MEDIA_GENRES, GENRE_TRANSLATIONS } from "@/app/(main)/search/_lib/advanced-search-constants"
+import { ADVANCED_SEARCH_MEDIA_GENRES, GENRE_TRANSLATIONS } from "@/app/(main)/search/_lib/advanced-search-constants"
 import { t } from "@/lib/i18n"
 
 export const DEFAULT_HOME_ITEMS: Models_HomeItem[] = [
@@ -159,12 +159,6 @@ const _carouselOptions = [
         name: "year",
         min: 0,
         max: 2100,
-    },
-    {
-        label: t("home.option.country_of_origin"),
-        type: "select",
-        name: "countryOfOrigin",
-        options: ADVANCED_SEARCH_COUNTRIES_MANGA,
     },
 ]
 

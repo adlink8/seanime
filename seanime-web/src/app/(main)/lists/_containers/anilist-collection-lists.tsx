@@ -13,9 +13,7 @@ import {
 import {
     ADVANCED_SEARCH_FORMATS,
     ADVANCED_SEARCH_MEDIA_GENRES,
-    ADVANCED_SEARCH_MEDIA_TAGS,
     ADVANCED_SEARCH_SEASONS,
-    ADVANCED_SEARCH_STATUS,
     GENRE_TRANSLATIONS,
     SEASON_TRANSLATIONS,
 } from "@/app/(main)/search/_lib/advanced-search-constants"
@@ -39,9 +37,8 @@ import React from "react"
 import { BiTrash } from "react-icons/bi"
 import { FaSortAmountDown } from "react-icons/fa"
 import { FiSearch } from "react-icons/fi"
-import { LuCalendar, LuLeaf, LuTags } from "react-icons/lu"
+import { LuCalendar, LuLeaf } from "react-icons/lu"
 import { MdPersonalVideo } from "react-icons/md"
-import { RiSignalTowerLine } from "react-icons/ri"
 import { TbSwords } from "react-icons/tb"
 
 const selectedIndexAtom = atom("-")
@@ -316,27 +313,6 @@ export function SearchOptions({
                     })}
                     fieldLabelClass="hidden"
                 />
-                <Combobox
-                    multiple
-                    leftAddon={!params.tags?.length &&
-                        <LuTags className={cn((params.tags !== null && !!params.tags.length) && "text-indigo-300 font-bold text-xl")} />}
-                    emptyMessage={t("library.filter.tags_empty")}
-                    label={t("library.filter.tags")} placeholder={t("library.filter.tags_all")} className="w-full"
-                    options={ADVANCED_SEARCH_MEDIA_TAGS
-                        .filter(tag => {
-                            if (params.isAdult && serverStatus?.settings?.anilist?.enableAdultContent) {
-                                return true
-                            }
-                            return tag.isAdult === false
-                        })
-                        .map(tag => ({ value: tag.name, label: tag.name, textValue: tag.name }))}
-                    value={params.tags ? params.tags : []}
-                    onValueChange={v => setParams(draft => {
-                        draft.tags = v
-                        return
-                    })}
-                    fieldLabelClass="hidden"
-                />
                 <Select
                     label={t("library.search.sorting")}
                     leftAddon={<FaSortAmountDown className={cn((params.sorting !== "SCORE_DESC") && "text-indigo-300 font-bold text-xl")} />}
@@ -366,22 +342,6 @@ export function SearchOptions({
                     })}
                     fieldLabelClass="hidden"
                 />}
-                <Select
-                    leftAddon={
-                        <RiSignalTowerLine className={cn((params.status !== null && !!params.status?.length) && "text-indigo-300 font-bold text-xl")} />}
-                    label={t("library.filter.status")} placeholder={t("library.filter.status_all")}
-                    className="w-full"
-                    fieldClass="w-full"
-                    options={[
-                        ...ADVANCED_SEARCH_STATUS,
-                    ]}
-                    value={params.status || ""}
-                    onValueChange={v => setParams(draft => {
-                        draft.status = v as any
-                        return
-                    })}
-                    fieldLabelClass="hidden"
-                />
                 {pageType === "anime" && <Select
                     leftAddon={<LuLeaf className={cn((params.season !== null && !!params.season?.length) && "text-indigo-300 font-bold text-xl")} />}
                     label={t("library.filter.season")}
