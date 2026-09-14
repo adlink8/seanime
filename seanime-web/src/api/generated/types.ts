@@ -97,6 +97,24 @@ export type AL_AnimeCollection_MediaListCollection_Lists_Entries_StartedAt = {
  * - Filename: client_gen.go
  * - Package: anilist
  */
+/**
+ * Phase 3.9d additive：Bangumi 标签（带热度与剧透标记）
+ */
+export type AL_BangumiTagInfo = {
+    name: string
+    count: number
+    spoiler?: boolean
+}
+
+/**
+ * Phase 3.9d additive：Bangumi 信息箱条目
+ * value 兼容两种形态：单值字符串（如 "TV"）与对象数组（如 [{ v: "京都动画" }]）
+ */
+export type AL_BangumiInfoboxEntry = {
+    key: string
+    value: string | Array<{ v?: string, k?: string }>
+}
+
 export type AL_AnimeDetailsById_Media = {
     averageScore?: number
     characters?: AL_AnimeDetailsById_Media_Characters
@@ -115,6 +133,10 @@ export type AL_AnimeDetailsById_Media = {
     startDate?: AL_AnimeDetailsById_Media_StartDate
     studios?: AL_AnimeDetailsById_Media_Studios
     trailer?: AL_AnimeDetailsById_Media_Trailer
+    // Phase 3.9d additive：Bangumi 标签云 / 排名 / 信息箱
+    bangumiTags?: Array<AL_BangumiTagInfo>
+    bangumiRank?: number
+    infobox?: Array<AL_BangumiInfoboxEntry>
 }
 
 /**
@@ -855,6 +877,10 @@ export type AL_MangaDetailsById_Media = {
     recommendations?: AL_MangaDetailsById_Media_Recommendations
     relations?: AL_MangaDetailsById_Media_Relations
     siteUrl?: string
+    // Phase 3.9d additive：Bangumi 标签云 / 排名 / 信息箱
+    bangumiTags?: Array<AL_BangumiTagInfo>
+    bangumiRank?: number
+    infobox?: Array<AL_BangumiInfoboxEntry>
 }
 
 /**

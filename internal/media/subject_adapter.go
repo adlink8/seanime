@@ -70,6 +70,11 @@ func AnimeFromSubject(s *Subject) *Anime {
 		a.MeanScore = &score
 	}
 
+	// 3.9d additive：Bangumi 标签云 / 排名 / 信息箱
+	a.BangumiTags = bangumiTagsFromSubject(s)
+	a.BangumiRank = bangumiRankFromSubject(s)
+	a.Infobox = bangumiInfoboxFromSubject(s)
+
 	// 别名：原日文名与中文名不同时，日文名进 synonyms 以便匹配层复用
 	if s.Name != "" && s.NameCN != "" && s.Name != s.NameCN {
 		name := s.Name
@@ -277,6 +282,31 @@ func subjectDateRange(s *Subject) (start, end *time.Time) {
 // subjectPlatform 返回 Subject 的平台信息。
 // Platform 为 Wave A 新增的 additive 字段（镜像 bangumi.Subject.Platform）。
 func subjectPlatform(s *Subject) string { return s.Platform }
+
+// bangumiTagsFromSubject（3.9d additive）将 Subject.Tags 映射为带热度/剧透标记的标签列表。
+func bangumiTagsFromSubject(s *Subject) []BangumiTagInfo {
+	if len(s.Tags) == 0 {
+		return nil
+	}
+	out := make([]BangumiTagInfo, 0, len(s.Tags))
+	for _, t := range s.Tags {
+		out = append(out, BangumiTagInfo{Name: t.Name, Count: t.Count, Spoiler: t.Spoiler})
+	}
+	return out
+}
+
+// bangumiRankFromSubject（3.9d additive）返回 Bangumi 排名（无评分为 0）。
+func bangumiRankFromSubject(s *Subject) int {
+	if s.Rating == nil {
+		return 0
+	}
+	return s.Rating.Rank
+}
+
+// bangumiInfoboxFromSubject（3.9d additive）透传信息箱条目（Value 为原始 JSON）。
+func bangumiInfoboxFromSubject(s *Subject) []BangumiInfoboxEntry {
+	return s.Infobox
+}
 
 func movieKeywords() []string { return []string{"剧场版", "劇場版", "映画", "电影", "Movie"} }
 

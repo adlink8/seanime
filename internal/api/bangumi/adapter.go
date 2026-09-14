@@ -65,7 +65,15 @@ func SubjectToMedia(s *Subject) *media.Subject {
 	if len(s.Tags) > 0 {
 		out.Tags = make([]media.SubjectTag, 0, len(s.Tags))
 		for _, t := range s.Tags {
-			out.Tags = append(out.Tags, media.SubjectTag{Name: t.Name, Count: t.Count})
+			// Spoiler（3.9d additive）：v0 tags 元素自带
+			out.Tags = append(out.Tags, media.SubjectTag{Name: t.Name, Count: t.Count, Spoiler: t.Spoiler})
+		}
+	}
+	// Infobox（3.9d additive）：信息箱条目原样透传（Value 为原始 JSON）
+	if len(s.Infobox) > 0 {
+		out.Infobox = make([]media.BangumiInfoboxEntry, 0, len(s.Infobox))
+		for _, item := range s.Infobox {
+			out.Infobox = append(out.Infobox, media.BangumiInfoboxEntry{Key: item.Key, Value: item.Value})
 		}
 	}
 
@@ -505,5 +513,9 @@ func MangaDetailsFromSubject(s *Subject) *media.MangaDetails {
 		ID:      base.ID,
 		SiteURL: base.SiteURL,
 		Genres:  base.Genres,
+		// 3.9d additive：标签云 / 排名 / 信息箱
+		BangumiTags: base.BangumiTags,
+		BangumiRank: base.BangumiRank,
+		Infobox:     base.Infobox,
 	}
 }

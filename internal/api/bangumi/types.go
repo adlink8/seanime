@@ -70,9 +70,12 @@ type SubjectRating struct {
 	Count map[string]int `json:"count"`
 }
 
+// SubjectTag 标签（3.9d additive：补 spoiler 字段——v0 API tags 元素自带，
+// 之前手写类型未承载，json 忽略不影响既有行为）。
 type SubjectTag struct {
-	Name  string `json:"name"`
-	Count int    `json:"count"`
+	Name    string `json:"name"`
+	Count   int    `json:"count"`
+	Spoiler bool   `json:"spoiler"`
 }
 
 // Episode 章节（EpType：0本篇 1SP 2OP 3ED 4PV 5MAD 6其他）

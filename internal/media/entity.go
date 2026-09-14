@@ -258,6 +258,12 @@ type Anime struct {
 	ID                int             `json:"id"`
 	IDMal             *int            `json:"idMal,omitempty"`
 	SiteURL           *string         `json:"siteUrl,omitempty"`
+
+	// Bangumi 扩展（3.9d additive）：标签云 / 排名 / 信息箱
+	BangumiTags []BangumiTagInfo      `json:"bangumiTags,omitempty"`
+	BangumiRank int                   `json:"bangumiRank,omitempty"`
+	Infobox     []BangumiInfoboxEntry `json:"infobox,omitempty"`
+
 	Status            *MediaStatus    `json:"status,omitempty"`
 	Season            *MediaSeason    `json:"season,omitempty"`
 	Type              *MediaType      `json:"type,omitempty"`
@@ -689,6 +695,11 @@ type Manga struct {
 
 	// NameCN —— Bangumi 扩展便捷字段
 	NameCN string `json:"nameCN,omitempty"`
+
+	// Bangumi 扩展（3.9d additive）：同 Anime
+	BangumiTags []BangumiTagInfo      `json:"bangumiTags,omitempty"`
+	BangumiRank int                   `json:"bangumiRank,omitempty"`
+	Infobox     []BangumiInfoboxEntry `json:"infobox,omitempty"`
 }
 
 func (t *Manga) GetID() int {
@@ -1533,6 +1544,11 @@ type AnimeDetails struct {
 	StartDate       *AnimeDetails_StartDate          `json:"startDate,omitempty"`
 	Studios         *AnimeDetails_Studios            `json:"studios,omitempty"`
 	Trailer         *AnimeDetails_Trailer            `json:"trailer,omitempty"`
+
+	// Bangumi 扩展（3.9d additive）：标签云 / 排名 / 信息箱
+	BangumiTags []BangumiTagInfo      `json:"bangumiTags,omitempty"`
+	BangumiRank int                   `json:"bangumiRank,omitempty"`
+	Infobox     []BangumiInfoboxEntry `json:"infobox,omitempty"`
 }
 
 type AnimeDetails_Characters struct {
@@ -1756,6 +1772,11 @@ type MangaDetails struct {
 	Recommendations *MangaDetails_Recommendations   `json:"recommendations,omitempty"`
 	Relations       *MangaDetails_Relations         `json:"relations,omitempty"`
 	SiteURL         *string                         `json:"siteUrl,omitempty"`
+
+	// Bangumi 扩展（3.9d additive）：同 AnimeDetails
+	BangumiTags []BangumiTagInfo      `json:"bangumiTags,omitempty"`
+	BangumiRank int                   `json:"bangumiRank,omitempty"`
+	Infobox     []BangumiInfoboxEntry `json:"infobox,omitempty"`
 }
 
 type MangaDetails_Characters struct {

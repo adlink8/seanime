@@ -4,6 +4,7 @@ import { useGetAnimeEntry } from "@/api/hooks/anime_entries.hooks"
 import { useGetMangaEntry, useGetMangaEntryDetails } from "@/api/hooks/manga.hooks"
 import { TrailerModal } from "@/app/(main)/_features/anime/_components/trailer-modal"
 import { AnimeEntryStudio } from "@/app/(main)/_features/media/_components/anime-entry-studio"
+import { BangumiInfoboxList, BangumiRankBadge, BangumiTagsCloud } from "@/app/(main)/_features/media/_components/media-entry-bangumi-info"
 import {
     AnimeEntryRankings,
     MediaEntryAudienceScore,
@@ -242,6 +243,8 @@ function Content({ entry, entryLoading, detailsLoading, details, type }: {
                         >
                             <MediaEntryAudienceScore meanScore={entry?.media?.meanScore} badgeClass="bg-transparent" />
 
+                            <BangumiRankBadge rank={details?.bangumiRank} />
+
                             {(details as AL_AnimeDetailsById_Media)?.studios &&
                                 <AnimeEntryStudio studios={(details as AL_AnimeDetailsById_Media)?.studios} />}
 
@@ -292,6 +295,10 @@ function Content({ entry, entryLoading, detailsLoading, details, type }: {
                     </div>
 
                     {detailsLoading ? <LoadingSpinner /> : <div className="space-y-6 pt-6">
+                        <div className="space-y-4">
+                            <BangumiTagsCloud tags={details?.bangumiTags} type={type} />
+                            <BangumiInfoboxList entries={details?.infobox} />
+                        </div>
                         {(type === "anime" && (entry as Anime_Entry).libraryData) && <EpisodeSection
                             entry={entry as Anime_Entry}
                             details={details as AL_AnimeDetailsById_Media}

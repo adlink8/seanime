@@ -9,6 +9,9 @@ const searchSchema = z.object({
     season: z.string().optional(),
     year: z.coerce.number().optional(),
     type: z.string().optional(),
+    // Phase 3.9d additive：Bangumi 标签直达（search/page.tsx 已消费该参数，
+    // 未声明时 zod 会在导航时剥掉未知键）
+    tags: z.string().optional(),
 })
 
 export const Route = createFileRoute("/_main/search/")({

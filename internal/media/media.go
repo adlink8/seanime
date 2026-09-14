@@ -11,6 +11,7 @@
 package media
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -76,6 +77,9 @@ type Subject struct {
 	Images   *SubjectImages `json:"images,omitempty"` // 封面图（5 尺寸）
 	Tags     []SubjectTag   `json:"tags,omitempty"`   // 标签
 	Rating   *SubjectRating `json:"rating,omitempty"` // 评分
+	// Infobox（3.9d additive）：Bangumi v0 信息箱，Value 形态不固定
+	//（单值字符串或 [{"v":"..."}] 数组），延迟解析。
+	Infobox []BangumiInfoboxEntry `json:"infobox,omitempty"`
 }
 
 type SubjectImages struct {
@@ -87,8 +91,25 @@ type SubjectImages struct {
 }
 
 type SubjectTag struct {
-	Name  string `json:"name"`
-	Count int    `json:"count"`
+	Name    string `json:"name"`
+	Count   int    `json:"count"`
+	Spoiler bool   `json:"spoiler,omitempty"` // 3.9d additive：剧透标签
+}
+
+// BangumiTagInfo（3.9d additive）：带热度与剧透标记的标签，
+// 由 Subject.Tags 映射而来，随 Anime/Manga/AnimeDetails 输出到前端。
+type BangumiTagInfo struct {
+	Name    string `json:"name"`
+	Count   int    `json:"count"`
+	Spoiler bool   `json:"spoiler,omitempty"`
+}
+
+// BangumiInfoboxEntry（3.9d additive）：信息箱条目。
+// Value 兼容两种形态：单值字符串（如 "TV"）与对象数组（如 [{"v":"京都动画"}]），
+// 用 json.RawMessage 延迟解析，序列化时原样透传给前端。
+type BangumiInfoboxEntry struct {
+	Key   string          `json:"key"`
+	Value json.RawMessage `json:"value"`
 }
 
 type SubjectRating struct {

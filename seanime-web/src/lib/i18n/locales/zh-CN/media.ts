@@ -52,6 +52,11 @@ export const mediaDictionary = {
     "media.rankings.highest_rated": "最高评分", // media-entry-metadata-components.tsx
     "media.rankings.popular": "热门", // media-entry-metadata-components.tsx
 
+    // —— Bangumi 详情增强（Phase 3.9d）——
+    "media.bangumi.rank_badge": "Bangumi #{rank}", // media-entry-bangumi-info.tsx
+    "media.bangumi.tags_title": "标签", // media-entry-bangumi-info.tsx
+    "media.bangumi.infobox_title": "信息", // media-entry-bangumi-info.tsx
+
     // —— 文件路径选择 ——
     "media.file_path.select_all": "全选文件", // filepath-selector.tsx
 
