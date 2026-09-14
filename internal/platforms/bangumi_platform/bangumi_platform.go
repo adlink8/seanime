@@ -85,6 +85,22 @@ func (bp *BangumiPlatform) SetMappingService(svc media.MappingService) {
 	bp.mappingService = svc
 }
 
+// MappingService 返回当前注入的映射服务（Phase 4 清偿端点读取；未装配返回 nil）。
+func (bp *BangumiPlatform) MappingService() media.MappingService {
+	return bp.mappingService
+}
+
+// ReverseIDIndex 返回反向 ID 索引（Phase 4 清偿端点读取统计）。
+func (bp *BangumiPlatform) ReverseIDIndex() *media.ReverseIDIndex {
+	return bp.reverseIndex
+}
+
+// ConfirmMapping 人工确认一组 bangumi ↔ anidb 对应关系，填入反向索引
+// （Phase 4 清偿端点调用；不覆盖 mappingService 的正向解析语义）。
+func (bp *BangumiPlatform) ConfirmMapping(bangumiID, aniDBID int) {
+	bp.reverseIndex.Put(bangumiID, aniDBID, 0)
+}
+
 var _ platform.Platform = (*BangumiPlatform)(nil)
 
 func (bp *BangumiPlatform) ClearCache() {

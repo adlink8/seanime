@@ -68,6 +68,31 @@ func (q *FileQueue) Load() ([]Unresolved, error) {
 	return q.readLocked()
 }
 
+// Remove 清偿后移除指定条目（幂等：不存在不报错）。
+func (q *FileQueue) Remove(bangumiIDs ...int) error {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	items, err := q.readLocked()
+	if err != nil {
+		return err
+	}
+	drop := make(map[int]bool, len(bangumiIDs))
+	for _, id := range bangumiIDs {
+		drop[id] = true
+	}
+	kept := items[:0]
+	for _, it := range items {
+		if !drop[it.BangumiID] {
+			kept = append(kept, it)
+		}
+	}
+	if len(kept) == len(items) {
+		return nil // 无变化不落盘
+	}
+	return q.writeLocked(kept)
+}
+
 // readLocked 读取文件（调用方需持锁）。
 func (q *FileQueue) readLocked() ([]Unresolved, error) {
 	data, err := os.ReadFile(q.path)

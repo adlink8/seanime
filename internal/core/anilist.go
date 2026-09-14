@@ -124,6 +124,7 @@ func (a *App) LoginToAnilist(token string) error {
 
 	bangumiPlatform := bangumi_platform.NewBangumiPlatform(a.BangumiClientRef.Get(), a.BangumiCacheDir, a.ExtensionBankRef, a.Logger, a.Database, a.LogoutFromAnilist)
 	a.UpdatePlatform(bangumiPlatform)
+	a.initMappingService(bangumiPlatform) // Phase 4：异步装配 bangumi→anidb 映射服务
 
 	a.InitOrRefreshAnilistData()
 	a.InitOrRefreshModules()

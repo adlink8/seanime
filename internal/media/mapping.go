@@ -80,6 +80,7 @@ type AnimapResolver struct {
 	malIndex   map[int]int           // mal ID -> anidb ID（反向查找用）
 	similarity SimilarityFunc        // 可注入的相似度函数
 	queue      Queue                 // 待映射队列
+	overrides  map[int]int           // bangumi ID -> anidb ID 人工覆盖表（Phase 4，优先级最高）
 	resolved   map[int]int           // bangumiID -> anidbID 解析缓存
 	mu         sync.RWMutex
 }
@@ -110,6 +111,28 @@ func WithSimilarity(f SimilarityFunc) ResolverOption {
 // 生产环境应注入 FileQueue）。
 func WithQueue(q Queue) ResolverOption {
 	return func(r *AnimapResolver) { r.queue = q }
+}
+
+// SetOverrides 批量加载人工覆盖表（生产接线时启动调用一次）。
+func (r *AnimapResolver) SetOverrides(m map[int]int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.overrides = m
+}
+
+// ApplyOverride 运行时人工确认一组映射（Phase 4 清偿工具调用）。
+// 写入 resolved 缓存立即生效，同名条目后续解析零开销。
+func (r *AnimapResolver) ApplyOverride(bangumiID, anidbID int) {
+	if bangumiID <= 0 || anidbID <= 0 {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.overrides == nil {
+		r.overrides = make(map[int]int)
+	}
+	r.overrides[bangumiID] = anidbID
+	r.resolved[bangumiID] = anidbID
 }
 
 // NewAnimapResolver 用 animap 条目集合构建解析器。
@@ -278,6 +301,11 @@ func (r *AnimapResolver) ResolveBangumiToAniDB(bangumiID int, names NameSet) (in
 		r.mu.RUnlock()
 		return id, true
 	}
+	// 人工覆盖表优先级最高（高于一切自动解析）
+	if id, ok := r.overrides[bangumiID]; ok {
+		r.mu.RUnlock()
+		return id, true
+	}
 	r.mu.RUnlock()
 
 	id, ok := r.resolve(bangumiID, names)
@@ -358,4 +386,50 @@ func (r *AnimapResolver) QueueUnresolved(bangumiID int, names NameSet) {
 		Names:     names,
 		QueuedAt:  time.Now(),
 	})
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Phase 4 清偿工具访问层
+
+// queueLoader 清偿工具需要的队列扩展能力（FileQueue 满足）。
+type queueLoader interface {
+	Load() ([]Unresolved, error)
+	Remove(bangumiIDs ...int) error
+}
+
+// QueueSnapshot 返回队列快照（支持读时返回 true）。
+func (r *AnimapResolver) QueueSnapshot() ([]Unresolved, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	l, ok := r.queue.(queueLoader)
+	if !ok {
+		return nil, false
+	}
+	items, err := l.Load()
+	if err != nil {
+		return nil, false
+	}
+	return items, true
+}
+
+// QueueRemove 清偿后从队列移除（支持时返回 true）。
+func (r *AnimapResolver) QueueRemove(bangumiIDs ...int) bool {
+	r.mu.RLock()
+	l, ok := r.queue.(queueLoader)
+	r.mu.RUnlock()
+	if !ok {
+		return false
+	}
+	return l.Remove(bangumiIDs...) == nil
+}
+
+// OverridesSnapshot 返回覆盖表副本（诊断用）。
+func (r *AnimapResolver) OverridesSnapshot() map[int]int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := make(map[int]int, len(r.overrides))
+	for k, v := range r.overrides {
+		out[k] = v
+	}
+	return out
 }

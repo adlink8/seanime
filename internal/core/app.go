@@ -35,6 +35,7 @@ import (
 	"seanime/internal/mediaplayers/mpv"
 	"seanime/internal/mediaplayers/vlc"
 	"seanime/internal/mediastream"
+	"seanime/internal/media"
 	"seanime/internal/mpvcore"
 	"seanime/internal/nakama"
 	"seanime/internal/nativeplayer"
@@ -180,6 +181,13 @@ type (
 		PlaylistManager *playlist.Manager
 		LibraryExplorer *library_explorer.LibraryExplorer
 		NakamaManager   *nakama.Manager
+
+		// Phase 4 映射服务：bangumi→anidb ID 映射（异步装配，未就绪时 Get() 返回 nil）
+		MappingServiceRef    *util.Ref[media.MappingService]
+		MappingOverridesPath string // 人工覆盖表文件路径（initMappingService 装配时填充）
+		MappingQueuePath     string // 待映射队列文件路径
+		MappingStatus        MappingDatasetStatus // 数据集装载状态（mapping/status 端点读）
+		MappingMu            sync.Mutex
 
 		// Show this version's tour on the frontend
 		// Hydrated by migrations.go when there's a version change
@@ -463,9 +471,13 @@ func NewApp(configOpts *ConfigOptions, selfupdater *updater.SelfUpdater) *App {
 		OnRefreshAnilistCollectionFuncs: result.NewMap[string, func()](),
 		HookManager:                     hookManager,
 		isOfflineRef:                    isOfflineRef,
+		MappingServiceRef:               util.NewRef[media.MappingService](nil),
 		ServerPasswordHash:              serverPasswordHash,
 		ClientIdentitySecret:            util.GenerateCryptoID(),
 	}
+
+	// Phase 4：异步装配 bangumi→anidb 映射服务（M1-04 检账）
+	app.initMappingService(bangumiPlatform)
 
 	plugin.GlobalAppContext.SetModulesPartial(plugin.AppContextModules{
 		PromptManager: extensionRepository.PromptManager(),

@@ -142,6 +142,12 @@ func InitRoutes(app *core.App, e *echo.Echo) {
 	// 探索页「每日推荐」（契约 03.9c）
 	v1.GET("/discover/daily", h.HandleDiscoverDaily)
 
+	// 映射队列清偿工具（Phase 4 / M4-01）
+	v1.GET("/mapping/status", h.HandleGetMappingStatus)
+	v1.GET("/mapping/queue", h.HandleGetMappingQueue)
+	v1.POST("/mapping/resolve", h.HandlePostMappingResolve)
+	v1.POST("/mapping/coverage", h.HandlePostMappingCoverage)
+
 	// ASMR 音声搜索域（asmr.one，Phase 2.5）
 	v1.POST("/asmr/search", h.HandleAsmrSearch)
 	v1.GET("/asmr/popular", h.HandleAsmrPopular)
