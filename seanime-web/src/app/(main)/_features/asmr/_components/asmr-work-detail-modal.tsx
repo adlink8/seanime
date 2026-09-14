@@ -1,8 +1,9 @@
-import { useAsmrLocalWork, useAsmrDownload, useAsmrTrackProgress, useAsmrWork } from "@/api/hooks/asmr.hooks"
+import { useAsmrLocalWork, useAsmrDownload, useAsmrSimilar, useAsmrTrackProgress, useAsmrWork } from "@/api/hooks/asmr.hooks"
 import { usePlaybackPlayVideo } from "@/api/hooks/playback_manager.hooks"
 import { Asmr_Track, Asmr_Work } from "@/api/generated/types"
 import { deriveCompletedPaths } from "@/app/(main)/_features/asmr/_lib/asmr-completed-paths"
 import { AsmrPlaybackBar } from "@/app/(main)/_features/asmr/_components/asmr-playback-bar"
+import { AsmrWorkCard } from "@/app/(main)/_features/asmr/_components/asmr-work-card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/components/ui/core/styling"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -10,7 +11,7 @@ import { Modal } from "@/components/ui/modal"
 import { SeaImage } from "@/components/shared/sea-image"
 import { t } from "@/lib/i18n"
 import React, { useEffect, useState } from "react"
-import { LuChevronDown, LuCheck, LuDownload, LuFolder, LuMusic, LuPlay } from "react-icons/lu"
+import { LuChevronDown, LuCheck, LuDownload, LuFolder, LuMusic, LuPlay, LuSparkles } from "react-icons/lu"
 
 // Phase 2.5：ASMR（音声）卡片与详情 modal，供搜索页与探索页共享（M3 前不做音频播放，音轨列表只读展示）
 // Phase 3.1：本地库模式复用同一 modal（localMode），叶子音轨加播放/完听；顶部下载按钮（在线作品）。
@@ -38,6 +39,11 @@ export function AsmrWorkDetailModal({ work, open, onOpenChange, localMode }: Asm
     // 本地已完听音轨集合。保留本地 Set 以支持 handleToggleCompleted 的乐观更新；
     // 服务端真相由下方 effect 在 detail 变化时灌入（Phase 3.2 / D8）。
     const [completedPaths, setCompletedPaths] = useState<Set<string>>(() => new Set())
+
+    // Phase 3.8：相似作品折叠区。懒加载——仅在展开时拉取 /asmr/similar（契约 §3）。
+    const [similarOpen, setSimilarOpen] = useState(false)
+    const { data: similarData, isLoading: similarLoading } = useAsmrSimilar(work.id, open && similarOpen)
+    const similarWorks = similarData?.works?.filter(Boolean) ?? []
 
     // Phase 3.2（D8）：detail 变化时用服务端逐轨 completed 重置本地集合，实现跨会话回显。
     // ⚠ 依赖只放 detail 本身（react-query data 在结构不变时保持引用稳定）；
@@ -163,6 +169,44 @@ export function AsmrWorkDetailModal({ work, open, onOpenChange, localMode }: Asm
                         onToggleCompleted={handleToggleCompleted}
                     />
                 )}
+
+                {/* 相似作品（Phase 3.8）：折叠懒加载，展开才调 /asmr/similar；works 为空属预期（契约 D5） */}
+                <div data-asmr-work-detail-similar-container className="space-y-2">
+                    <button
+                        type="button"
+                        onClick={() => setSimilarOpen(prev => !prev)}
+                        data-asmr-work-detail-similar-toggle
+                        className="flex items-center gap-2 text-sm font-semibold hover:text-[--brand]"
+                    >
+                        <LuSparkles className="text-[--brand]" />
+                        {t("asmr.detail.similar")}
+                        <LuChevronDown className={cn("transition-transform", !similarOpen && "-rotate-90")} />
+                    </button>
+                    {similarOpen && (
+                        <div data-asmr-work-detail-similar-content>
+                            {similarLoading && (
+                                <div className="flex justify-center py-6"><LoadingSpinner /></div>
+                            )}
+                            {!similarLoading && !similarWorks.length && (
+                                <p className="text-sm text-[--muted]">{t("asmr.detail.similar_empty")}</p>
+                            )}
+                            {!similarLoading && !!similarWorks.length && (
+                                <div
+                                    data-asmr-work-detail-similar-grid
+                                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
+                                >
+                                    {similarWorks.map(similarWork => (
+                                        <AsmrWorkCard
+                                            key={similarWork.id}
+                                            work={similarWork}
+                                            containerClassName="w-auto"
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
 
                 {/* 音轨树（Phase 3.1：本地音轨加播放/完听） */}
                 <div className="space-y-2" data-asmr-work-detail-tracks-container>

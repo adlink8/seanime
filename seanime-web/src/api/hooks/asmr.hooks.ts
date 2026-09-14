@@ -13,6 +13,7 @@ import {
     Asmr_FavoriteResponse,
     Asmr_Library,
     Asmr_LocalWorkDetail,
+    Asmr_PlaylistListResponse,
     Asmr_SearchResult,
     Asmr_TrackProgressResponse,
     Asmr_WorkDetail,
@@ -195,5 +196,48 @@ export function useAsmrPlaybackSeek() {
         onError: () => {
             // 静默：无活跃播放（409）等错误不提示
         },
+    })
+}
+
+/**
+ * ASMR 云端播放列表（GET /api/v1/asmr/playlist/list，Phase 3.8 新增）
+ * 未配置凭据时后端返回 configured:false（前端据此整块隐藏）。
+ */
+export function useAsmrPlaylistList(enabled?: boolean) {
+    return useServerQuery<Asmr_PlaylistListResponse, { page: number }>({
+        endpoint: API_ENDPOINTS.ASMR.AsmrPlaylistList.endpoint,
+        method: API_ENDPOINTS.ASMR.AsmrPlaylistList.methods[0],
+        queryKey: [API_ENDPOINTS.ASMR.AsmrPlaylistList.key],
+        params: { page: 1 },
+        enabled: enabled ?? true,
+    })
+}
+
+/**
+ * ASMR 云端播放列表内作品（GET /api/v1/asmr/playlist/works?id=&page=&pageSize=，Phase 3.8 新增）
+ * id 为播放列表 uuid。仅在组件启用（enabled）时拉取。
+ */
+export function useAsmrPlaylistWorks(id: Nullish<string>, enabled?: boolean) {
+    return useServerQuery<Asmr_SearchResult, { id: string, page: number, pageSize: number }>({
+        endpoint: API_ENDPOINTS.ASMR.AsmrPlaylistWorks.endpoint,
+        method: API_ENDPOINTS.ASMR.AsmrPlaylistWorks.methods[0],
+        queryKey: [API_ENDPOINTS.ASMR.AsmrPlaylistWorks.key, String(id)],
+        params: { id: String(id), page: 1, pageSize: 24 },
+        enabled: (!!id && enabled) ?? false,
+    })
+}
+
+/**
+ * ASMR 相似作品（GET /api/v1/asmr/similar?workId=&page=，Phase 3.8 新增）
+ * workId 同时接受 asmr.one 数字 id 与 RJ 号（本地模式卡片 id 即 RJ 号，契约 D5）。
+ * works 可能为空（部分作品无推荐数据，属预期）。
+ */
+export function useAsmrSimilar(workId: Nullish<string>, enabled?: boolean) {
+    return useServerQuery<Asmr_SearchResult, { workId: string, page: number }>({
+        endpoint: API_ENDPOINTS.ASMR.AsmrSimilar.endpoint,
+        method: API_ENDPOINTS.ASMR.AsmrSimilar.methods[0],
+        queryKey: [API_ENDPOINTS.ASMR.AsmrSimilar.key, String(workId)],
+        params: { workId: String(workId), page: 1 },
+        enabled: (!!workId && enabled) ?? false,
     })
 }

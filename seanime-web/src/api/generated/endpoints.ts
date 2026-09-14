@@ -247,6 +247,36 @@ export const API_ENDPOINTS = {
         },
         /**
          *  @description
+         *  Route lists the user's asmr.one cloud playlists. (Phase 3.8 新增)
+         *  未配置凭据时返回 { configured: false, playlists: [] }（前端整块隐藏）。
+         */
+        AsmrPlaylistList: {
+            key: "ASMR-asmr-playlist-list",
+            methods: ["GET"],
+            endpoint: "/api/v1/asmr/playlist/list",
+        },
+        /**
+         *  @description
+         *  Route lists the works inside one asmr.one cloud playlist. (Phase 3.8 新增)
+         *  query: ?id=<uuid>&page=&pageSize=
+         */
+        AsmrPlaylistWorks: {
+            key: "ASMR-asmr-playlist-works",
+            methods: ["GET"],
+            endpoint: "/api/v1/asmr/playlist/works",
+        },
+        /**
+         *  @description
+         *  Route returns works similar to the given asmr.one work (recommender item-neighbors). (Phase 3.8 新增)
+         *  query: ?workId=<数字串或RJ号>&page=；works 可能为空（部分作品无推荐数据，属预期）。
+         */
+        AsmrSimilar: {
+            key: "ASMR-asmr-similar",
+            methods: ["GET"],
+            endpoint: "/api/v1/asmr/similar",
+        },
+        /**
+         *  @description
          *  Route returns the current mpv playback status (running/playing/position). (Phase 3.1c 新增)
          *  无活跃播放时返回 running:false + 其余零值（不返 4xx，前端轮询无感降级，契约 D3）。
          */

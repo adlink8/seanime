@@ -1,5 +1,6 @@
 import { useAsmrLibrary } from "@/api/hooks/asmr.hooks"
 import { AsmrLibraryCard } from "@/app/(main)/_features/asmr/_components/asmr-library-card"
+import { AsmrPlaylistSection } from "@/app/(main)/_features/asmr/_components/asmr-playlist-section"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { t } from "@/lib/i18n"
 import React from "react"
@@ -7,6 +8,7 @@ import { LuFolderOpen } from "react-icons/lu"
 
 // Phase 3.1：本地音声库视图（/asmr 页 container）
 // 调 GET /api/v1/asmr/library 渲染网格；空库显示引导。
+// Phase 3.8：网格下方追加「云端播放列表」区块（未配置 asmr.one 账号时区块自隐藏）。
 
 export function AsmrLibraryView() {
     const { data, isLoading, isError, refetch } = useAsmrLibrary()
@@ -61,10 +63,15 @@ export function AsmrLibraryView() {
     }
 
     return (
-        <div data-asmr-library-grid className="flex flex-wrap gap-4">
-            {entries.map(entry => (
-                <AsmrLibraryCard key={entry.rjId} entry={entry} />
-            ))}
+        <div data-asmr-library-page className="space-y-10">
+            <div data-asmr-library-grid className="flex flex-wrap gap-4">
+                {entries.map(entry => (
+                    <AsmrLibraryCard key={entry.rjId} entry={entry} />
+                ))}
+            </div>
+
+            {/* Phase 3.8：云端播放列表（configured:false 时内部返回 null，不占位） */}
+            <AsmrPlaylistSection />
         </div>
     )
 }

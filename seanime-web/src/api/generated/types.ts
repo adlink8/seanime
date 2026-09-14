@@ -6324,3 +6324,29 @@ export type Asmr_CloudResponse = {
     /** 收听中 rjId 列表 */
     listening: Array<string>
 }
+
+/**
+ * ASMR 云端播放列表（Phase 3.8 新增，GET /api/v1/asmr/playlist/list 响应元素）
+ * 系统列表（__SYS_*）已在后端过滤，不会出现。
+ */
+export type Asmr_Playlist = {
+    /** asmr.one 播放列表 uuid（get-playlist-works 的 id 入参） */
+    id: string
+    name: string
+    /** 作品数 */
+    worksCount: number
+    /** 最新加入作品的 asmr.one work id（未取到时为 0） */
+    latestWorkId: number
+    coverUrl: string
+    /** ISO8601，未取到时为空 */
+    updatedAt: string
+}
+
+/**
+ * ASMR 云端播放列表响应（Phase 3.8 新增，GET /api/v1/asmr/playlist/list）
+ */
+export type Asmr_PlaylistListResponse = {
+    /** 是否配置了 asmr.one 账号 */
+    configured: boolean
+    playlists: Array<Asmr_Playlist>
+}

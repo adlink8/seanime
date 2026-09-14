@@ -24,4 +24,12 @@ export const asmrDictionary = {
 
     "asmr.playback.pause": "暂停", // src/app/(main)/_features/asmr/_components/asmr-playback-bar.tsx
     "asmr.playback.resume": "继续", // src/app/(main)/_features/asmr/_components/asmr-playback-bar.tsx
+
+    "asmr.playlist.title": "云端播放列表", // src/app/(main)/_features/asmr/_components/asmr-playlist-section.tsx (Phase 3.8)
+    "asmr.playlist.empty": "暂无播放列表", // src/app/(main)/_features/asmr/_components/asmr-playlist-section.tsx (Phase 3.8)
+    "asmr.playlist.load_error": "播放列表加载失败", // src/app/(main)/_features/asmr/_components/asmr-playlist-section.tsx (Phase 3.8)
+    "asmr.playlist.work_count": "{count} 部", // src/app/(main)/_features/asmr/_components/asmr-playlist-section.tsx (Phase 3.8)
+
+    "asmr.detail.similar": "相似作品", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx (Phase 3.8)
+    "asmr.detail.similar_empty": "暂无相似作品", // src/app/(main)/_features/asmr/_components/asmr-work-detail-modal.tsx (Phase 3.8)
 }
