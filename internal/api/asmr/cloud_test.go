@@ -10,43 +10,44 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestNormalizeReviewRJID 表驱动验证 review → rjId 提取（顶层/嵌套/小写前缀）。
+// TestNormalizeReviewRJID 表驱动验证 review → rjId 提取（顶层 source_id / id 回退 / 小写前缀）。
+// 实测结构（2026-09-14）：source_id 顶层必有；id 为数字 work id。
 func TestNormalizeReviewRJID(t *testing.T) {
 	cases := []struct {
 		name string
 		in   rawReview
 		want string
 	}{
-		{"顶层 source_id", rawReview{SourceID: "RJ01657200"}, "RJ01657200"},
-		{"嵌套 work.source_id", rawReview{Work: &struct {
-			SourceID string `json:"source_id"`
-		}{SourceID: "RJ00123456"}}, "RJ00123456"},
-		{"小写前缀", rawReview{SourceID: "rj00789012"}, "RJ00789012"},
-		{"无 source_id", rawReview{WorkID: 5}, ""},
+		{"顶层 source_id", rawReview{ID: 1657200, SourceID: "RJ01657200"}, "RJ01657200"},
+		{"source_id 缺失回退 id", rawReview{ID: 123456}, "RJ123456"},
+		{"小写前缀", rawReview{ID: 789012, SourceID: "rj00789012"}, "RJ00789012"},
+		{"全空", rawReview{}, ""},
 	}
 	for _, c := range cases {
 		require.Equal(t, c.want, normalizeReviewRJID(c.in), c.name)
 	}
 }
 
-// TestCloudReviewsParse 用 testdata fixture 验证 /api/review 解析（离线，不触网）。
+// TestCloudReviewsParse 用 testdata fixture 验证 /api/review 分页信封解析（离线，不触网）。
+// 2026-09-14 实测：真实响应为 {"works": [...], "pagination": {...}}，非裸数组。
 func TestCloudReviewsParse(t *testing.T) {
 	data, err := os.ReadFile("testdata/cloud_reviews.json")
 	require.NoError(t, err)
 
-	var reviews []rawReview
-	require.NoError(t, json.Unmarshal(data, &reviews))
-	require.Len(t, reviews, 3)
+	var env reviewEnvelope
+	require.NoError(t, json.Unmarshal(data, &env))
+	require.Len(t, env.Works, 3)
+	require.Equal(t, 3, env.Pagination.TotalCount)
 
 	// 模拟 CloudReviews 的提取逻辑
 	got := make(map[string]struct{})
-	for _, r := range reviews {
+	for _, r := range env.Works {
 		if rj := normalizeReviewRJID(r); rj != "" {
 			got[rj] = struct{}{}
 		}
 	}
 	require.Contains(t, got, "RJ01657200")
-	require.Contains(t, got, "RJ00123456")
+	require.Contains(t, got, "RJ123456")
 	require.Contains(t, got, "RJ00789012")
 	require.Len(t, got, 3)
 }

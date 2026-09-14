@@ -1,5 +1,8 @@
-[
-  {"id": 1, "work_id": 1657200, "source_id": "RJ01657200", "user_review": {"review": "好作品"}},
-  {"id": 2, "work_id": 123, "source_id": "", "work": {"source_id": "RJ00123456"}},
-  {"id": 3, "work_id": 999, "source_id": "rj00789012"}
-]
+{
+  "works": [
+    {"id": 1657200, "source_id": "RJ01657200", "progress": "listening"},
+    {"id": 123456, "source_id": "", "progress": "marked"},
+    {"id": 789012, "source_id": "rj00789012", "progress": "marked"}
+  ],
+  "pagination": {"currentPage": 1, "pageSize": 20, "totalCount": 3}
+}

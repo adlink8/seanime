@@ -7,20 +7,29 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 )
 
 // 云端账号同步（契约 §6）。
 //
-// 地面真值（编排层实测，勿重复实测）：
+// 地面真值（编排层实测，勿重复实测；2026-09-14 真实网络复测）：
 //   - 登录：POST /api/auth/me {name, password} → JWT（契约记为 token）
-//   - 读取：GET /api/review?order=updated_at&sort=desc&page=1&filter=marked|listening 实测 200
+//   - 读取：GET /api/review?order=updated_at&sort=desc&page=1&filter=marked|listening 实测 200。
+//     **响应是分页信封 {"works": [...], "pagination": {...}}，非裸数组**（2026-09-14 实测，
+//     旧版按 []rawReview 解析对真实响应必然失败——已修）。
+//   - 单条为**扁平结构**：{"id": 390787, "source_id": "RJ390787", "progress": "listening", ...}，
+//     无 work_id / 嵌套 work / user_review 字段（2026-09-14 实测）。
 //   - 写端点：PUT /api/review，body 仅 {work_id, progress}（progress 为枚举字符串，非布尔）。
-//     第三方源码坐实（两路独立）：
+//     **2026-09-14 真实账号实测通过**：PUT marked → 条目移入 marked filter 且 progress 回读一致；
+//     恢复 listening 同样生效。
+//   - 取消收藏语义（实测坐实）：progress 是唯一状态模型，条目只会在 filter 间移动、不会消失；
+//     无 DELETE 端点、无 "clear" 枚举值 → 云端无「取消收藏」，handler favorite=false 放弃同步是终态。
+//
+// 第三方源码佐证（body 形状两路独立）：
 //       https://raw.githubusercontent.com/henntaidesu/asmr.one_download/master/src/asmr_api/works_review.py
 //       https://raw.githubusercontent.com/asmroneapp/Yuro/main/lib/data/services/api_service.dart （updateWorkMarkStatus / convertMarkStatusToApi）
-//     PUT 方法与路径本就没错，旧实现错在 body 形状（见 SaveReview 与 §0.3）。
 //
 // 凭据来源：调用方（handler）从 config 注入，本 client 不读文件/环境变量。
 // 严禁把凭据/JWT 写入日志、文件、测试或提交（契约硬约束）。
@@ -31,17 +40,19 @@ type authResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
-// rawReview /api/review 列表单条（字段名宽松解析，按实测为准）。
-// asmr.one 单条至少含 work_id；source_id（RJxxxx）可能在顶层或嵌套 work 内。
+// rawReview /api/review 列表单条（2026-09-14 实测扁平结构，见文件头地面真值）。
 type rawReview struct {
-	WorkID   int    `json:"work_id"`
+	ID       int    `json:"id"`
 	SourceID string `json:"source_id"`
-	Work     *struct {
-		SourceID string `json:"source_id"`
-	} `json:"work"`
-	UserReview *struct {
-		Review string `json:"review"`
-	} `json:"user_review"`
+	Progress string `json:"progress"`
+}
+
+// reviewEnvelope /api/review 分页信封（2026-09-14 实测：{"works": [...], "pagination": {...}}）。
+type reviewEnvelope struct {
+	Works      []rawReview `json:"works"`
+	Pagination struct {
+		TotalCount int `json:"totalCount"`
+	} `json:"pagination"`
 }
 
 // jwtCache 内存缓存登录态；401 时由调用方触发重登一次。
@@ -205,13 +216,13 @@ func (c *Client) CloudReviews(ctx context.Context, filter string) (map[string]st
 		return nil, &APIError{Code: resp.StatusCode, URL: raw.String(), Body: truncateBody(data)}
 	}
 
-	var reviews []rawReview
-	if err := json.Unmarshal(data, &reviews); err != nil {
+	var env reviewEnvelope
+	if err := json.Unmarshal(data, &env); err != nil {
 		return nil, fmt.Errorf("asmr: 解析 /api/review 响应失败: %w", err)
 	}
 
-	res := make(map[string]struct{}, len(reviews))
-	for _, r := range reviews {
+	res := make(map[string]struct{}, len(env.Works))
+	for _, r := range env.Works {
 		if rj := normalizeReviewRJID(r); rj != "" {
 			res[rj] = struct{}{}
 		}
@@ -230,13 +241,15 @@ func (c *Client) CloudListening(ctx context.Context) (map[string]struct{}, error
 }
 
 // normalizeReviewRJID 从 review 单条提取归一化 rjId（"RJ"+数字）。
-// 兼容 source_id 在顶层或嵌套 work 内两种实测形态。
+// 实测结构（2026-09-14）：source_id 顶层必有（如 "RJ390787"）；缺失时回退用数字 id 拼 "RJ{id}"。
 func normalizeReviewRJID(r rawReview) string {
-	cand := r.SourceID
-	if cand == "" && r.Work != nil {
-		cand = r.Work.SourceID
+	cand := strings.TrimSpace(r.SourceID)
+	if cand == "" {
+		if r.ID <= 0 {
+			return ""
+		}
+		cand = strconv.Itoa(r.ID)
 	}
-	cand = strings.TrimSpace(cand)
 	cand = strings.TrimPrefix(cand, "RJ")
 	cand = strings.TrimPrefix(cand, "rj")
 	if cand == "" {
